@@ -33,7 +33,7 @@ class VerticalDashedLinePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     Paint paint = Paint()
-      ..color = AppColors.greyColro8D
+      ..color = AppColors.greyColor200
       ..strokeWidth = 1.w
       ..strokeCap = StrokeCap.round;
 

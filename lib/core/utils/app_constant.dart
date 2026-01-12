@@ -18,7 +18,7 @@ class AppConstant {
       title: Text(message),
       icon: Icon(
         isTrue ? Icons.check_circle_outline_rounded : Icons.close,
-        color: isTrue ? AppColors.greenColor2 : AppColors.redColor,
+        color: isTrue ? AppColors.greenColor300 : AppColors.errorColor100,
       ),
       autoCloseDuration: const Duration(seconds: 5),
     );

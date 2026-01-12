@@ -30,7 +30,7 @@ class DashedLinePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     Paint paint = Paint()
-      ..color = AppColors.greyColro8D
+      ..color = AppColors.greyColor200
       ..strokeWidth = 1.h
       ..strokeCap = StrokeCap.round;
 

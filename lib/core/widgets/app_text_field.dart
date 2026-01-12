@@ -91,31 +91,31 @@ class AppTextFormField extends StatelessWidget {
         disabledBorder:
             focusedBorder ??
             OutlineInputBorder(
-              borderSide: BorderSide(color: AppColors.greyColorDC, width: 1.3),
+              borderSide: BorderSide(color: AppColors.greyColor200, width: 1.3),
               borderRadius: BorderRadius.circular(20.r),
             ),
         focusedBorder:
             focusedBorder ??
             OutlineInputBorder(
-              borderSide: BorderSide(color: AppColors.greyColorDC, width: 1.3),
+              borderSide: BorderSide(color: AppColors.greyColor200, width: 1.3),
               borderRadius: BorderRadius.circular(20.r),
             ),
         enabledBorder:
             enabledBorder ??
             OutlineInputBorder(
-              borderSide: BorderSide(color: AppColors.greyColorDC, width: 1.3),
+              borderSide: BorderSide(color: AppColors.greyColor200, width: 1.3),
               borderRadius: BorderRadius.circular(20.r),
             ),
         errorBorder:
             errorBorder ??
             OutlineInputBorder(
-              borderSide: BorderSide(color: AppColors.redColor, width: 1.3),
+              borderSide: BorderSide(color: AppColors.errorColor100, width: 1.3),
               borderRadius: BorderRadius.circular(20.r),
             ),
         focusedErrorBorder:
             focusedErrorBorder ??
             OutlineInputBorder(
-              borderSide: BorderSide(color: AppColors.redColor, width: 1.3),
+              borderSide: BorderSide(color: AppColors.errorColor100, width: 1.3),
               borderRadius: BorderRadius.circular(20.r),
             ),
         hintStyle: hintStyle ?? TextStyles.font16BlackColorWeight400,

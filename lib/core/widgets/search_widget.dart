@@ -70,21 +70,21 @@ class SearchWidget extends StatelessWidget {
         focusedBorder: focusedBorder ??
             OutlineInputBorder(
               borderSide: BorderSide(
-                color: AppColors.greyColorBD.withOpacity(.11),
+                color: AppColors.greyColor200.withOpacity(.11),
               ),
               borderRadius: BorderRadius.circular(9.r),
             ),
         enabledBorder: enabledBorder ??
             OutlineInputBorder(
               borderSide: BorderSide(
-                color: AppColors.greyColorBD.withOpacity(.11),
+                color: AppColors.greyColor200.withOpacity(.11),
               ),
               borderRadius: BorderRadius.circular(9.r),
             ),
         errorBorder: errorBorder ??
             OutlineInputBorder(
               borderSide: BorderSide(
-                color: AppColors.redColor,
+                color: AppColors.errorColor100,
                 width: 1.3,
               ),
               borderRadius: BorderRadius.circular(20.r),
@@ -92,7 +92,7 @@ class SearchWidget extends StatelessWidget {
         focusedErrorBorder: focusedErrorBorder ??
             OutlineInputBorder(
               borderSide: BorderSide(
-                color: AppColors.redColor,
+                color: AppColors.errorColor100,
                 width: 1.3,
               ),
               borderRadius: BorderRadius.circular(20.r),

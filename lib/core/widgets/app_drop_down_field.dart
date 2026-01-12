@@ -70,7 +70,7 @@ class AppDropDownField extends StatelessWidget {
         focusedBorder: focusedBorder ??
             OutlineInputBorder(
               borderSide: BorderSide(
-                color: AppColors.greyColorDC,
+                color: AppColors.greyColor200,
                 width: 1.3,
               ),
               borderRadius: BorderRadius.circular(20.r),
@@ -78,7 +78,7 @@ class AppDropDownField extends StatelessWidget {
         enabledBorder: enabledBorder ??
             OutlineInputBorder(
               borderSide: BorderSide(
-                color: AppColors.greyColorDC,
+                color: AppColors.greyColor200,
                 width: 1.3,
               ),
               borderRadius: BorderRadius.circular(20.r),
@@ -86,7 +86,7 @@ class AppDropDownField extends StatelessWidget {
         errorBorder: errorBorder ??
             OutlineInputBorder(
               borderSide: BorderSide(
-                color: AppColors.redColor,
+                color: AppColors.errorColor100,
                 width: 1.3,
               ),
               borderRadius: BorderRadius.circular(20.r),
@@ -94,7 +94,7 @@ class AppDropDownField extends StatelessWidget {
         focusedErrorBorder: focusedErrorBorder ??
             OutlineInputBorder(
               borderSide: BorderSide(
-                color: AppColors.redColor,
+                color: AppColors.errorColor100,
                 width: 1.3,
               ),
               borderRadius: BorderRadius.circular(20.r),
