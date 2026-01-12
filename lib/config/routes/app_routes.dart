@@ -1,0 +1,179 @@
+import 'package:waqty_user_application/config/routes/routes.dart';
+import 'package:waqty_user_application/core/services/services_locator.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:waqty_user_application/features/register/logic/register_cubit.dart';
+import 'package:waqty_user_application/features/register/ui/register_screen.dart';
+
+class RouteGenerator {
+  static Route<dynamic>? generateRoute(RouteSettings settings) {
+    final dynamic args = settings.arguments;
+    switch (settings.name) {
+      // case Routes.registerScreen:
+      //   return MaterialPageRoute(builder: (_) => OnBoard1Screen());
+      // case Routes.onBoard2Screen:
+      //   return MaterialPageRoute(builder: (_) => OnBoard2Screen());
+      // case Routes.onBoard3Screen:
+      //   return MaterialPageRoute(builder: (_) => OnBoard3Screen());
+      case Routes.registerScreen:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (context) => RegisterCubit(getIt()),
+            child: RegisterScreen(),
+          ),
+        );
+      // case Routes.senderSignScreen:
+      //   return MaterialPageRoute(
+      //     builder: (_) => BlocProvider(
+      //       create: (context) => SenderSignCubit(getIt())
+      //         ..changeIsSignUpState(args['status'] == 'login' ? false : true),
+      //       child: SenderSignScreen(type: args['type']),
+      //     ),
+      //   );
+      // case Routes.senderRegisterOtpScreen:
+      //   return MaterialPageRoute(
+      //     builder: (_) => BlocProvider(
+      //       create: (context) => SenderRegisterOtpCubit(getIt()),
+      //       child: SenderRegisterOtpScreen(
+      //         type: args['type'],
+      //         email: args['email'],
+      //         phone: args['phone'],
+      //       ),
+      //     ),
+      //   );
+      // case Routes.senderForgetOtpScreen:
+      //   return MaterialPageRoute(
+      //     builder: (_) => BlocProvider(
+      //       create: (context) => SenderForgetOtpCubit(getIt()),
+      //       child: SenderForgetOtpScreen(
+      //         type: args['type'],
+      //         email: args['email'],
+      //       ),
+      //     ),
+      //   );
+      // case Routes.buttonNavigationBarScreen:
+      //   return MaterialPageRoute(
+      //     builder: (_) => BlocProvider(
+      //       create: (context) => ButtonNavigationBarCubit(),
+      //       child: ButtonNavigationBarScreen(),
+      //     ),
+      //   );
+      // case Routes.senderButtonNavigationBarScreen:
+      //   return MaterialPageRoute(
+      //     builder: (_) => BlocProvider(
+      //       create: (context) => SenderButtonNavigationBarCubit(),
+      //       child: SenderButtonNavigationBarScreen(),
+      //     ),
+      //   );
+      // case Routes.editProfileScreen:
+      //   return MaterialPageRoute(
+      //     builder: (_) => BlocProvider(
+      //       create: (context) => EditProfileCubit(getIt())..getMyData(),
+      //       child: EditProfileScreen(),
+      //     ),
+      //   );
+      // case Routes.changePasswordScreen:
+      //   return MaterialPageRoute(
+      //     builder: (_) => BlocProvider(
+      //       create: (context) => ChangePasswordCubit(getIt()),
+      //       child: ChangePasswordScreen(),
+      //     ),
+      //   );
+      // case Routes.helpCenterScreen:
+      //   return MaterialPageRoute(
+      //     builder: (_) => BlocProvider(
+      //       create: (context) => HelpCenterCubit(getIt())..getHelpCenter(),
+      //       child: HelpCenterScreen(),
+      //     ),
+      //   );
+      // case Routes.supportScreen:
+      //   return MaterialPageRoute(
+      //     builder: (_) => BlocProvider(
+      //       create: (context) => SupportCubit(getIt())..setting(),
+      //       child: SupportScreen(),
+      //     ),
+      //   );
+      // case Routes.termsConditionsScreen:
+      //   return MaterialPageRoute(
+      //     builder: (_) => BlocProvider(
+      //       create: (context) =>
+      //           TermsConditionsCubit(getIt())..getTermsAndConditions(),
+      //       child: TermsConditionsScreen(),
+      //     ),
+      //   );
+      // case Routes.openNewTicketScreen:
+      //   return MaterialPageRoute(
+      //     builder: (_) => BlocProvider(
+      //       create: (context) => OpenNewTicketCubit(getIt())..getCountries(),
+      //       child: OpenNewTicketScreen(),
+      //     ),
+      //   );
+      // case Routes.openNewTicketDoneScreen:
+      //   return MaterialPageRoute(
+      //     builder: (_) => BlocProvider(
+      //       create: (context) => OpenNewTicketDoneCubit(),
+      //       child: OpenNewTicketDoneScreen(),
+      //     ),
+      //   );
+      // case Routes.notificationScreen:
+      //   return MaterialPageRoute(
+      //     builder: (_) => BlocProvider(
+      //       create: (context) => NotificationCubit(),
+      //       child: NotificationScreen(),
+      //     ),
+      //   );
+      // case Routes.sendNewPackageScreen:
+      //   return MaterialPageRoute(
+      //     builder: (_) => BlocProvider(
+      //       create: (context) => SendNewPackageCubit(getIt(), getIt(), getIt())
+      //         ..getPackageTypes()
+      //         ..getMyAddress()
+      //         ..getCountry(),
+      //       child: SendNewPackageScreen(),
+      //     ),
+      //   );
+      // case Routes.myAddressScreen:
+      //   return MaterialPageRoute(
+      //     builder: (_) => BlocProvider(
+      //       create: (context) => MyAddressCubit(getIt())..getMyAddress(),
+      //       child: MyAddressScreen(),
+      //     ),
+      //   );
+      // case Routes.addNewAddressScreen:
+      //   return MaterialPageRoute(
+      //     builder: (_) => BlocProvider(
+      //       create: (context) =>
+      //           AddNewAddressCubit(getIt(), getIt())..getCites(),
+      //       child: AddNewAddressScreen(),
+      //     ),
+      //   );
+      // case Routes.updateAddressScreen:
+      //   return MaterialPageRoute(
+      //     builder: (_) => BlocProvider(
+      //       create: (context) => UpdateAddressCubit(getIt(), getIt())
+      //         ..getAddressDetails(args['id'])
+      //         ..getCites(),
+      //       child: UpdateAddressScreen(id: args['id']),
+      //     ),
+      //   );
+      // case Routes.sendNewPackageDoneScreen:
+      //   return MaterialPageRoute(
+      //     builder: (_) => BlocProvider(
+      //       create: (context) => SendNewPackageDoneCubit(),
+      //       child: SendNewPackageDoneScreen(id: args['id']),
+      //     ),
+      //   );
+      // case Routes.requestDetailsScreen:
+      //   return MaterialPageRoute(
+      //     builder: (_) => BlocProvider(
+      //       create: (context) =>
+      //           RequestDetailsCubit(getIt())..myRequests(args['id']),
+      //       child: RequestDetailsScreen(id: args['id']),
+      //     ),
+      //   );
+
+      default:
+        return null;
+    }
+  }
+}
