@@ -1,7 +1,8 @@
 class ImageAsset {
   ///images
 
-  // static const String onBoardingImg1 = 'assets/images/on_board_img_1.png';
+  static const String logoImage = 'assets/images/waty_logo_image.png';
+  static const String doneImage = 'assets/images/done_image.png';
 
   ///icons
   ///

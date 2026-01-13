@@ -2,16 +2,21 @@ import 'package:waqty_user_application/config/routes/routes.dart';
 import 'package:waqty_user_application/core/services/services_locator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:waqty_user_application/features/login/logic/login_cubit.dart';
-import 'package:waqty_user_application/features/login/ui/login_screen.dart';
-import 'package:waqty_user_application/features/register/logic/register_cubit.dart';
-import 'package:waqty_user_application/features/register/ui/register_screen.dart';
+import 'package:waqty_user_application/features/auth/forget_password/logic/forget_password_cubit.dart';
+import 'package:waqty_user_application/features/auth/forget_password/ui/forget_password_screen.dart';
+import 'package:waqty_user_application/features/auth/forget_verify_code/logic/forget_verify_code_cubit.dart';
+import 'package:waqty_user_application/features/auth/forget_verify_code/ui/forget_verify_code_screen.dart';
+import 'package:waqty_user_application/features/auth/login/logic/login_cubit.dart';
+import 'package:waqty_user_application/features/auth/login/ui/login_screen.dart';
+import 'package:waqty_user_application/features/auth/register/logic/register_cubit.dart';
+import 'package:waqty_user_application/features/auth/register/ui/register_screen.dart';
+import 'package:waqty_user_application/features/auth/reseat_password/logic/reseat_password_cubit.dart';
+import 'package:waqty_user_application/features/auth/reseat_password/ui/reseat_password_screen.dart';
 
 class RouteGenerator {
   static Route<dynamic>? generateRoute(RouteSettings settings) {
     final dynamic args = settings.arguments;
     switch (settings.name) {
-
       case Routes.registerScreen:
         return MaterialPageRoute(
           builder: (_) => BlocProvider(
@@ -27,7 +32,28 @@ class RouteGenerator {
           ),
         );
 
-        
+      case Routes.forgetPasswordScreen:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (context) => ForgetPasswordCubit(getIt()),
+            child: ForgetPasswordScreen(),
+          ),
+        );
+      case Routes.forgetVerifyCodeScreen:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (context) => ForgetVerifyCodeCubit(getIt()),
+            child: ForgetVerifyCodeScreen(),
+          ),
+        );
+      case Routes.reseatPasswordScreen:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (context) => ReseatPasswordCubit(getIt()),
+            child: ReseatPasswordScreen(),
+          ),
+        );
+
       // case Routes.registerScreen:
       //   return MaterialPageRoute(builder: (_) => OnBoard1Screen());
       // case Routes.onBoard2Screen:

@@ -2,10 +2,16 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:get_it/get_it.dart';
-import 'package:waqty_user_application/features/login/data/repo/login_repo.dart';
-import 'package:waqty_user_application/features/login/data/services/login_service.dart';
-import 'package:waqty_user_application/features/register/data/repo/register_repo.dart';
-import 'package:waqty_user_application/features/register/data/services/register_service.dart';
+import 'package:waqty_user_application/features/auth/forget_password/data/repo/forget_password_repo.dart';
+import 'package:waqty_user_application/features/auth/forget_password/data/services/forget_password_service.dart';
+import 'package:waqty_user_application/features/auth/forget_verify_code/data/repo/forget_verify_code_repo.dart';
+import 'package:waqty_user_application/features/auth/forget_verify_code/data/services/forget_verify_code_service.dart';
+import 'package:waqty_user_application/features/auth/login/data/repo/login_repo.dart';
+import 'package:waqty_user_application/features/auth/login/data/services/login_service.dart';
+import 'package:waqty_user_application/features/auth/register/data/repo/register_repo.dart';
+import 'package:waqty_user_application/features/auth/register/data/services/register_service.dart';
+import 'package:waqty_user_application/features/auth/reseat_password/data/repo/reseat_password_repo.dart';
+import 'package:waqty_user_application/features/auth/reseat_password/data/services/reseat_password_service.dart';
 
 import '../api/api_consumer.dart';
 import '../api/app_interceptor.dart';
@@ -25,6 +31,30 @@ class ServicesLocator {
     getIt.registerLazySingleton<LoginRepo>(() => LoginRepo(getIt()));
     getIt.registerFactory<LoginService>(
       () => LoginService(apiConsumer: getIt()),
+    );
+
+    /// ForgetPassword
+    getIt.registerLazySingleton<ForgetPasswordRepo>(
+      () => ForgetPasswordRepo(getIt()),
+    );
+    getIt.registerFactory<ForgetPasswordService>(
+      () => ForgetPasswordService(apiConsumer: getIt()),
+    );
+
+    /// ForgetVerifyCode
+    getIt.registerLazySingleton<ForgetVerifyCodeRepo>(
+      () => ForgetVerifyCodeRepo(getIt()),
+    );
+    getIt.registerFactory<ForgetVerifyCodeService>(
+      () => ForgetVerifyCodeService(apiConsumer: getIt()),
+    );
+
+    /// ReseatPassword
+    getIt.registerLazySingleton<ReseatPasswordRepo>(
+      () => ReseatPasswordRepo(getIt()),
+    );
+    getIt.registerFactory<ReseatPasswordService>(
+      () => ReseatPasswordService(apiConsumer: getIt()),
     );
 
     // /// RegisterOtp

@@ -28,6 +28,7 @@ class AppTextFormField extends StatelessWidget {
   final Function(String?) validator;
   final Function(String)? onchange;
   final Function()? onTapOutside;
+  final Function()? onTap;
   final TextInputType keyboardType;
 
   const AppTextFormField({
@@ -52,6 +53,7 @@ class AppTextFormField extends StatelessWidget {
     required this.validator,
     this.onchange,
     this.onTapOutside,
+    this.onTap,
     required this.keyboardType,
     this.isPhoneNumber = false,
     this.isRegister = false,
@@ -109,13 +111,19 @@ class AppTextFormField extends StatelessWidget {
         errorBorder:
             errorBorder ??
             OutlineInputBorder(
-              borderSide: BorderSide(color: AppColors.errorColor100, width: 1.3),
+              borderSide: BorderSide(
+                color: AppColors.errorColor100,
+                width: 1.3,
+              ),
               borderRadius: BorderRadius.circular(20.r),
             ),
         focusedErrorBorder:
             focusedErrorBorder ??
             OutlineInputBorder(
-              borderSide: BorderSide(color: AppColors.errorColor100, width: 1.3),
+              borderSide: BorderSide(
+                color: AppColors.errorColor100,
+                width: 1.3,
+              ),
               borderRadius: BorderRadius.circular(20.r),
             ),
         hintStyle: hintStyle ?? TextStyles.font16BlackColorWeight400,
@@ -126,7 +134,7 @@ class AppTextFormField extends StatelessWidget {
         filled: true,
       ),
       obscureText: isObscureText ?? false,
-
+      onTap: onTap,
       style: textStyle ?? TextStyles.font16BlackColorWeight400,
       validator: (value) {
         return validator(value);
