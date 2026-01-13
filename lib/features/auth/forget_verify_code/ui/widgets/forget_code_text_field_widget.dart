@@ -35,7 +35,7 @@ class ForgetCodeTextFieldWidget extends StatelessWidget {
         height: 50.h,
         textStyle: TextStyles.font16greyColor900Weight400,
         decoration: BoxDecoration(
-          color: AppColors.whiteColor,
+          color: AppColors.greenColor505,
           border: Border.all(color: AppColors.greenColor500, width: 1.3),
           borderRadius: BorderRadius.circular(10.r),
         ),

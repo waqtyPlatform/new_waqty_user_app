@@ -11,6 +11,12 @@ class ForgetPasswordCubit extends Cubit<ForgetPasswordState> {
   GlobalKey<FormState> forgetPasswordKey = GlobalKey();
   TextEditingController forgetPasswordEmailController = TextEditingController();
 
+  int selectedFieldNumber=0;
+  changeSelectedField(int value){
+    selectedFieldNumber=value;
+    emit(OnChangeSelectedFieldState());
+  }
+
 
 
 

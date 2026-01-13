@@ -15,7 +15,8 @@ class ReseatNewPasswordWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<ReseatPasswordCubit, ReseatPasswordState>(
       buildWhen: (previous, current) {
-        return current is IsNewPasswordVisibleState;
+        return current is OnChangeSelectedFieldState ||
+            current is IsNewPasswordVisibleState;
       },
       builder: (context, state) {
         return AppTextFormField(
@@ -30,7 +31,6 @@ class ReseatNewPasswordWidget extends StatelessWidget {
           controller: ReseatPasswordCubit.get(
             context,
           ).reseatNewPasswordController,
-          backgroundColor: AppColors.whiteColor,
 
           isObscureText: ReseatPasswordCubit.get(context).isNewPasswordVisible,
 
@@ -50,7 +50,7 @@ class ReseatNewPasswordWidget extends StatelessWidget {
             borderRadius: BorderRadius.circular(10.r),
           ),
           focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: AppColors.greyColor1001, width: 1),
+            borderSide: BorderSide(color: AppColors.greenColor500, width: 1),
             borderRadius: BorderRadius.circular(10.r),
           ),
           errorBorder: OutlineInputBorder(
@@ -66,6 +66,16 @@ class ReseatNewPasswordWidget extends StatelessWidget {
               return 'reseatPassword.enterNewPasswordText2'.tr();
             }
             return null;
+          },
+          backgroundColor:
+              ReseatPasswordCubit.get(context).selectedFieldNumber == 1
+              ? AppColors.greenColor505
+              : AppColors.whiteColor,
+          onTap: () {
+            ReseatPasswordCubit.get(context).changeSelectedField(1);
+          },
+          onTapOutside: () {
+            ReseatPasswordCubit.get(context).changeSelectedField(0);
           },
           keyboardType: TextInputType.visiblePassword,
         );
