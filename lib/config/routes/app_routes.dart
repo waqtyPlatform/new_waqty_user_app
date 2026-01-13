@@ -2,6 +2,8 @@ import 'package:waqty_user_application/config/routes/routes.dart';
 import 'package:waqty_user_application/core/services/services_locator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:waqty_user_application/features/login/logic/login_cubit.dart';
+import 'package:waqty_user_application/features/login/ui/login_screen.dart';
 import 'package:waqty_user_application/features/register/logic/register_cubit.dart';
 import 'package:waqty_user_application/features/register/ui/register_screen.dart';
 
@@ -9,12 +11,7 @@ class RouteGenerator {
   static Route<dynamic>? generateRoute(RouteSettings settings) {
     final dynamic args = settings.arguments;
     switch (settings.name) {
-      // case Routes.registerScreen:
-      //   return MaterialPageRoute(builder: (_) => OnBoard1Screen());
-      // case Routes.onBoard2Screen:
-      //   return MaterialPageRoute(builder: (_) => OnBoard2Screen());
-      // case Routes.onBoard3Screen:
-      //   return MaterialPageRoute(builder: (_) => OnBoard3Screen());
+
       case Routes.registerScreen:
         return MaterialPageRoute(
           builder: (_) => BlocProvider(
@@ -22,6 +19,22 @@ class RouteGenerator {
             child: RegisterScreen(),
           ),
         );
+      case Routes.loginScreen:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (context) => LoginCubit(getIt()),
+            child: LoginScreen(),
+          ),
+        );
+
+        
+      // case Routes.registerScreen:
+      //   return MaterialPageRoute(builder: (_) => OnBoard1Screen());
+      // case Routes.onBoard2Screen:
+      //   return MaterialPageRoute(builder: (_) => OnBoard2Screen());
+      // case Routes.onBoard3Screen:
+      //   return MaterialPageRoute(builder: (_) => OnBoard3Screen());
+
       // case Routes.senderSignScreen:
       //   return MaterialPageRoute(
       //     builder: (_) => BlocProvider(

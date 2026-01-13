@@ -1,6 +1,38 @@
 {
   "appName": "",
-  "home": {
-    "searchText": "ابحث عن العناصر المفضله"
+  "register": {
+    "title": "إنشاء حساب جديد",
+    "description": "سجّل بياناتك وابدأ استخدام وقتي لإدارة وحجز مواعيدك بكل سهولة.",
+    "nameText": "الاسم الكامل",
+    "enterNameText": "ادخل اسمك",
+    "enterNameText2": "قم بادخال اسمك",
+    "phoneText": "رقم الهاتف",
+    "enterPhoneText": "ادخل رقمك",
+    "enterPhoneText2": "قم بادخال رقمك",
+    "emailText": "بريد إلكتروني",
+    "enterEmailText": "ادخل بريدك الإلكتروني",
+    "enterEmailText2": "قم بادخال بريدك الإلكتروني",
+    "passwordText": "كلمة السر",
+    "enterPasswordText": "ادخل كلمة السر",
+    "enterPasswordText2": "قم بادخال  كلمة السر",
+    "registerNowText": "سجل الآن",
+    "haveAccountText": "عندك حساب بالفعل؟ ",
+    "loginText": " تسجيل الدخول"
+  },
+  "login": {
+    "title": "أهلاً وسهلاً بعودتك! \uD83D\uDC4B",
+    "description": "قم بتسجيل الدخول للوصول إلى حجوزاتك وإدارة وقتك.",
+    "phoneText": "رقم الهاتف",
+    "enterPhoneText": "ادخل رقمك",
+    "enterPhoneText2": "قم بادخال رقمك",
+    "passwordText": "كلمة السر",
+    "enterPasswordText": "ادخل كلمة السر",
+    "enterPasswordText2": "قم بادخال  كلمة السر",
+    "loginNowText": "تسجيل الدخول",
+    "continueWithText": "أو استمر مع",
+    "loginWithGoogleText": "سجل دخول باستخدام جوجل",
+    "loginWithAppleText": "سجل دخول باستخدام Apple",
+    "noAccountText": "لا يوجد لديك حساب ؟ ",
+    "registerNowText": "سجل الآن"
   }
 }

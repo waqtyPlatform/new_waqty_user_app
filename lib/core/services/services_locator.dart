@@ -2,6 +2,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:get_it/get_it.dart';
+import 'package:waqty_user_application/features/login/data/repo/login_repo.dart';
+import 'package:waqty_user_application/features/login/data/services/login_service.dart';
 import 'package:waqty_user_application/features/register/data/repo/register_repo.dart';
 import 'package:waqty_user_application/features/register/data/services/register_service.dart';
 
@@ -17,6 +19,12 @@ class ServicesLocator {
     getIt.registerLazySingleton<RegisterRepo>(() => RegisterRepo(getIt()));
     getIt.registerFactory<RegisterService>(
       () => RegisterService(apiConsumer: getIt()),
+    );
+
+    /// Login
+    getIt.registerLazySingleton<LoginRepo>(() => LoginRepo(getIt()));
+    getIt.registerFactory<LoginService>(
+      () => LoginService(apiConsumer: getIt()),
     );
 
     // /// RegisterOtp

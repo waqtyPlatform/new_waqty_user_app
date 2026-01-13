@@ -52,11 +52,11 @@ Future<void> main() async {
   // }
   runApp(
     EasyLocalization(
-      supportedLocales: const [Locale('en', 'US'), Locale('ar', 'EG')],
+      supportedLocales: const [Locale('ar', 'EG'), Locale('en', 'US')],
       saveLocale: true,
-      startLocale: const Locale('en', 'US'),
+      startLocale: const Locale('ar', 'EG'),
       path: 'assets/languages',
-      fallbackLocale: const Locale('en', 'US'),
+      fallbackLocale: const Locale('ar', 'EG'),
       child: MyApp(
         navigateWidget: Routes.registerScreen,
         // isLoggedInUser

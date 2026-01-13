@@ -1,0 +1,34 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
+import 'package:waqty_user_application/core/utils/extentions.dart';
+import 'package:waqty_user_application/core/utils/styles.dart';
+
+class LoginDonNotAlreadyHaveAccountWidget extends StatelessWidget {
+  const LoginDonNotAlreadyHaveAccountWidget({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Text.rich(
+        textAlign: TextAlign.center,
+        TextSpan(
+          children: [
+            TextSpan(
+              text: 'login.noAccountText'.tr(),
+              style: TextStyles.font14greyColor4002Weight400,
+            ),
+            TextSpan(
+              text: 'login.registerNowText'.tr(),
+              style: TextStyles.font14greenColor500Weight600,
+              recognizer: TapGestureRecognizer()
+                ..onTap = () {
+                  context.pop();
+                },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

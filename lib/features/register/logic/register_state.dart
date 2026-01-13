@@ -2,4 +2,4 @@
 abstract class RegisterState{}
 
 class InitialState extends RegisterState {}
-class OnChangeSelectedTypeState extends RegisterState {}
+class IsPasswordVisibleState extends RegisterState {}
