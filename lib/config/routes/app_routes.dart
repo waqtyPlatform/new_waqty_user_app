@@ -12,6 +12,8 @@ import 'package:waqty_user_application/features/auth/register/logic/register_cub
 import 'package:waqty_user_application/features/auth/register/ui/register_screen.dart';
 import 'package:waqty_user_application/features/auth/reseat_password/logic/reseat_password_cubit.dart';
 import 'package:waqty_user_application/features/auth/reseat_password/ui/reseat_password_screen.dart';
+import 'package:waqty_user_application/features/home/button_navigation_bar/logic/button_navigation_bar_cubit.dart';
+import 'package:waqty_user_application/features/home/button_navigation_bar/ui/button_navigation_bar_screen.dart';
 
 class RouteGenerator {
   static Route<dynamic>? generateRoute(RouteSettings settings) {
@@ -51,6 +53,13 @@ class RouteGenerator {
           builder: (_) => BlocProvider(
             create: (context) => ReseatPasswordCubit(getIt()),
             child: ReseatPasswordScreen(),
+          ),
+        );
+  case Routes.buttonNavigationBarScreen:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (context) => ButtonNavigationBarCubit(),
+            child: ButtonNavigationBarScreen(),
           ),
         );
 

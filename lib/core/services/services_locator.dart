@@ -12,6 +12,8 @@ import 'package:waqty_user_application/features/auth/register/data/repo/register
 import 'package:waqty_user_application/features/auth/register/data/services/register_service.dart';
 import 'package:waqty_user_application/features/auth/reseat_password/data/repo/reseat_password_repo.dart';
 import 'package:waqty_user_application/features/auth/reseat_password/data/services/reseat_password_service.dart';
+import 'package:waqty_user_application/features/home/home/data/repo/home_repo.dart';
+import 'package:waqty_user_application/features/home/home/data/services/home_service.dart';
 
 import '../api/api_consumer.dart';
 import '../api/app_interceptor.dart';
@@ -55,6 +57,13 @@ class ServicesLocator {
     );
     getIt.registerFactory<ReseatPasswordService>(
       () => ReseatPasswordService(apiConsumer: getIt()),
+    );
+   /// Home
+    getIt.registerLazySingleton<HomeRepo>(
+      () => HomeRepo(getIt()),
+    );
+    getIt.registerFactory<HomeService>(
+      () => HomeService(apiConsumer: getIt()),
     );
 
     // /// RegisterOtp

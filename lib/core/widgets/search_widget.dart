@@ -18,6 +18,7 @@ class SearchWidget extends StatelessWidget {
   final Widget? suffixIcon;
   final Widget? prefixIcon;
   final Color? backgroundColor;
+  final Color? cursorColor;
   final bool isPhoneNumber;
   final bool? isRegister;
   final bool? isLogin;
@@ -43,6 +44,7 @@ class SearchWidget extends StatelessWidget {
     this.prefixIcon,
     this.suffixIcon,
     this.backgroundColor,
+    this.cursorColor,
     this.controller,
     required this.validator,
     required this.onchange,
@@ -58,30 +60,34 @@ class SearchWidget extends StatelessWidget {
     return TextFormField(
       autofocus: autofocus!,
       controller: controller,
-      cursorColor: AppColors.blackColor,
+      cursorColor: cursorColor ?? AppColors.blackColor,
       keyboardType: keyboardType,
       onChanged: (String value) {
         onchange(value);
       },
       decoration: InputDecoration(
         isDense: true,
-        contentPadding: contentPadding ??
+        contentPadding:
+            contentPadding ??
             EdgeInsets.symmetric(horizontal: 20.w, vertical: 18.h),
-        focusedBorder: focusedBorder ??
+        focusedBorder:
+            focusedBorder ??
             OutlineInputBorder(
               borderSide: BorderSide(
                 color: AppColors.greyColor200.withOpacity(.11),
               ),
               borderRadius: BorderRadius.circular(9.r),
             ),
-        enabledBorder: enabledBorder ??
+        enabledBorder:
+            enabledBorder ??
             OutlineInputBorder(
               borderSide: BorderSide(
                 color: AppColors.greyColor200.withOpacity(.11),
               ),
               borderRadius: BorderRadius.circular(9.r),
             ),
-        errorBorder: errorBorder ??
+        errorBorder:
+            errorBorder ??
             OutlineInputBorder(
               borderSide: BorderSide(
                 color: AppColors.errorColor100,
@@ -89,7 +95,8 @@ class SearchWidget extends StatelessWidget {
               ),
               borderRadius: BorderRadius.circular(20.r),
             ),
-        focusedErrorBorder: focusedErrorBorder ??
+        focusedErrorBorder:
+            focusedErrorBorder ??
             OutlineInputBorder(
               borderSide: BorderSide(
                 color: AppColors.errorColor100,
@@ -112,4 +119,3 @@ class SearchWidget extends StatelessWidget {
     );
   }
 }
-

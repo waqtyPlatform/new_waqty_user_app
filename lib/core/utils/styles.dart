@@ -28,9 +28,30 @@ class TextStyles {
     fontFamily: 'IBMPlexSansArabic',
   );
 
+  static TextStyle font12greenColor500W600 = TextStyle(
+    fontSize: 12.sp,
+    color: AppColors.greenColor500,
+    fontWeight: FontWeight.w600,
+    fontFamily: 'IBMPlexSansArabic',
+  );
+
+  static TextStyle font12greyColor3003Weight400 = TextStyle(
+    fontSize: 12.sp,
+    color: AppColors.greyColor3003,
+    fontWeight: FontWeight.w400,
+    fontFamily: 'IBMPlexSansArabic',
+  );
+
   static TextStyle font14greyColor900Weight500 = TextStyle(
     fontSize: 14.sp,
     color: AppColors.greyColor900,
+    fontWeight: FontWeight.w500,
+    fontFamily: 'IBMPlexSansArabic',
+  );
+
+  static TextStyle font14whiteColorWeight500 = TextStyle(
+    fontSize: 14.sp,
+    color: AppColors.whiteColor,
     fontWeight: FontWeight.w500,
     fontFamily: 'IBMPlexSansArabic',
   );
@@ -39,6 +60,23 @@ class TextStyles {
     fontSize: 14.sp,
     color: AppColors.greenColor500,
     fontWeight: FontWeight.w600,
+    fontFamily: 'IBMPlexSansArabic',
+  );
+
+
+  static TextStyle font14greyColor500W500 = TextStyle(
+    fontSize: 14.sp,
+    color: AppColors.greyColor500,
+    fontWeight: FontWeight.w500,
+    fontFamily: 'IBMPlexSansArabic',
+  );
+
+
+
+  static TextStyle font14whiteColorWeight400 = TextStyle(
+    fontSize: 14.sp,
+    color: AppColors.whiteColor,
+    fontWeight: FontWeight.w400,
     fontFamily: 'IBMPlexSansArabic',
   );
 
@@ -62,6 +100,12 @@ class TextStyles {
   static TextStyle font18greyColor900Weight600 = TextStyle(
     fontSize: 18.sp,
     color: AppColors.greyColor900,
+    fontWeight: FontWeight.w600,
+    fontFamily: 'IBMPlexSansArabic',
+  );
+  static TextStyle font18whiteColorWeight600 = TextStyle(
+    fontSize: 18.sp,
+    color: AppColors.whiteColor,
     fontWeight: FontWeight.w600,
     fontFamily: 'IBMPlexSansArabic',
   );

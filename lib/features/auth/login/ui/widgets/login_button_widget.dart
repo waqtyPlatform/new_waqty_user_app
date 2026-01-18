@@ -2,7 +2,9 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:waqty_user_application/config/routes/routes.dart';
 import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
+import 'package:waqty_user_application/core/utils/extentions.dart';
 import 'package:waqty_user_application/core/utils/styles.dart';
 import 'package:waqty_user_application/core/widgets/button_widget.dart';
 import 'package:waqty_user_application/features/auth/login/logic/login_cubit.dart';
@@ -47,6 +49,7 @@ class LoginButtonWidget extends StatelessWidget {
           textStyle: TextStyles.font16whiteColorWeight600,
           onPressed: () {
             // validateRegister(context);
+            context.pushNamed(Routes.buttonNavigationBarScreen);
           },
         );
       },
