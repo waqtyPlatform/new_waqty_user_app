@@ -1,5 +1,11 @@
 class ImageAsset {
-  ///images
+  ///test
+
+  static const String t1 = 'assets/test/te1.png';
+  static const String t2 = 'assets/test/te2.png';
+
+
+  ///  ///images
 
   static const String logoImage = 'assets/images/waty_logo_image.png';
   static const String doneImage = 'assets/images/done_image.png';

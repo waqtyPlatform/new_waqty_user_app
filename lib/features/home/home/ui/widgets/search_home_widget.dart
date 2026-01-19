@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -12,7 +13,7 @@ class SearchHomeWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SearchWidget(
-      hintText: "Search",
+      hintText: 'home.searchText'.tr(),
       contentPadding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 20.w),
       hintStyle: TextStyles.font14greyColor500W500,
       textStyle: TextStyles.font14whiteColorWeight500,
