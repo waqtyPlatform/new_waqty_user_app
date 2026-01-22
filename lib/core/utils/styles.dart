@@ -6,7 +6,6 @@ import 'app_colors_white_theme.dart';
 class TextStyles {
   // Welcome Text Styles
 
-
   static TextStyle font24greyColor900Weight600 = TextStyle(
     fontSize: 24.sp,
     color: AppColors.greyColor900,
@@ -42,10 +41,22 @@ class TextStyles {
     fontFamily: 'IBMPlexSansArabic',
   );
 
+  static TextStyle font14greyColor900Weight400 = TextStyle(
+    fontSize: 14.sp,
+    color: AppColors.greyColor900,
+    fontWeight: FontWeight.w400,
+    fontFamily: 'IBMPlexSansArabic',
+  );
   static TextStyle font14greyColor900Weight500 = TextStyle(
     fontSize: 14.sp,
     color: AppColors.greyColor900,
     fontWeight: FontWeight.w500,
+    fontFamily: 'IBMPlexSansArabic',
+  );
+  static TextStyle font14greyColor900Weight600 = TextStyle(
+    fontSize: 14.sp,
+    color: AppColors.greyColor900,
+    fontWeight: FontWeight.w600,
     fontFamily: 'IBMPlexSansArabic',
   );
   static TextStyle font12greyColor900Weight400 = TextStyle(
@@ -67,8 +78,19 @@ class TextStyles {
     color: AppColors.whiteColor,
     fontWeight: FontWeight.w500,
     fontFamily: 'IBMPlexSansArabic',
+  );  static TextStyle font12whiteColorWeight600 = TextStyle(
+    fontSize: 12.sp,
+    color: AppColors.whiteColor,
+    fontWeight: FontWeight.w600,
+    fontFamily: 'IBMPlexSansArabic',
   );
 
+  static TextStyle font20greyColor900W600 = TextStyle(
+    fontSize: 20.sp,
+    color: AppColors.greyColor900,
+    fontWeight: FontWeight.w600,
+    fontFamily: 'IBMPlexSansArabic',
+  );
   static TextStyle font14greenColor500Weight600 = TextStyle(
     fontSize: 14.sp,
     color: AppColors.greenColor500,
@@ -82,19 +104,10 @@ class TextStyles {
     fontFamily: 'IBMPlexSansArabic',
   );
 
-
   static TextStyle font14greyColor500W500 = TextStyle(
     fontSize: 14.sp,
     color: AppColors.greyColor500,
     fontWeight: FontWeight.w500,
-    fontFamily: 'IBMPlexSansArabic',
-  );
-
-
-  static TextStyle font12greyColor500W400 = TextStyle(
-    fontSize: 12.sp,
-    color: AppColors.greyColor500,
-    fontWeight: FontWeight.w400,
     fontFamily: 'IBMPlexSansArabic',
   );
 
@@ -105,6 +118,19 @@ class TextStyles {
     fontFamily: 'IBMPlexSansArabic',
   );
 
+  static TextStyle font12greyColor500W400 = TextStyle(
+    fontSize: 12.sp,
+    color: AppColors.greyColor500,
+    fontWeight: FontWeight.w400,
+    fontFamily: 'IBMPlexSansArabic',
+  );
+
+  static TextStyle font14greenColor500W500 = TextStyle(
+    fontSize: 14.sp,
+    color: AppColors.greenColor500,
+    fontWeight: FontWeight.w500,
+    fontFamily: 'IBMPlexSansArabic',
+  );
 
   static TextStyle font12greyColor500W600 = TextStyle(
     fontSize: 12.sp,
@@ -113,17 +139,12 @@ class TextStyles {
     fontFamily: 'IBMPlexSansArabic',
   );
 
-
-
   static TextStyle font14whiteColorWeight400 = TextStyle(
     fontSize: 14.sp,
     color: AppColors.whiteColor,
     fontWeight: FontWeight.w400,
     fontFamily: 'IBMPlexSansArabic',
   );
-
-
-
 
   static TextStyle font16greyColor4002Weight500 = TextStyle(
     fontSize: 16.sp,
@@ -159,19 +180,19 @@ class TextStyles {
     fontFamily: 'IBMPlexSansArabic',
   );
 
- static TextStyle font16whiteColorWeight600 = TextStyle(
+  static TextStyle font16whiteColorWeight600 = TextStyle(
     fontSize: 16.sp,
     color: AppColors.whiteColor,
     fontWeight: FontWeight.w600,
     fontFamily: 'IBMPlexSansArabic',
   );
 
-
-
-
-
-
-
+  static TextStyle font14successColor100W500 = TextStyle(
+    fontSize: 14.sp,
+    color: AppColors.successColor100,
+    fontWeight: FontWeight.w500,
+    fontFamily: 'IBMPlexSansArabic',
+  );
 
   ///
   ///

@@ -10,6 +10,7 @@ import 'package:waqty_user_application/core/utils/spacing.dart';
 import 'package:waqty_user_application/core/utils/styles.dart';
 import 'package:waqty_user_application/features/home/home/ui/widgets/category_items_widget.dart';
 import 'package:waqty_user_application/features/home/home/ui/widgets/near_by_location_widget.dart';
+import 'package:waqty_user_application/features/home/home/ui/widgets/popular_people_widget.dart';
 import 'package:waqty_user_application/features/home/home/ui/widgets/top_home_widget.dart';
 import 'package:waqty_user_application/features/home/home/ui/widgets/upcoming_appointment_widget.dart';
 
@@ -49,6 +50,9 @@ class HomeScreen extends StatelessWidget {
             verticalSpace(16),
             UpcomingAppointmentWidget(),
             verticalSpace(24),
+            PopularPeopleWidget(),
+            verticalSpace(32),
+
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 24.w),
               child: Row(

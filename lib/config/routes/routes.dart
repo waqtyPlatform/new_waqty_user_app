@@ -7,6 +7,7 @@ class Routes {
   static const forgetVerifyCodeScreen = "/ForgetVerifyCodeScreen";
   static const reseatPasswordScreen = "/ReseatPasswordScreen";
   static const buttonNavigationBarScreen = "/ButtonNavigationBarScreen";
+  static const serviceProviderDetailsScreen = "/ServiceProviderDetailsScreen";
 
 
 

@@ -1,5 +1,4 @@
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
@@ -27,14 +26,23 @@ class ReseatPasswordScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 verticalSpace(16),
-                IconButton(
-                  onPressed: () {
+                GestureDetector(
+                  onTap: () {
                     context.pop();
                   },
-                  icon: Icon(
-                    Icons.arrow_back,
-                    color: AppColors.greyColor900,
-                    size: 24.r,
+                  child: Container(
+                    height: 48.r,
+                    width: 48.r,
+                    decoration: BoxDecoration(
+                      color: AppColors.whiteColor,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.greyColor50),
+                    ),
+                    child: Icon(
+                      Icons.arrow_back,
+                      color: AppColors.greyColor900,
+                      size: 24.r,
+                    ),
                   ),
                 ),
                 verticalSpace(24),
@@ -75,5 +83,4 @@ class ReseatPasswordScreen extends StatelessWidget {
       ),
     );
   }
-
 }

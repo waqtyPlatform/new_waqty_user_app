@@ -25,14 +25,23 @@ class ForgetVerifyCodeScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 verticalSpace(16),
-                IconButton(
-                  onPressed: () {
+                GestureDetector(
+                  onTap: (){
                     context.pop();
                   },
-                  icon: Icon(
-                    Icons.arrow_back,
-                    color: AppColors.greyColor900,
-                    size: 24.r,
+                  child: Container(
+                    height: 48.r,
+                    width: 48.r,
+                    decoration: BoxDecoration(
+                        color: AppColors.whiteColor,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppColors.greyColor50)
+                    ),
+                    child: Icon(
+                      Icons.arrow_back,
+                      color: AppColors.greyColor900,
+                      size: 24.r,
+                    ),
                   ),
                 ),
                 verticalSpace(24),

@@ -3,6 +3,9 @@ class ImageAsset {
 
   static const String t1 = 'assets/test/te1.png';
   static const String t2 = 'assets/test/te2.png';
+  static const String t3 = 'assets/test/te3.png';
+  static const String t4 = 'assets/test/te4.png';
+  static const String t5 = 'assets/test/te5.png';
 
 
   ///  ///images
