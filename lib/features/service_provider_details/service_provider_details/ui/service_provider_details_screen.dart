@@ -66,7 +66,7 @@ class ServiceProviderDetailsScreen extends StatelessWidget {
                         verticalSpace(28),
                         ServiceProviderDetailsReviewsWidget(),
 
-                        verticalSpace(160),
+                        verticalSpace(40),
                       ],
                     ),
                   ),
