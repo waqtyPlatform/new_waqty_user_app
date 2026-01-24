@@ -12,6 +12,8 @@ import 'package:waqty_user_application/features/auth/register/data/repo/register
 import 'package:waqty_user_application/features/auth/register/data/services/register_service.dart';
 import 'package:waqty_user_application/features/auth/reseat_password/data/repo/reseat_password_repo.dart';
 import 'package:waqty_user_application/features/auth/reseat_password/data/services/reseat_password_service.dart';
+import 'package:waqty_user_application/features/explore_near_people/explore_near_people/data/repo/explore_near_people_repo.dart';
+import 'package:waqty_user_application/features/explore_near_people/explore_near_people/data/services/explore_near_people_service.dart';
 import 'package:waqty_user_application/features/home/home/data/repo/home_repo.dart';
 import 'package:waqty_user_application/features/home/home/data/services/home_service.dart';
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/data/repo/service_provider_details_repo.dart';
@@ -73,6 +75,13 @@ class ServicesLocator {
     );
     getIt.registerFactory<ServiceProviderDetailsService>(
       () => ServiceProviderDetailsService(apiConsumer: getIt()),
+    );
+ /// ExploreNearPeople
+    getIt.registerLazySingleton<ExploreNearPeopleRepo>(
+      () => ExploreNearPeopleRepo(getIt()),
+    );
+    getIt.registerFactory<ExploreNearPeopleService>(
+      () => ExploreNearPeopleService(apiConsumer: getIt()),
     );
 
     // /// RegisterOtp

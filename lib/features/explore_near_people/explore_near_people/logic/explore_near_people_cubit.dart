@@ -9,5 +9,9 @@ class ExploreNearPeopleCubit extends Cubit<ExploreNearPeopleState> {
 
   ExploreNearPeopleCubit(this._exploreNearPeopleRepo) : super(InitialState());
 
+  TextEditingController latitudeController=TextEditingController();
+  TextEditingController longitudeController=TextEditingController();
+
+
   static ExploreNearPeopleCubit get(context) => BlocProvider.of(context);
 }
