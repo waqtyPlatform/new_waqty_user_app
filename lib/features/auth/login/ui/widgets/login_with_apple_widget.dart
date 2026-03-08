@@ -26,7 +26,7 @@ class LoginWithAppleWidget extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              'login.loginWithAppleText'.tr(),
+              context.tr('login.loginWithAppleText'),
               style: TextStyles.font16greyColor900Weight600,
             ),
             horizontalSpace(12),

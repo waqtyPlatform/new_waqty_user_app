@@ -1,6 +1,5 @@
+import 'package:waqty_user_application/core/api/end_points.dart';
 
 class RegisterApiEndPoints {
-  // static myAddressURl(String type, String search) => '${EndPoints.baseUrl}api/sender/addresses?type=$type&search=$search';
-  // static deleteURl(int id) => '${EndPoints.baseUrl}api/sender/addresses/$id';
-  // static setAddressDefaultURl(int id) => '${EndPoints.baseUrl}api/sender/addresses/$id/set-default';
+  static String registerUrl = '${EndPoints.baseUrl}/api/user/auth/register';
 }

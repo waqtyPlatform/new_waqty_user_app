@@ -20,16 +20,13 @@ class LoginWithGoogleWidget extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.whiteColor,
           borderRadius: BorderRadius.circular(10.r),
-          border: Border.all(
-            color: AppColors.greyColor1001,
-            width: 1.2,
-          ),
+          border: Border.all(color: AppColors.greyColor1001, width: 1.2),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              'login.loginWithGoogleText'.tr(),
+              context.tr('login.loginWithGoogleText'),
               style: TextStyles.font16greyColor900Weight600,
             ),
             horizontalSpace(12),

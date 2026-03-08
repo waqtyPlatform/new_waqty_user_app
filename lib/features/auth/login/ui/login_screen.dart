@@ -1,7 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:waqty_user_application/config/routes/routes.dart';
 import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
 import 'package:waqty_user_application/core/utils/assets_manager.dart';
@@ -24,6 +23,8 @@ class LoginScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.whiteColor,
+      resizeToAvoidBottomInset: true,
+
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.symmetric(horizontal: 24.w),
@@ -33,21 +34,22 @@ class LoginScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 verticalSpace(16),
+
                 Image.asset(ImageAsset.logoImage, height: 50),
                 verticalSpace(16),
                 Text(
-                  'login.title'.tr(),
+                  context.tr('login.title'),
                   style: TextStyles.font24greyColor900Weight600,
                 ),
                 verticalSpace(6),
                 Text(
-                  'login.description'.tr(),
+                  context.tr('login.description'),
                   style: TextStyles.font14greyColor4002Weight400,
                 ),
                 verticalSpace(32),
 
                 Text(
-                  "login.phoneText".tr(),
+                  context.tr("login.phoneText"),
                   style: TextStyles.font14greyColor900Weight500,
                 ),
                 verticalSpace(6),
@@ -55,7 +57,7 @@ class LoginScreen extends StatelessWidget {
                 verticalSpace(16),
 
                 Text(
-                  "login.passwordText".tr(),
+                  context.tr("login.passwordText"),
                   style: TextStyles.font14greyColor900Weight500,
                 ),
 
@@ -68,7 +70,7 @@ class LoginScreen extends StatelessWidget {
                     context.pushNamed(Routes.forgetPasswordScreen);
                   },
                   child: Text(
-                    "login.forgetPasswordText".tr(),
+                    context.tr("login.forgetPasswordText"),
                     style: TextStyles.font14greenColor500Weight600,
                   ),
                 ),

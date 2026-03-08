@@ -19,7 +19,7 @@ class RegisterNameWidget extends StatelessWidget {
       },
       builder: (context, state) {
         return AppTextFormField(
-          hintText: 'register.enterNameText'.tr(),
+          hintText: context.tr('register.enterNameText'),
           hintStyle: TextStyles.font16greyColor4002Weight500,
           contentPadding: EdgeInsets.symmetric(
             vertical: 11.h,
@@ -45,7 +45,7 @@ class RegisterNameWidget extends StatelessWidget {
           ),
           validator: (String? value) {
             if (value == null || value.isEmpty) {
-              return 'register.enterNameText2'.tr();
+              return context.tr('register.enterNameText2');
             }
             return null;
           },

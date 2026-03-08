@@ -20,7 +20,7 @@ class LoginPasswordWidget extends StatelessWidget {
       },
       builder: (context, state) {
         return AppTextFormField(
-          hintText: 'login.enterPasswordText'.tr(),
+          hintText: context.tr('login.enterPasswordText'),
           hintStyle: TextStyles.font16greyColor4002Weight500,
           contentPadding: EdgeInsets.symmetric(
             vertical: 11.h,
@@ -60,7 +60,7 @@ class LoginPasswordWidget extends StatelessWidget {
           ),
           validator: (String? value) {
             if (value == null || value.isEmpty) {
-              return 'login.enterPasswordText2'.tr();
+              return context.tr('login.enterPasswordText2');
             }
             return null;
           },

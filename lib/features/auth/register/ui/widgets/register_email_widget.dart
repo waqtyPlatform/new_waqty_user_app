@@ -19,7 +19,7 @@ class RegisterEmailWidget extends StatelessWidget {
       },
       builder: (context, state) {
         return AppTextFormField(
-          hintText: 'register.enterEmailText'.tr(),
+          hintText: context.tr('register.enterEmailText'),
           hintStyle: TextStyles.font16greyColor4002Weight500,
           contentPadding: EdgeInsets.symmetric(
             vertical: 11.h,
@@ -45,7 +45,7 @@ class RegisterEmailWidget extends StatelessWidget {
           ),
           validator: (String? value) {
             if (value == null || value.isEmpty) {
-              return 'register.enterEmailText2'.tr();
+              return context.tr('register.enterEmailText2');
             }
             return null;
           },

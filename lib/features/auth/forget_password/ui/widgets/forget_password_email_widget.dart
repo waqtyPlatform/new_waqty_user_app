@@ -19,7 +19,7 @@ class ForgetPasswordEmailWidget extends StatelessWidget {
       },
       builder: (context, state) {
         return AppTextFormField(
-          hintText: 'forgetPassword.enterEmailText'.tr(),
+          hintText: context.tr("forgetPassword.enterEmailText"),
           hintStyle: TextStyles.font16greyColor4002Weight500,
           contentPadding: EdgeInsets.symmetric(
             vertical: 11.h,
@@ -47,7 +47,7 @@ class ForgetPasswordEmailWidget extends StatelessWidget {
           ),
           validator: (String? value) {
             if (value == null || value.isEmpty) {
-              return 'forgetPassword.enterEmailText2'.tr();
+              return context.tr("forgetPassword.enterEmailText2");
             }
             return null;
           },

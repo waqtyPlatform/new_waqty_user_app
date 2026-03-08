@@ -15,11 +15,11 @@ class LoginDonNotAlreadyHaveAccountWidget extends StatelessWidget {
         TextSpan(
           children: [
             TextSpan(
-              text: 'login.noAccountText'.tr(),
+              text: context.tr('login.noAccountText'),
               style: TextStyles.font14greyColor4002Weight400,
             ),
             TextSpan(
-              text: 'login.registerNowText'.tr(),
+              text: context.tr('login.registerNowText'),
               style: TextStyles.font14greenColor500Weight600,
               recognizer: TapGestureRecognizer()
                 ..onTap = () {

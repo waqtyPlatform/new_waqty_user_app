@@ -16,11 +16,11 @@ class RegisterAlreadyHaveAccountWidget extends StatelessWidget {
         TextSpan(
           children: [
             TextSpan(
-              text: 'register.haveAccountText'.tr(),
+              text: context.tr('register.haveAccountText'),
               style: TextStyles.font14greyColor4002Weight400,
             ),
             TextSpan(
-              text: 'register.loginText'.tr(),
+              text: context.tr('register.loginText'),
               style: TextStyles.font14greenColor500Weight600,
               recognizer: TapGestureRecognizer()
                 ..onTap = () {

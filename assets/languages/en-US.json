@@ -1,7 +1,65 @@
 {
-  "appName": "",
+  "appName": "Waqty",
   "register": {
-    "title": "mmmm",
-    "searchText": "ابحث عن العناصر المفضله"
+    "title": "Create a New Account",
+    "description": "Register your details and start using Waqti to manage and book your appointments بسهولة.",
+    "nameText": "Full Name",
+    "enterNameText": "Enter your name",
+    "enterNameText2": "Please enter your name",
+    "phoneText": "Phone Number",
+    "enterPhoneText": "Enter your phone number",
+    "enterPhoneText2": "Please enter your phone number",
+    "emailText": "Email Address",
+    "enterEmailText": "Enter your email address",
+    "enterEmailText2": "Please enter your email address",
+    "passwordText": "Password",
+    "enterPasswordText": "Enter your password",
+    "enterPasswordText2": "Please enter your password",
+    "registerNowText": "Register Now",
+    "haveAccountText": "Already have an account? ",
+    "loginText": "Log In",
+    "accptedWithText": "By registering, you agree to the ",
+    "termsAndConditionsText": "\nTerms and Conditions",
+    "privacyPolicyText": "Privacy Policy",
+    "noInternet": "Please check your internet connection",
+    "genderText": "Gender",
+    "selectGenderText": "Select gender",
+    "maleText": "Male",
+    "femaleText": "Female",
+    "birthDateText": "Birth Date",
+    "enterBirthDateText": "Select your birth date",
+    "errorMessage": "Something went wrong"
+  },
+  "login": {
+    "title": "Welcome Back! 👋",
+    "description": "Log in to access your bookings and manage your time easily.",
+    "phoneText": "Phone Number",
+    "enterPhoneText": "Enter your phone number",
+    "enterPhoneText2": "Please enter your phone number",
+    "passwordText": "Password",
+    "enterPasswordText": "Enter your password",
+    "enterPasswordText2": "Please enter your password",
+    "forgetPasswordText": "Forgot your password?",
+    "loginNowText": "Log In",
+    "continueWithText": "Or continue with",
+    "loginWithGoogleText": "Sign in with Google",
+    "loginWithAppleText": "Sign in with Apple",
+    "noAccountText": "Don't have an account? ",
+    "registerNowText": "Register Now"
+  },
+  "forgetPassword": {
+    "title": "Forgot Password",
+    "description": "Please enter the email address associated with your account. A verification code will be sent to your email to reset your password.",
+    "emailText": "Email Address",
+    "enterEmailText": "Enter your email address",
+    "enterEmailText2": "Please enter your email address",
+    "sendCodeText": "Send Code"
+  },
+  "verifyCode": {
+    "title": "Enter Verification Code",
+    "description": "Please enter the verification code sent to your email to complete the password reset process.",
+    "resendCodeSecondsText": "You can resend the code in 56 seconds",
+    "resendCodeText": "Resend Code",
+    "confirmCodeText": "Confirm Code"
   }
 }

@@ -6,10 +6,13 @@ import 'package:waqty_user_application/core/utils/assets_manager.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
 import 'package:waqty_user_application/core/utils/styles.dart';
 import 'package:waqty_user_application/features/auth/register/logic/register_cubit.dart';
+import 'package:waqty_user_application/features/auth/register/ui/widgets/change_language_icon.dart';
 import 'package:waqty_user_application/features/auth/register/ui/widgets/register_already_have_account_widget.dart';
 import 'package:waqty_user_application/features/auth/register/ui/widgets/register_button_widget.dart';
 import 'package:waqty_user_application/features/auth/register/ui/widgets/register_email_widget.dart';
 import 'package:waqty_user_application/features/auth/register/ui/widgets/register_name_widget.dart';
+import 'package:waqty_user_application/features/auth/register/ui/widgets/register_gender_widget.dart';
+import 'package:waqty_user_application/features/auth/register/ui/widgets/register_birth_date_widget.dart';
 import 'package:waqty_user_application/features/auth/register/ui/widgets/register_password_widget.dart';
 import 'package:waqty_user_application/features/auth/register/ui/widgets/register_phone_number_widget.dart';
 import 'package:waqty_user_application/features/auth/register/ui/widgets/register_terms_and_conditions_widget.dart';
@@ -21,6 +24,8 @@ class RegisterScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.whiteColor,
+      resizeToAvoidBottomInset: true,
+
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.symmetric(horizontal: 24.w),
@@ -30,21 +35,28 @@ class RegisterScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 verticalSpace(16),
-                Image.asset(ImageAsset.logoImage, height: 50),
+                Row(
+                  children: [
+                    Image.asset(ImageAsset.logoImage, height: 50),
+                    const Spacer(),
+                    const ChangeLanguageIconWidget(),
+                  ],
+                ),
+
                 verticalSpace(16),
                 Text(
-                  'register.title'.tr(),
+                  context.tr('register.title'),
                   style: TextStyles.font24greyColor900Weight600,
                 ),
                 verticalSpace(6),
                 Text(
-                  'register.description'.tr(),
+                  context.tr('register.description'),
                   style: TextStyles.font14greyColor4002Weight400,
                 ),
                 verticalSpace(32),
 
                 Text(
-                  "register.nameText".tr(),
+                  context.tr('register.nameText'),
                   style: TextStyles.font14greyColor900Weight500,
                 ),
                 verticalSpace(6),
@@ -52,7 +64,7 @@ class RegisterScreen extends StatelessWidget {
                 verticalSpace(16),
 
                 Text(
-                  "register.phoneText".tr(),
+                  context.tr('register.phoneText'),
                   style: TextStyles.font14greyColor900Weight500,
                 ),
                 verticalSpace(6),
@@ -60,7 +72,7 @@ class RegisterScreen extends StatelessWidget {
                 verticalSpace(16),
 
                 Text(
-                  "register.emailText".tr(),
+                  context.tr('register.emailText'),
                   style: TextStyles.font14greyColor900Weight500,
                 ),
 
@@ -69,7 +81,23 @@ class RegisterScreen extends StatelessWidget {
                 verticalSpace(16),
 
                 Text(
-                  "register.passwordText".tr(),
+                  context.tr('register.genderText'),
+                  style: TextStyles.font14greyColor900Weight500,
+                ),
+                verticalSpace(6),
+                RegisterGenderWidget(),
+                verticalSpace(16),
+
+                Text(
+                  context.tr('register.birthDateText'),
+                  style: TextStyles.font14greyColor900Weight500,
+                ),
+                verticalSpace(6),
+                RegisterBirthDateWidget(),
+                verticalSpace(16),
+
+                Text(
+                  context.tr('register.passwordText'),
                   style: TextStyles.font14greyColor900Weight500,
                 ),
 

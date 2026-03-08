@@ -22,6 +22,8 @@ class AppDropDownField extends StatelessWidget {
   final bool? autofocus;
   final Widget? prefixIcon;
   final Function(dynamic) onChanged;
+  final Function() onTap;
+  final Function() onTapOutside;
 
   const AppDropDownField({
     super.key,
@@ -40,73 +42,90 @@ class AppDropDownField extends StatelessWidget {
     this.backgroundColor,
     this.prefixIcon,
     required this.onChanged,
+    required this.onTap,
+    required this.onTapOutside,
     this.autofocus = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return DropdownButtonFormField<dynamic>(
-      autofocus: autofocus!,
-      dropdownColor: backgroundColor ?? AppColors.whiteColor,
-      items: items.map((dynamic element) {
-        return DropdownMenuItem<dynamic>(
-          value: element,
-          child: Text(
-            element.name,
-            style: textStyle ?? TextStyles.font16BlackColorWeight400,
-          ),
-        );
-      }).toList(),
-      menuMaxHeight: 300.h,
-      onChanged: (dynamic item) {
-        onChanged(item!);
+    return TapRegion(
+      onTapOutside: (_) {
+        onTapOutside();
       },
-      isExpanded: true,
-      decoration: InputDecoration(
-        isDense: true,
+      child: DropdownButtonFormField<dynamic>(
+        autofocus: autofocus!,
+        dropdownColor: AppColors.whiteColor,
 
-        contentPadding: contentPadding ??
-            EdgeInsets.symmetric(horizontal: 20.w, vertical: 18.h),
-        focusedBorder: focusedBorder ??
-            OutlineInputBorder(
-              borderSide: BorderSide(
-                color: AppColors.greyColor200,
-                width: 1.3,
-              ),
-              borderRadius: BorderRadius.circular(20.r),
+        items: items.map((dynamic element) {
+          return DropdownMenuItem<dynamic>(
+            value: element,
+            child: Text(
+              element.name,
+              style: textStyle ?? TextStyles.font16BlackColorWeight400,
             ),
-        enabledBorder: enabledBorder ??
-            OutlineInputBorder(
-              borderSide: BorderSide(
-                color: AppColors.greyColor200,
-                width: 1.3,
+          );
+        }).toList(),
+        menuMaxHeight: 300.h,
+        onChanged: (dynamic item) {
+          onChanged(item!);
+        },
+        isExpanded: true,
+        decoration: InputDecoration(
+          isDense: true,
+
+          contentPadding:
+              contentPadding ??
+              EdgeInsets.symmetric(horizontal: 20.w, vertical: 18.h),
+          focusedBorder:
+              focusedBorder ??
+              OutlineInputBorder(
+                borderSide: BorderSide(
+                  color: AppColors.greyColor200,
+                  width: 1.3,
+                ),
+                borderRadius: BorderRadius.circular(20.r),
               ),
-              borderRadius: BorderRadius.circular(20.r),
-            ),
-        errorBorder: errorBorder ??
-            OutlineInputBorder(
-              borderSide: BorderSide(
-                color: AppColors.errorColor100,
-                width: 1.3,
+          enabledBorder:
+              enabledBorder ??
+              OutlineInputBorder(
+                borderSide: BorderSide(
+                  color: AppColors.greyColor200,
+                  width: 1.3,
+                ),
+                borderRadius: BorderRadius.circular(20.r),
               ),
-              borderRadius: BorderRadius.circular(20.r),
-            ),
-        focusedErrorBorder: focusedErrorBorder ??
-            OutlineInputBorder(
-              borderSide: BorderSide(
-                color: AppColors.errorColor100,
-                width: 1.3,
+          errorBorder:
+              errorBorder ??
+              OutlineInputBorder(
+                borderSide: BorderSide(
+                  color: AppColors.errorColor100,
+                  width: 1.3,
+                ),
+                borderRadius: BorderRadius.circular(20.r),
               ),
-              borderRadius: BorderRadius.circular(20.r),
-            ),
-        hintStyle: hintStyle ?? TextStyles.font16BlackColorWeight400,
-        hintText: hintText,
-        prefixIcon: prefixIcon,
-        suffixIcon: suffixIcon,
-        fillColor: backgroundColor ?? AppColors.whiteColor,
-        filled: true,
+          focusedErrorBorder:
+              focusedErrorBorder ??
+              OutlineInputBorder(
+                borderSide: BorderSide(
+                  color: AppColors.errorColor100,
+                  width: 1.3,
+                ),
+                borderRadius: BorderRadius.circular(20.r),
+              ),
+          hintStyle: hintStyle ?? TextStyles.font16BlackColorWeight400,
+          hintText: hintText,
+          prefixIcon: prefixIcon,
+          suffixIcon: suffixIcon,
+          fillColor: backgroundColor ?? AppColors.whiteColor,
+          filled: true,
+        ),
+
+        style: textStyle ?? TextStyles.font16BlackColorWeight400,
+        onTap: () {
+          onTap();
+        },
       ),
-      style: textStyle ?? TextStyles.font16BlackColorWeight400,
     );
   }
 }

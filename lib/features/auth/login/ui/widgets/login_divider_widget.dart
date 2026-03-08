@@ -14,7 +14,7 @@ class LoginDividerWidget extends StatelessWidget {
         Expanded(child: Divider(color: AppColors.greyColor1001)),
         horizontalSpace(8),
         Text(
-          'login.continueWithText'.tr(),
+          context.tr('login.continueWithText'),
           style: TextStyles.font12greyColor4002Weight400,
         ),
         horizontalSpace(8),

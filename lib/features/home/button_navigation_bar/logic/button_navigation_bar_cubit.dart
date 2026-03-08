@@ -31,9 +31,15 @@ class ButtonNavigationBarCubit extends Cubit<ButtonNavigationBarState> {
 
       case 1:
         return BlocProvider(
-          create: (_) => ExploreNearPeopleCubit(getIt()),
-          child: ExploreNearPeopleScreen(),
+          create: (_) => HomeCubit(getIt()),
+          child: HomeScreen(),
         );
+
+      // case 1:
+      //   return BlocProvider(
+      //     create: (_) => ExploreNearPeopleCubit(getIt()),
+      //     child: ExploreNearPeopleScreen(),
+      //   );
 
       case 2:
         return SizedBox();

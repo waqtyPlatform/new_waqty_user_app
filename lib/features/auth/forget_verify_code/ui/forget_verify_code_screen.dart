@@ -16,6 +16,21 @@ class ForgetVerifyCodeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.whiteColor,
+      resizeToAvoidBottomInset: true,
+
+      appBar: AppBar(
+        backgroundColor: AppColors.whiteColor,
+        elevation: 0,
+        leading: IconButton(
+          onPressed: () {
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            }
+          },
+          icon: Icon(Icons.arrow_back, color: AppColors.greyColor900),
+        ),
+      ),
+
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.symmetric(horizontal: 24.w),
@@ -25,26 +40,6 @@ class ForgetVerifyCodeScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 verticalSpace(16),
-                GestureDetector(
-                  onTap: (){
-                    context.pop();
-                  },
-                  child: Container(
-                    height: 48.r,
-                    width: 48.r,
-                    decoration: BoxDecoration(
-                        color: AppColors.whiteColor,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.greyColor50)
-                    ),
-                    child: Icon(
-                      Icons.arrow_back,
-                      color: AppColors.greyColor900,
-                      size: 24.r,
-                    ),
-                  ),
-                ),
-                verticalSpace(24),
 
                 Text(
                   'verifyCode.title'.tr(),

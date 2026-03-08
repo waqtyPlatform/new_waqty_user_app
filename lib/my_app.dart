@@ -1,4 +1,3 @@
-
 import 'package:waqty_user_application/core/widgets/offline_alert_dialog.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -58,7 +57,7 @@ class _MyAppState extends State<MyApp> {
             locale: context.locale,
             debugShowCheckedModeBanner: false,
             navigatorKey: navigatorKey,
-            title: "Waqty",
+            title: "appName".tr(),
             theme: themeData(),
             initialRoute: widget.navigateWidget,
             onGenerateRoute: RouteGenerator.generateRoute,

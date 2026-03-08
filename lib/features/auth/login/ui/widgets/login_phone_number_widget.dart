@@ -20,7 +20,7 @@ class LoginPhoneNumberWidget extends StatelessWidget {
       },
       builder: (context, state) {
         return AppTextFormField(
-          hintText: 'login.enterPhoneText'.tr(),
+          hintText: context.tr('login.enterPhoneText'),
           hintStyle: TextStyles.font16greyColor4002Weight500,
           contentPadding: EdgeInsets.symmetric(
             vertical: 11.h,
@@ -34,7 +34,7 @@ class LoginPhoneNumberWidget extends StatelessWidget {
           ),
 
           prefixIcon: SizedBox(
-            width: 130,
+            width: 115,
             child: CountryCodePicker(
               onChanged: (CountryCode code) {
                 LoginCubit.get(context).loginCountryCodeController.text = code
@@ -42,6 +42,8 @@ class LoginPhoneNumberWidget extends StatelessWidget {
               },
               initialSelection: 'Eg',
               favorite: const ['Eg'],
+              flagWidth: 20,
+              showFlag: true,
               showCountryOnly: true,
               showOnlyCountryWhenClosed: false,
               alignLeft: true,
@@ -66,7 +68,7 @@ class LoginPhoneNumberWidget extends StatelessWidget {
           ),
           validator: (String? value) {
             if (value == null || value.isEmpty) {
-              return 'login.enterPhoneText2'.tr();
+              return context.tr('login.enterPhoneText2');
             }
             return null;
           },

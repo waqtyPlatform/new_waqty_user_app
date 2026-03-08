@@ -1,9 +1,8 @@
-
 class EndPoints {
-  static const String baseUrl = "https://app.egkcompany.com/";
-  static const String _imageBaseUrl = "public/";
+  static const String baseUrl = "https://waqty.alemtayaz.shop/public";
+  // static const String _imageBaseUrl = "public/";
 
-  static String getImageFromApi(String imageUrl) {
-    return baseUrl + _imageBaseUrl + imageUrl;
-  }
+  // static String getImageFromApi(String imageUrl) {
+  //   return baseUrl + _imageBaseUrl + imageUrl;
+  // }
 }

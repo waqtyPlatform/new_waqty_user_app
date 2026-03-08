@@ -20,7 +20,7 @@ class RegisterPhoneNumberWidget extends StatelessWidget {
       },
       builder: (context, state) {
         return AppTextFormField(
-          hintText: 'register.enterPhoneText'.tr(),
+          hintText: context.tr('register.enterPhoneText'),
           hintStyle: TextStyles.font16greyColor4002Weight500,
           contentPadding: EdgeInsets.symmetric(
             vertical: 11.h,
@@ -34,7 +34,7 @@ class RegisterPhoneNumberWidget extends StatelessWidget {
           ),
 
           prefixIcon: SizedBox(
-            width: 130,
+            width: 115,
             child: CountryCodePicker(
               onChanged: (CountryCode code) {
                 RegisterCubit.get(context).registerCountryCodeController.text =
@@ -42,6 +42,8 @@ class RegisterPhoneNumberWidget extends StatelessWidget {
               },
               initialSelection: 'Eg',
               favorite: const ['Eg'],
+              flagWidth: 20,
+              showFlag: true,
               showCountryOnly: true,
               showOnlyCountryWhenClosed: false,
               alignLeft: true,
@@ -66,7 +68,7 @@ class RegisterPhoneNumberWidget extends StatelessWidget {
           ),
           validator: (String? value) {
             if (value == null || value.isEmpty) {
-              return 'register.enterPhoneText2'.tr();
+              return context.tr('register.enterPhoneText2');
             }
             return null;
           },

@@ -4,51 +4,67 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
 import 'package:waqty_user_application/core/utils/styles.dart';
-import 'package:waqty_user_application/core/widgets/app_text_field.dart';
+import 'package:waqty_user_application/core/widgets/app_drop_down_field.dart';
 import 'package:waqty_user_application/features/auth/register/logic/register_cubit.dart';
 import 'package:waqty_user_application/features/auth/register/logic/register_state.dart';
 
-class RegisterPasswordWidget extends StatelessWidget {
-  const RegisterPasswordWidget({super.key});
+class GenderItem {
+  final String value;
+  final String name;
+
+  GenderItem({required this.value, required this.name});
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is GenderItem &&
+          runtimeType == other.runtimeType &&
+          value == other.value;
+
+  @override
+  int get hashCode => value.hashCode;
+}
+
+class RegisterGenderWidget extends StatelessWidget {
+  const RegisterGenderWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final genderItems = [
+      GenderItem(value: 'male', name: context.tr('register.maleText')),
+      GenderItem(value: 'female', name: context.tr('register.femaleText')),
+    ];
+
     return BlocBuilder<RegisterCubit, RegisterState>(
       buildWhen: (previous, current) {
-        return current is IsPasswordVisibleState ||
+        return current is OnChangeGenderState ||
             current is OnChangeSelectedFieldState;
       },
       builder: (context, state) {
-        return AppTextFormField(
-          hintText: context.tr('register.enterPasswordText'),
+        final cubit = RegisterCubit.get(context);
+        return AppDropDownField(
+          hintText: context.tr('register.selectGenderText'),
           hintStyle: TextStyles.font16greyColor4002Weight500,
+          textStyle: TextStyles.font16greyColor900Weight400,
+          items: genderItems,
+          backgroundColor: cubit.selectedFieldNumber == 4
+              ? AppColors.greenColor505
+              : AppColors.whiteColor,
           contentPadding: EdgeInsets.symmetric(
             vertical: 11.h,
             horizontal: 12.w,
-          ),
-
-          textStyle: TextStyles.font16greyColor900Weight400,
-          controller: RegisterCubit.get(context).registerPasswordController,
-
-          isObscureText: RegisterCubit.get(context).isPasswordVisibleLogin,
-
-          suffixIcon: IconButton(
-            icon: Icon(
-              RegisterCubit.get(context).isPasswordVisibleLogin
-                  ? Icons.visibility
-                  : Icons.visibility_off,
-              color: AppColors.greyColor3003,
-            ),
-            onPressed: () {
-              RegisterCubit.get(context).changePasswordLoginState();
-            },
           ),
           enabledBorder: OutlineInputBorder(
             borderSide: BorderSide(color: AppColors.greyColor1001, width: 1),
             borderRadius: BorderRadius.circular(10.r),
           ),
           focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: AppColors.greenColor500, width: 1),
+            borderSide: BorderSide(
+              color: cubit.selectedFieldNumber == 4
+                  ? AppColors.greenColor500
+                  : AppColors.greyColor1001,
+              width: 1,
+            ),
             borderRadius: BorderRadius.circular(10.r),
           ),
           errorBorder: OutlineInputBorder(
@@ -59,22 +75,15 @@ class RegisterPasswordWidget extends StatelessWidget {
             borderSide: BorderSide(color: AppColors.errorColor100, width: 1),
             borderRadius: BorderRadius.circular(10.r),
           ),
-          validator: (String? value) {
-            if (value == null || value.isEmpty) {
-              return context.tr('register.enterPasswordText2');
-            }
-            return null;
+          onChanged: (item) {
+            RegisterCubit.get(context).changeGender((item as GenderItem));
           },
-          backgroundColor: RegisterCubit.get(context).selectedFieldNumber == 6
-              ? AppColors.greenColor505
-              : AppColors.whiteColor,
           onTap: () {
-            RegisterCubit.get(context).changeSelectedField(6);
+            RegisterCubit.get(context).changeSelectedField(4);
           },
           onTapOutside: () {
             RegisterCubit.get(context).changeSelectedField(0);
           },
-          keyboardType: TextInputType.visiblePassword,
         );
       },
     );
