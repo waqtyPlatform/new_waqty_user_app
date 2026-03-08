@@ -1,3 +1,4 @@
+import 'package:waqty_user_application/core/services/check_network.dart';
 import 'package:waqty_user_application/core/widgets/offline_alert_dialog.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -28,11 +29,11 @@ class _MyAppState extends State<MyApp> {
   }
 
   void _listenToNetwork() {
-    // MyConnectivity.myStream.listen((event) {
-    //   if (!MyConnectivity.isOnline()) {
-    //     _showOfflineDialog();
-    //   }
-    // });
+    MyConnectivity.myStream.listen((event) {
+      if (!MyConnectivity.isOnline()) {
+        _showOfflineDialog();
+      }
+    });
   }
 
   void _showOfflineDialog() {

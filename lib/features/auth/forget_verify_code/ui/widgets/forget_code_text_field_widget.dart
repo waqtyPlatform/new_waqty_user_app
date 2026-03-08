@@ -1,13 +1,17 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:pinput/pinput.dart';
+import 'package:waqty_user_application/core/services/check_network.dart';
 import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
+import 'package:waqty_user_application/core/utils/app_constant.dart';
 import 'package:waqty_user_application/core/utils/styles.dart';
 import 'package:waqty_user_application/features/auth/forget_verify_code/logic/forget_verify_code_cubit.dart';
 
 class ForgetCodeTextFieldWidget extends StatelessWidget {
-  const ForgetCodeTextFieldWidget({super.key});
+  final String email;
+  const ForgetCodeTextFieldWidget({super.key, required this.email});
 
   @override
   Widget build(BuildContext context) {
@@ -51,11 +55,15 @@ class ForgetCodeTextFieldWidget extends StatelessWidget {
         ),
       ),
       onCompleted: (String? value) {
-        // if (MyConnectivity.isOnline()) {
-        // SendCodeCubit.get(context).verifyCode();
-        // } else {
-        //   AppConstant.toast("Check Internet Connection", AppColors.redColor);
-        // }
+        if (MyConnectivity.isOnline()) {
+          ForgetVerifyCodeCubit.get(context).verifyCode(email);
+        } else {
+          AppConstant.toast(
+            context.tr('verifyCode.noInternet'),
+            false,
+            context,
+          );
+        }
       },
     );
   }

@@ -46,8 +46,8 @@ class RouteGenerator {
       case Routes.forgetVerifyCodeScreen:
         return MaterialPageRoute(
           builder: (_) => BlocProvider(
-            create: (context) => ForgetVerifyCodeCubit(getIt()),
-            child: ForgetVerifyCodeScreen(),
+            create: (context) => ForgetVerifyCodeCubit(getIt(), getIt()),
+            child: ForgetVerifyCodeScreen(email: args['email']),
           ),
         );
       case Routes.reseatPasswordScreen:

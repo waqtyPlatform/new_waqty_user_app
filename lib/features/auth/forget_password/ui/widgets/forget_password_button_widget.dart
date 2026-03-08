@@ -41,7 +41,7 @@ class ForgetPasswordButtonWidget extends StatelessWidget {
           AppConstant.toast(state.message, false, context);
         } else if (state is ForgetPasswordCatchErrorState) {
           AppConstant.toast(
-            context.tr('forgetPassword.errorMessage'),
+            context.tr('register.errorMessage'),
             false,
             context,
           );
@@ -49,7 +49,7 @@ class ForgetPasswordButtonWidget extends StatelessWidget {
       },
       builder: (context, state) {
         return ButtonWidget(
-          isLoading: false,
+          isLoading: state is ForgetPasswordLoadingState,
           borderRadius: 12,
           buttonHeight: 50.h,
           buttonText: context.tr("forgetPassword.sendCodeText"),
@@ -71,11 +71,7 @@ class ForgetPasswordButtonWidget extends StatelessWidget {
       if (MyConnectivity.isOnline()) {
         ForgetPasswordCubit.get(context).forgetPassword();
       } else {
-        AppConstant.toast(
-          context.tr('forgetPassword.noInternet'),
-          false,
-          context,
-        );
+        AppConstant.toast(context.tr('register.noInternet'), false, context);
       }
     }
   }

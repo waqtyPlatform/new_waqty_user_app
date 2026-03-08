@@ -58,8 +58,13 @@
   "verifyCode": {
     "title": "Enter Verification Code",
     "description": "Please enter the verification code sent to your email to complete the password reset process.",
-    "resendCodeSecondsText": "You can resend the code in 56 seconds",
-    "resendCodeText": "Resend Code",
-    "confirmCodeText": "Confirm Code"
+    "confirmCodeText": "Confirm Code",
+    "codeError": "Please enter the 4-digit code",
+    "successMessage": "Code verified successfully",
+    "errorMessage": "Something went wrong",
+    "resendIn": "You can resend the code in ",
+    "resend": "Resend Code",
+    "seconds": " seconds",
+    "noInternet": "Please check your internet connection"
   }
 }

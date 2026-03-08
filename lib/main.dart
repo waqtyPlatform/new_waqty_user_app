@@ -1,3 +1,4 @@
+import 'package:waqty_user_application/core/services/check_network.dart';
 import 'package:waqty_user_application/core/services/local_notification_service.dart';
 import 'package:waqty_user_application/config/routes/routes.dart';
 import 'package:waqty_user_application/core/utils/constant_keys.dart';
@@ -28,6 +29,7 @@ Future<void> main() async {
   await EasyLocalization.ensureInitialized();
   await ServicesLocator.init();
   await CacheHelper.init();
+  await MyConnectivity.initialise();
   // await LocalNotificationService.initializedNotification();
   // PusherService.initPusher();
 
