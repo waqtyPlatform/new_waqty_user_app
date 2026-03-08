@@ -70,13 +70,20 @@
   "reseatPassword": {
     "title": "إنشاء كلمة مرور جديدة",
     "description": "يرجى إدخال كلمة مرور جديدة لحسابك، مع التأكد من أنها قوية وآمنة.",
-    "newPasswordText": "كلمة مرور جديدة",
-    "enterNewPasswordText": "ادخل كلمة المرور الجديدة",
-    "enterNewPasswordText2": "قم بادخال كلمة المرور الجديدة",
-    "confirmNewPasswordText": "تأكيد كلمة المرور",
-    "enterConfirmNewPasswordText": "اكد المرور الجديدة",
-    "enterConfirmNewPasswordText2": "قم تاكيد كلمة المرور الجديدة",
-    "newPasswordText2": "إنشاء كلمة مرور جديدة"
+    "newPasswordText": "كلمة المرور الجديدة",
+    "enterNewPasswordText": "يرجى إدخال كلمة المرور الجديدة",
+    "enterNewPasswordText2": "الرجاء إدخال كلمة المرور الجديدة",
+    "confirmNewPasswordText": "تأكيد كلمة المرور الجديدة",
+    "enterConfirmNewPasswordText": "يرجى تأكيد كلمة المرور الجديدة",
+    "passwordMatchError": "كلمات المرور غير متطابقة",
+    "enterConfirmNewPasswordText2": "الرجاء إعادة إدخال كلمة المرور الجديدة للتأكيد",
+    "newPasswordText2": "إنشاء كلمة مرور جديدة",
+    "successMessage": "تم تغيير كلمة المرور بنجاح",
+    "errorMessage": "حدث خطأ ما",
+    "dialogTitle": "تم تغيير كلمة المرور!",
+    "dialogSubtitle": "تم تغيير كلمة المرور بنجاح",
+    "loginNow": "تسجيل الدخول الآن",
+    "noInternet": "الرجاء التحقق من اتصالك بالإنترنت"
   },
   "passwordChangedDone": {
     "title": "تم تغيير كلمة المرور بنجاح.",

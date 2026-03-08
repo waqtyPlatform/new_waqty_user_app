@@ -66,5 +66,28 @@
     "resend": "Resend Code",
     "seconds": " seconds",
     "noInternet": "Please check your internet connection"
+  },
+  "reseatPassword": {
+    "title": "Create a New Password",
+    "description": "Please enter a new password for your account and ensure that it is strong and secure.",
+    "newPasswordText": "New Password",
+    "enterNewPasswordText": "Please enter the new password",
+    "enterNewPasswordText2": "Kindly enter the new password",
+    "confirmNewPasswordText": "Confirm New Password",
+    "enterConfirmNewPasswordText": "Please confirm the new password",
+    "passwordMatchError": "Passwords do not match",
+    "enterConfirmNewPasswordText2": "Please re-enter the new password for confirmation",
+    "newPasswordText2": "Create a New Password",
+    "successMessage": "Password changed successfully",
+    "errorMessage": "Something went wrong",
+    "dialogTitle": "Password Changed!",
+    "dialogSubtitle": "Your password has been changed successfully",
+    "loginNow": "Log in Now",
+    "noInternet": "Please check your internet connection"
+  },
+  "passwordChangedDone": {
+    "title": "Password Changed Successfully",
+    "description": "Your password has been successfully updated. You can now log in using your new password.",
+    "buttonText": "Log in Now"
   }
 }

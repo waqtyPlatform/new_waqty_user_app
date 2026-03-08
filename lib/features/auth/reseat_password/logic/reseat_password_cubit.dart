@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:waqty_user_application/features/auth/reseat_password/data/models/reset_password_request_model.dart';
 import 'package:waqty_user_application/features/auth/reseat_password/data/repo/reseat_password_repo.dart';
 import 'package:waqty_user_application/features/auth/reseat_password/logic/reseat_password_state.dart';
 
@@ -12,9 +13,9 @@ class ReseatPasswordCubit extends Cubit<ReseatPasswordState> {
   TextEditingController reseatNewPasswordController = TextEditingController();
   TextEditingController reseatConfirmNewPasswordController =
       TextEditingController();
-  int selectedFieldNumber=0;
-  changeSelectedField(int value){
-    selectedFieldNumber=value;
+  int selectedFieldNumber = 0;
+  changeSelectedField(int value) {
+    selectedFieldNumber = value;
     emit(OnChangeSelectedFieldState());
   }
 
@@ -30,6 +31,31 @@ class ReseatPasswordCubit extends Cubit<ReseatPasswordState> {
   changeConfirmNewPasswordLoginState() {
     isConfirmNewPasswordVisible = !isConfirmNewPasswordVisible;
     emit(IsConfirmNewPasswordVisibleState());
+  }
+
+  Future<void> resetPassword(String email, String otp) async {
+    emit(ResetPasswordLoadingState());
+
+    final result = await _reseatPasswordRepo
+        .resetPassword(
+          ResetPasswordRequestModel(
+            email: email,
+            otp: otp,
+            newPassword: reseatNewPasswordController.text,
+            newPasswordConfirmation: reseatConfirmNewPasswordController.text,
+          ),
+        )
+        .catchError((error) {
+          emit(ResetPasswordCatchErrorState());
+        });
+
+    result.fold((failure) {
+      if (failure.message.isNotEmpty) {
+        emit(ResetPasswordErrorState(message: failure.message));
+      } else {
+        emit(ResetPasswordCatchErrorState());
+      }
+    }, (response) => emit(ResetPasswordSuccessState(response: response)));
   }
 
   static ReseatPasswordCubit get(context) => BlocProvider.of(context);

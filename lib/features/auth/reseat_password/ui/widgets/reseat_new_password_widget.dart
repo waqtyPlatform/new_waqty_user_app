@@ -20,7 +20,7 @@ class ReseatNewPasswordWidget extends StatelessWidget {
       },
       builder: (context, state) {
         return AppTextFormField(
-          hintText: 'reseatPassword.enterNewPasswordText'.tr(),
+          hintText: context.tr('reseatPassword.enterNewPasswordText'),
           hintStyle: TextStyles.font16greyColor4002Weight500,
           contentPadding: EdgeInsets.symmetric(
             vertical: 11.h,
@@ -63,7 +63,7 @@ class ReseatNewPasswordWidget extends StatelessWidget {
           ),
           validator: (String? value) {
             if (value == null || value.isEmpty) {
-              return 'reseatPassword.enterNewPasswordText2'.tr();
+              return context.tr('reseatPassword.enterNewPasswordText2');
             }
             return null;
           },

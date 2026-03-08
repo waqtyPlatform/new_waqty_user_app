@@ -20,7 +20,7 @@ class ReseatConfirmNewPasswordWidget extends StatelessWidget {
       },
       builder: (context, state) {
         return AppTextFormField(
-          hintText: 'reseatPassword.enterConfirmNewPasswordText'.tr(),
+          hintText: context.tr('reseatPassword.enterConfirmNewPasswordText'),
           hintStyle: TextStyles.font16greyColor4002Weight500,
           contentPadding: EdgeInsets.symmetric(
             vertical: 11.h,
@@ -65,12 +65,20 @@ class ReseatConfirmNewPasswordWidget extends StatelessWidget {
             borderSide: BorderSide(color: AppColors.errorColor100, width: 1),
             borderRadius: BorderRadius.circular(10.r),
           ),
+
           validator: (String? value) {
             if (value == null || value.isEmpty) {
-              return 'reseatPassword.enterConfirmNewPasswordText2'.tr();
+              return context.tr('resetPassword.confirmPasswordError');
+            }
+            if (value !=
+                ReseatPasswordCubit.get(
+                  context,
+                ).reseatNewPasswordController.text) {
+              return context.tr('resetPassword.passwordMatchError');
             }
             return null;
           },
+
           backgroundColor:
               ReseatPasswordCubit.get(context).selectedFieldNumber == 2
               ? AppColors.greenColor505
