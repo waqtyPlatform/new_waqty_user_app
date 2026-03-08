@@ -11,7 +11,14 @@ import 'package:waqty_user_application/features/auth/reseat_password/ui/widgets/
 import 'package:waqty_user_application/features/auth/reseat_password/ui/widgets/reseat_new_password_widget.dart';
 
 class ReseatPasswordScreen extends StatelessWidget {
-  const ReseatPasswordScreen({super.key});
+  final String email;
+  final String code;
+
+  const ReseatPasswordScreen({
+    required this.email,
+    required this.code,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

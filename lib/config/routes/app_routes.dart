@@ -54,7 +54,10 @@ class RouteGenerator {
         return MaterialPageRoute(
           builder: (_) => BlocProvider(
             create: (context) => ReseatPasswordCubit(getIt()),
-            child: ReseatPasswordScreen(),
+            child: ReseatPasswordScreen(
+              email: args['email'],
+              code: args['code'],
+            ),
           ),
         );
       case Routes.buttonNavigationBarScreen:
