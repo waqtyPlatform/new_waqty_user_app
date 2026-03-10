@@ -23,10 +23,8 @@ class BiometricService {
           ),
           IOSAuthMessages(cancelButton: 'Cancel'),
         ],
-        // options: const AuthenticationOptions(
-        //   biometricOnly: false,
-        //   persistAcrossBackgrounding: true,
-        // ),
+        biometricOnly: false,
+        persistAcrossBackgrounding: true,
       );
 
       return didAuthenticate;
