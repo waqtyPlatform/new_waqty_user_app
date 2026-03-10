@@ -28,7 +28,7 @@ class ForgetVerifyCodeCubit extends Cubit<ForgetVerifyCodeState> {
 
   /// Resend timer
   Timer? _resendTimer;
-  int resendTimerSeconds = 60;
+  int resendTimerSeconds = 120;
   bool get canResend => resendTimerSeconds == 0;
 
   String get timerText {
@@ -38,7 +38,7 @@ class ForgetVerifyCodeCubit extends Cubit<ForgetVerifyCodeState> {
   }
 
   void startResendTimer() {
-    resendTimerSeconds = 60;
+    resendTimerSeconds = 120;
     _resendTimer?.cancel();
     _resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (resendTimerSeconds > 0) {

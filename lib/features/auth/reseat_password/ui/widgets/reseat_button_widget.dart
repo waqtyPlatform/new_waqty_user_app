@@ -40,7 +40,7 @@ class ReseatButtonWidget extends StatelessWidget {
           AppConstant.toast(state.message, false, context);
         } else if (state is ResetPasswordCatchErrorState) {
           AppConstant.toast(
-            context.tr('resetPassword.errorMessage'),
+            context.tr('reseatPassword.errorMessage'),
             false,
             context,
           );
@@ -69,7 +69,7 @@ class ReseatButtonWidget extends StatelessWidget {
         ReseatPasswordCubit.get(context).resetPassword(email, code);
       } else {
         AppConstant.toast(
-          context.tr('resetPassword.noInternet'),
+          context.tr('reseatPassword.noInternet'),
           false,
           context,
         );
@@ -112,10 +112,10 @@ class ReseatButtonWidget extends StatelessWidget {
                 borderColor: AppColors.greenColor500,
                 textStyle: TextStyles.font16whiteColorWeight600,
                 onPressed: () {
-                  context.pushNamedAndRemoveUntil(
-                    Routes.registerScreen,
-                    predicate: (route) => false,
-                  );
+                  context.pop();
+                  context.pop();
+                  context.pop();
+                  context.pop();
                 },
               ),
             ],

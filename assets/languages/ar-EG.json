@@ -67,6 +67,18 @@
     "seconds": " ثواني",
     "noInternet": "الرجاء التحقق من اتصالك بالإنترنت"
   },
+  "registerVerifyCode": {
+    "title": "إدخال رمز التحقق",
+    "description": "يرجى إدخال رمز التحقق المرسل إلى بريدك الإلكتروني للتحقق من حسابك.",
+    "confirmCodeText": "تأكيد الرمز",
+    "codeError": "يرجى إدخال الرمز المكون من 4 أرقام",
+    "successMessage": "تم التحقق من الحساب بنجاح",
+    "errorMessage": "حدث خطأ ما",
+    "resendIn": "يمكنك إعادة إرسال الرمز خلال ",
+    "resend": "إعادة إرسال الرمز",
+    "seconds": " ثواني",
+    "noInternet": "الرجاء التحقق من اتصالك بالإنترنت"
+  },
   "reseatPassword": {
     "title": "إنشاء كلمة مرور جديدة",
     "description": "يرجى إدخال كلمة مرور جديدة لحسابك، مع التأكد من أنها قوية وآمنة.",
@@ -74,6 +86,7 @@
     "enterNewPasswordText": "يرجى إدخال كلمة المرور الجديدة",
     "enterNewPasswordText2": "الرجاء إدخال كلمة المرور الجديدة",
     "confirmNewPasswordText": "تأكيد كلمة المرور الجديدة",
+    "confirmPasswordError": "يرجى تأكيد كلمة المرور",
     "enterConfirmNewPasswordText": "يرجى تأكيد كلمة المرور الجديدة",
     "passwordMatchError": "كلمات المرور غير متطابقة",
     "enterConfirmNewPasswordText2": "الرجاء إعادة إدخال كلمة المرور الجديدة للتأكيد",

@@ -67,6 +67,18 @@
     "seconds": " seconds",
     "noInternet": "Please check your internet connection"
   },
+  "registerVerifyCode": {
+    "title": "Enter Verification Code",
+    "description": "Please enter the verification code sent to your email to verify your account.",
+    "confirmCodeText": "Confirm Code",
+    "codeError": "Please enter the 4-digit code",
+    "successMessage": "Account verified successfully",
+    "errorMessage": "Something went wrong",
+    "resendIn": "You can resend the code in ",
+    "resend": "Resend Code",
+    "seconds": " seconds",
+    "noInternet": "Please check your internet connection"
+  },
   "reseatPassword": {
     "title": "Create a New Password",
     "description": "Please enter a new password for your account and ensure that it is strong and secure.",
@@ -75,6 +87,7 @@
     "enterNewPasswordText2": "Kindly enter the new password",
     "confirmNewPasswordText": "Confirm New Password",
     "enterConfirmNewPasswordText": "Please confirm the new password",
+    "confirmPasswordError": "Please confirm your password",
     "passwordMatchError": "Passwords do not match",
     "enterConfirmNewPasswordText2": "Please re-enter the new password for confirmation",
     "newPasswordText2": "Create a New Password",

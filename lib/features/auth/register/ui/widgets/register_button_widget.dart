@@ -2,9 +2,11 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:waqty_user_application/config/routes/routes.dart';
 import 'package:waqty_user_application/core/services/check_network.dart';
 import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
 import 'package:waqty_user_application/core/utils/app_constant.dart';
+import 'package:waqty_user_application/core/utils/extentions.dart';
 import 'package:waqty_user_application/core/utils/styles.dart';
 import 'package:waqty_user_application/core/widgets/button_widget.dart';
 import 'package:waqty_user_application/features/auth/register/logic/register_cubit.dart';
@@ -25,6 +27,13 @@ class RegisterButtonWidget extends StatelessWidget {
       listener: (context, state) {
         if (state is OnRegisterSuccessState) {
           AppConstant.toast(state.registerResponseModel.message, true, context);
+          context.pushNamed(
+            Routes.registerVerifyCodeScreen,
+            arguments: {
+              'email': state.registerResponseModel.data.email,
+              'isSndCodeFrommServer': false,
+            },
+          );
         } else if (state is OnRegisterErrorState) {
           AppConstant.toast(state.message, false, context);
         } else if (state is OnRegisterCatchErrorState) {

@@ -52,7 +52,10 @@ class LoginCubit extends Cubit<LoginState> {
         emit(OnLoginErrorState(failure.message));
       },
       (loginResponse) async {
-        await cashUserData(loginResponse);
+        if (loginResponse.data != null) {
+          await cashUserData(loginResponse);
+        }
+
         emit(OnLoginSuccessState(loginResponse));
       },
     );
@@ -61,7 +64,7 @@ class LoginCubit extends Cubit<LoginState> {
   Future<void> cashUserData(LoginResponseModel response) async {
     await CacheHelper.setSecuredString(
       ConstantKeys.saveTokenToShared,
-      response.data.token,
+      response.data!.token,
     );
   }
 

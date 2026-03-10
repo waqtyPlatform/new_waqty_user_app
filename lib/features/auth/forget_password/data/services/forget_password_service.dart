@@ -26,7 +26,8 @@ class ForgetPasswordService {
             "${ConstantKeys.appBearer} ${await CacheHelper.getSecuredString(ConstantKeys.saveTokenToShared)}",
       },
     );
-
+    print(response.statusCode);
+    print(response.body);
     if (response.statusCode == StatusCode.ok) {
       return ForgetPasswordResponseModel.fromJson(jsonDecode(response.body));
     } else {

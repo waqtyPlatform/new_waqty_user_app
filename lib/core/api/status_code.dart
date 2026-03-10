@@ -3,5 +3,5 @@ class StatusCode {
   static const int created = 201;
   static const int okWithOutValidation = 101;
   static const int badRequest = 100;
-
+  static const int notVerified = 403;
 }

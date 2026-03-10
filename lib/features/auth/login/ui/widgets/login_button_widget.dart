@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/config/routes/routes.dart';
+import 'package:waqty_user_application/core/api/status_code.dart';
 import 'package:waqty_user_application/core/services/check_network.dart';
 import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
 import 'package:waqty_user_application/core/utils/app_constant.dart';
@@ -27,7 +28,17 @@ class LoginButtonWidget extends StatelessWidget {
       listener: (context, state) {
         if (state is OnLoginSuccessState) {
           AppConstant.toast(state.loginResponseModel.message, true, context);
-          context.pushNamed(Routes.buttonNavigationBarScreen);
+          if (state.loginResponseModel.code == StatusCode.notVerified) {
+            context.pushNamed(
+              Routes.registerVerifyCodeScreen,
+              arguments: {
+                'email': state.loginResponseModel.email,
+                'isSndCodeFrommServer': true,
+              },
+            );
+          } else {
+            context.pushNamed(Routes.buttonNavigationBarScreen);
+          }
         } else if (state is OnLoginErrorState) {
           AppConstant.toast(state.error, false, context);
         } else if (state is OnLoginCatchErrorState) {

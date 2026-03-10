@@ -68,13 +68,13 @@ class ReseatConfirmNewPasswordWidget extends StatelessWidget {
 
           validator: (String? value) {
             if (value == null || value.isEmpty) {
-              return context.tr('resetPassword.confirmPasswordError');
+              return context.tr('reseatPassword.confirmPasswordError');
             }
             if (value !=
                 ReseatPasswordCubit.get(
                   context,
                 ).reseatNewPasswordController.text) {
-              return context.tr('resetPassword.passwordMatchError');
+              return context.tr('reseatPassword.passwordMatchError');
             }
             return null;
           },

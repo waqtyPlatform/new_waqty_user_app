@@ -1,19 +1,27 @@
 class LoginResponseModel {
   final bool success;
+  final int code;
   final String message;
-  final LoginDataModel data;
+  final String email;
+  final LoginDataModel? data;
 
   LoginResponseModel({
     required this.success,
+    required this.code,
     required this.message,
+    required this.email,
     required this.data,
   });
 
-  factory LoginResponseModel.fromJson(Map<String, dynamic> json) =>
+  factory LoginResponseModel.fromJson(Map<String, dynamic> json, {int? code}) =>
       LoginResponseModel(
         success: json['success'] ?? false,
+        code: code ?? 0,
         message: json['message'] ?? '',
-        data: LoginDataModel.fromJson(json['data']),
+        email: json['email'] ?? '',
+        data: json['data'] != null
+            ? LoginDataModel.fromJson(json['data'])
+            : null,
       );
 }
 

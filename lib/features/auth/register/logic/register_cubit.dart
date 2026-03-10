@@ -1,8 +1,6 @@
 import 'package:easy_localization/easy_localization.dart' as context;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:waqty_user_application/core/services/cache_helper.dart';
-import 'package:waqty_user_application/core/utils/constant_keys.dart';
 import 'package:waqty_user_application/features/auth/register/data/models/register_request_model.dart';
 import 'package:waqty_user_application/features/auth/register/data/models/register_response_model.dart';
 import 'package:waqty_user_application/features/auth/register/data/repo/register_repo.dart';
@@ -58,9 +56,9 @@ class RegisterCubit extends Cubit<RegisterState> {
             name: registerNameController.text.trim(),
             email: registerEmailController.text.trim(),
             phone:
-                (registerPhoneController.text.isEmpty
+                (registerCountryCodeController.text.isEmpty
                     ? '+20'
-                    : registerPhoneController.text) +
+                    : registerCountryCodeController.text) +
                 registerPhoneController.text.trim(),
             dateBirth: registerBirthDateController.text,
             gender: selectedGender.value,
@@ -75,17 +73,9 @@ class RegisterCubit extends Cubit<RegisterState> {
       (failure) {
         emit(OnRegisterErrorState(failure.message));
       },
-      (registerResponse) async {
-        await cashUserData(registerResponse);
+      (registerResponse) {
         emit(OnRegisterSuccessState(registerResponse));
       },
-    );
-  }
-
-  Future<void> cashUserData(RegisterResponseModel response) async {
-    await CacheHelper.setSecuredString(
-      ConstantKeys.saveTokenToShared,
-      response.data.token,
     );
   }
 

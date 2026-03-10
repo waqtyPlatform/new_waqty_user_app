@@ -10,6 +10,8 @@ import 'package:waqty_user_application/features/auth/login/data/repo/login_repo.
 import 'package:waqty_user_application/features/auth/login/data/services/login_service.dart';
 import 'package:waqty_user_application/features/auth/register/data/repo/register_repo.dart';
 import 'package:waqty_user_application/features/auth/register/data/services/register_service.dart';
+import 'package:waqty_user_application/features/auth/register_verify_code/data/repo/register_verify_code_repo.dart';
+import 'package:waqty_user_application/features/auth/register_verify_code/data/services/register_verify_code_service.dart';
 import 'package:waqty_user_application/features/auth/reseat_password/data/repo/reseat_password_repo.dart';
 import 'package:waqty_user_application/features/auth/reseat_password/data/services/reseat_password_service.dart';
 import 'package:waqty_user_application/features/explore_near_people/explore_near_people/data/repo/explore_near_people_repo.dart';
@@ -29,13 +31,13 @@ class ServicesLocator {
   static Future<void> init() async {
     /// Register
     getIt.registerLazySingleton<RegisterRepo>(() => RegisterRepo(getIt()));
-    getIt.registerFactory<RegisterService>(
+    getIt.registerLazySingleton<RegisterService>(
       () => RegisterService(apiConsumer: getIt()),
     );
 
     /// Login
     getIt.registerLazySingleton<LoginRepo>(() => LoginRepo(getIt()));
-    getIt.registerFactory<LoginService>(
+    getIt.registerLazySingleton<LoginService>(
       () => LoginService(apiConsumer: getIt()),
     );
 
@@ -43,7 +45,7 @@ class ServicesLocator {
     getIt.registerLazySingleton<ForgetPasswordRepo>(
       () => ForgetPasswordRepo(getIt()),
     );
-    getIt.registerFactory<ForgetPasswordService>(
+    getIt.registerLazySingleton<ForgetPasswordService>(
       () => ForgetPasswordService(apiConsumer: getIt()),
     );
 
@@ -51,36 +53,45 @@ class ServicesLocator {
     getIt.registerLazySingleton<ForgetVerifyCodeRepo>(
       () => ForgetVerifyCodeRepo(getIt()),
     );
-    getIt.registerFactory<ForgetVerifyCodeService>(
+    getIt.registerLazySingleton<ForgetVerifyCodeService>(
       () => ForgetVerifyCodeService(apiConsumer: getIt()),
+    );
+
+    /// RegisterVerifyCode
+    getIt.registerLazySingleton<RegisterVerifyCodeRepo>(
+      () => RegisterVerifyCodeRepo(getIt()),
+    );
+    getIt.registerLazySingleton<RegisterVerifyCodeService>(
+      () => RegisterVerifyCodeService(apiConsumer: getIt()),
     );
 
     /// ReseatPassword
     getIt.registerLazySingleton<ReseatPasswordRepo>(
       () => ReseatPasswordRepo(getIt()),
     );
-    getIt.registerFactory<ReseatPasswordService>(
+    getIt.registerLazySingleton<ReseatPasswordService>(
       () => ReseatPasswordService(apiConsumer: getIt()),
     );
-   /// Home
-    getIt.registerLazySingleton<HomeRepo>(
-      () => HomeRepo(getIt()),
-    );
-    getIt.registerFactory<HomeService>(
+
+    /// Home
+    getIt.registerLazySingleton<HomeRepo>(() => HomeRepo(getIt()));
+    getIt.registerLazySingleton<HomeService>(
       () => HomeService(apiConsumer: getIt()),
     );
-   /// Home
+
+    /// Home
     getIt.registerLazySingleton<ServiceProviderDetailsRepo>(
       () => ServiceProviderDetailsRepo(getIt()),
     );
-    getIt.registerFactory<ServiceProviderDetailsService>(
+    getIt.registerLazySingleton<ServiceProviderDetailsService>(
       () => ServiceProviderDetailsService(apiConsumer: getIt()),
     );
- /// ExploreNearPeople
+
+    /// ExploreNearPeople
     getIt.registerLazySingleton<ExploreNearPeopleRepo>(
       () => ExploreNearPeopleRepo(getIt()),
     );
-    getIt.registerFactory<ExploreNearPeopleService>(
+    getIt.registerLazySingleton<ExploreNearPeopleService>(
       () => ExploreNearPeopleService(apiConsumer: getIt()),
     );
 

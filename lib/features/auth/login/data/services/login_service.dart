@@ -23,9 +23,14 @@ class LoginService {
             "${ConstantKeys.appBearer} ${await CacheHelper.getSecuredString(ConstantKeys.saveTokenToShared)}",
       },
     );
-
-    if (response.statusCode == StatusCode.ok) {
-      return LoginResponseModel.fromJson(jsonDecode(response.body));
+    print(response.statusCode);
+    print(response.body);
+    if (response.statusCode == StatusCode.ok ||
+        response.statusCode == StatusCode.notVerified) {
+      return LoginResponseModel.fromJson(
+        jsonDecode(response.body),
+        code: response.statusCode,
+      );
     } else {
       throw ServerException(
         serverFailure: ServerFailure.fromJson(jsonDecode(response.body)),
