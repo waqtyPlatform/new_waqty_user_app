@@ -14,12 +14,6 @@ import 'package:waqty_user_application/features/auth/register_verify_code/data/r
 import 'package:waqty_user_application/features/auth/register_verify_code/data/services/register_verify_code_service.dart';
 import 'package:waqty_user_application/features/auth/reseat_password/data/repo/reseat_password_repo.dart';
 import 'package:waqty_user_application/features/auth/reseat_password/data/services/reseat_password_service.dart';
-import 'package:waqty_user_application/features/explore_near_people/explore_near_people/data/repo/explore_near_people_repo.dart';
-import 'package:waqty_user_application/features/explore_near_people/explore_near_people/data/services/explore_near_people_service.dart';
-import 'package:waqty_user_application/features/home/home/data/repo/home_repo.dart';
-import 'package:waqty_user_application/features/home/home/data/services/home_service.dart';
-import 'package:waqty_user_application/features/service_provider_details/service_provider_details/data/repo/service_provider_details_repo.dart';
-import 'package:waqty_user_application/features/service_provider_details/service_provider_details/data/services/service_provider_details_service.dart';
 
 import '../api/api_consumer.dart';
 import '../api/app_interceptor.dart';
@@ -73,27 +67,9 @@ class ServicesLocator {
       () => ReseatPasswordService(apiConsumer: getIt()),
     );
 
-    /// Home
-    getIt.registerLazySingleton<HomeRepo>(() => HomeRepo(getIt()));
-    getIt.registerLazySingleton<HomeService>(
-      () => HomeService(apiConsumer: getIt()),
-    );
-
-    /// Home
-    getIt.registerLazySingleton<ServiceProviderDetailsRepo>(
-      () => ServiceProviderDetailsRepo(getIt()),
-    );
-    getIt.registerLazySingleton<ServiceProviderDetailsService>(
-      () => ServiceProviderDetailsService(apiConsumer: getIt()),
-    );
-
-    /// ExploreNearPeople
-    getIt.registerLazySingleton<ExploreNearPeopleRepo>(
-      () => ExploreNearPeopleRepo(getIt()),
-    );
-    getIt.registerLazySingleton<ExploreNearPeopleService>(
-      () => ExploreNearPeopleService(apiConsumer: getIt()),
-    );
+    // Home اتشال من هنا — الشاشة بقت شغالة على طبقة الـ mock لحد ما
+    // الربط يتعمل، والـ repo/service كانوا فاضيين (كلهم كومنت) فوجودهم
+    // في الـ DI كان بيوحي إن في ربط وهو مفيش.
 
     // /// RegisterOtp
     // getIt.registerLazySingleton<SenderRegisterOtpRepo>(

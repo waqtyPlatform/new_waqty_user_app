@@ -1,81 +1,235 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:waqty_user_application/config/routes/routes.dart';
 import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
+import 'package:waqty_user_application/core/utils/app_constant.dart';
+import 'package:waqty_user_application/core/utils/app_format.dart';
+import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
+import 'package:waqty_user_application/core/utils/app_spacing.dart';
+import 'package:waqty_user_application/core/utils/app_text_styles.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/widgets/service_provider_details_address_widget.dart';
-import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/widgets/service_provider_details_book_button_widget.dart';
-import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/widgets/service_provider_details_description_widget.dart';
-import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/widgets/service_provider_details_packages_widget.dart';
-import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/widgets/service_provider_details_pages_pagination_widget.dart';
-import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/widgets/service_provider_details_place_data_widget.dart';
-import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/widgets/service_provider_details_reviews_widget.dart';
-import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/widgets/service_provider_details_services_widget.dart';
-import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/widgets/service_provider_details_specialist_widget.dart';
-import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/widgets/service_provider_details_top_bar_actions_widget.dart';
-import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/widgets/service_provider_details_top_bar_widget.dart';
-import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/widgets/service_provider_details_working_hours_widget.dart';
+import 'package:waqty_user_application/core/widgets/app_section_header_widget.dart';
+import 'package:waqty_user_application/core/widgets/error_state_widget.dart';
+import 'package:waqty_user_application/core/widgets/loading_widget.dart';
+import 'package:waqty_user_application/features/booking/create_booking/ui/create_booking_sheet.dart';
+import 'package:waqty_user_application/features/service_provider_details/service_provider_details/logic/service_provider_details_cubit.dart';
+import 'package:waqty_user_application/features/service_provider_details/service_provider_details/logic/service_provider_details_state.dart';
+import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/widgets/service_provider_details_actions_widget.dart';
+import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/widgets/service_provider_details_branch_row_widget.dart';
+import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/widgets/service_provider_details_header_widget.dart';
+import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/widgets/service_provider_details_hours_widget.dart';
+import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/widgets/service_provider_details_service_row_widget.dart';
+import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/widgets/service_provider_details_specialists_widget.dart';
 
+/// ترتيب الصفحة اتغيّر عشان القرار مش التصفح.
+///
+/// القديم: صورة → أخصائيين → كلام → مواعيد → خريطة → **الخدمات**.
+/// يعني تقريبًا ٣ سحبات كاملة قبل ما توصل للحاجة اللي الزرار الأخضر
+/// المثبّت تحت بيطلب منك تشتريها.
+///
+/// الجديد: هوية → الفرع → المواعيد → **الخدمات** → أخصائيين.
+/// وفقرة الباقات وفقرة التقييمات اتشالوا خالص — الباقات كانت ٤ كروت
+/// بنفس السعر بزراير ميتة (وكانت الأسعار الوحيدة في الصفحة)، والتقييمات
+/// مراجعتين مكررين من نفس الشخص عن تشريعات المناخ.
 class ServiceProviderDetailsScreen extends StatelessWidget {
   const ServiceProviderDetailsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.whiteColor,
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              child: Stack(
-                alignment: Alignment.topCenter,
-                children: [
-                  ServiceProviderDetailsTopBarWidget(),
-                  ServiceProviderDetailsTopBarActionsWidget(),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 24.w),
-                    margin: EdgeInsets.only(top: 310.h),
-                    decoration: BoxDecoration(
-                      color: AppColors.whiteColor,
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(24.r),
-                        topRight: Radius.circular(24.r),
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        verticalSpace(32),
-                        ServiceProviderDetailsPlaceDataWidget(),
-                        verticalSpace(8),
-                        Divider(color: AppColors.greyColor50),
-                        verticalSpace(28),
-                        ServiceProviderDetailsSpecialistWidget(),
-                        verticalSpace(28),
-                        ServiceProviderDetailsPagesPaginationWidget(),
-                        verticalSpace(28),
-                        ServiceProviderDetailsDescriptionWidget(),
-                        verticalSpace(28),
-                        ServiceProviderDetailsWorkingHoursWidget(),
-                        verticalSpace(28),
-                        ServiceProviderDetailsAddressWidget(),
-                        verticalSpace(28),
-                        ServiceProviderDetailsServicesWidget(),
-                        verticalSpace(28),
-                        ServiceProviderDetailsPackagesWidget(),
-                        verticalSpace(28),
-                        ServiceProviderDetailsReviewsWidget(),
+      body: BlocBuilder<ServiceProviderDetailsCubit, ServiceProviderDetailsState>(
+        builder: (context, state) {
+          final cubit = ServiceProviderDetailsCubit.get(context);
 
-                        verticalSpace(40),
-                      ],
+          if (state is DetailsErrorState) {
+            return Center(
+              child: Padding(
+                padding: EdgeInsetsDirectional.symmetric(horizontal: 16.w),
+                child: ErrorStateWidget(
+                  message: state.message,
+                  onRetry: cubit.loadDetails,
+                ),
+              ),
+            );
+          }
+
+          final provider = cubit.provider;
+          if (provider == null) {
+            return const Center(
+              child: LoadingWidget(color: AppColors.greenColor500),
+            );
+          }
+
+          final branch = cubit.selectedBranch;
+
+          return CustomScrollView(
+            slivers: [
+              ServiceProviderDetailsHeaderWidget(
+                name: provider.name,
+                imageUrl: provider.imagePath,
+              ),
+
+              // الجزء ده كله «كلام» — بياخد هامش الصفحة من فوق.
+              SliverPadding(
+                padding: EdgeInsetsDirectional.only(
+                  start: AppSpacing.pageGutter.w,
+                  end: AppSpacing.pageGutter.w,
+                  top: AppSpacing.pageGutter.h,
+                ),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    Text(provider.name, style: AppTextStyles.titleLg),
+                    verticalSpace(AppSpacing.titleToSubtitle),
+                    Text(
+                      '${provider.categoryName} · ${provider.areaName} · ${AppFormat.distance(provider.distanceKm)}',
+                      style: AppTextStyles.bodyMdMuted,
                     ),
-                  ),
-                ],
+
+                    if (branch != null) ...[
+                      verticalSpace(AppSpacing.s16),
+                      ServiceProviderDetailsBranchRowWidget(
+                        branch: branch,
+                        hasMultipleBranches: cubit.branches.length > 1,
+                        onChangeBranch: () => _showBranchSheet(context, cubit),
+                      ),
+                      verticalSpace(AppSpacing.listRowGap),
+                      ServiceProviderDetailsHoursWidget(
+                        branch: branch,
+                        isExpanded: cubit.isWorkingHoursExpanded,
+                        onToggle: cubit.toggleWorkingHours,
+                      ),
+                      verticalSpace(AppSpacing.listRowGap),
+                      ServiceProviderDetailsActionsWidget(
+                        onCall: branch.phone.isEmpty
+                            ? null
+                            : () => AppConstant.openUrl('tel:${branch.phone}'),
+                        onDirections: () => AppConstant.openMap(
+                          branch.latitude,
+                          branch.longitude,
+                        ),
+                        // المشاركة محتاجة deep link — مش موجود لسه،
+                        // فبتتعرض باهتة مش شغالة وميتة.
+                        onShare: null,
+                      ),
+                    ],
+
+                    // العنوان شايل الفاصل ٤٠ بنفسه. قبل كده الفاصل قبل
+                    // «الخدمات» كان ٢٤ وقبل «الأخصائيين» ١٦ — **نفس
+                    // العلاقة البنيوية بقيمتين مختلفتين**.
+                    if (cubit.services.isNotEmpty)
+                      const AppSectionHeaderWidget(title: 'الخدمات'),
+                  ]),
+                ),
+              ),
+
+              // **الخدمات بره الهامش عن قصد.**
+              //
+              // كل صف بقى شايل الـ ١٦ بتاعه جواه، فلو قعد جوه الـ
+              // `SliverPadding` فوق كان الهامش هيتحسب مرتين (٣٢) والخط
+              // الشعري كان هيقف قبل حافة الشاشة بـ ١٦ — يعني بيرسم حد
+              // لكارت مش موجود. سلايفر لوحده أنضف من هامش سالب.
+              SliverList.builder(
+                itemCount: cubit.services.length,
+                itemBuilder: (context, index) {
+                  final service = cubit.services[index];
+
+                  return ServiceProviderDetailsServiceRowWidget(
+                    service: service,
+                    showHairline: index != cubit.services.length - 1,
+                    // صف الخدمة هو الضغطة الأولى من الأربعة. الـ sheet
+                    // بيفتح وخطوة الخدمة متخطية، لأن العميل اختارها
+                    // بالضغطة دي أصلاً.
+                    onTap: () => _openBooking(
+                      context,
+                      cubit,
+                      service.isCategory ? null : service.uuid,
+                    ),
+                  );
+                },
+              ),
+
+              SliverPadding(
+                padding: EdgeInsetsDirectional.only(
+                  start: AppSpacing.pageGutter.w,
+                  end: AppSpacing.pageGutter.w,
+                  bottom: AppSpacing.screenBottom.h,
+                ),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    if (cubit.employees.isNotEmpty) ...[
+                      const AppSectionHeaderWidget(title: 'الأخصائيين'),
+                      ServiceProviderDetailsSpecialistsWidget(
+                        employees: cubit.employees,
+                      ),
+                    ],
+                  ]),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _openBooking(
+    BuildContext context,
+    ServiceProviderDetailsCubit cubit,
+    String? serviceUuid,
+  ) async {
+    final didBook = await CreateBookingSheet.show(
+      context,
+      providerUuid: cubit.providerUuid,
+      providerName: cubit.provider?.name ?? '',
+      serviceUuid: serviceUuid,
+    );
+
+    if (didBook == true && context.mounted) {
+      Navigator.of(context).pushNamed(Routes.bookingSuccessScreen);
+    }
+  }
+
+  void _showBranchSheet(
+    BuildContext context,
+    ServiceProviderDetailsCubit cubit,
+  ) {
+    showModalBottomSheet<void>(
+      context: context,
+      useSafeArea: true,
+      builder: (_) => Padding(
+        padding: EdgeInsetsDirectional.only(
+          start: AppSpacing.s16.w,
+          end: AppSpacing.s16.w,
+          top: AppSpacing.s8.h,
+          bottom: AppSpacing.s16.h,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('اختر الفرع', style: AppTextStyles.sectionHeader),
+            verticalSpace(AppSpacing.s12),
+            ...cubit.branches.map(
+              (branch) => ListTile(
+                title: Text(branch.name),
+                subtitle: Text(
+                  '${branch.address} · ${AppFormat.distance(branch.distanceKm)}',
+                ),
+                trailing: branch.uuid == cubit.selectedBranch?.uuid
+                    ? const Icon(
+                        Icons.check_circle_rounded,
+                        color: AppSemanticColors.accent,
+                      )
+                    : null,
+                onTap: () {
+                  cubit.changeBranch(branch);
+                  Navigator.of(context).pop();
+                },
               ),
             ),
-          ),
-          ServiceProviderDetailsBookButtonWidget(),
-        ],
+          ],
+        ),
       ),
     );
   }

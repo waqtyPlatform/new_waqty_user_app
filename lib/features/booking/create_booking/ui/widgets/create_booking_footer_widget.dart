@@ -1,0 +1,105 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:waqty_user_application/core/utils/app_format.dart';
+import 'package:waqty_user_application/core/utils/app_motion.dart';
+import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
+import 'package:waqty_user_application/core/utils/app_shadows.dart';
+import 'package:waqty_user_application/core/utils/app_spacing.dart';
+import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/core/utils/spacing.dart';
+import 'package:waqty_user_application/core/widgets/button_widget.dart';
+
+/// الفوتر المثبّت — السعر والمدة على جنب، والزرار على الجنب التاني.
+///
+/// ده اللي بيخلي السعر ظاهر في كل خطوة. لو الحجز كان شاشات منفصلة
+/// مكانش ينفع نعمل ده من غير تكرار.
+class CreateBookingFooterWidget extends StatelessWidget {
+  final double? price;
+  final int? durationMinutes;
+  final String buttonLabel;
+  final bool isEnabled;
+  final bool isLoading;
+  final VoidCallback onPressed;
+
+  const CreateBookingFooterWidget({
+    super.key,
+    required this.buttonLabel,
+    required this.isEnabled,
+    required this.onPressed,
+    this.price,
+    this.durationMinutes,
+    this.isLoading = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsetsDirectional.symmetric(
+        horizontal: AppSpacing.pageGutter.w,
+        vertical: AppSpacing.cardPadding.h,
+      ),
+      // مش `const` — الظلال بتتقاس بـ `.r` فقيمها بتتحسب وقت التشغيل.
+      decoration: BoxDecoration(
+        color: AppSemanticColors.surfaceRaised,
+        // **حد حاد تحت ظل** — دي واحدة من التلات حالات اللي بيفضل فيها
+        // حد. الظل بيقول «الفوتر طايف»، والحد بيقطع الحافة بحدّة فبيبان
+        // إن المحتوى بيعدّي من تحته.
+        border: Border(top: BorderSide(color: AppSemanticColors.border)),
+        boxShadow: AppShadows.floatingUp,
+      ),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          children: [
+            if (price != null)
+              // السعر بيتغيّر لما تختار ميعاد بفرق سعر — بيتزحلق من تحت
+              // مع تلاشي بدل ما الرقم يتبدّل فجأة.
+              AnimatedSwitcher(
+                duration: AppMotion.base,
+                switchInCurve: AppMotion.standard,
+                transitionBuilder: (child, animation) => FadeTransition(
+                  opacity: animation,
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0, 0.35),
+                      end: Offset.zero,
+                    ).animate(animation),
+                    child: child,
+                  ),
+                ),
+                child: Column(
+                  key: ValueKey('${price}_$durationMinutes'),
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      AppFormat.money(price!),
+                      style: AppTextStyles.cardTitle,
+                    ),
+                    if (durationMinutes != null)
+                      Text(
+                        AppFormat.duration(durationMinutes!),
+                        style: AppTextStyles.caption,
+                      ),
+                  ],
+                ),
+              ),
+            horizontalSpace(AppSpacing.listRowGap),
+            Expanded(
+              child: ButtonWidget(
+                isLoading: isLoading,
+                isEnabled: isEnabled,
+                buttonText: buttonLabel,
+                backGroundColor: AppSemanticColors.accent,
+                borderColor: AppSemanticColors.accent,
+                textStyle: AppTextStyles.button,
+                buttonHeight: 52.h,
+                onPressed: onPressed,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

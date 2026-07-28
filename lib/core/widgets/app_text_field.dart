@@ -1,3 +1,5 @@
+import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/core/utils/app_radius.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../utils/app_colors_white_theme.dart';
@@ -94,19 +96,19 @@ class AppTextFormField extends StatelessWidget {
             focusedBorder ??
             OutlineInputBorder(
               borderSide: BorderSide(color: AppColors.greyColor200, width: 1.3),
-              borderRadius: BorderRadius.circular(20.r),
+              borderRadius: BorderRadius.circular(AppRadius.l.r),
             ),
         focusedBorder:
             focusedBorder ??
             OutlineInputBorder(
               borderSide: BorderSide(color: AppColors.greyColor200, width: 1.3),
-              borderRadius: BorderRadius.circular(20.r),
+              borderRadius: BorderRadius.circular(AppRadius.l.r),
             ),
         enabledBorder:
             enabledBorder ??
             OutlineInputBorder(
               borderSide: BorderSide(color: AppColors.greyColor200, width: 1.3),
-              borderRadius: BorderRadius.circular(20.r),
+              borderRadius: BorderRadius.circular(AppRadius.l.r),
             ),
         errorBorder:
             errorBorder ??
@@ -115,7 +117,7 @@ class AppTextFormField extends StatelessWidget {
                 color: AppColors.errorColor100,
                 width: 1.3,
               ),
-              borderRadius: BorderRadius.circular(20.r),
+              borderRadius: BorderRadius.circular(AppRadius.l.r),
             ),
         focusedErrorBorder:
             focusedErrorBorder ??
@@ -124,9 +126,9 @@ class AppTextFormField extends StatelessWidget {
                 color: AppColors.errorColor100,
                 width: 1.3,
               ),
-              borderRadius: BorderRadius.circular(20.r),
+              borderRadius: BorderRadius.circular(AppRadius.l.r),
             ),
-        hintStyle: hintStyle ?? TextStyles.font16BlackColorWeight400,
+        hintStyle: hintStyle ?? AppTextStyles.bodyLg,
         hintText: hintText,
         prefixIcon: prefixIcon,
         suffixIcon: suffixIcon,
@@ -135,7 +137,7 @@ class AppTextFormField extends StatelessWidget {
       ),
       obscureText: isObscureText ?? false,
       onTap: onTap,
-      style: textStyle ?? TextStyles.font16BlackColorWeight400,
+      style: textStyle ?? AppTextStyles.bodyLg,
       validator: (value) {
         return validator(value);
       },

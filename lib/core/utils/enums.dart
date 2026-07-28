@@ -1,8 +1,3 @@
-
-
-
-
-
 enum RequestsType {
   noInternet,
   signIn,
@@ -16,4 +11,3 @@ enum RequestsType {
   draftOrders,
   ninjaAccepted,
 }
-

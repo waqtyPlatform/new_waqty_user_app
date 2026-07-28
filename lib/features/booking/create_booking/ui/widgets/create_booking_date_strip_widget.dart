@@ -1,0 +1,237 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
+import 'package:waqty_user_application/core/utils/app_format.dart';
+import 'package:waqty_user_application/core/utils/app_motion.dart';
+import 'package:waqty_user_application/core/utils/app_radius.dart';
+import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
+import 'package:waqty_user_application/core/utils/app_spacing.dart';
+import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/core/utils/spacing.dart';
+import 'package:waqty_user_application/core/widgets/app_surface_widget.dart';
+import 'package:waqty_user_application/core/widgets/directional_chevron_widget.dart';
+
+/// شريط التواريخ الأفقي.
+///
+/// **مش `showDatePicker`** — الـ picker بتاع النظام مش بيعرف يقول «اليوم ده
+/// مليان»، وبيفتح dialog فوق sheet، وشكله بيتخانق مع تصميم الأبلكيشن.
+///
+/// **الأيام المليانة بتفضل ظاهرة، مش بتتشال.** الفراغ نفسه بيعلّم العميل
+/// إيقاع المحل (مقفول الجمعة مثلاً). لو شلناها الشريط بيكدب ويقول إن
+/// كل الأيام متاحة.
+class CreateBookingDateStripWidget extends StatelessWidget {
+  final List<DateTime> availableDates;
+  final DateTime? selectedDate;
+  final DateTime currentMonth;
+  final bool canGoToPreviousMonth;
+  final ValueChanged<DateTime> onDateTap;
+  final ValueChanged<int> onMonthChange;
+
+  const CreateBookingDateStripWidget({
+    super.key,
+    required this.availableDates,
+    required this.selectedDate,
+    required this.currentMonth,
+    required this.canGoToPreviousMonth,
+    required this.onDateTap,
+    required this.onMonthChange,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final days = _daysOfMonth();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              AppFormat.monthYear(currentMonth),
+              style: AppTextStyles.bodyMdStrong,
+            ),
+            const Spacer(),
+            _ArrowButton(
+              // «الشهر اللي فات» = عكس اتجاه القراءة
+              direction: ChevronDirection.back,
+              // مانرجعش لشهر فات — مواعيده عدّت أصلاً
+              onTap: canGoToPreviousMonth ? () => onMonthChange(-1) : null,
+            ),
+            horizontalSpace(4),
+            _ArrowButton(
+              direction: ChevronDirection.forward,
+              onTap: () => onMonthChange(1),
+            ),
+          ],
+        ),
+        verticalSpace(AppSpacing.headerToContent),
+        SizedBox(
+          // كان ٧٢ والمحتوى بياخد ٤٦٫٨ — **٣٥٪ من الخلية فاضية**.
+          height: 64.h,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: days.length,
+            separatorBuilder: (_, __) => horizontalSpace(AppSpacing.chipGap),
+            itemBuilder: (context, index) {
+              final day = days[index];
+              final isAvailable = availableDates.any((d) => _isSame(d, day));
+              final isSelected =
+                  selectedDate != null && _isSame(selectedDate!, day);
+              return _DayCell(
+                day: day,
+                isAvailable: isAvailable,
+                isSelected: isSelected,
+                isToday: _isSame(day, DateTime.now()),
+                onTap: isAvailable ? () => onDateTap(day) : null,
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// أيام الشهر من النهاردة لقدام — مش من أول الشهر.
+  List<DateTime> _daysOfMonth() {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final daysInMonth = DateUtils.getDaysInMonth(
+      currentMonth.year,
+      currentMonth.month,
+    );
+
+    final result = <DateTime>[];
+    for (var i = 1; i <= daysInMonth; i++) {
+      final day = DateTime(currentMonth.year, currentMonth.month, i);
+      if (day.isBefore(today)) continue;
+      result.add(day);
+    }
+    return result;
+  }
+
+  bool _isSame(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
+}
+
+class _ArrowButton extends StatelessWidget {
+  final ChevronDirection direction;
+  final VoidCallback? onTap;
+
+  const _ArrowButton({required this.direction, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: AppSpacing.touchTarget.r,
+      width: AppSpacing.touchTarget.r,
+      child: IconButton(
+        onPressed: onTap,
+        icon: DirectionalChevronWidget(
+          direction: direction,
+          size: 24,
+          color: onTap == null
+              ? AppColors.greyColor200
+              : AppSemanticColors.textPrimary,
+        ),
+      ),
+    );
+  }
+}
+
+class _DayCell extends StatelessWidget {
+  final DateTime day;
+  final bool isAvailable;
+  final bool isSelected;
+  final bool isToday;
+  final VoidCallback? onTap;
+
+  const _DayCell({
+    required this.day,
+    required this.isAvailable,
+    required this.isSelected,
+    required this.isToday,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // اليوم المليان: رمادي غامق كفاية يتقرا + شخطة مايلة — عشان الحالة
+    // تبان حتى لو الشاشة أبيض وأسود أو العميل عنده عمى ألوان.
+    final textColor = isSelected
+        ? AppSemanticColors.textOnAccent
+        : isAvailable
+        ? AppSemanticColors.textPrimary
+        : AppSemanticColors.textSecondary;
+
+    return AppSurfaceWidget(
+      onTap: onTap,
+      // المتاح **مرفوع** والمليان **غاطس** — الفرق بقى في العمق مش في
+      // حد رمادي تباينه ٧٪ تقريبًا مش باين على 3x.
+      level: isAvailable || isSelected
+          ? AppElevation.raised
+          : AppElevation.sunken,
+      color: isSelected ? AppSemanticColors.accent : null,
+      radius: AppRadius.m,
+      width: 56.w,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // النص بيتحرّك مع الخلفية — من غير كده اللون بينطّ
+              // والصندوق بيتلاشى، فالحركة بتحس نص خلصانة.
+              AnimatedDefaultTextStyle(
+                duration: AppMotion.base,
+                curve: AppMotion.standard,
+                style: AppTextStyles.caption.copyWith(color: textColor),
+                child: Text(AppFormat.shortDayName(day)),
+              ),
+              verticalSpace(AppSpacing.s4),
+              AnimatedDefaultTextStyle(
+                duration: AppMotion.base,
+                curve: AppMotion.standard,
+                style: AppTextStyles.cardTitle.copyWith(color: textColor),
+                child: Text(AppFormat.digits(day.day)),
+              ),
+            ],
+          ),
+          if (!isAvailable)
+            Positioned.fill(child: CustomPaint(painter: _StrikePainter())),
+          if (isToday)
+            PositionedDirectional(
+              bottom: AppSpacing.s8.h,
+              child: Container(
+                height: 2.h,
+                width: 16.w,
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? AppSemanticColors.textOnAccent
+                      : AppSemanticColors.accent,
+                  borderRadius: BorderRadius.circular(AppRadius.pill.r),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// شخطة مايلة على اليوم المليان.
+class _StrikePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = AppColors.greyColor200
+      ..strokeWidth = 1.2;
+    canvas.drawLine(
+      Offset(size.width * .22, size.height * .76),
+      Offset(size.width * .78, size.height * .24),
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
