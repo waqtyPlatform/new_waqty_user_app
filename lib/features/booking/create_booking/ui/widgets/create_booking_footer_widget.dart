@@ -15,7 +15,14 @@ import 'package:waqty_user_application/core/widgets/button_widget.dart';
 /// مكانش ينفع نعمل ده من غير تكرار.
 class CreateBookingFooterWidget extends StatelessWidget {
   final double? price;
-  final int? durationMinutes;
+
+  /// السطر اللي تحت السعر — «٤٥ دقيقة» لخدمة واحدة، أو
+  /// «٣ خدمات · ١ س ٣٠ د» للسلة.
+  ///
+  /// بيتحسب برّه بدل ما يبقى `durationMinutes` هنا: الفوتر مابيعرفش
+  /// السلة فيها كام حاجة، والمكان الوحيد اللي بيعرف هو الـ cubit.
+  final String? metaLabel;
+
   final String buttonLabel;
   final bool isEnabled;
   final bool isLoading;
@@ -27,7 +34,7 @@ class CreateBookingFooterWidget extends StatelessWidget {
     required this.isEnabled,
     required this.onPressed,
     this.price,
-    this.durationMinutes,
+    this.metaLabel,
     this.isLoading = false,
   });
 
@@ -68,7 +75,7 @@ class CreateBookingFooterWidget extends StatelessWidget {
                   ),
                 ),
                 child: Column(
-                  key: ValueKey('${price}_$durationMinutes'),
+                  key: ValueKey('${price}_$metaLabel'),
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -76,11 +83,8 @@ class CreateBookingFooterWidget extends StatelessWidget {
                       AppFormat.money(price!),
                       style: AppTextStyles.cardTitle,
                     ),
-                    if (durationMinutes != null)
-                      Text(
-                        AppFormat.duration(durationMinutes!),
-                        style: AppTextStyles.caption,
-                      ),
+                    if (metaLabel != null)
+                      Text(metaLabel!, style: AppTextStyles.caption),
                   ],
                 ),
               ),

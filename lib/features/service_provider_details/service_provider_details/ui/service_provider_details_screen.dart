@@ -16,6 +16,7 @@ import 'package:waqty_user_application/features/booking/create_booking/ui/create
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/logic/service_provider_details_cubit.dart';
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/logic/service_provider_details_state.dart';
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/widgets/service_provider_details_actions_widget.dart';
+import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/widgets/service_provider_details_booking_bar_widget.dart';
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/widgets/service_provider_details_branch_row_widget.dart';
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/widgets/service_provider_details_header_widget.dart';
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/widgets/service_provider_details_hours_widget.dart';
@@ -37,13 +38,13 @@ class ServiceProviderDetailsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: BlocBuilder<ServiceProviderDetailsCubit, ServiceProviderDetailsState>(
-        builder: (context, state) {
-          final cubit = ServiceProviderDetailsCubit.get(context);
+    return BlocBuilder<ServiceProviderDetailsCubit, ServiceProviderDetailsState>(
+      builder: (context, state) {
+        final cubit = ServiceProviderDetailsCubit.get(context);
 
-          if (state is DetailsErrorState) {
-            return Center(
+        if (state is DetailsErrorState) {
+          return Scaffold(
+            body: Center(
               child: Padding(
                 padding: EdgeInsetsDirectional.symmetric(horizontal: 16.w),
                 child: ErrorStateWidget(
@@ -51,19 +52,33 @@ class ServiceProviderDetailsScreen extends StatelessWidget {
                   onRetry: cubit.loadDetails,
                 ),
               ),
-            );
-          }
+            ),
+          );
+        }
 
-          final provider = cubit.provider;
-          if (provider == null) {
-            return const Center(
-              child: LoadingWidget(color: AppColors.greenColor500),
-            );
-          }
+        final provider = cubit.provider;
+        if (provider == null) {
+          return const Scaffold(
+            body: Center(child: LoadingWidget(color: AppColors.greenColor500)),
+          );
+        }
 
-          final branch = cubit.selectedBranch;
+        final branch = cubit.selectedBranch;
 
-          return CustomScrollView(
+        return Scaffold(
+          // الشريط المثبّت جاي من `bottomNavigationBar` مش `Stack`.
+          // الـ Scaffold بيقصّ ارتفاع الـ body بمقداره لوحده، فآخر صف في
+          // الليستة مابيتغطّاش — والحل بالـ Stack كان بيحتاج حشوة سفلية
+          // مكتوبة بالإيد لازم تتظبط كل ما الشريط يتغيّر.
+          bottomNavigationBar: cubit.services.isEmpty
+              ? null
+              : ServiceProviderDetailsBookingBarWidget(
+                  services: cubit.services,
+                  // من غير خدمة محددة — الـ sheet بيفتح على قايمة
+                  // الخدمات بالاختيار المتعدد.
+                  onBook: () => _openBooking(context, cubit, null),
+                ),
+          body: CustomScrollView(
             slivers: [
               ServiceProviderDetailsHeaderWidget(
                 name: provider.name,
@@ -167,9 +182,9 @@ class ServiceProviderDetailsScreen extends StatelessWidget {
                 ),
               ),
             ],
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 

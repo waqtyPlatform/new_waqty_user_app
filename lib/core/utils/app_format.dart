@@ -141,4 +141,25 @@ class AppFormat {
   /// «١٫٢ كم»
   static String distance(double km) =>
       '${digits(km.toStringAsFixed(1)).replaceAll('.', '٫')} كم';
+
+  /// «2026-07-28T18:00:00+02:00» — الصيغة اللي السيرفر بيقبلها في
+  /// `visits.*.items.*.start_at` (`Y-m-d\TH:i:sP` في Laravel).
+  ///
+  /// مش `toIso8601String()`: دي بتطلع `...T18:00:00.000` من غير offset
+  /// للتوقيت المحلي، والسيرفر بيرفضها بـ 422.
+  ///
+  /// **دي fallback للـ mock بس.** لما الـ API يترتبط، النص الخام الراجع
+  /// من السيرفر بيتحفظ في `SlotUiModel.startAtRaw` وبيتبعت زي ما هو —
+  /// إعادة التنسيق بتخاطر بإزاحة في المنطقة الزمنية.
+  static String serverDateTime(DateTime dt) {
+    String two(int v) => v.toString().padLeft(2, '0');
+
+    final offset = dt.timeZoneOffset;
+    final sign = offset.isNegative ? '-' : '+';
+    final absolute = offset.abs();
+
+    return '${dt.year}-${two(dt.month)}-${two(dt.day)}'
+        'T${two(dt.hour)}:${two(dt.minute)}:${two(dt.second)}'
+        '$sign${two(absolute.inHours)}:${two(absolute.inMinutes % 60)}';
+  }
 }

@@ -9,6 +9,7 @@ import 'package:waqty_user_application/core/models/branch_ui_model.dart';
 import 'package:waqty_user_application/core/models/employee_ui_model.dart';
 import 'package:waqty_user_application/core/models/service_ui_model.dart';
 import 'package:waqty_user_application/core/models/slot_ui_model.dart';
+import 'package:waqty_user_application/features/booking/create_booking/logic/booking_draft_item.dart';
 import 'package:waqty_user_application/features/booking/create_booking/logic/create_booking_state.dart';
 
 /// خطوات الحجز.
@@ -17,6 +18,20 @@ import 'package:waqty_user_application/features/booking/create_booking/logic/cre
 /// الطبيعي، فالحالة الشائعة خطوتين مش تلاتة.
 enum BookingStep { service, dateTime, confirm }
 
+/// الحجز — **سلة خدمات، مش خدمة واحدة**.
+///
+/// السيرفر بيقبل من زمان لحد ٢٠ زيارة × ٥٠ خدمة في الحجز الواحد
+/// (`visits[].items[]` في `StoreBookingRequest`)، ونفس الـ payload اللي
+/// داشبورد المزود بيبعته. الموبايل كان بيستخدم الحالة الأبسط بس —
+/// خدمة واحدة — والسيرفر كان بيلفّها في زيارة واحدة ويكمّل.
+///
+/// ## الزيارات بتتحدد لوحدها
+///
+/// الزيارة في السيرفر **تجميعة مش معلومة زيادة**: كل عنصر شايل تاريخه
+/// بنفسه و`scheduled_start_at` بتاعة الزيارة بتتحسب `min/max` للعناصر.
+/// فبنجمّع العناصر **باليوم** عند الإرسال بدل ما نعلّم العميل مفهوم
+/// «زيارة» وهو بيحجز. هو بيضيف خدمات ويحدّد ميعاد لكل واحدة، وبيشوف
+/// كلمة «الزيارة» في التأكيد بس كعنوان يوم.
 class CreateBookingCubit extends Cubit<CreateBookingState> {
   CreateBookingCubit({
     required this.providerUuid,
@@ -28,7 +43,8 @@ class CreateBookingCubit extends Cubit<CreateBookingState> {
     services = MockServices.ofProvider(providerUuid);
 
     if (initialServiceUuid != null && initialServiceUuid.isNotEmpty) {
-      selectedService = MockServices.byUuid(initialServiceUuid);
+      final service = MockServices.byUuid(initialServiceUuid);
+      _addItem(service);
       currentStep = BookingStep.dateTime;
     }
   }
@@ -42,73 +58,196 @@ class CreateBookingCubit extends Cubit<CreateBookingState> {
   BranchUiModel? selectedBranch;
 
   List<ServiceUiModel> services = <ServiceUiModel>[];
-  ServiceUiModel? selectedService;
 
-  List<EmployeeUiModel> employees = <EmployeeUiModel>[];
-
-  /// الافتراضي «أي أخصائي متاح».
-  ///
-  /// ده أهم قرار في الفلو كله: لما نطلب من العميل يختار أخصائي الأول،
-  /// بنجبره على تفضيل هو أصلاً ملوش، **وبنقلّل المواعيد المتاحة قبل ما
-  /// يشوفها** — وده السبب الأول اللي بيخلي حد يشوف «مفيش مواعيد» وهي
-  /// مش صح. والسيرفر بيختار لوحده لما نبعتله فاضي.
-  EmployeeUiModel selectedEmployee = EmployeeUiModel.anyAvailable;
-
-  DateTime currentMonth = DateTime(DateTime.now().year, DateTime.now().month);
-  List<DateTime> availableDates = <DateTime>[];
-  DateTime? selectedDate;
-
-  List<SlotUiModel> slots = <SlotUiModel>[];
-  SlotUiModel? selectedSlot;
-
-  /// الميعاد اللي اتحجز من حد تاني — بيتشخط في مكانه.
-  SlotUiModel? takenSlot;
+  /// السلة. الترتيب = ترتيب الاختيار.
+  final List<BookingDraftItem> items = <BookingDraftItem>[];
 
   final TextEditingController notesController = TextEditingController();
   bool isNotesExpanded = false;
 
   /// شهرين محمّلين قدام. الـ key: «فرع|خدمة|أخصائي|شهر».
+  ///
+  /// **مشترك بين كل عناصر السلة** — خدمتين بنفس المدة ونفس الأخصائي
+  /// بيستفيدوا من نفس الطلب بدل ما كل واحدة تروح للسيرفر لوحدها.
   final Map<String, List<DateTime>> _datesCache = <String, List<DateTime>>{};
+
+  int _keyCounter = 0;
+
+  // ── السلة ────────────────────────────────────────────────────────────
+
+  BookingDraftItem? itemByKey(String key) {
+    for (final item in items) {
+      if (item.key == key) return item;
+    }
+    return null;
+  }
+
+  bool isServiceSelected(String serviceUuid) =>
+      items.any((i) => i.service.uuid == serviceUuid);
+
+  void _addItem(ServiceUiModel service) {
+    final now = DateTime.now();
+    items.add(
+      BookingDraftItem(
+        key: 'item-${_keyCounter++}',
+        service: service,
+        currentMonth: DateTime(now.year, now.month),
+      ),
+    );
+  }
+
+  /// إضافة أو شيل خدمة من السلة.
+  void toggleService(ServiceUiModel service) {
+    final existing = items.where((i) => i.service.uuid == service.uuid);
+    if (existing.isEmpty) {
+      _addItem(service);
+    } else {
+      items.removeWhere((i) => i.service.uuid == service.uuid);
+    }
+    emit(OnSelectionChangedState());
+  }
+
+  void removeItem(String key) {
+    items.removeWhere((i) => i.key == key);
+    _boundaryOverrides.remove(key);
+
+    // شِلنا الكارت المفتوح؟ نفتح اللي بعده بدل ما الخطوة تفضل كلها مقفولة.
+    if (items.isNotEmpty && !items.any((i) => i.isExpanded)) {
+      _expandNextUnscheduled();
+      return;
+    }
+    emit(OnSelectionChangedState());
+  }
+
+  // ── الأكورديون ───────────────────────────────────────────────────────
+
+  /// فتح كارت — وقفل الباقي.
+  ///
+  /// كارت واحد في المرة بالقصد: تلات خدمات كل واحدة فيها صف أخصائي وشريط
+  /// تواريخ وشبكة مواعيد بيبقوا صفحة مالهاش نهاية على موبايل. والقفل
+  /// بيخلي الـ N خدمات يتحسّوا **تتابع موجّه** مش استمارة.
+  void expandItem(String key) {
+    for (final item in items) {
+      item.isExpanded = item.key == key;
+    }
+    emit(OnSelectionChangedState());
+
+    final item = itemByKey(key);
+    if (item != null) _ensureLoaded(item);
+  }
+
+  void collapseAll() {
+    for (final item in items) {
+      item.isExpanded = false;
+    }
+    emit(OnSelectionChangedState());
+  }
+
+  /// **بيعمل `emit` بنفسه — اللي بينده ماينفعش يعمل واحد بعده.**
+  ///
+  /// `_ensureLoaded` بينده `loadDatesFor` اللي بيعمل `emit(LoadingDatesState)`
+  /// **بشكل متزامن** قبل ما يستنى الشبكة. فلو اللي نادانا عمل
+  /// `emit(OnSelectionChangedState)` بعدينا، بيدهس حالة التحميل — والكارت
+  /// بيتفتح على «اليوم ده مليان» بدل الـ skeleton لحد ما الداتا توصل.
+  void _expandNextUnscheduled() {
+    for (final item in items) {
+      item.isExpanded = false;
+    }
+    final next = items.where((i) => !i.isScheduled);
+    if (next.isEmpty) {
+      emit(OnSelectionChangedState());
+      return;
+    }
+
+    next.first.isExpanded = true;
+    emit(OnSelectionChangedState());
+    _ensureLoaded(next.first);
+  }
 
   // ── الاختيارات ───────────────────────────────────────────────────────
 
   void selectBranch(BranchUiModel branch) {
     selectedBranch = branch;
-    // تغيير الفرع بيلغي كل اللي بعده — الأخصائيين والمواعيد بيختلفوا.
-    _clearFrom(clearService: false);
+
+    // الفرع اتغيّر — الأخصائيين والمواعيد كلها بتختلف، فكل اختيارات
+    // التوقيت في السلة بتتلغي. الخدمات نفسها بتفضل.
+    for (final item in items) {
+      _clearScheduling(item);
+    }
+    _datesCache.clear();
     emit(OnSelectionChangedState());
   }
 
-  void selectService(ServiceUiModel service) {
-    selectedService = service;
-    _clearFrom(clearService: false);
+  void selectEmployee(String key, EmployeeUiModel employee) {
+    final item = itemByKey(key);
+    if (item == null) return;
+
+    item.employee = employee;
+    // الأخصائي اتغيّر — التواريخ والمواعيد لازم تتحمّل من الأول، بس
+    // الشهر بيفضل زي ما هو.
+    item.availableDates = <DateTime>[];
+    item.selectedDate = null;
+    item.slots = <SlotUiModel>[];
+    item.selectedSlot = null;
+    emit(OnSelectionChangedState());
+    loadDatesFor(key);
+  }
+
+  void selectDate(String key, DateTime date) {
+    final item = itemByKey(key);
+    if (item == null) return;
+
+    item.selectedDate = date;
+    item.slots = <SlotUiModel>[];
+    item.selectedSlot = null;
+    item.takenSlot = null;
+    emit(OnSelectionChangedState());
+    loadSlotsFor(key);
+  }
+
+  /// اختيار ميعاد — **وبعديها الكارت بيقفل واللي بعده بيتفتح لوحده**.
+  ///
+  /// ده اللي بيحوّل السلة من استمارة لتتابع. من غيره العميل بيختار ميعاد
+  /// وبعدين لازم يفكّر «طب وبعدين؟» ويدوّر بنفسه على الكارت التاني.
+  void selectSlot(String key, SlotUiModel slot) {
+    final item = itemByKey(key);
+    if (item == null) return;
+
+    item.selectedSlot = slot;
+
+    // التعديل اليدوي على الحد كان جواب على أوقات بعينها. الوقت اتغيّر،
+    // فالجواب رجع للفارق يقرره.
+    _boundaryOverrides.remove(key);
+
+    if (items.any((i) => !i.isScheduled)) {
+      // بيعمل الـ emit بنفسه — بص على التعليق فوقه.
+      _expandNextUnscheduled();
+      return;
+    }
+
+    item.isExpanded = false;
     emit(OnSelectionChangedState());
   }
 
-  void selectEmployee(EmployeeUiModel employee) {
-    selectedEmployee = employee;
-    // الأخصائي اتغيّر — التواريخ والمواعيد لازم تتحمّل من الأول،
-    // بس الشهر بيفضل زي ما هو.
-    availableDates = <DateTime>[];
-    selectedDate = null;
-    slots = <SlotUiModel>[];
-    selectedSlot = null;
+  void changeMonth(String key, int offset) {
+    final item = itemByKey(key);
+    if (item == null) return;
+
+    item.currentMonth = DateTime(
+      item.currentMonth.year,
+      item.currentMonth.month + offset,
+    );
+    item.selectedDate = null;
+    item.slots = <SlotUiModel>[];
+    item.selectedSlot = null;
     emit(OnSelectionChangedState());
-    loadDates();
+    loadDatesFor(key);
   }
 
-  void selectDate(DateTime date) {
-    selectedDate = date;
-    slots = <SlotUiModel>[];
-    selectedSlot = null;
-    takenSlot = null;
-    emit(OnSelectionChangedState());
-    loadSlots();
-  }
-
-  void selectSlot(SlotUiModel slot) {
-    selectedSlot = slot;
-    emit(OnSelectionChangedState());
+  /// مانرجعش لشهر فات — المواعيد اللي عدّت مالهاش لازمة.
+  bool canGoToPreviousMonth(BookingDraftItem item) {
+    final now = DateTime.now();
+    return item.currentMonth.isAfter(DateTime(now.year, now.month));
   }
 
   void toggleNotes() {
@@ -116,15 +255,14 @@ class CreateBookingCubit extends Cubit<CreateBookingState> {
     emit(OnSelectionChangedState());
   }
 
-  void _clearFrom({required bool clearService}) {
-    if (clearService) selectedService = null;
-    employees = <EmployeeUiModel>[];
-    selectedEmployee = EmployeeUiModel.anyAvailable;
-    availableDates = <DateTime>[];
-    selectedDate = null;
-    slots = <SlotUiModel>[];
-    selectedSlot = null;
-    takenSlot = null;
+  void _clearScheduling(BookingDraftItem item) {
+    item.employees = <EmployeeUiModel>[];
+    item.employee = EmployeeUiModel.anyAvailable;
+    item.availableDates = <DateTime>[];
+    item.selectedDate = null;
+    item.slots = <SlotUiModel>[];
+    item.selectedSlot = null;
+    item.takenSlot = null;
   }
 
   // ── الخطوات ──────────────────────────────────────────────────────────
@@ -132,14 +270,22 @@ class CreateBookingCubit extends Cubit<CreateBookingState> {
   void goToStep(BookingStep step) {
     currentStep = step;
     emit(OnStepChangedState());
+    if (step == BookingStep.dateTime) enterDateTimeStep();
+  }
+
+  /// الرجوع لخطوة المواعيد **وفتح خدمة بعينها** — «تغيير» في التأكيد.
+  void goToItem(String key) {
+    currentStep = BookingStep.dateTime;
+    emit(OnStepChangedState());
+    expandItem(key);
   }
 
   void nextStep() {
-    if (currentStep == BookingStep.service && selectedService != null) {
+    if (currentStep == BookingStep.service && items.isNotEmpty) {
       currentStep = BookingStep.dateTime;
       emit(OnStepChangedState());
-      loadDateTimeStep();
-    } else if (currentStep == BookingStep.dateTime && selectedSlot != null) {
+      enterDateTimeStep();
+    } else if (currentStep == BookingStep.dateTime && _allScheduled) {
       currentStep = BookingStep.confirm;
       emit(OnStepChangedState());
     }
@@ -154,30 +300,48 @@ class CreateBookingCubit extends Cubit<CreateBookingState> {
     emit(OnStepChangedState());
   }
 
+  bool get _allScheduled =>
+      items.isNotEmpty && items.every((i) => i.isScheduled);
+
   bool get canGoNext => switch (currentStep) {
-    BookingStep.service => selectedService != null && selectedBranch != null,
-    BookingStep.dateTime => selectedSlot != null,
+    BookingStep.service => items.isNotEmpty && selectedBranch != null,
+    BookingStep.dateTime => _allScheduled,
     BookingStep.confirm => true,
   };
 
-  // ── تحميل المواعيد ───────────────────────────────────────────────────
+  // ── التحميل ──────────────────────────────────────────────────────────
 
-  Future<void> loadDateTimeStep() async {
-    // TODO(api): GET /api/public/bookings/available-employees
-    employees = MockEmployees.forService(selectedService?.uuid ?? '');
-    await loadDates();
+  /// أول ما ندخل خطوة المواعيد بنفتح أول خدمة من غير ميعاد ونحمّلها.
+  void enterDateTimeStep() {
+    if (items.isEmpty) return;
+    if (items.any((i) => i.isExpanded)) return;
+    // بيعمل الـ emit بنفسه.
+    _expandNextUnscheduled();
   }
 
-  Future<void> loadDates() async {
-    emit(LoadingDatesState());
+  Future<void> _ensureLoaded(BookingDraftItem item) async {
+    if (item.employees.isEmpty) {
+      // TODO(api): GET /api/public/bookings/available-employees
+      item.employees = MockEmployees.forService(item.service.uuid);
+    }
+    if (item.availableDates.isEmpty) {
+      await loadDatesFor(item.key);
+    }
+  }
 
-    final key = _cacheKey(currentMonth);
-    if (_datesCache.containsKey(key)) {
-      availableDates = _datesCache[key]!;
+  Future<void> loadDatesFor(String key) async {
+    final item = itemByKey(key);
+    if (item == null) return;
+
+    emit(LoadingDatesState(itemKey: key));
+
+    final cacheKey = _cacheKey(item, item.currentMonth);
+    if (_datesCache.containsKey(cacheKey)) {
+      item.availableDates = _datesCache[cacheKey]!;
     } else {
       // TODO(api): GET /api/public/bookings/available-dates?month=
       final result = await MockSource.fetchList(
-        MockSlots.availableDates(month: currentMonth),
+        MockSlots.availableDates(month: item.currentMonth),
       );
 
       final failure = result.fold<String?>((l) => l, (_) => null);
@@ -186,95 +350,229 @@ class CreateBookingCubit extends Cubit<CreateBookingState> {
         return;
       }
 
-      availableDates = result.getOrElse(() => <DateTime>[]);
-      _datesCache[key] = availableDates;
+      item.availableDates = result.getOrElse(() => <DateTime>[]);
+      _datesCache[cacheKey] = item.availableDates;
     }
 
     // الشهر ده فاضي؟ منسيبش العميل يكتشف الفراغ بنفسه — ننط لأقرب
     // شهر فيه مواعيد.
-    if (availableDates.isEmpty) {
+    if (item.availableDates.isEmpty) {
       final firstAvailable = MockSlots.firstAvailableDate();
       if (firstAvailable != null &&
-          (firstAvailable.month != currentMonth.month ||
-              firstAvailable.year != currentMonth.year)) {
-        currentMonth = DateTime(firstAvailable.year, firstAvailable.month);
-        await loadDates();
+          (firstAvailable.month != item.currentMonth.month ||
+              firstAvailable.year != item.currentMonth.year)) {
+        item.currentMonth = DateTime(firstAvailable.year, firstAvailable.month);
+        await loadDatesFor(key);
         return;
       }
       emit(OnSelectionChangedState());
       return;
     }
 
-    // أول يوم فاضي بيتحدد لوحده ومواعيده بتتحمّل — الـ sheet بيفتح
-    // وهو مفيد من أول ثانية بدل ما العميل يدوّر.
-    selectedDate ??= availableDates.first;
-    await loadSlots();
+    // أول يوم فاضي بيتحدد لوحده ومواعيده بتتحمّل — الكارت بيتفتح وهو
+    // مفيد من أول ثانية بدل ما العميل يدوّر.
+    item.selectedDate ??= item.availableDates.first;
+    await loadSlotsFor(key);
   }
 
-  Future<void> loadSlots() async {
-    if (selectedDate == null) return;
+  Future<void> loadSlotsFor(String key) async {
+    final item = itemByKey(key);
+    if (item == null || item.selectedDate == null) return;
 
-    emit(LoadingSlotsState());
+    emit(LoadingSlotsState(itemKey: key));
 
     // TODO(api): GET /api/public/bookings/available-slots?date=
     final result = await MockSource.fetchList(
       MockSlots.slotsFor(
-        date: selectedDate!,
-        durationMinutes: selectedService?.durationMinutes ?? 45,
-        basePrice: selectedEmployee.isAnyAvailable
-            ? (selectedService?.price ?? 250)
-            : selectedEmployee.price,
+        date: item.selectedDate!,
+        durationMinutes: item.service.durationMinutes,
+        basePrice: item.baselinePrice,
       ),
     );
 
-    result.fold((failure) => emit(CreateBookingErrorState(message: failure)), (
-      data,
-    ) {
-      slots = data;
-      emit(OnSelectionChangedState());
-    });
+    result.fold(
+      (failure) => emit(CreateBookingErrorState(message: failure)),
+      (data) {
+        item.slots = data;
+        emit(OnSelectionChangedState());
+      },
+    );
   }
 
-  void changeMonth(int offset) {
-    currentMonth = DateTime(currentMonth.year, currentMonth.month + offset);
-    selectedDate = null;
-    slots = <SlotUiModel>[];
-    selectedSlot = null;
+  String _cacheKey(BookingDraftItem item, DateTime month) {
+    final employeeKey = item.employee.isAnyAvailable ? 'any' : item.employee.uuid;
+    return '${selectedBranch?.uuid}|${item.service.uuid}|$employeeKey'
+        '|${month.year}-${month.month}';
+  }
+
+  // ── الإجماليات ───────────────────────────────────────────────────────
+
+  double get totalPrice => items.fold<double>(0, (sum, i) => sum + i.price);
+
+  int get totalDuration => items.fold<int>(0, (sum, i) => sum + i.durationMinutes);
+
+  int get scheduledCount => items.where((i) => i.isScheduled).length;
+
+  // ── الزيارات ─────────────────────────────────────────────────────────
+
+  /// الفارق اللي بعده بنعتبر الخدمتين **رحلتين منفصلتين** للمحل.
+  ///
+  /// مفيش قاعدة للفصل ده في السيرفر — بياخد `visits[]` زي ما بتتبعت
+  /// وبيحسب `scheduled_start_at/end_at` بس `min/max` لعناصر الزيارة.
+  /// يعني الـ client هو صاحب القرار، ولو غلط مفيش حد هيصلّحه.
+  ///
+  /// وده مش شكل: `checkInVisit` في السيرفر بيسجّل `arrived_at` **واحد
+  /// للزيارة كلها**. لو صبغة ١٠ص وحمام كريم ٨م اتجمعوا في زيارة واحدة،
+  /// الفرع بيعمل check-in الساعة ١٠ والعميل يفضل «واصل» عشر ساعات.
+  ///
+  /// ساعتين: الانتظار الطبيعي جوه المحل (فراغ بين خدمتين، تأخير) نادرًا
+  /// بيعديها. **والخطأ في اتجاه الفصل أرحم من الدمج** — فصل غلط بيعمل
+  /// check-in زيادة، ودمج غلط بيكسر تتبع اليوم كله.
+  static const Duration visitSplitGap = Duration(hours: 2);
+
+  /// الحد الأدنى للفارق اللي يستاهل نعرض عليه زرار دمج/فصل.
+  ///
+  /// أقل من كده الإجابة واضحة (نفس الرحلة) وعرض الزرار بيبقى ضوضاء على
+  /// كل حد بين خدمتين.
+  static const Duration boundaryControlMinGap = Duration(minutes: 30);
+
+  /// تعديلات العميل على الحدود — المفتاح هو العنصر اللي **بعد** الحد.
+  ///
+  /// `true` = افصل، `false` = ادمج. مفيش مدخل = سيبها للفارق.
+  final Map<String, bool> _boundaryOverrides = <String, bool>{};
+
+  List<BookingDraftItem> get _scheduledOrdered {
+    final scheduled = items.where((i) => i.isScheduled).toList();
+    scheduled.sort(
+      (a, b) => a.selectedSlot!.startAt.compareTo(b.selectedSlot!.startAt),
+    );
+    return scheduled;
+  }
+
+  /// الخدمات المتحددة مجمّعة في زيارات ومرتبة زمنيًا.
+  ///
+  /// نفس التجميع اللي بيتبعت للسيرفر، فالتأكيد بيعرض بالظبط اللي هيتحجز.
+  List<List<BookingDraftItem>> get visits {
+    final ordered = _scheduledOrdered;
+    final groups = <List<BookingDraftItem>>[];
+
+    for (final item in ordered) {
+      if (groups.isEmpty || startsNewVisit(groups.last.last, item)) {
+        groups.add(<BookingDraftItem>[item]);
+      } else {
+        groups.last.add(item);
+      }
+    }
+
+    return groups;
+  }
+
+  /// الفارق بين نهاية خدمة وبداية اللي بعدها.
+  Duration gapBetween(BookingDraftItem previous, BookingDraftItem current) =>
+      current.selectedSlot!.startAt.difference(previous.selectedSlot!.endAt);
+
+  /// هل [current] بيبدأ زيارة جديدة بعد [previous]؟
+  bool startsNewVisit(BookingDraftItem previous, BookingDraftItem current) {
+    // يوم مختلف = زيارة مختلفة **دايمًا**، والتعديل اليدوي مابيلغيش ده.
+    // مفيش رحلة واحدة بتمتد على يومين.
+    if (previous.day != current.day) return true;
+
+    final override = _boundaryOverrides[current.key];
+    if (override != null) return override;
+
+    return gapBetween(previous, current) > visitSplitGap;
+  }
+
+  /// وصف الحد اللي قبل [item] — أو `null` لو مفيش حد يتعرض عليه زرار.
+  VisitBoundary? boundaryBefore(BookingDraftItem item) {
+    final ordered = _scheduledOrdered;
+    final index = ordered.indexWhere((i) => i.key == item.key);
+    if (index <= 0) return null;
+
+    final previous = ordered[index - 1];
+    // الفصل بين يومين حقيقة مش رأي — مفيش زرار.
+    if (previous.day != item.day) return null;
+
+    final gap = gapBetween(previous, item);
+    final isBreak = startsNewVisit(previous, item);
+
+    if (gap < boundaryControlMinGap && !isBreak) return null;
+
+    return VisitBoundary(itemKey: item.key, gap: gap, isBreak: isBreak);
+  }
+
+  /// دمج زيارتين في نفس اليوم، أو فصل واحدة لاتنين.
+  void toggleBoundary(String itemKey) {
+    final ordered = _scheduledOrdered;
+    final index = ordered.indexWhere((i) => i.key == itemKey);
+    if (index <= 0) return;
+
+    final previous = ordered[index - 1];
+    final current = ordered[index];
+    if (previous.day != current.day) return;
+
+    _boundaryOverrides[itemKey] = !startsNewVisit(previous, current);
     emit(OnSelectionChangedState());
-    loadDates();
-  }
-
-  /// مانرجعش لشهر فات — المواعيد اللي عدّت مالهاش لازمة.
-  bool get canGoToPreviousMonth {
-    final now = DateTime.now();
-    return currentMonth.isAfter(DateTime(now.year, now.month));
-  }
-
-  String _cacheKey(DateTime month) {
-    final employeeKey = selectedEmployee.isAnyAvailable
-        ? 'any'
-        : selectedEmployee.uuid;
-    return '${selectedBranch?.uuid}|${selectedService?.uuid}|$employeeKey|${month.year}-${month.month}';
   }
 
   // ── التأكيد ──────────────────────────────────────────────────────────
 
+  /// الـ payload بتاع `POST /api/user/bookings`.
+  ///
+  /// مطابق لـ `StoreBookingRequest` في السيرفر:
+  /// `visits.*.items.*.{service_uuid, employee_uuid?, start_at}`.
+  ///
+  /// ملحوظتين مهمتين:
+  ///  • `employee_uuid` **بيتشال خالص** لما العميل سايب «أي أخصائي متاح»
+  ///    — مش بيتبعت فاضي. السيرفر بيوزّع لوحده لما الحقل مش موجود.
+  ///  • `scheduled_start_at` للزيارة **مش بنبعتها**. السيرفر بيحسبها
+  ///    `min` لعناصر الزيارة، ولو بعتناها ولو بفرق ثانية بيرفض.
+  Map<String, dynamic> buildPayload() {
+    final notes = notesController.text.trim();
+
+    return <String, dynamic>{
+      'branch_uuid': selectedBranch?.uuid,
+      if (notes.isNotEmpty) 'notes': notes,
+      'visits': visits
+          .map(
+            (visit) => <String, dynamic>{
+              'items': visit
+                  .map(
+                    (item) => <String, dynamic>{
+                      'service_uuid': item.service.uuid,
+                      if (!item.employee.isAnyAvailable)
+                        'employee_uuid': item.employee.uuid,
+                      'start_at': item.selectedSlot!.startAtPayload,
+                    },
+                  )
+                  .toList(),
+            },
+          )
+          .toList(),
+    };
+  }
+
   Future<void> confirmBooking() async {
     emit(CreateBookingLoadingState());
 
-    // TODO(api): POST /api/user/bookings
-    // ملحوظة وقت الربط: الميعاد راجع من السيرفر بصيغة H:i:s بس الـ request
-    // بيقبل H:i بس — لازم نقص الثواني قبل الإرسال وإلا هيرجع 422.
+    // TODO(api): POST /api/user/bookings — الـ body من `buildPayload()`.
     await Future.delayed(const Duration(milliseconds: 800));
 
     // مؤقتًا للتجربة: أي ميعاد الدقيقة فيه ١٥ بنعتبره اتحجز من حد تاني،
-    // عشان نقدر نجرّب شاشة «الميعاد راح» من غير جهازين.
-    if (selectedSlot != null && selectedSlot!.startAt.minute == 15) {
-      takenSlot = selectedSlot;
-      selectedSlot = null;
+    // عشان نقدر نجرّب حالة «الميعاد راح» من غير جهازين.
+    for (final item in items) {
+      if (item.selectedSlot?.startAt.minute != 15) continue;
+
+      item.takenSlot = item.selectedSlot;
+      item.selectedSlot = null;
       currentStep = BookingStep.dateTime;
-      await loadSlots();
-      emit(SlotTakenState());
+
+      for (final other in items) {
+        other.isExpanded = other.key == item.key;
+      }
+
+      await loadSlotsFor(item.key);
+      emit(SlotTakenState(itemKey: item.key, serviceName: item.service.name));
       return;
     }
 
@@ -283,13 +581,18 @@ class CreateBookingCubit extends Cubit<CreateBookingState> {
 
   /// حجز النهاردة مايتلغيش بعد التأكيد — قاعدة موجودة في السيرفر
   /// والعميل مكانش بيعرفها غير بعد ما يقع فيها.
+  ///
+  /// **أي** خدمة النهاردة بتكفي: العميل بيرتبط بالحجز كله، ولو أول
+  /// زيارة النهاردة يبقى مربوط دلوقتي.
   bool get isSameDayBooking {
-    if (selectedSlot == null) return false;
     final now = DateTime.now();
-    final slot = selectedSlot!.startAt;
-    return slot.year == now.year &&
-        slot.month == now.month &&
-        slot.day == now.day;
+    return items.any((item) {
+      final slot = item.selectedSlot;
+      if (slot == null) return false;
+      return slot.startAt.year == now.year &&
+          slot.startAt.month == now.month &&
+          slot.startAt.day == now.day;
+    });
   }
 
   @override

@@ -2,21 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/core/utils/app_format.dart';
-import 'package:waqty_user_application/core/utils/app_motion.dart';
 import 'package:waqty_user_application/core/utils/app_radius.dart';
 import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
 import 'package:waqty_user_application/core/utils/app_shadows.dart';
 import 'package:waqty_user_application/core/utils/app_spacing.dart';
 import 'package:waqty_user_application/core/utils/app_text_styles.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/app_surface_widget.dart';
 import 'package:waqty_user_application/core/widgets/error_state_widget.dart';
+import 'package:waqty_user_application/features/booking/create_booking/logic/booking_draft_item.dart';
 import 'package:waqty_user_application/features/booking/create_booking/logic/create_booking_cubit.dart';
 import 'package:waqty_user_application/features/booking/create_booking/logic/create_booking_state.dart';
-import 'package:waqty_user_application/features/booking/create_booking/ui/widgets/create_booking_date_strip_widget.dart';
 import 'package:waqty_user_application/features/booking/create_booking/ui/widgets/create_booking_footer_widget.dart';
-import 'package:waqty_user_application/features/booking/create_booking/ui/widgets/create_booking_slots_widget.dart';
-import 'package:waqty_user_application/features/booking/create_booking/ui/widgets/create_booking_staff_row_widget.dart';
+import 'package:waqty_user_application/features/booking/create_booking/ui/widgets/create_booking_item_card_widget.dart';
+import 'package:waqty_user_application/features/booking/create_booking/ui/widgets/create_booking_service_picker_widget.dart';
 import 'package:waqty_user_application/features/booking/create_booking/ui/widgets/create_booking_stepper_widget.dart';
 import 'package:waqty_user_application/features/booking/create_booking/ui/widgets/create_booking_summary_widget.dart';
 
@@ -26,6 +24,15 @@ import 'package:waqty_user_application/features/booking/create_booking/ui/widget
 /// stack. والصفحة الطويلة بتتهزّ تحت صباع العميل كل ما اختيار يتحمّل.
 /// الـ sheet بيسيب المحل باين ورا العتمة، فسؤال «أنا لسه في المحل الصح؟»
 /// مجاوب طول الوقت من غير أي شغل زيادة.
+///
+/// ## سلة خدمات، والشكل زي ما هو
+///
+/// الحجز بقى بياخد أكتر من خدمة وأكتر من زيارة — نفس قدرة داشبورد
+/// المزود بالظبط. اللي **ماتنقلش** هو شكل الداشبورد: هو استمارة من عمود
+/// واحد بكروت بتتكرر، على شاشة عريضة بشريط جانبي ثابت. نفس الشكل على
+/// ٣٧٥ بكسل بيبقى سكرول مالوش قاع. فالقدرة اتنقلت والشكل فضل: خطوة
+/// الخدمة بقت اختيار متعدد، وخطوة الميعاد بقت أكورديون كارت واحد مفتوح
+/// في المرة.
 class CreateBookingSheet extends StatelessWidget {
   const CreateBookingSheet({super.key});
 
@@ -45,7 +52,7 @@ class CreateBookingSheet extends StatelessWidget {
           providerUuid: providerUuid,
           providerName: providerName,
           initialServiceUuid: serviceUuid,
-        )..loadDateTimeStep(),
+        )..enterDateTimeStep(),
         child: const CreateBookingSheet(),
       ),
     );
@@ -79,10 +86,13 @@ class CreateBookingSheet extends StatelessWidget {
               if (state is SlotTakenState) {
                 // شكل الـ SnackBar جاي من `snackBarTheme` — كان مصمّم
                 // بالإيد في موضعين بشكلين مختلفين.
+                //
+                // واسم الخدمة في النص مقصود: في حجز بتلات خدمات، «الموعد
+                // اتحجز» لوحدها بتسيب العميل يدوّر على أنهي واحدة فيهم.
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
+                  SnackBar(
                     content: Text(
-                      'الموعد ده اتحجز من شوية — اخترنالك أقرب بديل',
+                      'ميعاد «${state.serviceName}» اتحجز من شوية — اختار بديل',
                     ),
                   ),
                 );
@@ -121,131 +131,111 @@ class CreateBookingSheet extends StatelessWidget {
     CreateBookingState state,
   ) {
     if (state is CreateBookingErrorState) {
-      return ErrorStateWidget(message: state.message, onRetry: cubit.loadDates);
+      return ErrorStateWidget(
+        message: state.message,
+        onRetry: () => _retry(cubit),
+      );
     }
 
     return switch (cubit.currentStep) {
-      BookingStep.service => _serviceStep(cubit),
+      BookingStep.service => CreateBookingServicePickerWidget(
+        services: cubit.services,
+        isSelected: cubit.isServiceSelected,
+        onToggle: cubit.toggleService,
+      ),
       BookingStep.dateTime => _dateTimeStep(cubit, state),
       BookingStep.confirm => CreateBookingSummaryWidget(cubit: cubit),
     };
   }
 
-  Widget _serviceStep(CreateBookingCubit cubit) {
-    final bookableServices = cubit.services
-        .where((s) => !s.isCategory)
-        .toList();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('اختر الخدمة', style: AppTextStyles.sectionHeader),
-        verticalSpace(AppSpacing.headerToContent),
-        ...bookableServices.map((service) {
-          final isSelected = cubit.selectedService?.uuid == service.uuid;
-          return Padding(
-            padding: EdgeInsetsDirectional.only(bottom: AppSpacing.chipGap.h),
-            child: AppSurfaceWidget(
-              onTap: () => cubit.selectService(service),
-              radius: AppRadius.m,
-              height: 64.h,
-              color: isSelected ? AppSemanticColors.accentSoft : null,
-              // **الحالة المختارة هي واحدة من تلات حالات بس بتاخد حد.**
-              // الحد هنا معناه دلالي («ده اختيارك») مش فصل بصري.
-              border: isSelected
-                  ? Border.all(color: AppSemanticColors.accent, width: 1.5)
-                  : null,
-              padding: EdgeInsets.symmetric(horizontal: AppSpacing.s12.w),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          service.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTextStyles.bodyMdStrong,
-                        ),
-                        verticalSpace(AppSpacing.titleToSubtitle),
-                        Text(
-                          AppFormat.duration(service.durationMinutes),
-                          style: AppTextStyles.caption,
-                        ),
-                      ],
-                    ),
-                  ),
-                  horizontalSpace(AppSpacing.s8),
-                  Text(
-                    AppFormat.money(service.price),
-                    style: AppTextStyles.bodyMdStrong,
-                  ),
-                ],
-              ),
-            ),
-          );
-        }),
-      ],
-    );
+  /// إعادة المحاولة بتخص **الكارت المفتوح** — مش الفلو كله.
+  void _retry(CreateBookingCubit cubit) {
+    for (final item in cubit.items) {
+      if (item.isExpanded) {
+        cubit.loadDatesFor(item.key);
+        return;
+      }
+    }
+    cubit.enterDateTimeStep();
   }
 
   Widget _dateTimeStep(CreateBookingCubit cubit, CreateBookingState state) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        CreateBookingStaffRowWidget(
-          employees: cubit.employees,
-          selectedEmployee: cubit.selectedEmployee,
-          onEmployeeSelected: cubit.selectEmployee,
+        ...List<Widget>.generate(cubit.items.length, (i) {
+          final item = cubit.items[i];
+          return CreateBookingItemCardWidget(
+            // الـ key من هوية العنصر مش من ترتيبه — من غيره شيل خدمة من
+            // النص بيخلي Flutter يعيد استخدام الـ state في الكارت الغلط.
+            key: ValueKey(item.key),
+            item: item,
+            index: i,
+            isLoadingSlots: _isLoading(state, item),
+            canGoToPreviousMonth: cubit.canGoToPreviousMonth(item),
+            onExpand: () => cubit.expandItem(item.key),
+            onEmployeeSelected: (employee) =>
+                cubit.selectEmployee(item.key, employee),
+            onDateTap: (date) => cubit.selectDate(item.key, date),
+            onMonthChange: (offset) => cubit.changeMonth(item.key, offset),
+            onSlotTap: (slot) => cubit.selectSlot(item.key, slot),
+            onRemove: cubit.items.length > 1
+                ? () => cubit.removeItem(item.key)
+                : null,
+          );
+        }),
+
+        // الرجوع لخطوة الخدمات — بغرض واضح مش سهم رجوع عام.
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: TextButton.icon(
+            onPressed: () => cubit.goToStep(BookingStep.service),
+            icon: Icon(Icons.add_rounded, size: 20.r),
+            label: Text('ضيف خدمة تانية', style: AppTextStyles.label),
+          ),
         ),
-        verticalSpace(AppSpacing.s24),
-        CreateBookingDateStripWidget(
-          availableDates: cubit.availableDates,
-          selectedDate: cubit.selectedDate,
-          currentMonth: cubit.currentMonth,
-          canGoToPreviousMonth: cubit.canGoToPreviousMonth,
-          onDateTap: cubit.selectDate,
-          onMonthChange: cubit.changeMonth,
-        ),
-        // ٢٤ في المكانين — كانوا ١٦ و٢٠، نفس العلاقة بقيمتين.
-        verticalSpace(AppSpacing.s24),
-        CreateBookingSlotsWidget(
-          slots: cubit.slots,
-          selectedSlot: cubit.selectedSlot,
-          takenSlot: cubit.takenSlot,
-          isLoading: state is LoadingSlotsState || state is LoadingDatesState,
-          baselinePrice: cubit.selectedService?.price ?? 0,
-          onSlotTap: cubit.selectSlot,
-        ),
-        // سطر الالتزام — العميل بيدي ٤٥ دقيقة من وقته، مش نقطة في الزمن.
-        // بيتلاشى داخل بدل ما يظهر فجأة ويزحلق الفوتر.
-        AnimatedSize(
-          duration: AppMotion.base,
-          curve: AppMotion.standard,
-          alignment: Alignment.topCenter,
-          child: cubit.selectedSlot == null
-              ? const SizedBox(width: double.infinity)
-              : Padding(
-                  padding: EdgeInsetsDirectional.only(top: AppSpacing.s12.h),
-                  child: AppSurfaceWidget(
-                    level: AppElevation.sunken,
-                    radius: AppRadius.m,
-                    width: double.infinity,
-                    padding: EdgeInsets.all(AppSpacing.cardPadding.r),
-                    child: Text(
-                      '${AppFormat.timeRange(cubit.selectedSlot!.startAt, cubit.selectedSlot!.endAt)} · '
-                      '${AppFormat.duration(cubit.selectedSlot!.durationMinutes)}'
-                      '${cubit.selectedEmployee.isAnyAvailable ? ' · مع ${cubit.selectedSlot!.employeeName}' : ''}',
-                      style: AppTextStyles.bodyMdStrong,
-                    ),
-                  ),
-                ),
-        ),
+
+        if (cubit.items.length > 1) _visitsHint(cubit),
         verticalSpace(AppSpacing.s16),
       ],
     );
+  }
+
+  /// تلميح بيظهر أول ما الخدمات تتوزّع على أكتر من رحلة.
+  ///
+  /// **مش «أيام»** — ممكن يكونوا رحلتين في نفس اليوم (صبغة الصبح وحمام
+  /// كريم بالليل). من غير التلميح ده العميل بيكتشف إنه رايح المحل مرتين
+  /// في شاشة التأكيد بس، ودي متأخرة.
+  Widget _visitsHint(CreateBookingCubit cubit) {
+    final count = cubit.visits.length;
+    if (count < 2) return const SizedBox.shrink();
+
+    return Padding(
+      padding: EdgeInsetsDirectional.only(top: AppSpacing.s8.h),
+      child: Row(
+        children: [
+          Icon(
+            Icons.event_repeat_rounded,
+            size: 16.r,
+            color: AppSemanticColors.textTertiary,
+          ),
+          horizontalSpace(AppSpacing.s8),
+          Expanded(
+            child: Text(
+              'ده ${AppFormat.digits(count)} رحلات للمحل — تقدر تعدّلها في التأكيد',
+              style: AppTextStyles.caption,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// الكارت ده بالذات هو اللي بيحمّل؟
+  bool _isLoading(CreateBookingState state, BookingDraftItem item) {
+    if (state is LoadingSlotsState) return state.itemKey == item.key;
+    if (state is LoadingDatesState) return state.itemKey == item.key;
+    return false;
   }
 
   Widget _footer(
@@ -256,12 +246,22 @@ class CreateBookingSheet extends StatelessWidget {
     final isConfirm = cubit.currentStep == BookingStep.confirm;
 
     return CreateBookingFooterWidget(
-      price: cubit.selectedSlot?.price ?? cubit.selectedService?.price,
-      durationMinutes: cubit.selectedSlot?.durationMinutes,
+      price: cubit.items.isEmpty ? null : cubit.totalPrice,
+      metaLabel: _metaLabel(cubit),
       buttonLabel: isConfirm ? 'تأكيد الحجز' : 'التالي',
       isEnabled: cubit.canGoNext,
       isLoading: state is CreateBookingLoadingState,
       onPressed: isConfirm ? cubit.confirmBooking : cubit.nextStep,
     );
+  }
+
+  /// «٤٥ دقيقة» لخدمة واحدة · «٣ خدمات · ١ س ٣٠ د» للسلة.
+  String? _metaLabel(CreateBookingCubit cubit) {
+    if (cubit.items.isEmpty) return null;
+
+    final duration = AppFormat.duration(cubit.totalDuration);
+    if (cubit.items.length == 1) return duration;
+
+    return '${AppFormat.digits(cubit.items.length)} خدمات · $duration';
   }
 }
