@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:country_code_picker/country_code_picker.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -33,7 +35,14 @@ class RegisterPhoneNumberWidget extends StatelessWidget {
             borderRadius: BorderRadius.circular(10.r),
           ),
 
-          prefixIcon: SizedBox(
+          // **كود الدولة لازم يفضل LTR.**
+          //
+          // الواجهة عربي، والـ RTL بيقلب «+20» لـ «20+» — وده مش رقم
+          // موجود. أكواد الدول والتليفونات نص لاتيني حتى جوه واجهة
+          // عربي، وقلبها بيخلي العميل يشك إنه اختار بلد غلط.
+          prefixIcon: Directionality(
+            textDirection: ui.TextDirection.ltr,
+            child: SizedBox(
             width: 115,
             child: CountryCodePicker(
               onChanged: (CountryCode code) {
@@ -52,6 +61,7 @@ class RegisterPhoneNumberWidget extends StatelessWidget {
                 shape: BoxShape.rectangle,
                 borderRadius: BorderRadius.circular(2.r),
               ),
+            ),
             ),
           ),
           focusedBorder: OutlineInputBorder(

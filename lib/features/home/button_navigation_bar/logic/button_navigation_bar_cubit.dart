@@ -1,133 +1,79 @@
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:waqty_user_application/core/services/services_locator.dart';
-import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
+import 'package:waqty_user_application/core/mock/mock_bookings.dart';
+import 'package:waqty_user_application/core/models/booking_ui_model.dart';
 import 'package:waqty_user_application/core/utils/assets_manager.dart';
-import 'package:waqty_user_application/features/explore_near_people/explore_near_people/logic/explore_near_people_cubit.dart';
-import 'package:waqty_user_application/features/explore_near_people/explore_near_people/ui/explore_near_people_screen.dart';
 import 'package:waqty_user_application/features/home/button_navigation_bar/logic/button_navigation_bar_state.dart';
-import 'package:waqty_user_application/features/home/home/logic/home_cubit.dart';
-import 'package:waqty_user_application/features/home/home/ui/home_screen.dart';
 
+/// ٤ تبويبات — مش ٥.
+///
+/// زرار الـ `+` الكبير في النص اتشال. ده كلام إنستجرام وتيك توك ومعناه
+/// «اعمل حاجة الناس تشوفها». العميل في تطبيق حجوزات مش بيعمل حاجة —
+/// المحلات هي اللي بتعمل. وكمان كان بيفتح شاشة بيضا فاضية، ومالوش label
+/// فقارئ الشاشة كان بيقول «تبويب ٣ من ٥» وبس.
+///
+/// و«استكشاف» كان بيعرض نفس شاشة الهوم بالظبط — تبويبين بنفس المحتوى
+/// شكلهم غلطة برمجية، وكمان كان بيضيّع مكان السكرول كل مرة.
 class ButtonNavigationBarCubit extends Cubit<ButtonNavigationBarState> {
-  ButtonNavigationBarCubit() : super(InitialState());
-  int currentIndex = 0;
+  ButtonNavigationBarCubit({int initialIndex = 0})
+    : currentIndex = initialIndex,
+      liveBooking = _resolveLiveBooking(),
+      super(InitialState());
+
+  int currentIndex;
+
+  /// الحجز اللي ممكن يبقى له حالة فرع حية دلوقتي، أو `null` لو مفيش حجوزات.
+  ///
+  /// ## ليه القشرة هي اللي شايلاه مش الهوم
+  ///
+  /// شريط «الكرسي جاهز» بيظهر فوق التبويبات — يعني على **أي** تبويب، حتى
+  /// وإنت في حسابك. فمصدر الحالة لازم يعيش فوق التبويبات الأربعة، مش
+  /// جوه واحد منهم.
+  ///
+  /// والأهم: ده بيخلي في الأبلكيشن **مؤقت واحد بس**. لو الهوم عملت
+  /// `InBranchCubit` والقشرة عملت واحد تاني، بيبقى فيه نبضتين
+  /// مستقلتين وحقيقتين ممكن يختلفوا في نفس اللحظة — الشريط يقول «دورك
+  /// دلوقتي» والبؤرة في الهوم لسه بتقول «اتنين قدامك». ده أوحش من إن
+  /// مايبقاش فيه شريط أصلاً.
+  final BookingUiModel? liveBooking;
+
+  /// نفس التعبير الموجود في `HomeCubit.loadHome` بالحرف، وبيقرا من نفس
+  /// المصدر — عشان لو الهوم لقت حجز تبقى القشرة أكيد لاقياه، والعكس.
+  /// أول ما ده يبقى نداء شبكة حقيقي لازم يفضل **نفس الـ endpoint**.
+  static BookingUiModel? _resolveLiveBooking() {
+    // TODO(api): GET /api/user/bookings?upcoming=true&per_page=1
+    final bookings = MockBookings.upcoming;
+    return bookings.isEmpty ? null : bookings.first;
+  }
 
   void changeIndex(int i) {
     currentIndex = i;
     emit(OnBottomNavBarChangedState());
   }
 
-  Widget buttonBarBody() {
-    switch (currentIndex) {
-      case 0:
-        return BlocProvider(
-          create: (_) => HomeCubit(getIt()),
-          child: HomeScreen(),
-        );
-
-      case 1:
-        return BlocProvider(
-          create: (_) => HomeCubit(getIt()),
-          child: HomeScreen(),
-        );
-
-      // case 1:
-      //   return BlocProvider(
-      //     create: (_) => ExploreNearPeopleCubit(getIt()),
-      //     child: ExploreNearPeopleScreen(),
-      //   );
-
-      case 2:
-        return SizedBox();
-      // return BlocProvider(
-      //   create: (_) => SenderProfileCubit(getIt(),getIt())..getProfileData(),
-      //   child: SenderProfileScreen(),
-      // );
-      case 3:
-        return SizedBox();
-      // return BlocProvider(
-      //   create: (_) => SenderProfileCubit(getIt(),getIt())..getProfileData(),
-      //   child: SenderProfileScreen(),
-      // );
-      case 4:
-        return SizedBox();
-      // return BlocProvider(
-      //   create: (_) => SenderProfileCubit(getIt(),getIt())..getProfileData(),
-      //   child: SenderProfileScreen(),
-      // );
-
-      default:
-        return BlocProvider(
-          create: (_) => HomeCubit(getIt()),
-          child: HomeScreen(),
-        );
-    }
-  }
-
   List<BottomNavigationBarItem> buttonNavigationBarItems() => [
-    BottomNavigationBarItem(
-      icon: SvgPicture.asset(ImageAsset.homeIcon, height: 20.r, width: 20.r),
-      activeIcon: SvgPicture.asset(
-        ImageAsset.selectedHomeIcon,
-        height: 20.r,
-        width: 20.r,
-        fit: BoxFit.fill,
-      ),
-      label: 'buttonNavBar.homeText'.tr(),
-    ),
-    BottomNavigationBarItem(
-      icon: SvgPicture.asset(ImageAsset.exploreIcon, height: 20.r, width: 20.r),
-      activeIcon: SvgPicture.asset(
-        ImageAsset.selectedExploreIcon,
-        height: 20.r,
-        width: 20.r,
-      ),
-      label: 'buttonNavBar.exploreText'.tr(),
-    ),
-    BottomNavigationBarItem(
-      icon: Container(
-        height: 48.r,
-        width: 48.r,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: AppColors.greyColor900,
-        ),
-        child: Icon(Icons.add, color: AppColors.whiteColor),
-      ),
-      activeIcon: Container(
-        height: 48.r,
-        width: 48.r,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: AppColors.greyColor900,
-        ),
-        child: Icon(Icons.add, color: AppColors.whiteColor),
-      ),
-      label: '',
-    ),
-    BottomNavigationBarItem(
-      icon: SvgPicture.asset(ImageAsset.bookingIcon, height: 20.r, width: 20.r),
-      activeIcon: SvgPicture.asset(
-        ImageAsset.selectedBookingIcon,
-        height: 20.r,
-        width: 20.r,
-      ),
-      label: 'buttonNavBar.bookingText'.tr(),
-    ),
-    BottomNavigationBarItem(
-      icon: SvgPicture.asset(ImageAsset.accountIcon, height: 20.r, width: 20.r),
-      activeIcon: SvgPicture.asset(
-        ImageAsset.selectedAccountIcon,
-        height: 20.r,
-        width: 20.r,
-      ),
-      label: 'buttonNavBar.accountText'.tr(),
-    ),
+    _item(ImageAsset.homeIcon, ImageAsset.selectedHomeIcon, 'الرئيسية'),
+    _item(ImageAsset.exploreIcon, ImageAsset.selectedExploreIcon, 'استكشاف'),
+    _item(ImageAsset.bookingIcon, ImageAsset.selectedBookingIcon, 'الحجوزات'),
+    // «حسابي» مش «البروفايل» — التلات تبويبات التانية عربي، ودي كانت
+    // كلمة إنجليزي مكتوبة بحروف عربية جنبهم.
+    _item(ImageAsset.accountIcon, ImageAsset.selectedAccountIcon, 'حسابي'),
   ];
+
+  BottomNavigationBarItem _item(String icon, String activeIcon, String label) =>
+      BottomNavigationBarItem(
+        icon: Padding(
+          padding: EdgeInsetsDirectional.only(bottom: 4.h),
+          child: SvgPicture.asset(icon, height: 22.r, width: 22.r),
+        ),
+        activeIcon: Padding(
+          padding: EdgeInsetsDirectional.only(bottom: 4.h),
+          child: SvgPicture.asset(activeIcon, height: 22.r, width: 22.r),
+        ),
+        label: label,
+      );
 
   static ButtonNavigationBarCubit get(context) => BlocProvider.of(context);
 }

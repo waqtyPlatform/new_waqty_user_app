@@ -1,7 +1,7 @@
 import 'package:waqty_user_application/core/services/check_network.dart';
-import 'package:waqty_user_application/core/services/local_notification_service.dart';
 import 'package:waqty_user_application/config/routes/routes.dart';
 import 'package:waqty_user_application/core/utils/constant_keys.dart';
+import 'package:waqty_user_application/core/utils/demo_mode.dart';
 import 'package:waqty_user_application/my_app.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -59,17 +59,22 @@ Future<void> main() async {
       startLocale: const Locale('ar', 'EG'),
       path: 'assets/languages',
       fallbackLocale: const Locale('ar', 'EG'),
-      child: MyApp(
-        navigateWidget: Routes.registerScreen,
-        // isLoggedInUser
-        //     ? (userType == 'client'
-        //           ? Routes.buttonNavigationBarScreen
-        //           : Routes.sponsorButtonNavigationBarSceen)
-        //     : Routes.onBoardingScreen,
-      ),
+      // من غيرها أي مفتاح ناقص في الإنجليزي بيتعرض نص خام زي
+      // `buttonNavBar.homeText` قدام العميل. `fallbackLocale` لوحدها
+      // مابتحلهاش — دي بتختار اللغة مش بتدوّر على المفتاح.
+      useFallbackTranslations: true,
+      // القرار بتاع «أفتح على إيه» بقى في SplashCubit مش hardcoded هنا.
+      child: MyApp(navigateWidget: _initialRoute),
     ),
   );
 }
+
+/// نقطة البداية — السبلاش دايمًا، إلا في وضع العرض.
+///
+/// شوف [kDemoMode] للتفاصيل.
+const String _initialRoute = kDemoMode
+    ? Routes.buttonNavigationBarScreen
+    : Routes.splashScreen;
 
 Future<void> checkIsFirstRunForApp() async {
   final isFirstRun = await CacheHelper.getBool(

@@ -9,12 +9,9 @@ import 'package:waqty_user_application/core/utils/spacing.dart';
 import 'package:waqty_user_application/core/utils/styles.dart';
 import 'package:waqty_user_application/features/auth/login/logic/login_cubit.dart';
 import 'package:waqty_user_application/features/auth/login/ui/widgets/login_button_widget.dart';
-import 'package:waqty_user_application/features/auth/login/ui/widgets/login_divider_widget.dart';
 import 'package:waqty_user_application/features/auth/login/ui/widgets/login_don_not_already_have_account_widget.dart';
 import 'package:waqty_user_application/features/auth/login/ui/widgets/login_password_widget.dart';
 import 'package:waqty_user_application/features/auth/login/ui/widgets/login_phone_number_widget.dart';
-import 'package:waqty_user_application/features/auth/login/ui/widgets/login_with_apple_widget.dart';
-import 'package:waqty_user_application/features/auth/login/ui/widgets/login_with_google_widget.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -78,15 +75,19 @@ class LoginScreen extends StatelessWidget {
                 verticalSpace(48),
 
                 LoginButtonWidget(),
-                verticalSpace(16),
-                LoginDividerWidget(),
-                verticalSpace(16),
 
-                LoginWithGoogleWidget(),
-                verticalSpace(16),
-
-                LoginWithAppleWidget(),
-
+                // **الدخول بجوجل وآبل اتشالوا — كانوا زراير ميتة.**
+                //
+                // `onTap: () {}` في الاتنين، ومفيش ولا حزمة في
+                // `pubspec.yaml` (لا `google_sign_in` ولا
+                // `sign_in_with_apple` ولا `firebase_auth`).
+                //
+                // زرار دخول ميت أوحش من زرار مش موجود: العميل بيدوس،
+                // مايحصلش حاجة، فيستنتج إن الأبلكيشن باظ — وده على
+                // **أول شاشة** يشوفها. والفاصل «أو المتابعة باستخدام»
+                // اتشال معاهم لأنه بيقدّم حاجة مابقتش موجودة.
+                //
+                // يرجعوا لما الحزم تتضاف والـ backend يقبلهم.
                 verticalSpace(70),
                 LoginDonNotAlreadyHaveAccountWidget(),
                 verticalSpace(24),

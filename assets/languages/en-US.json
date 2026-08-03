@@ -41,9 +41,6 @@
     "enterPasswordText2": "Please enter your password",
     "forgetPasswordText": "Forgot your password?",
     "loginNowText": "Log In",
-    "continueWithText": "Or continue with",
-    "loginWithGoogleText": "Sign in with Google",
-    "loginWithAppleText": "Sign in with Apple",
     "noAccountText": "Don't have an account? ",
     "registerNowText": "Register Now"
   },

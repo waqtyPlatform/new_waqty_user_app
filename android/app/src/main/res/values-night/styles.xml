@@ -1,7 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Theme applied to the Android Window while the process is starting when the OS's Dark Mode setting is on -->
-    <style name="LaunchTheme" parent="@android:style/Theme.Black.NoTitleBar">
+    <!-- **لازم يفضل مشتق من `Theme.AppCompat`.**
+
+         `MainActivity` بتمتد `FlutterFragmentActivity` (مطلوبة لـ
+         `local_auth`)، ودي مبنية على `AppCompatActivity` — فبترمي
+         `IllegalStateException: You need to use a Theme.AppCompat theme`
+         لحظة الفتح لو الـ theme مش من عيلة AppCompat.
+
+         كان `@android:style/Theme.Black.NoTitleBar` هنا، والنسخة النهارية
+         `Theme.AppCompat.DayNight`. فالتطبيق كان بيقع **على الأجهزة اللي
+         الوضع الليلي مفتوح فيها بس** — والـ emulator كان نهاري، فالباج
+         عدّى من كل التجارب. -->
+    <style name="LaunchTheme" parent="Theme.AppCompat.DayNight">
         <!-- Show a splash screen on the activity. Automatically removed when
              the Flutter engine draws its first frame -->
         <item name="android:windowBackground">@drawable/launch_background</item>

@@ -10,7 +10,9 @@ class GeocodingService {
   }
 
   static Future<List<Placemark>?> getPlaceMarkFromCoordinates(
-      double latitude, double longitude) async {
+    double latitude,
+    double longitude,
+  ) async {
     try {
       return await placemarkFromCoordinates(latitude, longitude);
     } catch (error) {

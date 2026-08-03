@@ -7,9 +7,15 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'config/routes/app_routes.dart';
 import 'config/themes/app_white_theme.dart';
 import 'core/utils/app_colors_white_theme.dart';
-import 'core/utils/app_constant.dart';
+import 'core/utils/app_semantic_colors.dart';
+import 'core/utils/app_spacing.dart';
 
+import 'core/mock/mock_scenario_switcher_widget.dart';
 import 'core/services/biometric_service.dart';
+
+/// TEMP (local run only): skips the biometric gate so the app is reachable on
+/// emulators with no screen lock or enrolled fingerprint. Set back to false.
+const bool kBypassAppLock = true;
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -23,7 +29,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
-  bool _isAuthenticated = false;
+  bool _isAuthenticated = kBypassAppLock;
   final BiometricService _biometricService = BiometricService();
 
   @override
@@ -33,7 +39,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
 
     _listenToNetwork();
-    _authenticate();
+    if (!kBypassAppLock) _authenticate();
   }
 
   /// authenticate using biometric
@@ -61,6 +67,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) async {
+    if (kBypassAppLock) return;
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.resumed) {
       if (_isAuthenticated) {
@@ -90,8 +97,11 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         if (!_isAuthenticated) {
           return MaterialApp(
             debugShowCheckedModeBanner: false,
+            // كانت `MaterialApp` تانية **من غير `theme:`** — يعني زرار
+            // الفتح كان بيطلع بنفسجي بتاع Material الافتراضي.
+            theme: themeData(),
             home: Scaffold(
-              backgroundColor: AppColors.whiteColor,
+              backgroundColor: AppSemanticColors.page,
               body: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -130,7 +140,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         }
 
         return Container(
-          color: AppColors.whiteColor,
+          color: AppSemanticColors.page,
           child: MaterialApp(
             localizationsDelegates: context.localizationDelegates,
             supportedLocales: context.supportedLocales,
@@ -141,6 +151,18 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             theme: themeData(),
             initialRoute: widget.navigateWidget,
             onGenerateRoute: RouteGenerator.generateRoute,
+            // **سطر واحد بيحمي كل ارتفاع ثابت في الأبلكيشن مرة واحدة.**
+            //
+            // أندرويد بيوصّل مقياس الخط لـ ٢× من إعدادات إمكانية الوصول.
+            // الأرقام اللي حسبناها اتحسبت لحد ١٫٣، وفوقها الصناديق بتفيض.
+            // بنقصّه هنا بدل ما نلاحق ٢٠ صندوق واحد واحد.
+            builder: (context, child) => MediaQuery.withClampedTextScaling(
+              maxScaleFactor: AppSpacing.maxTextScale,
+              // MOCK — الشارة والسيناريوهات بيختفوا بالكامل في الـ release.
+              child: MockScenarioSwitcherWidget(
+                child: child ?? const SizedBox.shrink(),
+              ),
+            ),
           ),
         );
       },

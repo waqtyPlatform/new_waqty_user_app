@@ -1,7 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 
 class AppStrings {
-
   ///api
 
   static const contentType = "Content-Type";
@@ -9,10 +8,4 @@ class AppStrings {
   static const acceptLanguage = "Accept-Language";
   static const appAuthorization = "Authorization";
   static const appBearer = "Bearer";
-
-
-
-
-
-
 }
