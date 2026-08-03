@@ -382,17 +382,20 @@ void main() {
     });
 
     // انحدار حصل فعلاً: `_expandNextUnscheduled` بينده `_ensureLoaded` اللي
-    // بيعمل `emit(LoadingDatesState)` بشكل متزامن، واللي نداه كان بيعمل
+    // بيعمل الـ emit بتاع التحميل بشكل متزامن، واللي نداه كان بيعمل
     // `emit(OnSelectionChangedState)` بعديها فبيدهسها. النتيجة إن الكارت
-    // بيتفتح على «اليوم ده مليان» بدل الـ skeleton.
+    // بيتفتح على حالة فاضية بدل الـ skeleton.
+    //
+    // بعد Phase 4 التحميل الافتراضي بقى **اقتراحات** مش تواريخ — التقويم
+    // مابيتحمّلش غير لما العميل يفتح «كل المواعيد».
     test('فتح كارت بيسيب حالة التحميل تعيش مش يدهسها', () {
       final cubit = buildCubit();
       cubit.toggleService(MockServices.byUuid('srv-1'));
 
       cubit.enterDateTimeStep();
 
-      expect(cubit.state, isA<LoadingDatesState>());
-      expect((cubit.state as LoadingDatesState).itemKey, cubit.items.first.key);
+      expect(cubit.state, isA<LoadingSlotsState>());
+      expect((cubit.state as LoadingSlotsState).itemKey, cubit.items.first.key);
     });
 
     test('حالة التحميل بتخص الكارت المفتوح بس', () {
@@ -403,7 +406,7 @@ void main() {
       cubit.expandItem(cubit.items[1].key);
 
       // من غير الـ itemKey كان الـ skeleton هيظهر في كل كروت السلة.
-      expect((cubit.state as LoadingDatesState).itemKey, cubit.items[1].key);
+      expect((cubit.state as LoadingSlotsState).itemKey, cubit.items[1].key);
     });
 
     test('canGoNext في خطوة المواعيد بيستنى كل الخدمات تتحدد', () {

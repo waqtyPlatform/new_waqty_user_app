@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:waqty_user_application/core/models/branch_ui_model.dart';
 import 'package:waqty_user_application/core/utils/app_format.dart';
 import 'package:waqty_user_application/core/utils/app_radius.dart';
 import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
@@ -15,7 +16,7 @@ import 'package:waqty_user_application/features/booking/create_booking/logic/cre
 import 'package:waqty_user_application/features/booking/create_booking/ui/widgets/create_booking_footer_widget.dart';
 import 'package:waqty_user_application/features/booking/create_booking/ui/widgets/create_booking_item_card_widget.dart';
 import 'package:waqty_user_application/features/booking/create_booking/ui/widgets/create_booking_service_picker_widget.dart';
-import 'package:waqty_user_application/features/booking/create_booking/ui/widgets/create_booking_stepper_widget.dart';
+import 'package:waqty_user_application/features/booking/create_booking/ui/widgets/create_booking_header_widget.dart';
 import 'package:waqty_user_application/features/booking/create_booking/ui/widgets/create_booking_summary_widget.dart';
 
 /// الحجز — sheet فوق صفحة المحل، مش wizard بخمس شاشات.
@@ -37,21 +38,39 @@ class CreateBookingSheet extends StatelessWidget {
   const CreateBookingSheet({super.key});
 
   /// بيفتح الـ sheet فوق الصفحة اللي العميل واقف فيها.
+  ///
+  /// [branch] هو الفرع اللي العميل مختاره في شاشة المحل. لو اتساب فاضي
+  /// بيقع على أول فرع — وده اللي كان بيحصل دايمًا وبيضيّع اختياره.
   static Future<bool?> show(
     BuildContext context, {
     required String providerUuid,
     required String providerName,
     String? serviceUuid,
+    BranchUiModel? branch,
+    String? branchUuid,
   }) {
     return showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      // **السحب لتحت والضغط على العتمة مقفولين** — الخروج من الزرار بس.
+      //
+      // الـ sheet ده بيشيل من تلات لخمس دقايق شغل في حالة متطايرة: خدمات
+      // وأخصائيين ومواعيد وملاحظات، كلهم على `CreateBookingCubit` اللي
+      // بيتعمل جوه الـ builder. سحبة واحدة لتحت على ليستة مسحوبة لفوق
+      // كانت بترجّع `null` وتفضّي السلة **في صمت**.
+      //
+      // الشكل نفسه كان بيكدب: الـ sheet بيقول «حاجة صغيرة تتلغي بسهولة»
+      // والمحتوى بيقول العكس.
+      isDismissible: false,
+      enableDrag: false,
       builder: (_) => BlocProvider(
         create: (_) => CreateBookingCubit(
           providerUuid: providerUuid,
           providerName: providerName,
           initialServiceUuid: serviceUuid,
+          initialBranch: branch,
+          initialBranchUuid: branchUuid,
         )..enterDateTimeStep(),
         child: const CreateBookingSheet(),
       ),
@@ -60,7 +79,9 @@ class CreateBookingSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DraggableScrollableSheet(
+    return _guarded(
+      context,
+      child: DraggableScrollableSheet(
       initialChildSize: 0.82,
       minChildSize: 0.5,
       maxChildSize: 0.95,
@@ -83,16 +104,32 @@ class CreateBookingSheet extends StatelessWidget {
               if (state is CreateBookingSuccessState) {
                 Navigator.of(context).pop(true);
               }
+              if (state is JoinedWaitlistState) {
+                // الرد لازم يقول **إيه اللي هيحصل بعد كده** — «تمام»
+                // لوحدها بتسيب العميل مستني حاجة مش عارف شكلها.
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'ضفناك لقائمة انتظار «${state.serviceName}» — '
+                      'هتلاقيها في مواعيدك',
+                    ),
+                  ),
+                );
+              }
               if (state is SlotTakenState) {
                 // شكل الـ SnackBar جاي من `snackBarTheme` — كان مصمّم
                 // بالإيد في موضعين بشكلين مختلفين.
                 //
-                // واسم الخدمة في النص مقصود: في حجز بتلات خدمات، «الموعد
+                // وأسماء الخدمات في النص مقصودة: في حجز بتلات خدمات، «الموعد
                 // اتحجز» لوحدها بتسيب العميل يدوّر على أنهي واحدة فيهم.
+                // وبنعدّهم كلهم لو أكتر من واحد راح مع بعض.
+                final names = state.serviceNames.map((n) => '«$n»').join(' و');
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
-                      'ميعاد «${state.serviceName}» اتحجز من شوية — اختار بديل',
+                      state.serviceNames.length == 1
+                          ? 'ميعاد $names اتحجز من شوية — اختار بديل'
+                          : 'مواعيد $names اتحجزوا من شوية — اختار بدائل',
                     ),
                   ),
                 );
@@ -104,7 +141,24 @@ class CreateBookingSheet extends StatelessWidget {
               return Column(
                 children: [
                   const CreateBookingGrabberWidget(),
-                  CreateBookingStepperWidget(currentStep: cubit.currentStep),
+                  CreateBookingHeaderWidget(
+                    currentStep: cubit.currentStep,
+                    scheduledCount: cubit.items
+                        .where((i) => i.isScheduled)
+                        .length,
+                    totalCount: cubit.items.length,
+                    // أول خطوة مالهاش رجوع — الخروج من الـ sheet هو
+                    // الرجوع، والحارس تحت بيحميه.
+                    onBack: cubit.currentStep == BookingStep.service
+                        ? null
+                        : cubit.previousStep,
+                  ),
+                  CreateBookingBranchChipWidget(
+                    branch: cubit.selectedBranch,
+                    onChangeBranch: cubit.branches.length > 1
+                        ? () => _showBranchSheet(context, cubit)
+                        : null,
+                  ),
                   verticalSpace(AppSpacing.headerToContent),
                   Expanded(
                     child: SingleChildScrollView(
@@ -121,7 +175,113 @@ class CreateBookingSheet extends StatelessWidget {
             },
           ),
         );
+        },
+      ),
+    );
+  }
+
+  /// حارس الخروج — **بيسأل قبل ما يرمي شغل**.
+  ///
+  /// زرار الرجوع بتاع النظام (وإيماءة الرجوع في أندرويد) بيقفلوا الـ
+  /// sheet ويرجّعوا `null`. مع سلة فيها خدمات، ده بيمسح كل حاجة من غير
+  /// ما حد يسأل. `PopScope` بيوقف الخروج ويسأل الأول.
+  ///
+  /// **مفيش حارس والسلة فاضية** — سؤال «متأكد؟» على لا شيء بيعلّم العميل
+  /// إنه يدوس «أيوة» من غير ما يقرا، وبعدين السؤال الحقيقي مابيتقراش.
+  Widget _guarded(BuildContext context, {required Widget child}) {
+    return BlocBuilder<CreateBookingCubit, CreateBookingState>(
+      builder: (context, _) {
+        final cubit = CreateBookingCubit.get(context);
+        final hasWork = cubit.items.isNotEmpty;
+
+        return PopScope(
+          canPop: !hasWork,
+          onPopInvokedWithResult: (didPop, _) async {
+            if (didPop || !context.mounted) return;
+            final leave = await _confirmDiscard(context);
+            if (leave == true && context.mounted) {
+              Navigator.of(context).pop();
+            }
+          },
+          child: child,
+        );
       },
+    );
+  }
+
+  Future<bool?> _confirmDiscard(BuildContext context) {
+    return showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text('تسيب الحجز؟', style: AppTextStyles.sectionHeader),
+        content: Text(
+          'الخدمات والمواعيد اللي اخترتها هتتمسح',
+          style: AppTextStyles.bodyMd,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text('أكمّل', style: AppTextStyles.bodyMdStrong),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(
+              'اسيبه',
+              style: AppTextStyles.bodyMdStrong.copyWith(
+                color: AppSemanticColors.danger,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// تغيير الفرع من جوه الحجز.
+  ///
+  /// **بيحذّر لأن التغيير بيمسح شغل.** الأخصائيين والمواعيد والأسعار كلهم
+  /// متعلقين بالفرع، فـ `selectBranch` بيصفّي جدولة كل الخدمات. لو غيّرنا
+  /// من غير سؤال، العميل بيرجع يلاقي سلته فاضية من المواعيد ومش عارف ليه.
+  void _showBranchSheet(BuildContext context, CreateBookingCubit cubit) {
+    showModalBottomSheet<void>(
+      context: context,
+      useSafeArea: true,
+      builder: (sheetContext) => Padding(
+        padding: EdgeInsetsDirectional.all(AppSpacing.s16.r),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('تحجز في أنهي فرع؟', style: AppTextStyles.sectionHeader),
+            verticalSpace(AppSpacing.s4),
+            Text(
+              cubit.items.any((i) => i.isScheduled)
+                  ? 'تغيير الفرع هيمسح المواعيد اللي اخترتها — الأخصائيين والمواعيد بيختلفوا من فرع للتاني'
+                  : 'الأخصائيين والمواعيد والأسعار بيختلفوا من فرع للتاني',
+              style: AppTextStyles.caption,
+            ),
+            verticalSpace(AppSpacing.s16),
+            for (final branch in cubit.branches)
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(branch.name, style: AppTextStyles.cardTitle),
+                subtitle: Text(branch.address, style: AppTextStyles.caption),
+                trailing: branch.uuid == cubit.selectedBranch?.uuid
+                    ? Icon(
+                        Icons.check_rounded,
+                        color: AppSemanticColors.accent,
+                      )
+                    : null,
+                // `selectBranch` بيتكفّل بإعادة التحميل بنفسه — الشاشة
+                // مابتعرفش إن الكارت المفتوح محتاج يتحدّث.
+                onTap: () {
+                  Navigator.of(sheetContext).pop();
+                  cubit.selectBranch(branch);
+                },
+              ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -182,6 +342,10 @@ class CreateBookingSheet extends StatelessWidget {
             onRemove: cubit.items.length > 1
                 ? () => cubit.removeItem(item.key)
                 : null,
+            onPickAnotherService: () => cubit.goToStep(BookingStep.service),
+            onJoinWaitlist: () => cubit.joinWaitlist(item.key),
+            onPeriodToggle: (period) => cubit.togglePeriod(item.key, period),
+            onBrowseAll: () => cubit.toggleBrowseAll(item.key),
           );
         }),
 

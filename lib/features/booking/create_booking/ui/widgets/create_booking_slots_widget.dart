@@ -27,12 +27,16 @@ class CreateBookingSlotsWidget extends StatelessWidget {
   final double baselinePrice;
   final ValueChanged<SlotUiModel> onSlotTap;
 
+  /// `null` = مفيش قائمة انتظار (مثلاً اليوم مقفول مش مليان).
+  final VoidCallback? onJoinWaitlist;
+
   const CreateBookingSlotsWidget({
     super.key,
     required this.slots,
     required this.selectedSlot,
     required this.baselinePrice,
     required this.onSlotTap,
+    this.onJoinWaitlist,
     this.takenSlot,
     this.isLoading = false,
   });
@@ -62,26 +66,55 @@ class CreateBookingSlotsWidget extends StatelessWidget {
     }
 
     if (slots.isEmpty) {
-      return const EmptyStateWidget(
+      // **«مليان» أحسن مدخل لقائمة الانتظار في المنتج كله.**
+      //
+      // ده طلب قابل قدامه عرض فاضي — مش «مقفول» اللي بيقفل الكلام.
+      // `POST /user/waitlist` مبني وشغال في السيرفر، والأبلكيشن كان
+      // بيرد على اليوم المليان بطريق مسدود.
+      return EmptyStateWidget(
         icon: Icons.event_busy_outlined,
         title: 'اليوم ده مليان',
-        message: 'جرّب يوم تاني من الشريط اللي فوق',
+        message: 'جرّب يوم تاني من الشريط اللي فوق، أو خلينا نبلّغك أول ما يفضى',
+        actionLabel: onJoinWaitlist == null ? null : 'ضيفني لقائمة الانتظار',
+        onAction: onJoinWaitlist,
       );
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: SlotPeriod.values.map((period) {
-        final periodSlots = slots.where((s) => s.period == period).toList();
-        return _PeriodGroup(
-          period: period,
-          slots: periodSlots,
-          selectedSlot: selectedSlot,
-          takenSlot: takenSlot,
-          baselinePrice: baselinePrice,
-          onSlotTap: onSlotTap,
-        );
-      }).toList(),
+      children: [
+        ...SlotPeriod.values.map((period) {
+          final periodSlots = slots.where((s) => s.period == period).toList();
+          return _PeriodGroup(
+            period: period,
+            slots: periodSlots,
+            selectedSlot: selectedSlot,
+            takenSlot: takenSlot,
+            baselinePrice: baselinePrice,
+            onSlotTap: onSlotTap,
+          );
+        }),
+
+        // **الميعاد اللي راح ليه مخرج تاني غير البدائل.**
+        //
+        // العميل كان عايز الميعاد ده بالذات. البدائل حل، وقائمة الانتظار
+        // حل تاني — «لو رجع، بلّغني». من غير ده، خطّاف «الميعاد اتحجز»
+        // بيختبر الفشل بس ومابيختبرش التعافي.
+        if (takenSlot != null && onJoinWaitlist != null) ...[
+          verticalSpace(AppSpacing.s8),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: TextButton.icon(
+              onPressed: onJoinWaitlist,
+              icon: Icon(Icons.notifications_active_outlined, size: 18.r),
+              label: Text(
+                'بلّغني لو الميعاد ده رجع',
+                style: AppTextStyles.label,
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

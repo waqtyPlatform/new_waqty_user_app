@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:waqty_user_application/core/models/queue_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_format.dart';
+import 'package:waqty_user_application/core/models/in_branch_ui_model.dart';
 import 'package:waqty_user_application/core/utils/app_motion.dart';
 import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
 import 'package:waqty_user_application/core/utils/app_spacing.dart';
@@ -10,7 +9,7 @@ import 'package:waqty_user_application/core/utils/spacing.dart';
 import 'package:waqty_user_application/core/widgets/app_band_widget.dart';
 import 'package:waqty_user_application/core/widgets/directional_chevron_widget.dart';
 
-/// شريط رفيع فوق التبويبات — بيظهر لما الدور يقرب، على **أي تبويب**.
+/// شريط رفيع فوق التبويبات — بيظهر لما الكرسي يقرب، على **أي تبويب**.
 ///
 /// ## ليه الحركة مش تفصيلة شكلية
 ///
@@ -21,25 +20,25 @@ import 'package:waqty_user_application/core/widgets/directional_chevron_widget.d
 ///
 /// ## بيقول حاجة واحدة بس
 ///
-/// سطر واحد وسهم. لو حط عليه رقم وتقدير ووقت تحديث بقى بؤرة تانية بتزاحم
+/// سطر واحد وسهم. لو حط عليه تقدير ووقت تحديث بقى بؤرة تانية بتزاحم
 /// المحتوى — وده شريط **تنبيه**، مش لوحة. التفاصيل كلها على بُعد ضغطة.
-class BranchQueueBannerWidget extends StatelessWidget {
-  /// `null` = مفيش حجز حي أصلاً. الشريط بيتعامل مع الحالتين بنفس الطريقة
-  /// عشان اللي بينده مايحتاجش يلفّه في `if`.
-  final QueueUiModel? queue;
+class InBranchBannerWidget extends StatelessWidget {
+  /// `null` = مفيش حجز في الفرع أصلاً. الشريط بيتعامل مع الحالتين بنفس
+  /// الطريقة عشان اللي بينده مايحتاجش يلفّه في `if`.
+  final InBranchUiModel? data;
 
   final VoidCallback onTap;
 
-  const BranchQueueBannerWidget({
+  const InBranchBannerWidget({
     super.key,
-    required this.queue,
+    required this.data,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final live = queue;
-    final isVisible = live != null && live.state.needsAttention;
+    final live = data;
+    final isVisible = live != null && live.needsAttention;
 
     return AnimatedSize(
       duration: AppMotion.slow,
@@ -58,12 +57,15 @@ class BranchQueueBannerWidget extends StatelessWidget {
     );
   }
 
-  Widget _band(QueueUiModel live) {
-    final isNow = live.state == QueueState.yourTurn;
-
+  /// نفس باج البؤرة بالحرف: خلفية [AppSemanticColors.accent] وفوقها طقم
+  /// معمول للحبر. النص كان **3.76:1** والسهم **1.35:1** — يعني الشريط
+  /// اللي بينده على العميل عشان يدخل كان أصعب حاجة يقراها في الشاشة.
+  ///
+  /// الأخضر الغامق وطقمه بيرفعوهم لـ **6.8:1** و**4.7:1**.
+  Widget _band(InBranchUiModel live) {
     return AppBandWidget(
       onTap: onTap,
-      color: isNow ? AppSemanticColors.accent : AppSemanticColors.surfaceInk,
+      color: AppSemanticColors.surfaceAccentDeep,
       padding: EdgeInsetsDirectional.symmetric(
         horizontal: AppSpacing.pageGutter.w,
         vertical: AppSpacing.s12.h,
@@ -72,20 +74,19 @@ class BranchQueueBannerWidget extends StatelessWidget {
         children: [
           Expanded(
             child: Text(
-              isNow
-                  ? 'دورك دلوقتي — اتوجّه للريسيبشن'
-                  : 'دورك قرّب — ${AppFormat.digits(live.aheadOfMe)} قدامك',
+              // **مش `announcement`.** ده شريط قاعد، والتنبيه لحظة.
+              live.bannerLabel,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: AppTextStyles.bodyMdStrong.copyWith(
-                color: AppSemanticColors.textOnInk,
+                color: AppSemanticColors.textOnAccent,
               ),
             ),
           ),
           horizontalSpace(AppSpacing.s8),
           const DirectionalChevronWidget(
             size: 18,
-            color: AppSemanticColors.textOnInkMuted,
+            color: AppSemanticColors.textOnAccentMuted,
           ),
         ],
       ),

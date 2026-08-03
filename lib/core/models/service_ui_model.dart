@@ -9,7 +9,13 @@ class ServiceUiModel {
   final double price;
   final int durationMinutes;
   final bool isCategory;
-  final int childrenCount;
+
+  /// التصنيف اللي الخدمة دي تحته — `null` يعني خدمة من المستوى الأول.
+  ///
+  /// **من غير الحقل ده كان التصنيف بيكدب.** «صبغة · 11 خدمة» كانت
+  /// بتفتح مختار الخدمات على **كل** خدمات المحل، لأن مكانش فيه أي رابط
+  /// بين التصنيف وولاده — الـ 11 كانت رقم مكتوب بالإيد ومالوش وجود.
+  final String? parentUuid;
 
   const ServiceUiModel({
     required this.uuid,
@@ -17,6 +23,6 @@ class ServiceUiModel {
     required this.price,
     required this.durationMinutes,
     this.isCategory = false,
-    this.childrenCount = 0,
+    this.parentUuid,
   });
 }

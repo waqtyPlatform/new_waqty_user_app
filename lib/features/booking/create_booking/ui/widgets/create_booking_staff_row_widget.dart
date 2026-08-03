@@ -85,7 +85,7 @@ class CreateBookingStaffRowWidget extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('اختر الأخصائي', style: AppTextStyles.sectionHeader),
+            Text('اختار الأخصائي', style: AppTextStyles.sectionHeader),
             verticalSpace(AppSpacing.s12),
             ...employees.map(
               (employee) => ListTile(

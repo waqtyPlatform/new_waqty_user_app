@@ -75,11 +75,11 @@ class AccountScreen extends StatelessWidget {
                   label: 'بياناتي',
                   onTap: () {},
                 ),
-                AccountMenuItemWidget(
-                  icon: Icons.event_note_outlined,
-                  label: 'حجوزاتي',
-                  onTap: () {},
-                ),
+                // **«حجوزاتي» اتشالت — كانت مكررة وميتة.**
+                //
+                // فيه تبويب اسمه «الحجوزات» في الشريط تحت وشغّال. الصف
+                // ده كان `onTap: () {}`، يعني بيوعد بنفس المكان ومايوصلش
+                // — والعميل اللي يدوسه مرة بيتعلّم إن الشاشة دي مابتردش.
               ],
             ),
 

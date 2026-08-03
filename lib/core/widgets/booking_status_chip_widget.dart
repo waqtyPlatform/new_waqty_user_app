@@ -39,14 +39,25 @@ class BookingStatusChipWidget extends StatelessWidget {
     );
   }
 
+  /// **مفيش `_ =>` هنا بالقصد.**
+  ///
+  /// الـ default كان بيبلع أي حالة جديدة ويطلّعها رمادية من غير ما حد
+  /// ياخد باله — وده بالظبط اللي خلّى أبلكيشن الموظف يرسم شارة مش
+  /// مقروءة. من غيره، أي حالة تتضاف للـ enum بتوقّف الـ build لحد ما حد
+  /// يقرر لونها.
   (Color, Color) get _colors => switch (status) {
-    BookingStatus.pending => (
-      AppSemanticColors.warningSoft,
-      AppSemanticColors.warning,
-    ),
     BookingStatus.confirmed => (
       AppSemanticColors.accentSoft,
       AppSemanticColors.accent,
+    ),
+    // وصل ومستني — الأصفر بيقول «فيه حاجة بتحصل دلوقتي وتخصك».
+    BookingStatus.arrived => (
+      AppSemanticColors.warningSoft,
+      AppSemanticColors.warning,
+    ),
+    BookingStatus.waiting => (
+      AppSemanticColors.warningSoft,
+      AppSemanticColors.warning,
     ),
     BookingStatus.inProgress => (
       AppSemanticColors.infoSoft,
@@ -60,9 +71,9 @@ class BookingStatusChipWidget extends StatelessWidget {
       AppSemanticColors.dangerSoft,
       AppSemanticColors.danger,
     ),
-    // الإلغاء بأنواعه التلاتة — رمادي مش أحمر. الأحمر بيقرا «فيه مشكلة»
-    // والإلغاء غالبًا العميل هو اللي عمله.
-    _ => (
+    // الإلغاء رمادي مش أحمر. الأحمر بيقرا «فيه مشكلة» والإلغاء غالبًا
+    // العميل هو اللي عمله.
+    BookingStatus.cancelled => (
       AppSemanticColors.surfaceSunken,
       AppSemanticColors.textSecondary,
     ),

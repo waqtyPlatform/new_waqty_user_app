@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/config/routes/routes.dart';
+import 'package:waqty_user_application/core/models/booking_ui_model.dart';
 import 'package:waqty_user_application/core/utils/app_spacing.dart';
 import 'package:waqty_user_application/core/utils/extentions.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
@@ -13,9 +14,11 @@ import 'package:waqty_user_application/features/home/home/ui/widgets/home_app_ba
 import 'package:waqty_user_application/features/home/home/ui/widgets/home_categories_widget.dart';
 import 'package:waqty_user_application/features/home/home/ui/widgets/home_nearby_widget.dart';
 import 'package:waqty_user_application/features/home/home/ui/widgets/home_providers_rail_widget.dart';
-import 'package:waqty_user_application/features/booking/branch_queue/logic/branch_queue_cubit.dart';
-import 'package:waqty_user_application/features/booking/branch_queue/ui/widgets/branch_queue_hero_section_widget.dart';
+import 'package:waqty_user_application/features/booking/create_booking/ui/create_booking_sheet.dart';
+import 'package:waqty_user_application/features/booking/in_branch/ui/widgets/in_branch_hero_section_widget.dart';
+import 'package:waqty_user_application/features/home/home/ui/widgets/home_rebook_widget.dart';
 import 'package:waqty_user_application/features/home/home/ui/widgets/home_search_widget.dart';
+import 'package:waqty_user_application/features/home/home/ui/widgets/home_waitlist_offer_widget.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -54,12 +57,7 @@ class HomeScreen extends StatelessWidget {
               bottom: AppSpacing.screenBottom.h,
             ),
             children: [
-              _gutter(
-                HomeAppBarWidget(
-                  cityName: cubit.selectedCity,
-                  onNotificationsTap: () {},
-                ),
-              ),
+              _gutter(HomeAppBarWidget(cityName: cubit.selectedCity)),
               verticalSpace(AppSpacing.s16),
               _gutter(
                 HomeSearchWidget(
@@ -82,13 +80,23 @@ class HomeScreen extends StatelessWidget {
               // كانوا ٢٠ مكتوبين بالإيد قبل كل عنوان، وأول ما حد يضيف قسم
               // جديد وينسى السطر ده التناسق بيقع.
 
+              // **العرض بعدّاده فوق البؤرة.**
+              //
+              // البؤرة بتقول «موعدك الجاي» — حاجة مضمونة ومالهاش وقت
+              // بيجري. العرض ده عكسها بالظبط: ٥ دقايق وبعدين يروح لحد
+              // تاني. اللي بيموت بيتقدّم.
+              //
+              // القسم بيطوّي نفسه لصفر لما مفيش عرض شغّال، فالترتيب ده
+              // مالوش تكلفة في الحالة الغالبة.
+              const HomeWaitlistOfferWidget(),
+
               // **البؤرة.** مايتبنيش خالص لو مفيش حجز — مش كارت فاضي.
               //
               // ومش ملفوف في `_gutter` عن قصد: ده `AppBandWidget` بياخد
               // العرض كله. وبيبدأ من هنا مش من فوق عشان **مايلمسش شريط
               // الحالة** — لوح حبر واصل للنوتش بيقرا كروم مش محتوى.
               //
-              // **مفيش `BlocProvider` هنا.** الـ `BranchQueueCubit` بيتعمل
+              // **مفيش `BlocProvider` هنا.** الـ `InBranchCubit` بيتعمل
               // مرة واحدة في `ButtonNavigationBarScreen` فوق الأربع تبويبات،
               // والبؤرة دي والشريط اللي فوق التبويبات بيقروا **من نفس
               // النسخة**.
@@ -99,7 +107,22 @@ class HomeScreen extends StatelessWidget {
               // إن الشريط مايبقاش موجود أصلاً.
               if (cubit.upcomingBooking != null) ...[
                 verticalSpace(AppSpacing.sectionBreak),
-                const BranchQueueHeroSectionWidget(),
+                const InBranchHeroSectionWidget(),
+              ],
+
+              // **«زي المرة اللي فاتت» فوق الطية.**
+              //
+              // بيقعد بعد البؤرة وقبل «الأكثر طلبًا»: اللي بيحصل دلوقتي
+              // الأول، بعده اللي غالبًا عايزه، وبعدين الاستكشاف. الترتيب
+              // ده بيتبع نية العميل مش تصنيف المحتوى.
+              if (cubit.lastCompleted != null) ...[
+                verticalSpace(AppSpacing.sectionBreak),
+                _gutter(
+                  HomeRebookWidget(
+                    booking: cubit.lastCompleted!,
+                    onTap: () => _rebook(context, cubit.lastCompleted!),
+                  ),
+                ),
               ],
 
               _gutter(
@@ -145,6 +168,25 @@ class HomeScreen extends StatelessWidget {
         );
       },
     );
+  }
+
+  /// «زي المرة اللي فاتت» → **نفس المحل ونفس الفرع ونفس الخدمة**.
+  ///
+  /// التلاتة بيتنقلوا من الحجز القديم، فالـ sheet بيفتح على خطوة الميعاد
+  /// على طول. اللي فاضل من «زي ما هي» هو الأخصائي — الـ wizard بياخد
+  /// خدمة واحدة مبدئية بس، وحجز بكذا خدمة بياخد أولها.
+  Future<void> _rebook(BuildContext context, BookingUiModel booking) async {
+    final didBook = await CreateBookingSheet.show(
+      context,
+      providerUuid: booking.providerUuid,
+      providerName: booking.providerName,
+      branchUuid: booking.branchUuid,
+      serviceUuid: booking.items.first.serviceUuid,
+    );
+
+    if (didBook == true && context.mounted) {
+      Navigator.of(context).pushNamed(Routes.bookingSuccessScreen);
+    }
   }
 
   /// هامش الصفحة — **للي مش شايل هامشه بنفسه بس**.

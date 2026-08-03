@@ -8,7 +8,12 @@ import 'package:waqty_user_application/core/utils/spacing.dart';
 import 'package:waqty_user_application/core/widgets/button_widget.dart';
 
 /// شيت التقييم — نجوم + تعليق اختياري.
+///
+/// **بيقيّم خدمة واحدة بعينها، والاسم في العنوان.** التقييمات مربوطة بـ
+/// `booking_item_id` في السيرفر، فحجز بتلات خدمات = تلات تقييمات. من غير
+/// الاسم، العميل اللي بيقيّم تانية خدمة مش عارف هو بيقيّم إيه.
 class BookingRateSheetWidget extends StatelessWidget {
+  final String serviceName;
   final int rating;
   final TextEditingController commentController;
   final bool isLoading;
@@ -17,6 +22,7 @@ class BookingRateSheetWidget extends StatelessWidget {
 
   const BookingRateSheetWidget({
     super.key,
+    required this.serviceName,
     required this.rating,
     required this.commentController,
     required this.onRatingChanged,
@@ -37,7 +43,7 @@ class BookingRateSheetWidget extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('قيّم الخدمة', style: AppTextStyles.cardTitle),
+          Text('قيّم «$serviceName»', style: AppTextStyles.cardTitle),
           verticalSpace(4),
           Text(
             'رأيك بيساعد ناس تانية تختار',

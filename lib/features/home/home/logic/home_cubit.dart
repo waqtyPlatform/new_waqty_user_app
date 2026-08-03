@@ -19,6 +19,15 @@ class HomeCubit extends Cubit<HomeState> {
   /// **مايظهرش خالص**، مش كارت فاضي.
   BookingUiModel? upcomingBooking;
 
+  /// آخر حجز مكتمل — مصدر كارت «زي المرة اللي فاتت».
+  ///
+  /// **«نفس اللي فات» هو السلوك الغالب** عند الكوافير والباربر، ومكانش
+  /// ليه أي سطح في الأبلكيشن: مدفون في تبويب اسمه «السابقة»، ورا زرار
+  /// «احجز تاني» كان بيعمل `context.pop()`.
+  ///
+  /// ومحتاجش أي داتا جديدة — آخر حجز مكتمل، نفس الخدمة، نفس الأخصائي.
+  BookingUiModel? lastCompleted;
+
   String selectedCity = 'القاهرة';
 
   Future<void> loadHome() async {
@@ -43,6 +52,13 @@ class HomeCubit extends Cubit<HomeState> {
     // TODO(api): GET /api/user/bookings?upcoming=true&per_page=1
     final bookings = MockBookings.upcoming;
     upcomingBooking = bookings.isEmpty ? null : bookings.first;
+
+    // TODO(api): GET /api/user/bookings?past=true&per_page=1
+    //   بنعرض أحدث حجز **مكتمل** بس — الملغي والـ no-show مش «مرة فاتت».
+    final past = MockBookings.past
+        .where((b) => b.status == BookingStatus.completed)
+        .toList();
+    lastCompleted = past.isEmpty ? null : past.first;
 
     emit(HomeSuccessState());
   }

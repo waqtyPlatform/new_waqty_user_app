@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/config/routes/routes.dart';
 import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
+import 'package:waqty_user_application/core/mock/mock_services.dart';
+import 'package:waqty_user_application/core/models/service_ui_model.dart';
 import 'package:waqty_user_application/core/utils/app_constant.dart';
 import 'package:waqty_user_application/core/utils/app_format.dart';
 import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
@@ -155,11 +157,14 @@ class ServiceProviderDetailsScreen extends StatelessWidget {
                     // صف الخدمة هو الضغطة الأولى من الأربعة. الـ sheet
                     // بيفتح وخطوة الخدمة متخطية، لأن العميل اختارها
                     // بالضغطة دي أصلاً.
-                    onTap: () => _openBooking(
-                      context,
-                      cubit,
-                      service.isCategory ? null : service.uuid,
-                    ),
+                    // **التصنيف بيفتح ولاده، مش كل خدمات المحل.**
+                    //
+                    // كان بيبعت `null` — يعني الـ sheet بيفتح على القايمة
+                    // الكاملة. صف بيقول «صبغة · 5 خدمات» وبيوصّلك لقص
+                    // شعر وحلاقة ذقن بيكسر الوعد اللي هو نفسه كتبه.
+                    onTap: () => service.isCategory
+                        ? _openCategory(context, cubit, service)
+                        : _openBooking(context, cubit, service.uuid),
                   );
                 },
               ),
@@ -188,6 +193,66 @@ class ServiceProviderDetailsScreen extends StatelessWidget {
     );
   }
 
+  /// شيت ولاد التصنيف — اختار منه وبعدين يكمّل للحجز.
+  ///
+  /// خطوة زيادة بالقصد: التصنيف مش خدمة، والعميل لازم يحدد **أنهي**
+  /// صبغة قبل ما نسأله عن الميعاد — الأسعار والمدد بتختلف بينهم بالتلت.
+  Future<void> _openCategory(
+    BuildContext context,
+    ServiceProviderDetailsCubit cubit,
+    ServiceUiModel category,
+  ) async {
+    final children = MockServices.childrenOf(category.uuid);
+    if (children.isEmpty) return;
+
+    final picked = await showModalBottomSheet<ServiceUiModel>(
+      context: context,
+      useSafeArea: true,
+      isScrollControlled: true,
+      builder: (sheetContext) => Padding(
+        padding: EdgeInsetsDirectional.all(AppSpacing.s16.r),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(category.name, style: AppTextStyles.sectionHeader),
+            verticalSpace(AppSpacing.s4),
+            Text(
+              'الأسعار والمدد بيختلفوا حسب النوع',
+              style: AppTextStyles.caption,
+            ),
+            verticalSpace(AppSpacing.s16),
+            Flexible(
+              child: ListView(
+                shrinkWrap: true,
+                children: [
+                  for (final child in children)
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(child.name, style: AppTextStyles.cardTitle),
+                      subtitle: Text(
+                        AppFormat.duration(child.durationMinutes),
+                        style: AppTextStyles.caption,
+                      ),
+                      trailing: Text(
+                        AppFormat.money(child.price),
+                        style: AppTextStyles.bodyMdStrong,
+                      ),
+                      onTap: () => Navigator.of(sheetContext).pop(child),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (picked != null && context.mounted) {
+      await _openBooking(context, cubit, picked.uuid);
+    }
+  }
+
   Future<void> _openBooking(
     BuildContext context,
     ServiceProviderDetailsCubit cubit,
@@ -198,6 +263,9 @@ class ServiceProviderDetailsScreen extends StatelessWidget {
       providerUuid: cubit.providerUuid,
       providerName: cubit.provider?.name ?? '',
       serviceUuid: serviceUuid,
+      // الفرع اللي العميل اختاره من `_showBranchSheet` — كان بيتضاع هنا
+      // والحجز بيروح لأول فرع مهما اختار.
+      branch: cubit.selectedBranch,
     );
 
     if (didBook == true && context.mounted) {
@@ -223,7 +291,7 @@ class ServiceProviderDetailsScreen extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('اختر الفرع', style: AppTextStyles.sectionHeader),
+            Text('اختار الفرع', style: AppTextStyles.sectionHeader),
             verticalSpace(AppSpacing.s12),
             ...cubit.branches.map(
               (branch) => ListTile(

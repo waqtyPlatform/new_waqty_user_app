@@ -35,10 +35,18 @@ class BookingDetailsActionsWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        if (booking.status.canRate && booking.myRating == 0)
+        // **الزرار بيفضل موجود لحد ما كل الخدمات تتقيّم.**
+        //
+        // كان `booking.myRating == 0` — رقم واحد للحجز كله، يعني في حجز
+        // بتلات خدمات أول تقييم كان بيخفي الزرار والاتنين التانيين
+        // مايتقيّموش أبدًا. التقييمات مربوطة بـ `booking_item_id` في
+        // السيرفر، فالحجز ده تلات تقييمات مستقلة.
+        if (booking.hasPendingRatings)
           ButtonWidget(
             isLoading: false,
-            buttonText: 'قيّم الخدمة',
+            buttonText: booking.rateableItems.length == 1
+                ? 'قيّم الخدمة'
+                : 'قيّم الخدمات',
             backGroundColor: AppSemanticColors.accent,
             borderColor: AppSemanticColors.accent,
             textStyle: AppTextStyles.button,

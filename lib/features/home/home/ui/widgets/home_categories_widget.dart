@@ -7,42 +7,51 @@ import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
 import 'package:waqty_user_application/core/utils/app_spacing.dart';
 import 'package:waqty_user_application/core/utils/app_text_styles.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
+import 'package:waqty_user_application/core/widgets/app_surface_widget.dart';
 import 'package:waqty_user_application/core/widgets/skeleton_box_widget.dart';
 
-/// صف التصنيفات — `ListView.builder` أفقي، **من غير بلاطات**.
+/// صف التصنيفات — `ListView.builder` أفقي، **كل تصنيف بلاطة بيضا**.
 ///
-/// ## ليه البلاطة والطبق اتشالوا
+/// ## البلاطة رجعت — وطبق الأيقونة لأ
 ///
-/// كل تصنيف كان بلاطة غاطسة (٩٢×~١٢٤) جواها طبق أبيض دايرة ٣٦. يعني
-/// أربع تصنيفات = **٨ صناديق مستديرة** من أصل ١٥ فوق الطيّة. لما ٨
-/// صناديق بتتقسم على تنقّل ثانوي، البؤرة (لوح الحبر) بتتحوّل لواحد من
-/// خمستاشر بدل ما تبقى الحاجة الوحيدة اللي العين تقع عليها.
+/// النسخة اللي قبل دي شالت كل حاجة: التصنيف بقى أيقونة واسم قاعدين على
+/// الصفحة مباشرة. ده حلّ مشكلة الزحام، بس خلق واحدة تانية — **التصنيف
+/// بطّل يبان إنه قابل للضغط**. أيقونة رمادية جنب نص رمادي على أرضية
+/// دافية بتقرا «عنوان قسم»، مش «اضغط هنا».
 ///
-/// التصنيف دلوقتي **أيقونة رمادية + اسم + عدد قاعدين على الصفحة الدافية
-/// مباشرة**. مفيش سطح، مفيش ظل، مفيش استدارة — التنقّل رجع لورا زي ما
-/// كان المفروض من الأول، والطبق الأبيض اللي كان بيدّي «عمق» بقى مالوش
-/// لازمة لما مفيش خلفية غاطسة يقعد عليها.
+/// البلاطة البيضا بترجّع الإشارة دي: سطح مرفوع = هدف لمس. والصفحة دافية
+/// (`page`) فالأبيض عليها ليه حد واضح من غير ما يحتاج ظل تقيل.
+///
+/// **بس طبق الأيقونة الدايرة ماترجعش.** ده كان الصندوق التاني جوه نفس
+/// العنصر — بلاطة جوه بلاطة. الأيقونة على أرضية البلاطة مباشرة كفاية،
+/// والفرق بين ٨ صناديق و٤ هو اللي كان بيدوّخ الشاشة.
+///
+/// **والأيقونة بتفضل رمادية.** ٦ أيقونات خضرا هنا كانت أكبر سبب إن
+/// الأخضر بطّل يعلّم حاجة في الهوم.
 class HomeCategoriesWidget extends StatelessWidget {
-  /// عرض العنصر. فضل ٩٢ زي البلاطة عشان إيقاع الصف مايتغيّرش — بس دلوقتي
-  /// الـ ٩٢ كلها للنص بدل ٧٦ (كان فيه ٨ حشوة على كل جنب).
-  static const double itemWidth = 92;
-
-  /// المسافة بين عنصر وعنصر.
+  /// عرض العنصر — **١٠٠ مش ٩٢**.
   ///
-  /// كانت `chipGap` ٨، بس البلاطة كانت بتضيف ٨ حشوة من كل ناحية — يعني
-  /// **الفراغ اللي العين شايفاه بين نص ونص كان ٢٤**. لما الحشوة اتشالت،
-  /// الـ ٨ لوحدها بتخلي أسماء التصنيفات تقريبًا تلزق في بعض. الـ ٢٤ هنا
-  /// بترجّع نفس الفراغ البصري بالظبط.
-  static const double itemGap = AppSpacing.s24;
+  /// البلاطة بتاكل ١٢ حشوة من كل جنب، فلو فضلت ٩٢ كان الباقي للنص ٦٨
+  /// و«عناية بالبشرة» كانت هتتلف تلات سطور. الـ ١٠٠ بترجّع نفس الـ ٧٦
+  /// المتاحة للنص.
+  static const double itemWidth = 100;
+
+  /// حشوة البلاطة.
+  static const double tilePadding = AppSpacing.s12;
+
+  /// المسافة بين بلاطة وبلاطة.
+  ///
+  /// رجعت ٨ لما البلاطة رجعت. الـ ٢٤ اللي كانت هنا كانت بتعوّض إن مفيش
+  /// حواف — دلوقتي الحافة نفسها بتفصل، و٢٤ فوقها كانت هتفكّك الصف.
+  static const double itemGap = AppSpacing.chipGap;
 
   /// مقاس الأيقونة. كانت ٢٠ جوه طبق ٣٦ — بره الطبق الـ ٢٠ بتبقى ضايعة،
   /// فطلعت ٢٨ عشان تفضل مرساة الصف من غير ما توزن أكتر من الاسم.
   static const double iconSize = 28;
 
-  /// الجزء اللي مالوش دعوة بمقياس الخط: أيقونة ٢٨ + ٨ (`s8`) + ٤ (`s4`).
-  /// **المجموع ٤٠.** (كان ٧٦ — الـ ٣٦ اللي راحت هي طبق الأيقونة، والحشوة
-  /// ٢٤ راحت مع البلاطة.)
-  static const double _fixedPart = 40;
+  /// الجزء اللي مالوش دعوة بمقياس الخط: حشوة ١٢ فوق + ١٢ تحت + أيقونة ٢٨
+  /// + ٨ (`s8`) + ٤ (`s4`). **المجموع ٦٤.**
+  static const double _fixedPart = 64;
 
   /// النص عند مقياس ١٫٠: سطرين اسم (`captionInk` ١٢×١٫٤٠×٢ = ٣٣٫٦)
   /// + العدد (`overline` ١١×١٫٣٠ = ١٤٫٣). **المجموع ٤٧٫٩.**
@@ -109,24 +118,34 @@ class _CategoryItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // `Material` شفاف + `InkWell` — نفس ترتيب [AppRowWidget]. مفيش
-    // `AppSurfaceWidget` هنا عن قصد: أي سطح معناه لون وظل واستدارة، وده
-    // بالظبط اللي بنشيله. الموجة بتظهر وقت الضغط بس ومابتسيبش صندوق ورا.
-    return Material(
-      type: MaterialType.transparency,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadius.s.r),
-        child: SizedBox(
-          width: HomeCategoriesWidget.itemWidth.w,
+    return AppSurfaceWidget(
+      onTap: onTap,
+      radius: AppRadius.m,
+      padding: EdgeInsets.all(HomeCategoriesWidget.tilePadding.r),
+      child: SizedBox(
+          width:
+              (HomeCategoriesWidget.itemWidth -
+                      HomeCategoriesWidget.tilePadding * 2)
+                  .w,
           child: Column(
             children: [
               Icon(
                 _iconFor(category.name),
                 size: HomeCategoriesWidget.iconSize.r,
-                // **رمادية مش خضرا.** ٦ أيقونات خضرا كانت هنا، وهي أكبر
-                // سبب إن الأخضر بطّل يعلّم حاجة في الهوم.
-                color: AppSemanticColors.textSecondary,
+                // **خضرا — لون البراند.**
+                //
+                // كانت رمادية بحجة إن ٦ أيقونات خضرا بتخفّف قيمة الأخضر
+                // في الهوم. الحجة دي اتراجعنا عنها: الرمادي خلّى صف
+                // التصنيفات يقرا **معطّل** — ٦ مربعات بيضا فيها أيقونة
+                // رمادية ونص رمادي مافيهاش حاجة تقول إنها بتتداس.
+                //
+                // والأخضر هنا مش بيزاحم حاجة: البؤرة الحقيقية في الهوم
+                // شريط غامق (`surfaceInk`/`surfaceAccentDeep`) بيكسب على
+                // أي أيقونة بالحجم واللون.
+                //
+                // التباين مع الكارت الأبيض 3.96:1 — فوق حد الـ3:1
+                // المطلوب لعنصر واجهة مش نص.
+                color: AppSemanticColors.accent,
               ),
               verticalSpace(AppSpacing.s8),
               // `Expanded` عشان العدد يقعد على نفس الخط في كل العناصر.
@@ -155,7 +174,6 @@ class _CategoryItem extends StatelessWidget {
                 ),
             ],
           ),
-        ),
       ),
     );
   }

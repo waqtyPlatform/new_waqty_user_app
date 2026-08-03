@@ -1,6 +1,7 @@
 import 'package:waqty_user_application/core/services/check_network.dart';
 import 'package:waqty_user_application/config/routes/routes.dart';
 import 'package:waqty_user_application/core/utils/constant_keys.dart';
+import 'package:waqty_user_application/core/utils/demo_mode.dart';
 import 'package:waqty_user_application/my_app.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -63,10 +64,17 @@ Future<void> main() async {
       // مابتحلهاش — دي بتختار اللغة مش بتدوّر على المفتاح.
       useFallbackTranslations: true,
       // القرار بتاع «أفتح على إيه» بقى في SplashCubit مش hardcoded هنا.
-      child: MyApp(navigateWidget: Routes.splashScreen),
+      child: MyApp(navigateWidget: _initialRoute),
     ),
   );
 }
+
+/// نقطة البداية — السبلاش دايمًا، إلا في وضع العرض.
+///
+/// شوف [kDemoMode] للتفاصيل.
+const String _initialRoute = kDemoMode
+    ? Routes.buttonNavigationBarScreen
+    : Routes.splashScreen;
 
 Future<void> checkIsFirstRunForApp() async {
   final isFirstRun = await CacheHelper.getBool(

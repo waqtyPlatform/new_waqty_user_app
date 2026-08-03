@@ -10,8 +10,10 @@ import 'package:waqty_user_application/core/utils/app_spacing.dart';
 import 'package:waqty_user_application/core/utils/app_text_styles.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
 import 'package:waqty_user_application/core/widgets/app_surface_widget.dart';
+import 'package:waqty_user_application/core/widgets/empty_state_widget.dart';
 import 'package:waqty_user_application/features/booking/create_booking/logic/booking_draft_item.dart';
 import 'package:waqty_user_application/features/booking/create_booking/ui/widgets/create_booking_date_strip_widget.dart';
+import 'package:waqty_user_application/features/booking/create_booking/ui/widgets/create_booking_proposals_widget.dart';
 import 'package:waqty_user_application/features/booking/create_booking/ui/widgets/create_booking_slots_widget.dart';
 import 'package:waqty_user_application/features/booking/create_booking/ui/widgets/create_booking_staff_row_widget.dart';
 
@@ -44,6 +46,18 @@ class CreateBookingItemCardWidget extends StatelessWidget {
   /// `null` لما تكون دي الخدمة الوحيدة — حجز من غير خدمات مالوش معنى.
   final VoidCallback? onRemove;
 
+  /// مخرج من الخدمة اللي مالهاش أخصائيين في الفرع ده.
+  final VoidCallback onPickAnotherService;
+
+  /// دخول قائمة انتظار الفرع لما اليوم مليان أو الميعاد راح.
+  final VoidCallback onJoinWaitlist;
+
+  /// قلب نافذة وقت في الاقتراحات.
+  final ValueChanged<SlotPeriod> onPeriodToggle;
+
+  /// تبديل بين الاقتراحات والشبكة الكاملة.
+  final VoidCallback onBrowseAll;
+
   const CreateBookingItemCardWidget({
     super.key,
     required this.item,
@@ -55,6 +69,10 @@ class CreateBookingItemCardWidget extends StatelessWidget {
     required this.onDateTap,
     required this.onMonthChange,
     required this.onSlotTap,
+    required this.onPickAnotherService,
+    required this.onJoinWaitlist,
+    required this.onPeriodToggle,
+    required this.onBrowseAll,
     this.onRemove,
   });
 
@@ -185,6 +203,31 @@ class CreateBookingItemCardWidget extends StatelessWidget {
   // ── الجسم المفتوح ────────────────────────────────────────────────────
 
   Widget _body(BuildContext context) {
+    // **مفيش حد بيعمل الخدمة دي في الفرع ده.**
+    //
+    // نتيجة حقيقية من السيرفر — التعيينات (أخصائي × خدمة × فرع) ممكن
+    // تبقى فاضية. الكارت كان هيعرض صف أخصائي فاضي وتقويم مالوش أيام
+    // ومساحة مواعيد فاضية: تلات فراغات ورا بعض العميل يفسّرها «الأبلكيشن
+    // باظ». السطر ده بيقول السبب ويدي مخرج.
+    if (item.employees.isEmpty) {
+      return Padding(
+        padding: EdgeInsetsDirectional.only(top: AppSpacing.s16.h),
+        child: EmptyStateWidget(
+          icon: Icons.person_off_outlined,
+          title: 'الخدمة دي مش متاحة في الفرع ده',
+          message: 'جرّب فرع تاني، أو غيّر الخدمة',
+          // **الطريق المسدود لازم يبقى ليه باب.**
+          //
+          // زرار الشيل بيختفي لما الخدمة دي هي الوحيدة في السلة
+          // (`items.length > 1`)، والحجز مش هيكمّل من غير ميعاد — يعني
+          // العميل كان بيقعد محبوس في كارت مالوش قدام ولا ورا. الزرار
+          // ده بيرجّعه لمختار الخدمات.
+          actionLabel: 'اختار خدمة تانية',
+          onAction: onPickAnotherService,
+        ),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -195,24 +238,56 @@ class CreateBookingItemCardWidget extends StatelessWidget {
           onEmployeeSelected: onEmployeeSelected,
         ),
         verticalSpace(AppSpacing.s24),
-        CreateBookingDateStripWidget(
-          availableDates: item.availableDates,
-          selectedDate: item.selectedDate,
-          currentMonth: item.currentMonth,
-          canGoToPreviousMonth: canGoToPreviousMonth,
-          onDateTap: onDateTap,
-          onMonthChange: onMonthChange,
-        ),
-        // ٢٤ في المكانين — نفس العلاقة بنفس القيمة.
-        verticalSpace(AppSpacing.s24),
-        CreateBookingSlotsWidget(
-          slots: item.slots,
-          selectedSlot: item.selectedSlot,
-          takenSlot: item.takenSlot,
-          isLoading: isLoadingSlots,
-          baselinePrice: item.baselinePrice,
-          onSlotTap: onSlotTap,
-        ),
+
+        // **الاقتراحات هي الافتراضي، والشبكة ورا ضغطة.**
+        //
+        // مش «بدل» — الاتنين موجودين. الاقتراحات بتغطي الحالة الغالبة
+        // (نافذة مقبولة، أقرب ميعاد فيها)، والشبكة للي عايز الساعة
+        // ٦:١٥ بالذات.
+        if (!item.isBrowsingAll)
+          CreateBookingProposalsWidget(
+            proposals: item.proposals,
+            selectedSlot: item.selectedSlot,
+            periods: item.periods,
+            isLoading: isLoadingSlots,
+            baselinePrice: item.baselinePrice,
+            onPeriodToggle: onPeriodToggle,
+            onSlotTap: onSlotTap,
+            onBrowseAll: onBrowseAll,
+            onJoinWaitlist: onJoinWaitlist,
+          )
+        else ...[
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: TextButton.icon(
+              onPressed: onBrowseAll,
+              icon: Icon(Icons.arrow_forward_rounded, size: 18.r),
+              label: Text('رجوع للاقتراحات', style: AppTextStyles.label),
+            ),
+          ),
+          verticalSpace(AppSpacing.s8),
+          CreateBookingDateStripWidget(
+            availableDates: item.availableDates,
+            selectedDate: item.selectedDate,
+            currentMonth: item.currentMonth,
+            canGoToPreviousMonth: canGoToPreviousMonth,
+            durationMinutes: item.service.durationMinutes,
+            onDateTap: onDateTap,
+            onMonthChange: onMonthChange,
+            onFullDayTap: onJoinWaitlist,
+          ),
+          // ٢٤ في المكانين — نفس العلاقة بنفس القيمة.
+          verticalSpace(AppSpacing.s24),
+          CreateBookingSlotsWidget(
+            slots: item.slots,
+            selectedSlot: item.selectedSlot,
+            takenSlot: item.takenSlot,
+            isLoading: isLoadingSlots,
+            baselinePrice: item.baselinePrice,
+            onSlotTap: onSlotTap,
+            onJoinWaitlist: onJoinWaitlist,
+          ),
+        ],
       ],
     );
   }

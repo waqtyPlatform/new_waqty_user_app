@@ -10,6 +10,7 @@ import 'core/utils/app_colors_white_theme.dart';
 import 'core/utils/app_semantic_colors.dart';
 import 'core/utils/app_spacing.dart';
 
+import 'core/mock/mock_scenario_switcher_widget.dart';
 import 'core/services/biometric_service.dart';
 
 /// TEMP (local run only): skips the biometric gate so the app is reachable on
@@ -157,7 +158,10 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             // بنقصّه هنا بدل ما نلاحق ٢٠ صندوق واحد واحد.
             builder: (context, child) => MediaQuery.withClampedTextScaling(
               maxScaleFactor: AppSpacing.maxTextScale,
-              child: child ?? const SizedBox.shrink(),
+              // MOCK — الشارة والسيناريوهات بيختفوا بالكامل في الـ release.
+              child: MockScenarioSwitcherWidget(
+                child: child ?? const SizedBox.shrink(),
+              ),
             ),
           ),
         );

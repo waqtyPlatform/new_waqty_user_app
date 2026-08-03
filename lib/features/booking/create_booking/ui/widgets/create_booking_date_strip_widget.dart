@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:waqty_user_application/core/mock/mock_slots.dart';
 import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
 import 'package:waqty_user_application/core/utils/app_format.dart';
 import 'package:waqty_user_application/core/utils/app_motion.dart';
@@ -19,13 +20,31 @@ import 'package:waqty_user_application/core/widgets/directional_chevron_widget.d
 /// **الأيام المليانة بتفضل ظاهرة، مش بتتشال.** الفراغ نفسه بيعلّم العميل
 /// إيقاع المحل (مقفول الجمعة مثلاً). لو شلناها الشريط بيكدب ويقول إن
 /// كل الأيام متاحة.
+///
+/// ## «مقفول» غير «مليان» — والفرق بيغيّر الرد
+///
+/// الاتنين كانوا شخطة رمادية واحدة، ومعناهم عكس بعض:
+///
+///  • **مقفول** حقيقة عن المحل. بتقفل الكلام — مفيش حاجة تتعمل.
+///  • **مليان** طلب قابل قدامه عرض فاضي. ده **أحسن مدخل لقائمة الانتظار
+///    في المنتج كله**، وكان متعرض كطريق مسدود.
+///
+/// فاليوم المليان بقى قابل للضغط وبيودّي لقائمة الانتظار، والمقفول لأ.
 class CreateBookingDateStripWidget extends StatelessWidget {
   final List<DateTime> availableDates;
   final DateTime? selectedDate;
   final DateTime currentMonth;
   final bool canGoToPreviousMonth;
+
+  /// مدة الخدمة — عشان حالة اليوم تتحسب صح. يوم فيه فرجة ساعة «مليان»
+  /// لخدمة ساعتين ومفتوح لخدمة نص ساعة.
+  final int durationMinutes;
+
   final ValueChanged<DateTime> onDateTap;
   final ValueChanged<int> onMonthChange;
+
+  /// الضغط على يوم **مليان** — بيودّي لقائمة الانتظار.
+  final VoidCallback? onFullDayTap;
 
   const CreateBookingDateStripWidget({
     super.key,
@@ -35,6 +54,8 @@ class CreateBookingDateStripWidget extends StatelessWidget {
     required this.canGoToPreviousMonth,
     required this.onDateTap,
     required this.onMonthChange,
+    this.durationMinutes = 45,
+    this.onFullDayTap,
   });
 
   @override
@@ -74,18 +95,39 @@ class CreateBookingDateStripWidget extends StatelessWidget {
             separatorBuilder: (_, __) => horizontalSpace(AppSpacing.chipGap),
             itemBuilder: (context, index) {
               final day = days[index];
-              final isAvailable = availableDates.any((d) => _isSame(d, day));
+              final status = MockSlots.dayStatus(
+                day,
+                durationMinutes: durationMinutes,
+              );
               final isSelected =
                   selectedDate != null && _isSame(selectedDate!, day);
               return _DayCell(
                 day: day,
-                isAvailable: isAvailable,
+                status: status,
                 isSelected: isSelected,
                 isToday: _isSame(day, DateTime.now()),
-                onTap: isAvailable ? () => onDateTap(day) : null,
+                onTap: status.isBookable
+                    ? () => onDateTap(day)
+                    : status.offersWaitlist
+                    ? onFullDayTap
+                    : null,
               );
             },
           ),
+        ),
+        // **مفتاح الشكل — سطر واحد بيشرح الفرق مرة.**
+        //
+        // من غيره العميل لازم يستنتج إن الحد الأخضر معناه «اضغط»
+        // والشخطة معناها «خلاص». الاستنتاج ده بيتعلّم بالتجربة والخطأ،
+        // والتجربة والخطأ في شاشة حجز غالية.
+        verticalSpace(AppSpacing.s8),
+        Row(
+          children: [
+            _LegendDot(
+              color: AppSemanticColors.accent,
+              label: 'مليان — ينفع تدخل قائمة الانتظار',
+            ),
+          ],
         ),
       ],
     );
@@ -111,6 +153,32 @@ class CreateBookingDateStripWidget extends StatelessWidget {
 
   bool _isSame(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
+}
+
+class _LegendDot extends StatelessWidget {
+  final Color color;
+  final String label;
+
+  const _LegendDot({required this.color, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          height: 8.r,
+          width: 8.r,
+          decoration: BoxDecoration(
+            border: Border.all(color: color),
+            borderRadius: BorderRadius.circular(AppRadius.pill.r),
+          ),
+        ),
+        horizontalSpace(AppSpacing.s4),
+        Text(label, style: AppTextStyles.overline),
+      ],
+    );
+  }
 }
 
 class _ArrowButton extends StatelessWidget {
@@ -140,18 +208,20 @@ class _ArrowButton extends StatelessWidget {
 
 class _DayCell extends StatelessWidget {
   final DateTime day;
-  final bool isAvailable;
+  final DayAvailability status;
   final bool isSelected;
   final bool isToday;
   final VoidCallback? onTap;
 
   const _DayCell({
     required this.day,
-    required this.isAvailable,
+    required this.status,
     required this.isSelected,
     required this.isToday,
     this.onTap,
   });
+
+  bool get isAvailable => status.isBookable;
 
   @override
   Widget build(BuildContext context) {
@@ -165,12 +235,20 @@ class _DayCell extends StatelessWidget {
 
     return AppSurfaceWidget(
       onTap: onTap,
-      // المتاح **مرفوع** والمليان **غاطس** — الفرق بقى في العمق مش في
-      // حد رمادي تباينه ٧٪ تقريبًا مش باين على 3x.
+      // المتاح **مرفوع** والمقفول **غاطس** — الفرق في العمق مش في حد
+      // رمادي تباينه ٧٪ تقريبًا مش باين على 3x.
       level: isAvailable || isSelected
           ? AppElevation.raised
           : AppElevation.sunken,
       color: isSelected ? AppSemanticColors.accent : null,
+      // **اليوم المليان ليه حد أخضر — هو قابل للضغط.**
+      //
+      // ده الفرق الشكلي بين «مقفول» (مشخوط، ميت) و«مليان» (محدود،
+      // بيودّي لقائمة الانتظار). من غيره الاتنين شكلهم واحد ومعناهم
+      // عكس بعض.
+      border: status == DayAvailability.fullyBooked
+          ? Border.all(color: AppSemanticColors.accent)
+          : null,
       radius: AppRadius.m,
       width: 56.w,
       child: Stack(
@@ -196,7 +274,9 @@ class _DayCell extends StatelessWidget {
               ),
             ],
           ),
-          if (!isAvailable)
+          // الشخطة للمقفول واللي عدّى بس — المليان مش ميت، هو مليان.
+          if (status == DayAvailability.closed ||
+              status == DayAvailability.passed)
             Positioned.fill(child: CustomPaint(painter: _StrikePainter())),
           if (isToday)
             PositionedDirectional(

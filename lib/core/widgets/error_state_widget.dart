@@ -64,7 +64,7 @@ class ErrorStateWidget extends StatelessWidget {
           verticalSpace(AppSpacing.s8),
           TextButton(
             onPressed: onRetry,
-            child: const Text('إعادة المحاولة'),
+            child: const Text('جرّب تاني'),
           ),
         ],
       ),

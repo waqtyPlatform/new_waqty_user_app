@@ -9,26 +9,30 @@ import 'package:waqty_user_application/core/mock/mock_config.dart';
 class MockSource {
   MockSource._();
 
-  /// بترجّع الداتا بعد تأخير، أو خطأ لو `MockConfig.forceError` مقفول.
+  /// بترجّع الداتا بعد تأخير، أو خطأ لو الخطأ مفروض.
+  ///
+  /// بيقرا من `isErrorForced` و`effectiveDelay` مش من الحقول الخام —
+  /// عشان السيناريو (`networkError`، `slowNetwork`) والسويتش اليدوي
+  /// الاتنين يشتغلوا من غير ما حد يفتكر يزامنهم.
   static Future<Either<String, T>> fetch<T>(T data) async {
-    await Future.delayed(MockConfig.delay);
+    await Future.delayed(MockConfig.effectiveDelay);
 
-    if (MockConfig.forceError) {
+    if (MockConfig.isErrorForced) {
       return const Left(MockConfig.errorMessage);
     }
 
     return Right(data);
   }
 
-  /// نسخة لليستات — بتحترم `forceEmpty` كمان.
+  /// نسخة لليستات — بتحترم الفاضي كمان.
   static Future<Either<String, List<T>>> fetchList<T>(List<T> data) async {
-    await Future.delayed(MockConfig.delay);
+    await Future.delayed(MockConfig.effectiveDelay);
 
-    if (MockConfig.forceError) {
+    if (MockConfig.isErrorForced) {
       return const Left(MockConfig.errorMessage);
     }
 
-    if (MockConfig.forceEmpty) {
+    if (MockConfig.isEmptyForced) {
       return const Right(<Never>[]);
     }
 

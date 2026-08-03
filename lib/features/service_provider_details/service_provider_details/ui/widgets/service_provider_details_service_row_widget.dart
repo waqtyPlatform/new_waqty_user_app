@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/core/models/service_ui_model.dart';
+import 'package:waqty_user_application/core/mock/mock_services.dart';
 import 'package:waqty_user_application/core/utils/app_format.dart';
 import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
 import 'package:waqty_user_application/core/utils/app_spacing.dart';
@@ -95,7 +96,7 @@ class ServiceProviderDetailsServiceRowWidget extends StatelessWidget {
   }
 
   Widget _categoryLabel() => Text(
-    '${service.name} · ${AppFormat.digits(service.childrenCount)} خدمة',
+    '${service.name} · ${AppFormat.digits(MockServices.childrenCountOf(service.uuid))} خدمة',
     maxLines: 1,
     overflow: TextOverflow.ellipsis,
     style: AppTextStyles.bodyMdStrong,

@@ -1,28 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:waqty_user_application/core/utils/app_motion.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
 import 'package:waqty_user_application/core/utils/app_spacing.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/app_hairline_widget.dart';
+import 'package:waqty_user_application/core/utils/app_radius.dart';
+import 'package:waqty_user_application/core/widgets/app_surface_widget.dart';
 
-/// صف في قايمة — **مش كارت**.
+/// صف في قايمة — **كارت أبيض**.
 ///
-/// ## ليه القوايم بطّلت كروت
+/// ## ليه رجعت كروت
 ///
-/// كل قايمة في الأبلكيشن كانت N كارت أبيض مرفوع ورا بعض. والكارت معناه
-/// «الحاجة دي جسم منفصل ليها حدود ووزن» — لما كل صف ياخد المعاملة دي،
-/// المعنى بيضيع وبيتحوّل لضوضاء: عشر ظلال في الشاشة الواحدة، والعين
-/// مالهاش مكان تقع فيه.
+/// النسخة اللي قبل دي كانت صفوف مسطّحة قاعدة على الصفحة ومفصولة بخط
+/// شعري، والحجة كانت إن N كارت = N ظل = ضوضاء.
 ///
-/// الصف بيقعد **على الصفحة مباشرة** ومفصول بخط شعري. الكارت بيتحجز
-/// للحاجات اللي فعلاً أجسام منفصلة — زي كروت الصف الأفقي اللي بتتسحب.
+/// الحجة دي بتشتغل على شاشة فيها عنصر واحد بيحارب على الانتباه. بس
+/// الأبلكيشن ده **مالوش صور** — كل صف نص رمادي وحرف في مربّع. من غير
+/// سطح، القايمة بتتحوّل لعمود نص متواصل: مفيش حد يقول فين المحل ده
+/// بيخلص وفين اللي بعده يبدأ، والصف بطّل يبان إنه هدف لمس.
 ///
-/// ## الـ full-bleed
+/// الكارت بيرجّع التلات حاجات دي مرة واحدة: **حد**، و**فصل**، و**إشارة
+/// إنه بيتداس**. والظل خفيف (`AppShadows`) فمفيش تكويم بصري.
 ///
-/// الهامش **جوه الصف** مش على الـ `ListView`. كده الصف بياخد العرض كله،
-/// والخط الشعري يقدر يمشي من حافة لحافة أو ينزاح تحت النص — قرار اللي
-/// بينده، مش قيد من الأب.
+/// ## الهامش جوه الصف
+///
+/// الـ `ListView` بيفضل من غير هامش أفقي، والكارت بياخد هامشه بنفسه —
+/// عشان اللي بينده مايحتاجش يعرف إن ده كارت ولا صف.
 class AppRowWidget extends StatelessWidget {
   /// الخانة الأمامية — لوح حرف، أيقونة، أو أي حاجة بعرض ثابت.
   final Widget? leading;
@@ -34,10 +35,14 @@ class AppRowWidget extends StatelessWidget {
 
   final VoidCallback? onTap;
 
-  /// خط شعري تحت الصف. آخر صف في القايمة بياخد `false`.
+  /// فيه صف بعده؟ لو أيوة بياخد مسافة تحته.
+  ///
+  /// الاسم فضل زي ما هو عشان مش نلمس ٦ ملفات — بس معناه بقى «فاصل»
+  /// مش «خط». آخر صف في القايمة بياخد `false` فمابياخدش مسافة زيادة.
   final bool showHairline;
 
-  /// إزاحة الخط الشعري. الافتراضي بيبدأ من تحت المحتوى مش من حافة الشاشة.
+  /// مابقاش ليه لازمة بعد ما الصف بقى كارت — الفصل بقى بالحافة مش بخط.
+  /// اتساب في الـ API عشان النداءات الموجودة ما تتكسرش.
   final double? hairlineIndent;
 
   final double? height;
@@ -55,42 +60,33 @@ class AppRowWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Material(
-          type: MaterialType.transparency,
-          child: InkWell(
-            onTap: onTap,
-            child: AnimatedContainer(
-              duration: AppMotion.base,
-              curve: AppMotion.standard,
-              height: height,
-              padding: EdgeInsetsDirectional.symmetric(
-                horizontal: AppSpacing.pageGutter.w,
-                vertical: AppSpacing.cardPadding.h,
-              ),
-              child: Row(
-                children: [
-                  if (leading != null) ...[
-                    leading!,
-                    horizontalSpace(AppSpacing.listRowGap),
-                  ],
-                  Expanded(child: child),
-                  if (trailing != null) ...[
-                    horizontalSpace(AppSpacing.s8),
-                    trailing!,
-                  ],
-                ],
-              ),
-            ),
+    return Padding(
+      padding: EdgeInsetsDirectional.only(
+        start: AppSpacing.pageGutter.w,
+        end: AppSpacing.pageGutter.w,
+        bottom: showHairline ? AppSpacing.listRowGap.h : 0,
+      ),
+      child: AppSurfaceWidget(
+        onTap: onTap,
+        radius: AppRadius.m,
+        padding: EdgeInsets.all(AppSpacing.cardPadding.r),
+        child: SizedBox(
+          height: height,
+          child: Row(
+            children: [
+              if (leading != null) ...[
+                leading!,
+                horizontalSpace(AppSpacing.listRowGap),
+              ],
+              Expanded(child: child),
+              if (trailing != null) ...[
+                horizontalSpace(AppSpacing.s8),
+                trailing!,
+              ],
+            ],
           ),
         ),
-        if (showHairline)
-          AppHairlineWidget(
-            indent: hairlineIndent ?? AppSpacing.pageGutter,
-          ),
-      ],
+      ),
     );
   }
 }

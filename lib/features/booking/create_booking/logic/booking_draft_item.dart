@@ -33,6 +33,24 @@ class BookingDraftItem {
   List<SlotUiModel> slots;
   SlotUiModel? selectedSlot;
 
+  /// **الاقتراحات — ٤–٦ مواعيد عبر كذا يوم.**
+  ///
+  /// دي الواجهة الافتراضية دلوقتي، مش شبكة الـ٣٠ شيب. العميل بيقول
+  /// النافذة اللي تناسبه والأبلكيشن بيبحث، بدل العكس.
+  List<SlotUiModel> proposals;
+
+  /// النوافذ اللي العميل قابلها — فاضية = أي وقت.
+  ///
+  /// **مجموعة مش قيمة واحدة.** «أنا فاضي الصبح أو بالليل بس مش الضهر»
+  /// جملة طبيعية، و«اختار واحدة» كانت هتجبره يقسم طلبه على مرتين.
+  Set<SlotPeriod> periods;
+
+  /// العميل فتح الشبكة الكاملة؟
+  ///
+  /// الاقتراحات بتغطي الحالة الغالبة، والشبكة بتفضل موجودة للي عايز
+  /// ميعاد بعينه. **مفيش حاجة اتشالت** — اتنقلت ورا ضغطة.
+  bool isBrowsingAll;
+
   /// الميعاد اللي حد تاني خده وإحنا بنأكد — بيتشخط في مكانه.
   SlotUiModel? takenSlot;
 
@@ -51,7 +69,10 @@ class BookingDraftItem {
     this.selectedSlot,
     this.takenSlot,
     this.isExpanded = false,
-  });
+    this.proposals = const <SlotUiModel>[],
+    Set<SlotPeriod>? periods,
+    this.isBrowsingAll = false,
+  }) : periods = periods ?? <SlotPeriod>{};
 
   bool get isScheduled => selectedSlot != null;
 
@@ -62,13 +83,24 @@ class BookingDraftItem {
   int get durationMinutes =>
       selectedSlot?.durationMinutes ?? service.durationMinutes;
 
-  /// الأخصائي اللي هيعمل الخدمة فعلاً.
+  /// الاسم اللي بيتعرض للعميل **قبل التأكيد**.
   ///
-  /// لما العميل سايب «أي أخصائي متاح»، الاسم الحقيقي بيبقى جوه الميعاد
-  /// اللي السيرفر رجّعه — فبنعرضه هو مش النص العام.
-  String get resolvedEmployeeName => employee.isAnyAvailable
-      ? (selectedSlot?.employeeName ?? employee.name)
-      : employee.name;
+  /// ## «أي أخصائي متاح» بتفضل «أي أخصائي متاح»
+  ///
+  /// كان بيرجّع `selectedSlot?.employeeName` — يعني اسم شخص بعينه. وده
+  /// **وعد الأبلكيشن مش ماسكه**: التوزيع بيحصل **وقت الحفظ** جوه
+  /// transaction بـ `lockForUpdate` باستراتيجية `first_available` أو
+  /// `least_booked` (`BookingAvailabilityService`). فالاسم اللي كان
+  /// بيتعرض تخمين، والعميل بيروح المحل ويلاقي حد تاني — يبقى الأبلكيشن
+  /// كدب عليه.
+  ///
+  /// وحتى **لو** السيرفر كان ماسك التوزيع من بدري، العرض غلط: العميل
+  /// اختار صراحة إنه مش فارقة معاه. تسمية شخص بترد على سؤال هو قرر
+  /// مايسألوش، وبتحوّل اختيار مريح لالتزام.
+  ///
+  /// الاسم الحقيقي بيبان **بعد** التأكيد، من `BookingItemUiModel` اللي
+  /// السيرفر بيرجّعه.
+  String get resolvedEmployeeName => employee.name;
 
   /// اليوم من غير ساعة — مفتاح تجميع العناصر في زيارات.
   DateTime? get day {

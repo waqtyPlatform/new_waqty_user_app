@@ -50,6 +50,14 @@ class AppSemanticColors {
   /// خلفية خضرا فاتحة — للحالة المختارة بس.
   static const Color surfaceAccentSoft = AppColors.greenColor505;
 
+  /// **سطح أخضر غامق — نظير [surfaceInk] لما البؤرة تنبّه.**
+  ///
+  /// كان الشريط بياخد [accent] نفسه لما الكرسي يجهز. و[accent] معمول
+  /// عشان يقعد **على** صفحة فاتحة، فتباينه محسوب مع الأبيض مش مع النص
+  /// اللي فوقه. لما بقى خلفية، النص الثانوي طلع **1.35:1** والعنوان
+  /// **3.76:1** — يعني أهم لحظة في الأبلكيشن كانت أقل شاشة مقروءة فيه.
+  static const Color surfaceAccentDeep = AppColors.greenColor700;
+
   /// سطح غامق — الـ snackbar وشريط «مفيش نت».
   static const Color surfaceInverse = AppColors.greyColor700;
 
@@ -75,6 +83,12 @@ class AppSemanticColors {
 
   /// نص ثانوي على الحبر — 6.30:1.
   static const Color textOnInkMuted = AppColors.inkMutedColor;
+
+  /// نص ثانوي على [surfaceAccentDeep] — 4.74:1.
+  ///
+  /// **مش نفس [textOnInkMuted]** عن قصد: الرمادي الدافي بتاع الحبر بيدي
+  /// 1.35:1 على الأخضر. لكل سطح غامق رماديه.
+  static const Color textOnAccentMuted = AppColors.greenInkMutedColor;
 
   // ── اللهجة ───────────────────────────────────────────────────────────
 

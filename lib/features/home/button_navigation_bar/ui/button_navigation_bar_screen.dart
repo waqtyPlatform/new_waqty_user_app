@@ -10,10 +10,11 @@ import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
 import 'package:waqty_user_application/core/utils/extentions.dart';
 import 'package:waqty_user_application/features/account/account/logic/account_cubit.dart';
 import 'package:waqty_user_application/features/account/account/ui/account_screen.dart';
-import 'package:waqty_user_application/features/booking/branch_queue/logic/branch_queue_cubit.dart';
-import 'package:waqty_user_application/features/booking/branch_queue/logic/branch_queue_state.dart';
-import 'package:waqty_user_application/features/booking/branch_queue/ui/widgets/branch_queue_banner_widget.dart';
+import 'package:waqty_user_application/features/booking/in_branch/logic/in_branch_cubit.dart';
+import 'package:waqty_user_application/features/booking/in_branch/logic/in_branch_state.dart';
+import 'package:waqty_user_application/features/booking/in_branch/ui/widgets/in_branch_banner_widget.dart';
 import 'package:waqty_user_application/features/booking/my_bookings/logic/my_bookings_cubit.dart';
+import 'package:waqty_user_application/features/booking/waitlist/logic/waitlist_cubit.dart';
 import 'package:waqty_user_application/features/booking/my_bookings/ui/my_bookings_screen.dart';
 import 'package:waqty_user_application/features/home/button_navigation_bar/logic/button_navigation_bar_cubit.dart';
 import 'package:waqty_user_application/features/home/button_navigation_bar/logic/button_navigation_bar_state.dart';
@@ -33,16 +34,30 @@ class ButtonNavigationBarScreen extends StatelessWidget {
         final cubit = ButtonNavigationBarCubit.get(context);
         final live = cubit.liveBooking;
 
-        final shell = _shell(context, cubit, live);
+        // **نسخة واحدة من قائمة الانتظار للأبلكيشن كله** — لنفس سبب
+        // `InBranchCubit` تحت بالظبط.
+        //
+        // الحجز المؤقت عدّاد بينبض **كل ثانية**. لو الرئيسية عملت نسخة
+        // ومواعيدي عملت نسخة تانية، بيبقى فيه **مؤقتين ومصدرين حقيقة**
+        // يقدروا يفترقوا: تبويب يقول ٤:٣٢ والتاني ٤:٣١، وواحد يعلن
+        // الانتهاء والتاني لسه شغال. عدّاد بيكدب على نفسه أوحش من عدّاد
+        // مش موجود.
+        //
+        // وهي **برة** الشرط بتاع `live` عن قصد: كده مكانها في الشجرة
+        // ثابت مهما اتغيّر الحجز الشغّال، فالمؤقت مابيتعملش من الأول.
+        final shell = BlocProvider<WaitlistCubit>(
+          create: (_) => WaitlistCubit()..start(),
+          child: _shell(context, cubit, live),
+        );
 
-        // **الـ Cubit الوحيد للطابور في الأبلكيشن كله**، ومكانه فوق
+        // **الـ Cubit الوحيد لحالة الفرع في الأبلكيشن كله**، ومكانه فوق
         // الأربع تبويبات عشان الشريط (اللي تحت) والبؤرة (اللي جوه الهوم)
         // يقروا من نفس النسخة. `create` مابيتنادش تاني مع تبديل التبويب —
         // الـ Element ثابت في مكانه، فالمؤقت بيتعمل مرة واحدة.
         if (live == null) return shell;
 
         return BlocProvider(
-          create: (_) => BranchQueueCubit(booking: live)..start(),
+          create: (_) => InBranchCubit(booking: live)..start(),
           child: shell,
         );
       },
@@ -108,7 +123,7 @@ class ButtonNavigationBarScreen extends StatelessWidget {
           children: [
             // فوق الـ SafeArea عن قصد — الـ inset التحتاني شغل شريط
             // التبويبات اللي تحته، والشريط ده مش ملزوق في حافة الجهاز.
-            _queueBanner(context, live),
+            _inBranchBanner(context, live),
             SafeArea(
               child: SizedBox(
                 height: 62.h,
@@ -139,17 +154,17 @@ class ButtonNavigationBarScreen extends StatelessWidget {
 
   /// الشريط بيتبنى في الحالتين — هو اللي بيطوّي نفسه لصفر.
   ///
-  /// لما مافيش حجز أصلاً، مفيش `BranchQueueCubit` فوقنا نقرا منه، والحالة
+  /// لما مافيش حجز أصلاً، مفيش `InBranchCubit` فوقنا نقرا منه، والحالة
   /// دي مابتتغيّرش طول الجلسة — فالـ `if` هنا مابيقتلش أي حركة، عكس لو
-  /// لفّينا الشريط نفسه في `if` على حالة الطابور.
-  Widget _queueBanner(BuildContext context, BookingUiModel? live) {
+  /// لفّينا الشريط نفسه في `if` على حالة الفرع.
+  Widget _inBranchBanner(BuildContext context, BookingUiModel? live) {
     if (live == null) {
-      return const BranchQueueBannerWidget(queue: null, onTap: _noop);
+      return const InBranchBannerWidget(data: null, onTap: _noop);
     }
 
-    return BlocBuilder<BranchQueueCubit, BranchQueueState>(
-      builder: (context, state) => BranchQueueBannerWidget(
-        queue: state is BranchQueueReadyState ? state.queue : null,
+    return BlocBuilder<InBranchCubit, InBranchState>(
+      builder: (context, state) => InBranchBannerWidget(
+        data: state is InBranchReadyState ? state.data : null,
         onTap: () => context.pushNamed(
           Routes.bookingDetailsScreen,
           arguments: {'bookingUuid': live.uuid},

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:waqty_user_application/core/mock/mock_queue.dart';
+import 'package:waqty_user_application/core/mock/mock_in_branch.dart';
 import 'package:waqty_user_application/core/models/booking_ui_model.dart';
-import 'package:waqty_user_application/core/models/queue_ui_model.dart';
+import 'package:waqty_user_application/core/models/in_branch_ui_model.dart';
 import 'package:waqty_user_application/core/utils/app_format.dart';
 import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
 import 'package:waqty_user_application/core/utils/app_spacing.dart';
@@ -10,7 +10,7 @@ import 'package:waqty_user_application/core/utils/app_text_styles.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
 import 'package:waqty_user_application/core/widgets/app_row_widget.dart';
 import 'package:waqty_user_application/core/widgets/booking_status_chip_widget.dart';
-import 'package:waqty_user_application/features/booking/branch_queue/ui/widgets/branch_queue_chip_widget.dart';
+import 'package:waqty_user_application/features/booking/in_branch/ui/widgets/in_branch_chip_widget.dart';
 
 /// الحجز **كصف في قايمة** — كان كارت أبيض مرفوع.
 ///
@@ -28,11 +28,11 @@ import 'package:waqty_user_application/features/booking/branch_queue/ui/widgets/
 /// المحل خلاص، اللي بيدوّر عليه هو **الوقت والحالة**. لوح ملوّن على كل صف
 /// هنا كان هيزاحم الشارات على نفس الانتباه من غير ما يضيف معلومة.
 ///
-/// ## شارة الدور
+/// ## شارة حالة الفرع
 ///
-/// [BranchQueueChipWidget] بتاخد لقطة **مرة واحدة** من [MockQueue] وقت
-/// الـ build. الصف **عمره ما يفتح `BranchQueueCubit`** — عشرين صف يبقى
-/// عشرين تايمر شغّال في الخلفية عشان رقم بيتغيّر كل ٤٥ ثانية. اللي بيـ poll
+/// [InBranchChipWidget] بتاخد لقطة **مرة واحدة** من [MockInBranch] وقت
+/// الـ build. الصف **عمره ما يفتح `InBranchCubit`** — عشرين صف يبقى
+/// عشرين تايمر شغّال في الخلفية عشان تقدير بيتغيّر كل ٢٠ ثانية. اللي بيـ poll
 /// هو الهيرو في الهوم وبلوك التفاصيل بس، وهما واحد في الشاشة.
 class MyBookingRowWidget extends StatelessWidget {
   /// **الحسبة:** ١٢ حشوة فوق + ١٢ تحت (من [AppRowWidget]) = ٢٤، زائد
@@ -76,7 +76,7 @@ class MyBookingRowWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final queue = _liveQueue;
+    final inBranch = _inBranch;
 
     return AppRowWidget(
       onTap: onTap,
@@ -97,15 +97,15 @@ class MyBookingRowWidget extends StatelessWidget {
                 ),
               ),
               horizontalSpace(AppSpacing.s8),
-              // **شارة الدور قبل شارة الحالة.** الحالة («مؤكد») ثابتة من
-              // ساعة الحجز، والدور («٣ قدامك») هو اللي بيتغيّر دلوقتي —
-              // فبيقعد أقرب للاسم عشان يتقرا الأول.
+              // **شارة الفرع قبل شارة الحالة.** الحالة («مؤكد») ثابتة من
+              // ساعة الحجز، والتقدير هو اللي بيتغيّر دلوقتي — فبيقعد أقرب
+              // للاسم عشان يتقرا الأول.
               //
               // الشرط هنا **مش تكرار** لشرط الـ widget: الشارة بتخفي نفسها
               // بس المسافة اللي قبلها لأ، فمن غيره كان هيبان ٨ بكسل فاضيين
-              // في كل صف مالوش طابور.
-              if (queue != null) ...[
-                BranchQueueChipWidget(queue: queue),
+              // في كل صف مالوش حالة فرع.
+              if (inBranch != null) ...[
+                InBranchChipWidget(data: inBranch),
                 horizontalSpace(AppSpacing.chipGap),
               ],
               BookingStatusChipWidget(status: booking.status),
@@ -118,6 +118,27 @@ class MyBookingRowWidget extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: AppTextStyles.caption,
           ),
+
+          // **التقييم المستني بيقول عن نفسه في الصف.**
+          //
+          // صف الحجز المكتمل كان ساكت تمامًا عن التقييم، فصف عليه تلات
+          // خدمات محدش قيّمها بيبان **زي** صف اتقيّم بالكامل بالحرف.
+          // العميل مالوش سبب يدوس، والتقييم اللي الأبلكيشن كله متبني
+          // عليه (`booking_item_id` بـunique constraint) بيموت في مكانه.
+          //
+          // العدد مقصود مش «قيّم دلوقتي»: **التقييم لكل خدمة** — ودي
+          // بالظبط الحاجة اللي سيناريو «مكتمل · من غير تقييم» بيسأل عنها
+          // («فاهمين إن التقييم لكل خدمة؟»). رقم في الصف بيجاوب السؤال
+          // قبل ما العميل يفتح أصلاً.
+          if (booking.hasPendingRatings) ...[
+            verticalSpace(AppSpacing.titleToSubtitle),
+            Text(
+              booking.rateableItems.length == 1
+                  ? 'قيّم الخدمة'
+                  : 'قيّم ${AppFormat.digits(booking.rateableItems.length)} خدمات',
+              style: AppTextStyles.captionAccent,
+            ),
+          ],
           verticalSpace(AppSpacing.subtitleToMeta),
           Row(
             children: [
@@ -135,6 +156,22 @@ class MyBookingRowWidget extends StatelessWidget {
                 style: AppTextStyles.captionInk,
               ),
               const Spacer(),
+              // **الخصم بيبان من القايمة مش من التفاصيل بس.**
+              //
+              // الصف كان بيعرض «1125 ج.م» ساكت. الرقم ده صح، بس ساكت —
+              // مفيش حاجة تقول إن ده أقل من العادي، فالخصم كان بيتكشف
+              // بعد ضغطة على صفحة التفاصيل.
+              //
+              // وده بيضيّع الخصم في المكان الوحيد اللي بيهم فيه: العميل
+              // بيمرّ على القايمة، مابيفتحش كل حجز. سعر مشطوب جنب السعر
+              // الجديد بيقول القصة في نص ثانية من غير لابل ولا لون صارخ.
+              if (booking.hasDiscount) ...[
+                Text(
+                  AppFormat.money(booking.originalPrice!),
+                  style: AppTextStyles.captionStruck,
+                ),
+                horizontalSpace(AppSpacing.s4),
+              ],
               Text(
                 AppFormat.money(booking.price),
                 style: AppTextStyles.bodyMdStrong,
@@ -146,16 +183,14 @@ class MyBookingRowWidget extends StatelessWidget {
     );
   }
 
-  /// الطابور اللي يستاهل شارة — أو `null`.
+  /// حالة الفرع اللي تستاهل شارة — أو `null`.
   ///
-  /// **الحالة بتتشاف قبل الطابور.** [MockQueue] بيرد على «الحجز ده
-  /// النهاردة؟» بس، فحجز النهاردة الساعة ١٠ وخلص كان هياخد «٣ قدامك»
-  /// الساعة ٤. الطابور معناه إنك لسه مستني، والمستني حالته `isUpcoming`.
-  QueueUiModel? get _liveQueue {
-    if (!booking.status.isUpcoming) return null;
-    final queue = MockQueue.forBooking(booking, DateTime.now());
-    return queue.state.isLive ? queue : null;
-  }
+  /// **الحالة هي اللي بتقرر، مش التاريخ.** الكود القديم كان بيسأل
+  /// `MockQueue` «الحجز ده النهاردة؟» وبس، فحجز النهاردة الساعة ١٠ وخلص
+  /// كان بياخد «٣ قدامك» الساعة ٤. دلوقتي `isInBranch` بتيجي من
+  /// `booking.status` اللي الفرع نفسه بيحرّكه.
+  InBranchUiModel? get _inBranch =>
+      MockInBranch.forBooking(booking, DateTime.now());
 }
 
 /// أيقونة بيانات صغيرة — رمادية دايمًا، حجم موحّد.

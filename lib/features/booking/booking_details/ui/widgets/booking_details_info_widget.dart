@@ -43,7 +43,7 @@ class BookingDetailsInfoWidget extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ── ١ · فين ومين ─────────────────────────────────────────────
-          _row('رقم الحجز', booking.reference),
+          _row('رقم الحجز', booking.reference, isLtr: true),
           _row('الفرع', booking.branchName),
           if (booking.branchAddress.isNotEmpty)
             _row('العنوان', booking.branchAddress),
@@ -68,6 +68,19 @@ class BookingDetailsInfoWidget extends StatelessWidget {
             children: [
               Text('الإجمالي', style: AppTextStyles.bodyMdMuted),
               const Spacer(),
+              // **«كان ٢٥٠ · بقى ٢٠٠».**
+              //
+              // خصم مجموعة العميل بيتحسب وبيتخزّن في السيرفر
+              // (`CustomerGroupPricingService`) بس **مش مكشوف في أي
+              // resource** — فالعميل كان بيشوف رقم أقل من اللي في القايمة
+              // من غير أي تفسير، والرقم من غير سبب بيتقري «غلطة».
+              if (booking.hasDiscount) ...[
+                Text(
+                  AppFormat.money(booking.originalPrice!),
+                  style: AppTextStyles.captionStruck,
+                ),
+                horizontalSpace(AppSpacing.s8),
+              ],
               Text(AppFormat.money(booking.price), style: AppTextStyles.titleLg),
             ],
           ),
@@ -97,6 +110,15 @@ class BookingDetailsInfoWidget extends StatelessWidget {
         '${AppFormat.timeRange(item.startAt, item.endAt)}'
             ' · ${AppFormat.duration(item.durationMinutes)}',
       ),
+      // نفس منطق `_itemLine` — الشكل المسطّح لازم يقول حالة التقييم برضه،
+      // وإلا خدمة واحدة اتقيّمت بتفضل ساكتة عن «قيد المراجعة».
+      if (item.rating != null)
+        _row(
+          'تقييمك',
+          item.ratingStatus == RatingStatus.pending
+              ? '${AppFormat.digits(item.rating!)} · ${item.ratingStatus.label}'
+              : AppFormat.digits(item.rating!),
+        ),
     ];
   }
 
@@ -145,6 +167,27 @@ class BookingDetailsInfoWidget extends StatelessWidget {
                   ' · مع ${item.employeeName}',
                   style: AppTextStyles.caption,
                 ),
+                // **حالة التقييم لكل خدمة لوحدها.**
+                //
+                // التقييم بيتعمل `active: false` في السيرفر وبيفضل مخفي
+                // لحد المراجعة. من غير السطر ده، العميل بيقيّم وبيشوف لا
+                // شيء ويستنتج إنه ما اتسجّلش، فيقيّم تاني.
+                if (item.rating != null) ...[
+                  verticalSpace(AppSpacing.titleToSubtitle),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.star_rounded, size: 14.r),
+                      horizontalSpace(2),
+                      Text(
+                        item.ratingStatus == RatingStatus.pending
+                            ? '${AppFormat.digits(item.rating!)} · ${item.ratingStatus.label}'
+                            : AppFormat.digits(item.rating!),
+                        style: AppTextStyles.caption,
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
@@ -176,7 +219,7 @@ class BookingDetailsInfoWidget extends StatelessWidget {
     child: const AppHairlineWidget(),
   );
 
-  Widget _row(String label, String value) => Padding(
+  Widget _row(String label, String value, {bool isLtr = false}) => Padding(
     padding: EdgeInsetsDirectional.symmetric(vertical: (AppSpacing.s8 / 2).h),
     child: Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -187,7 +230,16 @@ class BookingDetailsInfoWidget extends StatelessWidget {
           width: 84.w,
           child: Text(label, style: AppTextStyles.bodyMdMuted),
         ),
-        Expanded(child: Text(value, style: AppTextStyles.bodyMdStrong)),
+        Expanded(
+          child: Text(
+            value,
+            style: AppTextStyles.bodyMdStrong,
+            // رقم الحجز نص لاتيني جوه واجهة عربي. من غير الاتجاه ده
+            // ترتيبه بيتقلب على الشاشة، والعميل يقرا للموظف حاجة تانية.
+            textDirection: isLtr ? TextDirection.ltr : null,
+            textAlign: isLtr ? TextAlign.left : null,
+          ),
+        ),
       ],
     ),
   );

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:waqty_user_application/core/mock/mock_config.dart';
 import 'package:waqty_user_application/core/mock/mock_employees.dart';
+import 'package:waqty_user_application/core/mock/mock_scenario.dart';
 import 'package:waqty_user_application/core/mock/mock_providers.dart';
 import 'package:waqty_user_application/core/mock/mock_services.dart';
 import 'package:waqty_user_application/core/mock/mock_slots.dart';
+import 'package:waqty_user_application/core/mock/mock_waitlist.dart';
 import 'package:waqty_user_application/core/mock/mock_source.dart';
 import 'package:waqty_user_application/core/models/branch_ui_model.dart';
 import 'package:waqty_user_application/core/models/employee_ui_model.dart';
@@ -37,9 +40,29 @@ class CreateBookingCubit extends Cubit<CreateBookingState> {
     required this.providerUuid,
     required this.providerName,
     String? initialServiceUuid,
+    BranchUiModel? initialBranch,
+    String? initialBranchUuid,
   }) : super(InitialState()) {
     branches = MockProviders.branchesOf(providerUuid);
-    selectedBranch = branches.isEmpty ? null : branches.first;
+
+    // **الفرع اللي العميل اختاره في شاشة المحل، مش أول واحد في القايمة.**
+    //
+    // `changeBranch` في `ServiceProviderDetailsCubit` كان شغال، بس القيمة
+    // مكانتش بتتنقل هنا خالص — فعميل اختار «فرع مدينة نصر» كان `buildPayload`
+    // بيبعتله `branch_uuid` بتاع «فرع المعادي». ده مكانش صمت في الـ UI،
+    // ده داتا غلط رايحة للسيرفر.
+    //
+    // بنطابق بالـ uuid مش بالكائن نفسه عشان مصادر الفروع تفضل تقدر تختلف
+    // — شاشة المحل بتبعت الكائن، و«احجز تاني» عنده الـ uuid بس (جاي من
+    // `BookingUiModel.branchUuid`).
+    final wantedBranch = initialBranch?.uuid ?? initialBranchUuid;
+    selectedBranch = branches.isEmpty
+        ? null
+        : branches.firstWhere(
+            (b) => b.uuid == wantedBranch,
+            orElse: () => branches.first,
+          );
+
     services = MockServices.ofProvider(providerUuid);
 
     if (initialServiceUuid != null && initialServiceUuid.isNotEmpty) {
@@ -167,6 +190,8 @@ class CreateBookingCubit extends Cubit<CreateBookingState> {
   // ── الاختيارات ───────────────────────────────────────────────────────
 
   void selectBranch(BranchUiModel branch) {
+    if (branch.uuid == selectedBranch?.uuid) return;
+
     selectedBranch = branch;
 
     // الفرع اتغيّر — الأخصائيين والمواعيد كلها بتختلف، فكل اختيارات
@@ -176,6 +201,20 @@ class CreateBookingCubit extends Cubit<CreateBookingState> {
     }
     _datesCache.clear();
     emit(OnSelectionChangedState());
+
+    // **الكارت المفتوح لازم يعيد تحميل نفسه.**
+    //
+    // `_clearScheduling` بيفضّي التواريخ والمواعيد، و`enterDateTimeStep`
+    // بيرجع من غير ما يعمل حاجة لو فيه كارت مفتوح (وهو مفتوح دايمًا في
+    // الأكورديون). فمن غير السطور دي الكارت بيفضل مفتوح على تقويم من غير
+    // أيام ومواعيد فاضية، والعميل مش عارف هو مستني تحميل ولا الفرع
+    // الجديد مالوش مواعيد أصلاً.
+    final expanded = items.where((i) => i.isExpanded).toList();
+    if (expanded.isEmpty) {
+      enterDateTimeStep();
+      return;
+    }
+    _ensureLoaded(expanded.first);
   }
 
   void selectEmployee(String key, EmployeeUiModel employee) {
@@ -184,13 +223,16 @@ class CreateBookingCubit extends Cubit<CreateBookingState> {
 
     item.employee = employee;
     // الأخصائي اتغيّر — التواريخ والمواعيد لازم تتحمّل من الأول، بس
-    // الشهر بيفضل زي ما هو.
+    // الشهر والنوافذ المختارة بيفضلوا زي ما هم (دول تفضيل العميل مش
+    // نتيجة بحث).
     item.availableDates = <DateTime>[];
     item.selectedDate = null;
     item.slots = <SlotUiModel>[];
     item.selectedSlot = null;
+    item.proposals = <SlotUiModel>[];
     emit(OnSelectionChangedState());
-    loadDatesFor(key);
+    loadProposalsFor(key);
+    if (item.isBrowsingAll) loadDatesFor(key);
   }
 
   void selectDate(String key, DateTime date) {
@@ -214,6 +256,17 @@ class CreateBookingCubit extends Cubit<CreateBookingState> {
     if (item == null) return;
 
     item.selectedSlot = slot;
+
+    // **اليوم بيتبع الميعاد.**
+    //
+    // الاقتراحات بتعدّي على كذا يوم، فميعاد مختار من اقتراح ممكن يكون
+    // في يوم غير اللي الشريط واقف عليه. من غير السطر ده، العميل يفتح
+    // «كل المواعيد» بعد ما يختار فيلاقي نفسه في يوم تاني.
+    item.selectedDate = DateTime(
+      slot.startAt.year,
+      slot.startAt.month,
+      slot.startAt.day,
+    );
 
     // التعديل اليدوي على الحد كان جواب على أوقات بعينها. الوقت اتغيّر،
     // فالجواب رجع للفارق يقرره.
@@ -263,6 +316,7 @@ class CreateBookingCubit extends Cubit<CreateBookingState> {
     item.slots = <SlotUiModel>[];
     item.selectedSlot = null;
     item.takenSlot = null;
+    item.proposals = <SlotUiModel>[];
   }
 
   // ── الخطوات ──────────────────────────────────────────────────────────
@@ -324,9 +378,74 @@ class CreateBookingCubit extends Cubit<CreateBookingState> {
       // TODO(api): GET /api/public/bookings/available-employees
       item.employees = MockEmployees.forService(item.service.uuid);
     }
-    if (item.availableDates.isEmpty) {
+    // مفيش حد بيعمل الخدمة دي هنا — الكارت بيعرض طريق مسدود، ومفيش
+    // لزمة نحمّل مواعيد لحاجة مش هتتحجز.
+    if (item.employees.isEmpty) return;
+
+    // **الاقتراحات هي الافتراضي دلوقتي.** التواريخ بتتحمّل لما العميل
+    // يفتح الشبكة الكاملة بس — يعني الحالة الغالبة بقت نداء واحد بدل
+    // نداء تواريخ + نداء مواعيد اليوم.
+    if (item.proposals.isEmpty) {
+      await loadProposalsFor(item.key);
+    }
+    if (item.isBrowsingAll && item.availableDates.isEmpty) {
       await loadDatesFor(item.key);
     }
+  }
+
+  // ── الاقتراحات (Phase 4) ─────────────────────────────────────────────
+
+  /// بيقلب نافذة وقت — والاقتراحات بتتحدّث على طول.
+  void togglePeriod(String key, SlotPeriod period) {
+    final item = itemByKey(key);
+    if (item == null) return;
+
+    if (!item.periods.remove(period)) item.periods.add(period);
+    emit(OnSelectionChangedState());
+    loadProposalsFor(key);
+  }
+
+  /// بيفتح/يقفل الشبكة الكاملة.
+  ///
+  /// أول فتح بيحمّل التواريخ — الشبكة محتاجة شريط الأيام، والاقتراحات لأ.
+  void toggleBrowseAll(String key) {
+    final item = itemByKey(key);
+    if (item == null) return;
+
+    item.isBrowsingAll = !item.isBrowsingAll;
+    emit(OnSelectionChangedState());
+
+    if (item.isBrowsingAll && item.availableDates.isEmpty) {
+      loadDatesFor(key);
+    }
+  }
+
+  Future<void> loadProposalsFor(String key) async {
+    final item = itemByKey(key);
+    if (item == null) return;
+
+    emit(LoadingSlotsState(itemKey: key));
+
+    // TODO(api): GET /api/public/bookings/available-slots على كذا يوم.
+    //   الـ endpoint الحالي بياخد **يوم واحد**، فالاقتراحات عبر أسبوعين
+    //   معناها N نداءات. الطلب للباك إند: باراميتر مدى تواريخ، أو
+    //   endpoint اقتراحات يرجّع أحسن K مواعيد.
+    final result = await MockSource.fetchList(
+      MockSlots.proposals(
+        durationMinutes: item.service.durationMinutes,
+        basePrice: item.baselinePrice,
+        anyAvailable: item.employee.isAnyAvailable,
+        periods: item.periods,
+      ),
+    );
+
+    result.fold(
+      (failure) => emit(CreateBookingErrorState(message: failure)),
+      (data) {
+        item.proposals = data;
+        emit(OnSelectionChangedState());
+      },
+    );
   }
 
   Future<void> loadDatesFor(String key) async {
@@ -341,7 +460,12 @@ class CreateBookingCubit extends Cubit<CreateBookingState> {
     } else {
       // TODO(api): GET /api/public/bookings/available-dates?month=
       final result = await MockSource.fetchList(
-        MockSlots.availableDates(month: item.currentMonth),
+        MockSlots.availableDates(
+          month: item.currentMonth,
+          // **مدة الخدمة الحقيقية.** من غيرها التقويم بيتحسب بـ٤٥ دقيقة
+          // لكل الخدمات، فيوم فيه فرجة ساعة بيبان متاح لخدمة ساعتين.
+          durationMinutes: item.service.durationMinutes,
+        ),
       );
 
       final failure = result.fold<String?>((l) => l, (_) => null);
@@ -357,7 +481,9 @@ class CreateBookingCubit extends Cubit<CreateBookingState> {
     // الشهر ده فاضي؟ منسيبش العميل يكتشف الفراغ بنفسه — ننط لأقرب
     // شهر فيه مواعيد.
     if (item.availableDates.isEmpty) {
-      final firstAvailable = MockSlots.firstAvailableDate();
+      final firstAvailable = MockSlots.firstAvailableDate(
+        durationMinutes: item.service.durationMinutes,
+      );
       if (firstAvailable != null &&
           (firstAvailable.month != item.currentMonth.month ||
               firstAvailable.year != item.currentMonth.year)) {
@@ -387,6 +513,8 @@ class CreateBookingCubit extends Cubit<CreateBookingState> {
         date: item.selectedDate!,
         durationMinutes: item.service.durationMinutes,
         basePrice: item.baselinePrice,
+        // «أي أخصائي متاح» = السعر بيتغير حسب مين الفاضي في الميعاد ده.
+        anyAvailable: item.employee.isAnyAvailable,
       ),
     );
 
@@ -552,6 +680,57 @@ class CreateBookingCubit extends Cubit<CreateBookingState> {
     };
   }
 
+  /// دخول قائمة انتظار الفرع لخدمة معيّنة.
+  ///
+  /// **رد السيرفر على يوم مليان كان طريق مسدود.** `POST /user/waitlist`
+  /// مبني وشغال (`routes/api.php:642-645`) بحجز مؤقت ٥ دقايق، والأبلكيشن
+  /// مكانش فيه ولا سطر عنه — فاليوم المليان كان بيقول «جرّب يوم تاني»
+  /// وخلاص، مع إن الطلب نفسه يستاهل يتسجّل.
+  void joinWaitlist(String key) {
+    final item = itemByKey(key);
+    if (item == null) return;
+
+    // الميعاد اللي راح لو موجود، وإلا اليوم اللي هو واقف عليه.
+    final preferredAt =
+        item.takenSlot?.startAt ?? item.selectedDate ?? DateTime.now();
+
+    // TODO(api): POST /api/user/waitlist
+    //   {branch_uuid, service_uuid, employee_uuid?, preferred_date,
+    //    preferred_time}
+    MockWaitlist.add(
+      providerName: providerName,
+      branchName: selectedBranch?.name ?? '',
+      serviceName: item.service.name,
+      preferredAt: preferredAt,
+      // نفس قاعدة الحجز: «أي أخصائي متاح» بيتبعت **فاضي**، مش باسم.
+      employeeName: item.employee.isAnyAvailable ? null : item.employee.name,
+    );
+
+    emit(JoinedWaitlistState(serviceName: item.service.name));
+  }
+
+  /// السيناريو بيوقّع **أول محاولة بس**.
+  bool _scenarioSlotLostFired = false;
+
+  /// الميعاد ده اتاخد من حد تاني؟ — **mock**.
+  ///
+  /// القاعدة الافتراضية (دقيقة `:15`) عشوائية شوية: بتعتمد على إن العميل
+  /// يصادف يختار ميعاد بالدقيقة دي. سيناريو `slotLostAtConfirm` بيخلي
+  /// **أول خدمة** تقع — عشان الحالة تبقى قابلة للعرض في تانيتين بدل ما
+  /// نفضل نجرّب مواعيد لحد ما واحد يقع.
+  ///
+  /// **بس مرة واحدة.** من غير [_scenarioSlotLostFired] كان الحجز يقع كل
+  /// مرة: العميل يختار بديل، يدوس تأكيد، ويقع تاني — حلقة مقفولة مالهاش
+  /// مخرج. والسيناريو المفروض يوري **التعافي**، والتعافي معناه إنك تقدر
+  /// تكمّل في الآخر.
+  bool _isSlotTaken(BookingDraftItem item) {
+    if (MockConfig.scenario == MockScenario.slotLostAtConfirm) {
+      if (_scenarioSlotLostFired) return false;
+      return items.isNotEmpty && item.key == items.first.key;
+    }
+    return item.selectedSlot?.startAt.minute == 15;
+  }
+
   Future<void> confirmBooking() async {
     emit(CreateBookingLoadingState());
 
@@ -560,19 +739,36 @@ class CreateBookingCubit extends Cubit<CreateBookingState> {
 
     // مؤقتًا للتجربة: أي ميعاد الدقيقة فيه ١٥ بنعتبره اتحجز من حد تاني،
     // عشان نقدر نجرّب حالة «الميعاد راح» من غير جهازين.
-    for (final item in items) {
-      if (item.selectedSlot?.startAt.minute != 15) continue;
+    //
+    // **بنجمّعهم كلهم قبل ما نرد.** الكود القديم كان بيعمل `return` من جوه
+    // اللوب عند أول خدمة وقعت، فحجز بتلات خدمات واتنين مواعيدهم راحوا كان
+    // بيوري واحدة بس — والعميل يصلّحها، يدوس تأكيد، ويتصدم تاني.
+    final taken = items.where(_isSlotTaken).toList();
 
-      item.takenSlot = item.selectedSlot;
-      item.selectedSlot = null;
-      currentStep = BookingStep.dateTime;
+    if (taken.isNotEmpty) {
+      _scenarioSlotLostFired = true;
 
-      for (final other in items) {
-        other.isExpanded = other.key == item.key;
+      for (final item in taken) {
+        item.takenSlot = item.selectedSlot;
+        item.selectedSlot = null;
       }
 
-      await loadSlotsFor(item.key);
-      emit(SlotTakenState(itemKey: item.key, serviceName: item.service.name));
+      currentStep = BookingStep.dateTime;
+
+      // بنفتح أول واحد بس — كارت واحد مفتوح في المرة هي قاعدة الأكورديون،
+      // والباقي بيفضل مشخوط ومستني دوره.
+      final first = taken.first;
+      for (final other in items) {
+        other.isExpanded = other.key == first.key;
+      }
+
+      await loadSlotsFor(first.key);
+      emit(
+        SlotTakenState(
+          itemKey: first.key,
+          serviceNames: taken.map((i) => i.service.name).toList(),
+        ),
+      );
       return;
     }
 

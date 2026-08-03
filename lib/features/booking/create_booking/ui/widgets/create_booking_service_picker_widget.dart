@@ -8,6 +8,7 @@ import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
 import 'package:waqty_user_application/core/utils/app_spacing.dart';
 import 'package:waqty_user_application/core/utils/app_text_styles.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
+import 'package:waqty_user_application/core/widgets/app_hairline_widget.dart';
 import 'package:waqty_user_application/core/widgets/app_surface_widget.dart';
 
 /// اختيار الخدمات — **متعدد**.
@@ -42,63 +43,138 @@ class CreateBookingServicePickerWidget extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('اختر الخدمات', style: AppTextStyles.sectionHeader),
-        verticalSpace(AppSpacing.s4),
+        // **مفيش عنوان هنا.** الرأس بتاع الـ sheet بيقول «اختار الخدمات»
+        // خلاص — والعنوان التاني كان بيكرره حرفيًا تحته بـ٤٠ بكسل فرق.
+        // السطر ده بيشرح **القاعدة** (متعدد) مش بيسمّي الخطوة تاني.
         Text(
           'تقدر تختار أكتر من خدمة في نفس الحجز',
           style: AppTextStyles.caption,
         ),
         verticalSpace(AppSpacing.headerToContent),
-        ...bookable.map((service) {
-          final selected = isSelected(service.uuid);
 
-          return Padding(
-            padding: EdgeInsetsDirectional.only(bottom: AppSpacing.chipGap.h),
-            child: AppSurfaceWidget(
-              onTap: () => onToggle(service),
-              radius: AppRadius.m,
-              height: 64.h,
-              color: selected ? AppSemanticColors.accentSoft : null,
-              // **الحالة المختارة هي واحدة من تلات حالات بس بتاخد حد.**
-              // الحد هنا معناه دلالي («ده اختيارك») مش فصل بصري.
-              border: selected
-                  ? Border.all(color: AppSemanticColors.accent, width: 1.5)
-                  : null,
-              padding: EdgeInsets.symmetric(horizontal: AppSpacing.s12.w),
-              child: Row(
-                children: [
-                  _Checkbox(isSelected: selected),
-                  horizontalSpace(AppSpacing.s12),
-                  Expanded(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          service.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTextStyles.bodyMdStrong,
-                        ),
-                        verticalSpace(AppSpacing.titleToSubtitle),
-                        Text(
-                          AppFormat.duration(service.durationMinutes),
-                          style: AppTextStyles.caption,
-                        ),
-                      ],
-                    ),
-                  ),
-                  horizontalSpace(AppSpacing.s8),
-                  Text(
-                    AppFormat.money(service.price),
-                    style: AppTextStyles.bodyMdStrong,
-                  ),
-                ],
-              ),
-            ),
-          );
-        }),
+        // **قايمة بخط شعري، مش كروت طايرة.**
+        //
+        // أربع أسطح مرفوعة ورا بعض = أربع ظلال وأربع حدود، وكل واحد
+        // بيقول «أنا جسم منفصل» — ولما الكل بيقولها محدش بيقولها. نفس
+        // السبب اللي شال الكارت من قايمة الأماكن ومن صفوف الحجوزات.
+        // والمكسب مش شكلي بس: أربع خدمات بقت تدخل في نص المساحة.
+        AppSurfaceWidget(
+          radius: AppRadius.m,
+          padding: EdgeInsets.zero,
+          child: Column(
+            children: [
+              for (var i = 0; i < bookable.length; i++)
+                _ServiceRow(
+                  service: bookable[i],
+                  isSelected: isSelected(bookable[i].uuid),
+                  showHairline: i != bookable.length - 1,
+                  onTap: () => onToggle(bookable[i]),
+                ),
+            ],
+          ),
+        ),
       ],
+    );
+  }
+}
+
+/// صف خدمة واحدة.
+///
+/// ## السعر على سطر الاسم — مش في الناحية التانية من الشاشة
+///
+/// كان الاسم على اليمين والسعر على الشمال، والنص اللي بينهم فاضي. على
+/// ٣٧٥ بكسل ده بيتقرا **جدول مكسور**، والعين بتلف مرتين لكل صف.
+///
+/// السعر جزء من قرار الاختيار، فمكانه جنب الحاجة اللي بيسعّرها: الاسم
+/// والسعر على نفس السطر (نمط قايمة الأسعار المعروف)، والمدة تحت. حركة
+/// عين واحدة بدل اتنين.
+class _ServiceRow extends StatelessWidget {
+  final ServiceUiModel service;
+  final bool isSelected;
+  final bool showHairline;
+  final VoidCallback onTap;
+
+  const _ServiceRow({
+    required this.service,
+    required this.isSelected,
+    required this.showHairline,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: AppMotion.base,
+        curve: AppMotion.standard,
+        // الصف المختار بيتلوّن — **من غير حد**. الحد كان بيضيف تالت
+        // إشارة (مربع + لون + حد) لحالة واحدة، والتلاتة مع بعض بيبقوا
+        // ضوضاء مش تأكيد.
+        color: isSelected
+            ? AppSemanticColors.accentSoft
+            : Colors.transparent,
+        padding: EdgeInsetsDirectional.symmetric(
+          horizontal: AppSpacing.s12.w,
+          vertical: AppSpacing.s12.h,
+        ),
+        child: Column(
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _Checkbox(isSelected: isSelected),
+                horizontalSpace(AppSpacing.s12),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        // خط القاعدة مشترك — الاسم والسعر بيقعدوا على نفس
+                        // السطر فعلاً، مش متوسطين كل واحد في صندوقه.
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              service.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTextStyles.bodyMdStrong,
+                            ),
+                          ),
+                          horizontalSpace(AppSpacing.s8),
+                          Text(
+                            AppFormat.money(service.price),
+                            style: AppTextStyles.bodyMdStrong,
+                          ),
+                        ],
+                      ),
+                      verticalSpace(AppSpacing.titleToSubtitle),
+                      Text(
+                        AppFormat.duration(service.durationMinutes),
+                        style: AppTextStyles.caption,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            if (showHairline) ...[
+              verticalSpace(AppSpacing.s12),
+              // الخط بيبدأ بعد المربع — بيربط الصفوف من غير ما يقطع
+              // عمود الاختيار.
+              Padding(
+                padding: EdgeInsetsDirectional.only(
+                  start: (22 + AppSpacing.s12).w,
+                ),
+                child: const AppHairlineWidget(),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }
