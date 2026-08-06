@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:waqty_user_application/config/themes/app_theme.dart';
 import 'package:waqty_user_application/config/themes/theme_cubit.dart';
+import 'package:waqty_user_application/core/utils/app_gradients.dart';
 import 'package:waqty_user_application/core/utils/app_palette.dart';
 import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
 
@@ -307,6 +308,94 @@ void main() {
         expect(
           _luminance(AppPalette.dark.entityGrounds[i]),
           lessThan(_luminance(AppPalette.light.entityGrounds[i])),
+        );
+      }
+    });
+  });
+
+  /// **الغسلات بتغيّر لون السطح تحت النص.**
+  ///
+  /// كل الحساب اللي فوق بيقيس النص على **لون واحد**. أول ما اتحط تدرّج على
+  /// لوح البؤرة، السطح بقى مدى ألوان — والنص بيتقرا على المدى كله مش على
+  /// نقطة البداية. فالقياس بيتعمل على **كل نقطة توقّف في التدرّج**.
+  ///
+  /// ده اللي بيخلي زيادة `_lift` في `AppGradients` حاجة الاختبار بيرد
+  /// عليها، مش حاجة حد يكتشفها بعينه بالليل.
+  group('غسلات AppGradients', () {
+    /// كل ألوان التدرّج — نقطة الضوء ولون السطح.
+    List<Color> stopsOf(Gradient gradient) => gradient.colors;
+
+    test('نص لوح الحبر مقروء على الغسلة كلها في الوضعين', () {
+      for (final brightness in Brightness.values) {
+        AppSemanticColors.apply(brightness);
+
+        for (final stop in stopsOf(AppGradients.ink)) {
+          expect(
+            _contrast(AppSemanticColors.textOnInk, stop),
+            greaterThan(small),
+            reason: 'النص الأساسي وقع على $stop في $brightness',
+          );
+          expect(
+            _contrast(AppSemanticColors.textOnInkMuted, stop),
+            greaterThan(small),
+            reason: 'النص الثانوي وقع على $stop في $brightness',
+          );
+        }
+      }
+    });
+
+    /// ⚠ الشريط الأخضر هامشه فوق AA **٠٫٢٤ بس** على النص الثانوي، فغسلته
+    /// معمولة تغمق مش تفتح. الاختبار ده بيثبّت الاتجاه: أي نقطة في التدرّج
+    /// لازم تبقى **أغمق أو زي** السطح الأساسي.
+    test('غسلة الشريط الأخضر بتغمق مش بتفتح', () {
+      for (final brightness in Brightness.values) {
+        AppSemanticColors.apply(brightness);
+        final base = _luminance(AppSemanticColors.surfaceAccentDeep);
+
+        for (final stop in stopsOf(AppGradients.accentDeep)) {
+          expect(
+            _luminance(stop),
+            lessThanOrEqualTo(base + 0.0001),
+            reason: 'الغسلة فتّحت الشريط عند $stop في $brightness',
+          );
+          expect(
+            _contrast(AppSemanticColors.textOnAccentMuted, stop),
+            greaterThan(small),
+            reason: 'النص الثانوي وقع على $stop في $brightness',
+          );
+        }
+      }
+    });
+
+    /// الطبق شايل أيقونة مش نص — والأيقونة رسمة، فحدها ٣:١ مش ٤٫٥.
+    test('أيقونة التصنيف بتبان على الطبق في الوضعين', () {
+      for (final brightness in Brightness.values) {
+        AppSemanticColors.apply(brightness);
+
+        for (final gradient in [AppGradients.plate, AppGradients.plateSelected]) {
+          for (final stop in stopsOf(gradient)) {
+            expect(
+              _contrast(AppSemanticColors.accent, stop),
+              greaterThan(large),
+              reason: 'الأيقونة وقعت على $stop في $brightness',
+            );
+          }
+        }
+      }
+    });
+
+    /// الهالة بتقعد **ورا** المحتوى وبتنتهي عند شفافية صفر — لو حد رفع
+    /// الشفافية دي بقت طبقة لون فوق الصفحة وبتاكل من تباين النص عليها.
+    test('هالة الصفحة بتخلص شفافة', () {
+      for (final brightness in Brightness.values) {
+        AppSemanticColors.apply(brightness);
+        final stops = stopsOf(AppGradients.pageGlow);
+
+        expect(stops.last.a, 0, reason: 'مابتخلصش شفافة في $brightness');
+        expect(
+          stops.first.a,
+          lessThan(0.15),
+          reason: 'الهالة بقت طبقة لون في $brightness',
         );
       }
     });

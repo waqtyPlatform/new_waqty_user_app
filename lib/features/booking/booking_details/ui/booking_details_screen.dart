@@ -21,6 +21,7 @@ import 'package:waqty_user_application/features/booking/booking_details/ui/widge
 import 'package:waqty_user_application/features/booking/booking_details/ui/widgets/booking_rate_sheet_widget.dart';
 import 'package:waqty_user_application/features/booking/create_booking/ui/create_booking_sheet.dart';
 import 'package:waqty_user_application/core/widgets/booking_status_chip_widget.dart';
+import 'package:waqty_user_application/core/widgets/directional_chevron_widget.dart';
 
 class BookingDetailsScreen extends StatelessWidget {
   const BookingDetailsScreen({super.key});
@@ -323,8 +324,10 @@ class BookingDetailsScreen extends StatelessWidget {
                   'مع ${item.employeeName}',
                   style: AppTextStyles.caption,
                 ),
-                trailing: Icon(
-                  Icons.chevron_left_rounded,
+                // `chevron_left` مكتوبة بإيد كانت بتشاور **يمين** في
+                // العربي (فلاتر بيقلبها لوحده) — يعني «ارجع» في صف
+                // معناه «كمّل للتقييم».
+                trailing: DirectionalChevronWidget(
                   color: AppSemanticColors.textSecondary,
                 ),
                 onTap: () {

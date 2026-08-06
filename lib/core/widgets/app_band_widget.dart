@@ -24,6 +24,19 @@ class AppBandWidget extends StatelessWidget {
   /// الافتراضي حبر — ده الاستخدام الأساسي.
   final Color? color;
 
+  /// غسلة ركنية فوق [color].
+  ///
+  /// جاية من [AppGradients] مش مكتوبة في مكان النداء — الشريط ده أكبر سطح
+  /// في الأبلكيشن، ولون مكتوب بالإيد عليه بيخرج من نظام الوضعين على طول.
+  final Gradient? gradient;
+
+  /// طبقة بترسم **ورا** المحتوى وبتتقص بحدود الشريط.
+  ///
+  /// موجودة عشان اللي بينده يقدر يحط حاجة تلمس حواف الشريط — الحشوة
+  /// بتتطبّق على [child] بس. من غيرها كان لازم اللي بينده يشيل الحشوة
+  /// ويعيد تركيبها بنفسه.
+  final Widget? backdrop;
+
   final EdgeInsetsGeometry? padding;
   final VoidCallback? onTap;
 
@@ -31,6 +44,8 @@ class AppBandWidget extends StatelessWidget {
     super.key,
     required this.child,
     this.color,
+    this.gradient,
+    this.backdrop,
     this.padding,
     this.onTap,
   });
@@ -39,24 +54,40 @@ class AppBandWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     // `AnimatedContainer` عشان الشريط لما يغيّر لونه (مثلاً من حبر لأخضر
     // لما يبقى دورك) يتحوّل بدل ما ينطّ.
+    //
+    // اللون جوه الـ `decoration` مش في `color:` — الاتنين مع بعض بيرموا
+    // assertion، والتدرّج مالوش مكان غير الـ decoration.
     return AnimatedContainer(
       duration: AppMotion.slow,
       curve: AppMotion.standard,
       width: double.infinity,
-      color: color ?? AppSemanticColors.surfaceInk,
-      child: Material(
-        type: MaterialType.transparency,
-        child: InkWell(
-          onTap: onTap,
-          child: Padding(
-            padding:
-                padding ??
-                EdgeInsetsDirectional.symmetric(
-                  horizontal: AppSpacing.pageGutter.w,
-                  vertical: AppSpacing.s24.h,
+      decoration: BoxDecoration(
+        color: color ?? AppSemanticColors.surfaceInk,
+        gradient: gradient,
+      ),
+      // `ClipRect` عشان الـ [backdrop] يقدر يخرج بره الشريط من غير ما
+      // يترسم على الصفحة. الـ `Stack` غير مقيّد بالحجم — `Positioned.fill`
+      // على الطبقة الخلفية بس، والمحتوى هو اللي بيحدد الارتفاع.
+      child: ClipRect(
+        child: Stack(
+          children: [
+            if (backdrop != null) Positioned.fill(child: backdrop!),
+            Material(
+              type: MaterialType.transparency,
+              child: InkWell(
+                onTap: onTap,
+                child: Padding(
+                  padding:
+                      padding ??
+                      EdgeInsetsDirectional.symmetric(
+                        horizontal: AppSpacing.pageGutter.w,
+                        vertical: AppSpacing.s24.h,
+                      ),
+                  child: child,
                 ),
-            child: child,
-          ),
+              ),
+            ),
+          ],
         ),
       ),
     );

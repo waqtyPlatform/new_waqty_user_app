@@ -264,7 +264,9 @@ class CreateBookingItemCardWidget extends StatelessWidget {
             alignment: AlignmentDirectional.centerStart,
             child: TextButton.icon(
               onPressed: onBrowseAll,
-              icon: Icon(Icons.arrow_forward_rounded, size: 18.r),
+              // اللابل «رجوع» — يبقى السهم `arrow_back` (فلاتر بيقلبه
+              // لوحده فبيشاور يمين في العربي).
+              icon: Icon(Icons.arrow_back_rounded, size: 18.r),
               label: Text('رجوع للاقتراحات', style: AppTextStyles.label),
             ),
           ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:waqty_user_application/core/models/booking_ui_model.dart';
 import 'package:waqty_user_application/core/models/in_branch_ui_model.dart';
 import 'package:waqty_user_application/core/utils/app_format.dart';
+import 'package:waqty_user_application/core/utils/app_gradients.dart';
 import 'package:waqty_user_application/core/utils/app_motion.dart';
 import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
 import 'package:waqty_user_application/core/utils/app_spacing.dart';
@@ -9,6 +10,7 @@ import 'package:waqty_user_application/core/utils/app_text_styles.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
 import 'package:waqty_user_application/core/widgets/app_band_widget.dart';
 import 'package:waqty_user_application/core/widgets/app_hairline_widget.dart';
+import 'package:waqty_user_application/core/widgets/app_watermark_glyph_widget.dart';
 
 /// **بؤرة الهوم.** الحاجة الغامقة الوحيدة في الأبلكيشن.
 ///
@@ -64,6 +66,16 @@ class InBranchHeroWidget extends StatelessWidget {
       color: isAttention
           ? AppSemanticColors.surfaceAccentDeep
           : AppSemanticColors.surfaceInk,
+      // الحالتين ليهم غسلتين متعاكستين: الحبر بيتضوّي، والأخضر بيغمق
+      // ناحية الركن. السبب في `AppGradients.accentDeep` — الهامش فوق AA
+      // على الشريط الأخضر ٠٫٢٤ بس، فالضوء هناك ماينفعش يفتّح.
+      gradient: isAttention ? AppGradients.accentDeep : AppGradients.ink,
+      // حرف المحل باهت وخارج من الحافة — الشريط بيبقى **بتاع الحجز ده**
+      // مش مستطيل عام. بيتغيّر بتغيّر المحل، فالشاشة مش واحدة عند الكل.
+      backdrop: AppWatermarkGlyphWidget(
+        name: booking.providerName,
+        color: ink,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

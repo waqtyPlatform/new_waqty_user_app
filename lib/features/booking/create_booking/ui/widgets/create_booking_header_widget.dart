@@ -98,8 +98,11 @@ class CreateBookingHeaderWidget extends StatelessWidget {
                       minWidth: AppSpacing.touchTarget.w,
                       minHeight: AppSpacing.touchTarget.h,
                     ),
+                    // `arrow_back` مش `arrow_forward`: فلاتر بيقلب
+                    // الاتنين لوحده في الـ RTL، فـ`forward` كانت بتشاور
+                    // **شمال** في العربي — إشارة «كمّل» على زرار رجوع.
                     icon: Icon(
-                      Icons.arrow_forward_rounded,
+                      Icons.arrow_back_rounded,
                       size: 24.r,
                       color: AppSemanticColors.textPrimary,
                     ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/core/models/category_ui_model.dart';
 import 'package:waqty_user_application/core/utils/app_format.dart';
+import 'package:waqty_user_application/core/utils/app_gradients.dart';
 import 'package:waqty_user_application/core/utils/app_motion.dart';
 import 'package:waqty_user_application/core/utils/app_radius.dart';
 import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
@@ -143,9 +144,15 @@ class _CategoryItem extends StatelessWidget {
                 width: HomeCategoriesWidget.plateSize.r,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: isSelected
-                      ? AppSemanticColors.accentSoft
-                      : AppSemanticColors.surfaceSunken,
+                  // **قرص محدّب مش خرم.**
+                  //
+                  // الطبق المسطّح بيقرا كفراغ في الصفحة، وخمس دواير مسطّحة
+                  // ورا بعض بتقرا كصف عناصر نائبة. التدرّج المضوّي من فوق
+                  // بيخليها تقرا كأجسام، والفرق ده هو الفرق بين «صف تصنيفات»
+                  // و«placeholder».
+                  gradient: isSelected
+                      ? AppGradients.plateSelected
+                      : AppGradients.plate,
                   shape: BoxShape.circle,
                   border: isSelected
                       ? Border.all(
