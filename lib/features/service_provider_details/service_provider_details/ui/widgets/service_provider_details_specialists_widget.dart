@@ -25,7 +25,11 @@ class ServiceProviderDetailsSpecialistsWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // ٧٢ صورة + ٨ + ٤ مسافات = ٨٤ ثابت، والباقي نص بيكبر مع مقياس الخط.
-    final height = AppSpacing.scaledHeight(context, fixed: 84, text: 33.6);
+    //
+    // النص **٣٤٫٥ مش ٣٣٫٦**: سطرين × ١٢×١٫٤٠ = ٣٣٫٦ حسابيًا، وفلاتر بيقرّب
+    // ارتفاع السطر لأعلى وقت التشكيل فبيطلع أكبر بكسر بكسل — والكسر ده كان
+    // بيفيض عند مقياس خط ١٫٣.
+    final height = AppSpacing.scaledHeight(context, fixed: 84, text: 34.5);
 
     return SizedBox(
       height: height.h,
@@ -36,15 +40,14 @@ class ServiceProviderDetailsSpecialistsWidget extends StatelessWidget {
         itemBuilder: (context, index) {
           final employee = employees[index];
           return SizedBox(
-            width: 88.w,
+            // **٩٦ مش ٨٨.** «من ٢٥٠ ج.م» مكانش داخل على ٨٨، وسطر السعر كان
+            // **بيتلف لسطرين** — وده اللي كان بيفيّض العمود ١٧ بكسل.
+            width: 96.w,
             child: Column(
               children: [
-                EntityAvatarWidget(
-                  name: employee.name,
-                  size: 72,
-                  // نصف المقاس = دايرة كاملة.
-                  radius: 36,
-                ),
+                // دايرة — شبكة الأخصائيين في الـ DNA أفاتارات دائرية ٥٦–٦٤.
+                // الـ ٧٢ عندنا أوسع شوية عشان الحرف البديل هو اللوجو.
+                EntityAvatarWidget(name: employee.name, size: 72),
                 verticalSpace(AppSpacing.s8),
                 Text(
                   employee.name,
@@ -54,8 +57,12 @@ class ServiceProviderDetailsSpecialistsWidget extends StatelessWidget {
                   style: AppTextStyles.captionInk,
                 ),
                 verticalSpace(AppSpacing.s4),
+                // `maxLines: 1` مفروض صراحة — من غيره السطر بيتلف والعمود
+                // بيفيض، والارتفاع محسوب على سطر واحد.
                 Text(
                   'من ${AppFormat.money(employee.price)}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: AppTextStyles.caption,
                 ),
               ],

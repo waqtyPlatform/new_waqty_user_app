@@ -9,6 +9,7 @@ import 'package:waqty_user_application/core/utils/app_spacing.dart';
 import 'package:waqty_user_application/core/utils/app_text_styles.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
 import 'package:waqty_user_application/core/widgets/app_hairline_widget.dart';
+import 'package:waqty_user_application/core/widgets/app_pill_widget.dart';
 import 'package:waqty_user_application/core/widgets/app_surface_widget.dart';
 
 /// اختيار الخدمات — **متعدد**.
@@ -116,7 +117,11 @@ class _ServiceRow extends StatelessWidget {
             : Colors.transparent,
         padding: EdgeInsetsDirectional.symmetric(
           horizontal: AppSpacing.s12.w,
-          vertical: AppSpacing.s12.h,
+          // **٨ مش ١٢.** الصف سطرين قصيرين، والخط الشعري تحته بياخد ٨ كمان
+          // — يعني بين محتوى صف ومحتوى اللي بعده كان فيه ٣٢ فراغ لسطرين
+          // نص. الصف بقى ~٧١ بدل ~٧٩، ولسه فوق الحد الأدنى للمس (٤٤)
+          // بفارق مريح.
+          vertical: AppSpacing.s8.h,
         ),
         child: Column(
           children: [
@@ -151,10 +156,13 @@ class _ServiceRow extends StatelessWidget {
                           ),
                         ],
                       ),
-                      verticalSpace(AppSpacing.titleToSubtitle),
-                      Text(
-                        AppFormat.duration(service.durationMinutes),
-                        style: AppTextStyles.caption,
+                      verticalSpace(AppSpacing.s4),
+                      // شارة مش نص رمادي — نفس لغة صف الخدمة في صفحة
+                      // المحل. المدة قيد بيتقارن بين الخدمات، والحدود
+                      // بتخليها تتقرا كحقيقة مش كتعليق.
+                      AppPillWidget(
+                        label: AppFormat.duration(service.durationMinutes),
+                        icon: Icons.schedule_rounded,
                       ),
                     ],
                   ),
@@ -162,7 +170,7 @@ class _ServiceRow extends StatelessWidget {
               ],
             ),
             if (showHairline) ...[
-              verticalSpace(AppSpacing.s12),
+              verticalSpace(AppSpacing.s8),
               // الخط بيبدأ بعد المربع — بيربط الصفوف من غير ما يقطع
               // عمود الاختيار.
               Padding(

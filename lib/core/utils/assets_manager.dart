@@ -18,18 +18,17 @@ class ImageAsset {
   static const String appleIcon = 'assets/icons/apple_icon.svg';
   static const String googleICon = 'assets/icons/google_icon.svg';
 
-  static const String homeIcon = 'assets/icons/home_icon.svg';
-  static const String exploreIcon = 'assets/icons/explore_icon.svg';
-  static const String bookingIcon = 'assets/icons/booking_icon.svg';
-  static const String accountIcon = 'assets/icons/account_icon.svg';
+  // ── أيقونات شريط التبويبات اتشالت ────────────────────────────────────
+  //
+  // كانت ٨ ملفات SVG (عادي/مختار لكل تبويب) **بلون مطبوع جواها**، يعني في
+  // الوضع الغامق كانت هتفضل سودا على شريط غامق.
+  //
+  // الشريط بقى بياخد `Icons.*_rounded` من ماتيريال وبيلوّنها من التوكن،
+  // والحالة المختارة بقت دايرة خلف الأيقونة (من الـ design DNA) مش أيقونة
+  // تانية — فالملف التاني بطّل يبقى ليه لازمة أصلاً.
+  //
+  // الملفات لسه في `assets/icons/` لو حد احتاج يرجّعها.
 
-  static const String selectedHomeIcon = 'assets/icons/selected_home_icon.svg';
-  static const String selectedExploreIcon =
-      'assets/icons/selected_explore_icon.svg';
-  static const String selectedBookingIcon =
-      'assets/icons/selected_booking_icon.svg';
-  static const String selectedAccountIcon =
-      'assets/icons/selected_account_icon.svg';
   static const String notificationIcon = 'assets/icons/notification_icon.svg';
   static const String filterIcon = 'assets/icons/filter_icon.svg';
 }

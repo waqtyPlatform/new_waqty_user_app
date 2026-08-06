@@ -78,13 +78,15 @@ class InBranchBannerWidget extends StatelessWidget {
               live.bannerLabel,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
+              // **`textOnAccentDeep` مش `textOnAccent`** — التاني بينقلب
+              // لحبر غامق في الوضع الغامق، وعلى الأخضر الغامق بيدي 2.52:1.
               style: AppTextStyles.bodyMdStrong.copyWith(
-                color: AppSemanticColors.textOnAccent,
+                color: AppSemanticColors.textOnAccentDeep,
               ),
             ),
           ),
           horizontalSpace(AppSpacing.s8),
-          const DirectionalChevronWidget(
+          DirectionalChevronWidget(
             size: 18,
             color: AppSemanticColors.textOnAccentMuted,
           ),

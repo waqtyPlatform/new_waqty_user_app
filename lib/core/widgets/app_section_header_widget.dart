@@ -75,7 +75,7 @@ class AppSectionHeaderWidget extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(actionLabel!, style: AppTextStyles.sectionLabel),
-                    const DirectionalChevronWidget(
+                    DirectionalChevronWidget(
                       size: 16,
                       color: AppSemanticColors.textSecondary,
                     ),
@@ -96,7 +96,7 @@ class _LeadingRule extends StatelessWidget {
     return SizedBox(
       width: 16.w,
       height: 1 / MediaQuery.devicePixelRatioOf(context),
-      child: const ColoredBox(color: AppSemanticColors.borderStrong),
+      child: ColoredBox(color: AppSemanticColors.borderStrong),
     );
   }
 }

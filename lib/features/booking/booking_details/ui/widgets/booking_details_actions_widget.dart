@@ -7,7 +7,7 @@ import 'package:waqty_user_application/core/utils/app_spacing.dart';
 import 'package:waqty_user_application/core/utils/app_text_styles.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
 import 'package:waqty_user_application/core/widgets/app_surface_widget.dart';
-import 'package:waqty_user_application/core/widgets/button_widget.dart';
+import 'package:waqty_user_application/core/widgets/app_button_widget.dart';
 
 /// إجراءات الحجز.
 ///
@@ -42,28 +42,18 @@ class BookingDetailsActionsWidget extends StatelessWidget {
         // مايتقيّموش أبدًا. التقييمات مربوطة بـ `booking_item_id` في
         // السيرفر، فالحجز ده تلات تقييمات مستقلة.
         if (booking.hasPendingRatings)
-          ButtonWidget(
-            isLoading: false,
-            buttonText: booking.rateableItems.length == 1
+          AppButtonWidget(
+            label: booking.rateableItems.length == 1
                 ? 'قيّم الخدمة'
                 : 'قيّم الخدمات',
-            backGroundColor: AppSemanticColors.accent,
-            borderColor: AppSemanticColors.accent,
-            textStyle: AppTextStyles.button,
-            buttonHeight: 52.h,
             onPressed: onRate,
           ),
 
         if (!booking.status.isUpcoming) ...[
           verticalSpace(AppSpacing.listRowGap),
-          ButtonWidget(
-            isLoading: false,
-            buttonText: 'احجز تاني',
-            backGroundColor: AppSemanticColors.surfaceRaised,
-            borderColor: AppSemanticColors.accent,
-            borderWidth: 1,
-            textStyle: AppTextStyles.cardTitle,
-            buttonHeight: 52.h,
+          AppButtonWidget(
+            label: 'احجز تاني',
+            variant: AppButtonVariant.secondary,
             onPressed: onRebook,
           ),
         ],
@@ -71,16 +61,9 @@ class BookingDetailsActionsWidget extends StatelessWidget {
         if (booking.status.isUpcoming) ...[
           verticalSpace(AppSpacing.listRowGap),
           if (booking.canCancel)
-            ButtonWidget(
-              isLoading: false,
-              buttonText: 'إلغاء الحجز',
-              backGroundColor: AppSemanticColors.surfaceRaised,
-              borderColor: AppSemanticColors.dangerBorder,
-              borderWidth: 1,
-              textStyle: AppTextStyles.cardTitle.copyWith(
-                color: AppSemanticColors.danger,
-              ),
-              buttonHeight: 52.h,
+            AppButtonWidget(
+              label: 'إلغاء الحجز',
+              variant: AppButtonVariant.danger,
               onPressed: onCancel,
             )
           else

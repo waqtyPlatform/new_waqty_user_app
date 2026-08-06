@@ -59,16 +59,16 @@ class ProvidersListSearchBarWidget extends StatelessWidget {
               ),
         contentPadding: EdgeInsetsDirectional.symmetric(vertical: 14.h),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.m.r),
+          borderRadius: BorderRadius.circular(AppRadius.s.r),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.m.r),
+          borderRadius: BorderRadius.circular(AppRadius.s.r),
           borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.m.r),
-          borderSide: const BorderSide(color: AppSemanticColors.accent),
+          borderRadius: BorderRadius.circular(AppRadius.s.r),
+          borderSide: BorderSide(color: AppSemanticColors.accent, width: 1.5.r),
         ),
       ),
     );

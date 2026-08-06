@@ -7,7 +7,7 @@ import 'package:waqty_user_application/core/utils/app_shadows.dart';
 import 'package:waqty_user_application/core/utils/app_spacing.dart';
 import 'package:waqty_user_application/core/utils/app_text_styles.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/button_widget.dart';
+import 'package:waqty_user_application/core/widgets/app_button_widget.dart';
 
 /// شريط الحجز المثبّت تحت صفحة المحل.
 ///
@@ -88,15 +88,7 @@ class ServiceProviderDetailsBookingBarWidget extends StatelessWidget {
               horizontalSpace(AppSpacing.listRowGap),
             ],
             Expanded(
-              child: ButtonWidget(
-                isLoading: false,
-                buttonText: 'احجز موعد',
-                backGroundColor: AppSemanticColors.accent,
-                borderColor: AppSemanticColors.accent,
-                textStyle: AppTextStyles.button,
-                buttonHeight: 52.h,
-                onPressed: onBook,
-              ),
+              child: AppButtonWidget(label: 'احجز موعد', onPressed: onBook),
             ),
           ],
         ),

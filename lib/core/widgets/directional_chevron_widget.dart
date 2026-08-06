@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
+import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
 
 /// اتجاه السهم بالنسبة لاتجاه القراءة، مش بالنسبة للشاشة.
 enum ChevronDirection {
@@ -41,7 +41,7 @@ class DirectionalChevronWidget extends StatelessWidget {
           ? Icons.chevron_right_rounded
           : Icons.chevron_left_rounded,
       size: size.r,
-      color: color ?? AppColors.greyColor300,
+      color: color ?? AppSemanticColors.textTertiary,
     );
   }
 }

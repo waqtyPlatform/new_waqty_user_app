@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/config/routes/routes.dart';
-import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
 import 'package:waqty_user_application/core/mock/mock_services.dart';
 import 'package:waqty_user_application/core/models/service_ui_model.dart';
 import 'package:waqty_user_application/core/utils/app_constant.dart';
@@ -21,6 +20,7 @@ import 'package:waqty_user_application/features/service_provider_details/service
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/widgets/service_provider_details_booking_bar_widget.dart';
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/widgets/service_provider_details_branch_row_widget.dart';
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/widgets/service_provider_details_header_widget.dart';
+import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/widgets/service_provider_details_meta_widget.dart';
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/widgets/service_provider_details_hours_widget.dart';
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/widgets/service_provider_details_service_row_widget.dart';
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/widgets/service_provider_details_specialists_widget.dart';
@@ -60,8 +60,10 @@ class ServiceProviderDetailsScreen extends StatelessWidget {
 
         final provider = cubit.provider;
         if (provider == null) {
-          return const Scaffold(
-            body: Center(child: LoadingWidget(color: AppColors.greenColor500)),
+          return Scaffold(
+            body: Center(
+              child: LoadingWidget(color: AppSemanticColors.accent),
+            ),
           );
         }
 
@@ -85,6 +87,8 @@ class ServiceProviderDetailsScreen extends StatelessWidget {
               ServiceProviderDetailsHeaderWidget(
                 name: provider.name,
                 imageUrl: provider.imagePath,
+                categoryName: provider.categoryName,
+                areaName: provider.areaName,
               ),
 
               // الجزء ده كله «كلام» — بياخد هامش الصفحة من فوق.
@@ -96,12 +100,9 @@ class ServiceProviderDetailsScreen extends StatelessWidget {
                 ),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
-                    Text(provider.name, style: AppTextStyles.titleLg),
-                    verticalSpace(AppSpacing.titleToSubtitle),
-                    Text(
-                      '${provider.categoryName} · ${provider.areaName} · ${AppFormat.distance(provider.distanceKm)}',
-                      style: AppTextStyles.bodyMdMuted,
-                    ),
+                    // الاسم والتصنيف اتنقلوا **فوق الصورة** في الهيدر —
+                    // كانوا هنا مكرّرين تحت لوح ملوّن بلا سياق.
+                    ServiceProviderDetailsMetaWidget(provider: provider),
 
                     if (branch != null) ...[
                       verticalSpace(AppSpacing.s16),
@@ -300,7 +301,7 @@ class ServiceProviderDetailsScreen extends StatelessWidget {
                   '${branch.address} · ${AppFormat.distance(branch.distanceKm)}',
                 ),
                 trailing: branch.uuid == cubit.selectedBranch?.uuid
-                    ? const Icon(
+                    ? Icon(
                         Icons.check_circle_rounded,
                         color: AppSemanticColors.accent,
                       )

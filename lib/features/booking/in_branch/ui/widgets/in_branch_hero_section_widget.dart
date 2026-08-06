@@ -62,7 +62,7 @@ class InBranchHeroSectionWidget extends StatelessWidget {
         if (state is InBranchInitialState || state is InBranchLoadingState) {
           return SizedBox(
             height: 148.h,
-            child: const ColoredBox(color: AppSemanticColors.surfaceInk),
+            child: ColoredBox(color: AppSemanticColors.surfaceInk),
           );
         }
 

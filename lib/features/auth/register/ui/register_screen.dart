@@ -1,10 +1,10 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
+import 'package:waqty_user_application/core/utils/app_spacing.dart';
+import 'package:waqty_user_application/core/utils/app_text_styles.dart';
 import 'package:waqty_user_application/core/utils/assets_manager.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/utils/styles.dart';
 import 'package:waqty_user_application/features/auth/register/logic/register_cubit.dart';
 import 'package:waqty_user_application/features/auth/register/ui/widgets/change_language_icon.dart';
 import 'package:waqty_user_application/features/auth/register/ui/widgets/register_already_have_account_widget.dart';
@@ -17,24 +17,29 @@ import 'package:waqty_user_application/features/auth/register/ui/widgets/registe
 import 'package:waqty_user_application/features/auth/register/ui/widgets/register_phone_number_widget.dart';
 import 'package:waqty_user_application/features/auth/register/ui/widgets/register_terms_and_conditions_widget.dart';
 
+/// شاشة التسجيل — ٦ حقول.
+///
+/// اللابلات كانت ٦ `Text` + ٦ `verticalSpace(6)` مكتوبين هنا. دلوقتي كل
+/// حقل شايل لابله (من الـ DNA: `label positioned above the field`)،
+/// فالشاشة بقت **قايمة حقول** مش تخطيط بالإيد.
 class RegisterScreen extends StatelessWidget {
   const RegisterScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.whiteColor,
       resizeToAvoidBottomInset: true,
-
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: 24.w),
+          padding: EdgeInsetsDirectional.symmetric(
+            horizontal: AppSpacing.pageGutter.w,
+          ),
           child: Form(
             key: RegisterCubit.get(context).registerKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                verticalSpace(16),
+                verticalSpace(AppSpacing.s16),
                 Row(
                   children: [
                     Image.asset(ImageAsset.logoImage, height: 50),
@@ -43,74 +48,37 @@ class RegisterScreen extends StatelessWidget {
                   ],
                 ),
 
-                verticalSpace(16),
+                verticalSpace(AppSpacing.s16),
                 Text(
                   context.tr('register.title'),
-                  style: TextStyles.font24greyColor900Weight600,
+                  style: AppTextStyles.titleXl,
                 ),
-                verticalSpace(6),
+                verticalSpace(AppSpacing.s8),
                 Text(
                   context.tr('register.description'),
-                  style: TextStyles.font14greyColor4002Weight400,
+                  style: AppTextStyles.bodyMdMuted,
                 ),
-                verticalSpace(32),
+                verticalSpace(AppSpacing.s32),
 
-                Text(
-                  context.tr('register.nameText'),
-                  style: TextStyles.font14greyColor900Weight500,
-                ),
-                verticalSpace(6),
-                RegisterNameWidget(),
-                verticalSpace(16),
+                const RegisterNameWidget(),
+                verticalSpace(AppSpacing.s16),
+                const RegisterPhoneNumberWidget(),
+                verticalSpace(AppSpacing.s16),
+                const RegisterEmailWidget(),
+                verticalSpace(AppSpacing.s16),
+                const RegisterGenderWidget(),
+                verticalSpace(AppSpacing.s16),
+                const RegisterBirthDateWidget(),
+                verticalSpace(AppSpacing.s16),
+                const RegisterPasswordWidget(),
 
-                Text(
-                  context.tr('register.phoneText'),
-                  style: TextStyles.font14greyColor900Weight500,
-                ),
-                verticalSpace(6),
-                RegisterPhoneNumberWidget(),
-                verticalSpace(16),
-
-                Text(
-                  context.tr('register.emailText'),
-                  style: TextStyles.font14greyColor900Weight500,
-                ),
-
-                verticalSpace(6),
-                RegisterEmailWidget(),
-                verticalSpace(16),
-
-                Text(
-                  context.tr('register.genderText'),
-                  style: TextStyles.font14greyColor900Weight500,
-                ),
-                verticalSpace(6),
-                RegisterGenderWidget(),
-                verticalSpace(16),
-
-                Text(
-                  context.tr('register.birthDateText'),
-                  style: TextStyles.font14greyColor900Weight500,
-                ),
-                verticalSpace(6),
-                RegisterBirthDateWidget(),
-                verticalSpace(16),
-
-                Text(
-                  context.tr('register.passwordText'),
-                  style: TextStyles.font14greyColor900Weight500,
-                ),
-
-                verticalSpace(6),
-                RegisterPasswordWidget(),
-                verticalSpace(54),
-
-                RegisterButtonWidget(),
-                verticalSpace(24),
-                RegisterTermsAndConditionsWidget(),
-                verticalSpace(58),
-                RegisterAlreadyHaveAccountWidget(),
-                verticalSpace(24),
+                verticalSpace(AppSpacing.s32),
+                const RegisterButtonWidget(),
+                verticalSpace(AppSpacing.s16),
+                const RegisterTermsAndConditionsWidget(),
+                verticalSpace(AppSpacing.s40),
+                const RegisterAlreadyHaveAccountWidget(),
+                verticalSpace(AppSpacing.s24),
               ],
             ),
           ),

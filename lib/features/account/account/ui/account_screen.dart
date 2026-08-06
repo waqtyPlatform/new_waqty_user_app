@@ -8,7 +8,7 @@ import 'package:waqty_user_application/core/utils/app_spacing.dart';
 import 'package:waqty_user_application/core/utils/app_text_styles.dart';
 import 'package:waqty_user_application/core/utils/extentions.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/button_widget.dart';
+import 'package:waqty_user_application/core/widgets/app_button_widget.dart';
 import 'package:waqty_user_application/core/widgets/error_state_widget.dart';
 import 'package:waqty_user_application/features/account/account/logic/account_cubit.dart';
 import 'package:waqty_user_application/features/account/account/logic/account_state.dart';
@@ -16,6 +16,7 @@ import 'package:waqty_user_application/features/account/account/ui/widgets/accou
 import 'package:waqty_user_application/features/account/account/ui/widgets/account_header_widget.dart';
 import 'package:waqty_user_application/features/account/account/ui/widgets/account_menu_group_widget.dart';
 import 'package:waqty_user_application/features/account/account/ui/widgets/account_menu_item_widget.dart';
+import 'package:waqty_user_application/features/account/account/ui/widgets/account_theme_item_widget.dart';
 
 class AccountScreen extends StatelessWidget {
   const AccountScreen({super.key});
@@ -63,7 +64,11 @@ class AccountScreen extends StatelessWidget {
             else
               AccountHeaderWidget(account: account),
 
-            verticalSpace(AppSpacing.sectionBreak),
+            // ٢٤ مش ٤٠. الهيدر ده **عنوان الصفحة** مش قسم — و`sectionBreak`
+            // معمول عشان يفصل قسم عن قسم لما اللابل بتاعه ١٢sp هادي. تحت
+            // اسم ٣٢sp الفصل موجود بالوزن أصلاً، والـ ٤٠ كانت بتزوّد فراغ
+            // على فراغ.
+            verticalSpace(AppSpacing.s24),
 
             // مجموعتين بدل خمس صفوف سايبة: **حسابك** و**الأبلكيشن**.
             // التقسيم ده مش شكلي — الصفوف الأولانية بتخص داتا العميل،
@@ -104,6 +109,12 @@ class AccountScreen extends StatelessWidget {
                       : 'English',
                   onTap: () => _showLanguageSheet(context),
                 ),
+                // **المظهر — الطريق الوحيد للوضع الغامق.**
+                //
+                // الافتراضي «حسب الجهاز»، فمعظم الناس مش هيدخلوا هنا أصلاً.
+                // الصف موجود للحالتين اللي النظام مابيغطّيهمش: حد عايز
+                // الأبلكيشن غامق طول الوقت، وحد جهازه غامق بس عايزه فاتح.
+                const AccountThemeItemWidget(),
                 AccountMenuItemWidget(
                   icon: Icons.help_outline_rounded,
                   label: 'المساعدة',
@@ -131,15 +142,18 @@ class AccountScreen extends StatelessWidget {
             //
             // الأحمر على النص كفاية للوضوح، وهدف اللمس لسه كامل العرض
             // بارتفاع `touchTarget` — يعني رجع لورا من غير ما يصعب.
-            ButtonWidget(
-              isLoading: state is LogoutLoadingState,
-              buttonText: 'تسجيل الخروج',
-              fourGroundColor: AppSemanticColors.danger,
-              textStyle: AppTextStyles.bodyMdStrong.copyWith(
-                color: AppSemanticColors.danger,
-              ),
-              buttonHeight: AppSpacing.touchTarget.r,
+            TextButton(
               onPressed: () => _confirmLogout(context, cubit),
+              style: TextButton.styleFrom(
+                foregroundColor: AppSemanticColors.danger,
+                minimumSize: Size(double.infinity, AppSpacing.touchTarget.r),
+              ),
+              child: Text(
+                'تسجيل الخروج',
+                style: AppTextStyles.bodyMdStrong.copyWith(
+                  color: AppSemanticColors.danger,
+                ),
+              ),
             ),
           ],
         );
@@ -183,7 +197,7 @@ class AccountScreen extends StatelessWidget {
     return ListTile(
       title: Text(label),
       trailing: isSelected
-          ? const Icon(
+          ? Icon(
               Icons.check_circle_rounded,
               color: AppSemanticColors.accent,
             )
@@ -217,13 +231,9 @@ class AccountScreen extends StatelessWidget {
               style: AppTextStyles.caption,
             ),
             verticalSpace(AppSpacing.s16),
-            ButtonWidget(
-              isLoading: false,
-              buttonText: 'تسجيل الخروج',
-              backGroundColor: AppSemanticColors.danger,
-              borderColor: AppSemanticColors.danger,
-              textStyle: AppTextStyles.button,
-              buttonHeight: 52.h,
+            AppButtonWidget(
+              label: 'تسجيل الخروج',
+              variant: AppButtonVariant.danger,
               onPressed: () {
                 Navigator.of(sheetContext).pop();
                 cubit.logout();

@@ -7,7 +7,7 @@ import 'package:waqty_user_application/core/utils/app_spacing.dart';
 import 'package:waqty_user_application/core/utils/app_text_styles.dart';
 import 'package:waqty_user_application/core/utils/extentions.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/button_widget.dart';
+import 'package:waqty_user_application/core/widgets/app_button_widget.dart';
 
 /// شاشة النجاح — **شاشة كاملة، مش toast**.
 ///
@@ -54,13 +54,8 @@ class BookingSuccessScreen extends StatelessWidget {
                       ),
                       const Spacer(),
                       verticalSpace(AppSpacing.sectionBreak),
-                      ButtonWidget(
-                        isLoading: false,
-                        buttonText: 'شوف حجوزاتي',
-                        backGroundColor: AppSemanticColors.accent,
-                        borderColor: AppSemanticColors.accent,
-                        textStyle: AppTextStyles.button,
-                        buttonHeight: 52.h,
+                      AppButtonWidget(
+                        label: 'شوف حجوزاتي',
                         onPressed: () => context.pushNamedAndRemoveUntil(
                           Routes.buttonNavigationBarScreen,
                           arguments: {'initialIndex': 2},
@@ -112,7 +107,7 @@ class _SuccessMark extends StatelessWidget {
       child: Container(
         height: 96.r,
         width: 96.r,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppSemanticColors.accentSoft,
           shape: BoxShape.circle,
         ),

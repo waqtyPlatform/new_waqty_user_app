@@ -40,7 +40,7 @@ class AppSurfaceWidget extends StatelessWidget {
   final Widget child;
   final AppElevation level;
 
-  /// الاستدارة. الافتراضي `AppRadius.l` (كارت).
+  /// الاستدارة. الافتراضي [AppRadius.m] (كارت — ١٦ من الـ design DNA).
   final double? radius;
 
   /// لون مخصص. لو `null` بيتحدد من [level].
@@ -71,7 +71,7 @@ class AppSurfaceWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final resolved = radius ?? AppRadius.l;
+    final resolved = radius ?? AppRadius.m;
 
     // استدارة صفر معناها مفيش حاجة تتقص — فطبقة الـ `Material` بـ
     // `Clip.hardEdge` بتبقى `saveLayer` فاضية. مع أربعين صف في القايمة

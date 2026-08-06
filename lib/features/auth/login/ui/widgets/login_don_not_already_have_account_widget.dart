@@ -2,8 +2,8 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:waqty_user_application/config/routes/routes.dart';
+import 'package:waqty_user_application/core/utils/app_text_styles.dart';
 import 'package:waqty_user_application/core/utils/extentions.dart';
-import 'package:waqty_user_application/core/utils/styles.dart';
 
 class LoginDonNotAlreadyHaveAccountWidget extends StatelessWidget {
   const LoginDonNotAlreadyHaveAccountWidget({super.key});
@@ -17,11 +17,11 @@ class LoginDonNotAlreadyHaveAccountWidget extends StatelessWidget {
           children: [
             TextSpan(
               text: context.tr('login.noAccountText'),
-              style: TextStyles.font14greyColor4002Weight400,
+              style: AppTextStyles.bodyMdMuted,
             ),
             TextSpan(
               text: context.tr('login.registerNowText'),
-              style: TextStyles.font14greenColor500Weight600,
+              style: AppTextStyles.label,
               recognizer: TapGestureRecognizer()
                 ..onTap = () {
                   // كان `pop()` — بيفترض إن Login اتفتحت من Register.

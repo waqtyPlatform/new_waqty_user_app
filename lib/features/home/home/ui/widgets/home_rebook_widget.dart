@@ -106,7 +106,7 @@ class HomeRebookWidget extends StatelessWidget {
               // للحجز كله. في حجز بتلات أخصائيين، أول حرف من أول واحد
               // فيهم معلومة عشوائية بتاخد ٤٤ بكسل.
               if (_singleEmployee != null) ...[
-                EntityAvatarWidget(name: _singleEmployee!, size: 28, radius: 14),
+                EntityAvatarWidget(name: _singleEmployee!, size: 28),
                 horizontalSpace(AppSpacing.s8),
               ],
               Expanded(
@@ -122,7 +122,7 @@ class HomeRebookWidget extends StatelessWidget {
                 style: AppTextStyles.bodyMdStrong,
               ),
               horizontalSpace(AppSpacing.s8),
-              const DirectionalChevronWidget(
+              DirectionalChevronWidget(
                 size: 18,
                 color: AppSemanticColors.accent,
               ),

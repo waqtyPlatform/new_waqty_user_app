@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
+import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
 
 /// لون الكيان — محسوب من اسمه، ثابت للأبد.
 ///
@@ -19,54 +19,29 @@ class AppEntityTint {
   AppEntityTint._();
 
   /// أرضية · أرضية أغمق (للغسلة الركنية) · حبر الحرف.
+  ///
+  /// التدرّجات بتتقرا من الـ palette الشغّال، فنفس المحل بياخد **نفس الرقم**
+  /// في الوضعين وبس بيقلب من أرضية فاتحة بحبر غامق لأرضية غامقة بحبر فاتح.
+  /// لو كانت ثابتة، ٤ مربعات لمعانها ٨٥٪ كانت هتولّع في الصفحة السودا.
   static ({Color ground, Color groundDeep, Color ink}) of(String name) {
-    final index = _indexOf(name);
+    final palette = AppSemanticColors.palette;
+    final index = _indexOf(name, palette.entityGrounds.length);
     return (
-      ground: _grounds[index],
-      groundDeep: _groundsDeep[index],
-      ink: _inks[index],
+      ground: palette.entityGrounds[index],
+      groundDeep: palette.entityGroundsDeep[index],
+      ink: palette.entityInks[index],
     );
   }
 
-  static int _indexOf(String name) {
+  static int _indexOf(String name, int length) {
     final trimmed = name.trim();
     if (trimmed.isEmpty) return 0;
     var sum = 0;
     for (final unit in trimmed.codeUnits) {
       sum += unit;
     }
-    return sum % _grounds.length;
+    return sum % length;
   }
-
-  // **الأرضيات اتعمّقت.** كانت في نطاق E3–F0 (لمعان ~92٪) على صفحة
-  // أرضيتها فاتحة أصلاً — يعني الفرق بين الكارت وخلفيته كان أقل من ٤٪،
-  // والمربّع كان بيقرا «صورة ماحمّلتش» مش «ده لوجو المحل».
-  //
-  // النطاق الجديد D2–DE (لمعان ~85٪): لسه هادي وبعيد عن التشبّع، بس
-  // ليه **حد واضح** ضد الصفحة. والحبر اتغمق معاه فالتباين فضل فوق 7:1.
-  //
-  // الفرق ده مش تجميل: الأبلكيشن مالوش صور، والحرف ده **الهوية البصرية
-  // الوحيدة** لكل محل. لما يبهت، القايمة كلها بتبقى صفوف نص رمادية.
-  static const List<Color> _grounds = [
-    Color(0xffD3DFEA), // أزرق مغبّر
-    Color(0xffE7DAC6), // رملي
-    Color(0xffD2E2D7), // أخضر مغبّر
-    Color(0xffDED3E8), // بنفسجي مغبّر
-  ];
-
-  static const List<Color> _groundsDeep = [
-    Color(0xffBFD1E1),
-    Color(0xffDBC9AC),
-    Color(0xffBED5C6),
-    Color(0xffCEBEDD),
-  ];
-
-  static const List<Color> _inks = [
-    Color(0xff22374B),
-    Color(0xff4A3A24),
-    Color(0xff1F3B2C),
-    Color(0xff382B47),
-  ];
 
   /// أول حرف صالح للعرض من الاسم.
   ///

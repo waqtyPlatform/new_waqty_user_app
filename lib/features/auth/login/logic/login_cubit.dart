@@ -17,11 +17,10 @@ class LoginCubit extends Cubit<LoginState> {
   TextEditingController loginPhoneController = TextEditingController();
   TextEditingController loginPasswordController = TextEditingController();
 
-  int selectedFieldNumber = 0;
-  changeSelectedField(int value) {
-    selectedFieldNumber = value;
-    emit(OnChangeSelectedFieldState());
-  }
+  // `selectedFieldNumber` و`changeSelectedField` اتشالوا: كانوا بيلوّنوا
+  // خلفية الحقل المركّز أخضر فاتح. التركيز بقى بيتقال بحد باللمسة من
+  // `inputDecorationTheme`، فالحالة دي بقت بتعيد بناء حقلين مع كل ضغطة
+  // من غير ما تغيّر حاجة على الشاشة.
 
   bool isPasswordVisibleLogin = true;
 

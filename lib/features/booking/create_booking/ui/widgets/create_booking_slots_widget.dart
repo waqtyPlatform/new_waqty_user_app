@@ -9,6 +9,7 @@ import 'package:waqty_user_application/core/utils/app_spacing.dart';
 import 'package:waqty_user_application/core/utils/app_text_styles.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
 import 'package:waqty_user_application/core/widgets/app_surface_widget.dart';
+import 'package:waqty_user_application/core/widgets/app_pill_widget.dart';
 import 'package:waqty_user_application/core/widgets/empty_state_widget.dart';
 import 'package:waqty_user_application/core/widgets/skeleton_box_widget.dart';
 
@@ -153,32 +154,26 @@ class _PeriodGroup extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // `Expanded` على العنوان: «بعد الظهر · ١٢ مواعيد» جنب شارة
+          // «آخر موعد» كانوا **بيفيضوا ٥٥ بكسل** عند مقياس خط ١٫٣.
           Row(
             children: [
-              Text(
-                '${period.label} · ${AppFormat.digits(slots.length)} مواعيد',
-                style: AppTextStyles.bodyMdStrong,
+              Expanded(
+                child: Text(
+                  '${period.label} · ${AppFormat.digits(slots.length)} مواعيد',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.bodyMdStrong,
+                ),
               ),
               // آخر ميعادين؟ نقول كده — الندرة معلومة مفيدة للعميل.
-              // نفس حشوة `BookingStatusChipWidget` بالظبط — الشارتين
-              // كانوا بحشوتين مختلفتين وشكلهم مش واحد.
+              // بقت `AppPillWidget` بدل `Container` مكتوب بالإيد — نفس
+              // شكل كل شارات الأبلكيشن، ومن غير حشوة متكرّرة.
               if (slots.length <= 2) ...[
                 horizontalSpace(AppSpacing.s8),
-                Container(
-                  padding: EdgeInsetsDirectional.symmetric(
-                    horizontal: AppSpacing.s8.w,
-                    vertical: AppSpacing.s4.h,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppSemanticColors.warningSoft,
-                    borderRadius: BorderRadius.circular(AppRadius.pill.r),
-                  ),
-                  child: Text(
-                    'آخر موعد',
-                    style: AppTextStyles.overline.copyWith(
-                      color: AppSemanticColors.warning,
-                    ),
-                  ),
+                const AppPillWidget(
+                  label: 'آخر موعد',
+                  tone: AppPillTone.warning,
                 ),
               ],
             ],

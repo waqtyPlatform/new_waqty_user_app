@@ -7,7 +7,7 @@ import 'package:waqty_user_application/core/utils/app_shadows.dart';
 import 'package:waqty_user_application/core/utils/app_spacing.dart';
 import 'package:waqty_user_application/core/utils/app_text_styles.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/button_widget.dart';
+import 'package:waqty_user_application/core/widgets/app_button_widget.dart';
 
 /// الفوتر المثبّت — السعر والمدة على جنب، والزرار على الجنب التاني.
 ///
@@ -90,15 +90,10 @@ class CreateBookingFooterWidget extends StatelessWidget {
               ),
             horizontalSpace(AppSpacing.listRowGap),
             Expanded(
-              child: ButtonWidget(
+              child: AppButtonWidget(
+                label: buttonLabel,
                 isLoading: isLoading,
-                isEnabled: isEnabled,
-                buttonText: buttonLabel,
-                backGroundColor: AppSemanticColors.accent,
-                borderColor: AppSemanticColors.accent,
-                textStyle: AppTextStyles.button,
-                buttonHeight: 52.h,
-                onPressed: onPressed,
+                onPressed: isEnabled ? onPressed : null,
               ),
             ),
           ],

@@ -13,11 +13,8 @@ class ReseatPasswordCubit extends Cubit<ReseatPasswordState> {
   TextEditingController reseatNewPasswordController = TextEditingController();
   TextEditingController reseatConfirmNewPasswordController =
       TextEditingController();
-  int selectedFieldNumber = 0;
-  changeSelectedField(int value) {
-    selectedFieldNumber = value;
-    emit(OnChangeSelectedFieldState());
-  }
+  // `selectedFieldNumber` اتشال — التركيز بقى بيتقال بحد باللمسة من
+  // `inputDecorationTheme` مش بخلفية خضرا فاتحة.
 
   bool isNewPasswordVisible = true;
 

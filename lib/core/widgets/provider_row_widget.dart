@@ -2,60 +2,56 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/core/models/provider_ui_model.dart';
 import 'package:waqty_user_application/core/utils/app_format.dart';
-import 'package:waqty_user_application/core/utils/app_radius.dart';
 import 'package:waqty_user_application/core/utils/app_spacing.dart';
 import 'package:waqty_user_application/core/utils/app_text_styles.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
+import 'package:waqty_user_application/core/widgets/app_pill_widget.dart';
 import 'package:waqty_user_application/core/widgets/app_row_widget.dart';
 import 'package:waqty_user_application/core/widgets/entity_avatar_widget.dart';
 
-/// المكان **كصف في قايمة** — نفس داتا `ProviderCardWidget` من غير الكارت.
+/// المكان **كصف في قايمة**.
 ///
-/// ## ليه الكارت اتشال من اللستة
+/// ## اللوح كبر و«أقرب موعد» بقى شارة
 ///
-/// شاشة البحث كانت عشر كروت بيضا مرفوعة ورا بعض: عشر ظلال، عشر استدارات
-/// ٢٠، وعشر حدود بتقول «أنا جسم منفصل». لما كل عنصر بيقول كده، مافيش عنصر
-/// بيقوله. الكارت اتحجز للصف الأفقي اللي بيتسحب في الهوم — هناك هو فعلاً
-/// جسم منفصل بيتحرّك لوحده.
+/// اللوح كان ٥٦ والسطر الرابع («أقرب موعد») نص أخضر مدفون تحت البيانات.
+/// حاجتين اتغيّروا:
 ///
-/// الصف قاعد على `page` مباشرة ومفصول بخط شعري بيبدأ **من تحت النص** —
-/// فالعين بتنزل على عمود واحد نضيف بدل ما تقفز بين حدود.
+/// **اللوح ٦٤.** الأبلكيشن مالوش صور، والحرف ده الهوية البصرية الوحيدة لكل
+/// محل. عند ٥٦ بيقرا أيقونة؛ عند ٦٤ بيقرا **صورة المحل** — وده اللي بيخلي
+/// القايمة تتقرا كفاترينة مش كجدول.
 ///
-/// ## الصورة ٥٦ مش ٨٨
-///
-/// الكارت بياخد ٨٨ عشان الحرف فيه عنصر تصميم مستقل. في الصف اللي مالوش
-/// حدود، اللوح الكبير بيبقى هو الحد — بيرسم عمود ملوّن جنب النص. ٥٦ بيخلي
-/// اللوح علامة مش جدار.
+/// **«أقرب موعد» بقى شارة.** ده أبلكيشن حجز، والمعلومة دي هي اللي بتفرّق
+/// محل عن محل. كنص أخضر بين تلات سطور نص، بتضيع. كشارة، ليها حدود وخلفية
+/// فبتقرا كحالة مش كجملة.
 class ProviderRowWidget extends StatelessWidget {
-  /// مقاس لوح الحرف.
-  static const double avatarSize = 56;
+  /// مقاس لوح الحرف. **٦٤ مش ٥٦.**
+  static const double avatarSize = 64;
 
-  /// إزاحة الخط الشعري: ١٦ هامش + ٥٦ لوح + ١٢ مسافة = **٨٤**.
+  /// إزاحة الفاصل: هامش الصفحة + اللوح + المسافة.
   ///
-  /// مصدّرة عشان أي حاجة تانية في نفس اللستة (فاصل قسم، صف «عرض المزيد»)
-  /// تقدر تمشي على نفس الإزاحة بدل ما تعيد حساب الرقم بإيدها.
+  /// مصدّرة عشان أي حاجة تانية في نفس اللستة تمشي على نفس الإزاحة بدل ما
+  /// تعيد حساب الرقم بإيدها.
   static const double hairlineIndent =
       AppSpacing.pageGutter + avatarSize + AppSpacing.listRowGap;
 
-  /// **الحسبة:** ١٢ حشوة فوق + ١٢ تحت (من [AppRowWidget]) = ٢٤،
-  /// زائد المسافات جوه عمود النص: ٤ (`titleToSubtitle`) + ٨
-  /// (`subtitleToMeta`) + ٤ (`s4` قبل «أقرب موعد») = ١٦. **المجموع ٤٠.**
-  static const double _fixedPart = 40;
+  /// ١٦ حشوة فوق + ١٦ تحت (من [AppRowWidget]) = ٣٢، زائد المسافات جوه عمود
+  /// النص: ٤ + ٤ + ٤ = ١٢، زائد حشوة الشارة الرأسية (٤ فوق + ٤ تحت) = ٨.
+  /// **المجموع ٥٢.**
+  ///
+  /// المسافة بين المنطقة وسطر البيانات نزلت من ٨ لـ ٤: التلات سطور دول
+  /// **بيانات المحل نفسه** ومش محتاجين فصل بينهم — الفصل الحقيقي بين
+  /// الاسم وبينهم، وده لسه ٤ لأن الوزن هو اللي بيفصل مش المسافة.
+  static const double _fixedPart = 52;
 
-  /// **الحسبة عند مقياس خط ١٫٠:**
-  /// `cardTitle` ١٦×١٫٤٠ = ٢٢٫٤ · `caption` ١٢×١٫٤٠ = ١٦٫٨ ·
-  /// `captionInk` ١٢×١٫٤٠ = ١٦٫٨ · `captionAccent` ١٢×١٫٤٠ = ١٦٫٨.
-  /// **المجموع ٧٢٫٨.**
-  static const double _textPart = 72.8;
+  /// عند مقياس ١٫٠: `cardTitle` ٢٢٫٤ + `caption` ١٦٫٨ + `captionInk` ١٦٫٨
+  /// + نص الشارة (`overline` ١١×١٫٣٠ = ١٤٫٣). المجموع الحسابي **٧٠٫٣**،
+  /// والرقم هنا ٧٢ لأن فلاتر بيقرّب ارتفاع السطر لأعلى وقت التشكيل.
+  static const double _textPart = 72;
 
   /// المصدر الوحيد للارتفاع — **و`ProviderRowSkeletonWidget` بيقراه من هنا**.
   ///
-  /// السطر الرابع («أقرب موعد») مساحته محجوزة حتى لو مش موجود. لو الارتفاع
-  /// اتحسب على اللي ظاهر، اللستة كانت هترقص بين ٩٦ و١١٢ حسب كل صف —
-  /// وده بالظبط الباج اللي كان في الكارت القديم.
-  ///
-  /// الإجمالي عند ١٫٠ = ١١٢٫٨، واللوح ٥٦ + ٢٤ حشوة = ٨٠ — يعني اللوح
-  /// **عمره ما بيحدد الارتفاع**، فمفيش حاجة تانية محتاجة تتراعى هنا.
+  /// مساحة الشارة محجوزة حتى لو المحل مالوش موعد قريب. لو الارتفاع اتحسب
+  /// على اللي ظاهر، اللستة كانت هترقص بين صف وصف.
   static double heightOf(BuildContext context) => AppSpacing.scaledHeight(
     context,
     fixed: _fixedPart,
@@ -65,8 +61,7 @@ class ProviderRowWidget extends StatelessWidget {
   final ProviderUiModel provider;
   final VoidCallback onTap;
 
-  /// آخر صف في القايمة بياخد `false` — الخط الشعري تحت آخر عنصر بيرسم
-  /// حد لقايمة مالهاش حد.
+  /// آخر صف في القايمة بياخد `false` — مافيش مسافة تحته.
   final bool showHairline;
 
   const ProviderRowWidget({
@@ -78,15 +73,19 @@ class ProviderRowWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasSlot = provider.nextAvailableLabel.isNotEmpty;
+
     return AppRowWidget(
       onTap: onTap,
       height: heightOf(context).h,
       showHairline: showHairline,
       hairlineIndent: hairlineIndent,
+      // **`entity` مش `person`** — ده محل مش أخصائي. المربّع المستدير بيقرا
+      // «مكان» والدايرة بتقرا «حد».
       leading: EntityAvatarWidget(
         name: provider.name,
         size: avatarSize,
-        radius: AppRadius.xs,
+        shape: AvatarShape.entity,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -105,22 +104,33 @@ class ProviderRowWidget extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: AppTextStyles.caption,
           ),
-          verticalSpace(AppSpacing.subtitleToMeta),
+          verticalSpace(AppSpacing.s4),
           Text(
             _metrics,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: AppTextStyles.captionInk,
           ),
-          if (provider.nextAvailableLabel.isNotEmpty) ...[
-            verticalSpace(AppSpacing.s4),
-            Text(
-              'أقرب موعد: ${provider.nextAvailableLabel}',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppTextStyles.captionAccent,
+          verticalSpace(AppSpacing.s4),
+          // **الشارة موجودة في الحالتين.**
+          //
+          // كانت بتتحوّل لـ `SizedBox` فاضي لما المحل مالوش موعد قريب —
+          // الارتفاع كان بيفضل ثابت (فالقايمة مابترقصش) بس المساحة كانت
+          // **فراغ ميت** في صف من كل تلاتة.
+          //
+          // «مفيش مواعيد قريبة» معلومة حقيقية في أبلكيشن حجز: بتخلي العميل
+          // يعدّي بدل ما يدخل ويكتشف بنفسه. ورماديها بيقول إنها مش فرصة.
+          if (hasSlot)
+            AppPillWidget(
+              label: 'أقرب موعد ${provider.nextAvailableLabel}',
+              icon: Icons.schedule_rounded,
+              tone: AppPillTone.accent,
+            )
+          else
+            const AppPillWidget(
+              label: 'مفيش مواعيد قريبة',
+              icon: Icons.event_busy_rounded,
             ),
-          ],
         ],
       ),
     );

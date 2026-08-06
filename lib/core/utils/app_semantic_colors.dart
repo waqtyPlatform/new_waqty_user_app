@@ -1,131 +1,153 @@
 import 'package:flutter/widgets.dart';
-import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
+import 'package:waqty_user_application/core/utils/app_palette.dart';
 
-/// الطبقة الدلالية للألوان.
+/// الطبقة الدلالية للألوان — **الواجهة الوحيدة اللي الـ widgets بتقرا منها**.
 ///
-/// `AppColors` هي الألوان الخام (السلّم). الملف ده بيدّي كل لون **دوره**.
-/// **مافيهوش ولا hex واحد** — بس إعادة توجيه، فمفيش تكرار ولا مصدرين للحقيقة.
+/// `AppPalette` هي القيم الخام (نسختين). الملف ده بيدّي كل لون **دوره**،
+/// و**مافيهوش ولا hex واحد**.
 ///
-/// قبل كده مكانش فيه طبقة دلالية خالص: لون الحدود ولون النص الثانوي كانوا
-/// الاتنين اسمهم رقم من السلّم، فمن مكان الاستدعاء مش فارقين عن بعض.
+/// ## من `const` لـ getters
+///
+/// كل توكن هنا كان `static const`. القيم دلوقتي بتتقرا من [palette] وقت
+/// الاستدعاء، فنفس السطر `AppSemanticColors.page` بيدي الأبيض الدافي في النهار
+/// و`#121110` بالليل — **من غير ما أي widget يتلمس**.
+///
+/// الثمن الوحيد إن التوكنز مابقتش `const`، يعني `const ColoredBox(color: …)`
+/// مابقاش ينفع. التلات مواضع اللي كانوا كده اتظبطوا.
+///
+/// ## مين بيظبط الوضع
+///
+/// `my_app.dart` بينادي [apply] **قبل** ما `MaterialApp` تتبني، فالقيم مضمون
+/// إنها صح وقت الرسم. ماتناديهاش من أي مكان تاني.
 class AppSemanticColors {
   AppSemanticColors._();
+
+  static AppPalette _palette = AppPalette.light;
+
+  /// الـ palette الشغّال دلوقتي.
+  static AppPalette get palette => _palette;
+
+  static Brightness get brightness => _palette.brightness;
+
+  static bool get isDark => _palette.isDark;
+
+  /// بيتنادى من `my_app.dart` بس.
+  ///
+  /// بيرجّع `true` لو الوضع اتغيّر فعلاً — الرجوع ده بيخلي اللي فوق يقرر
+  /// يعيد البناء ولا لأ من غير ما يقارن بنفسه.
+  static bool apply(Brightness brightness) {
+    if (_palette.brightness == brightness) return false;
+    _palette = AppPalette.of(brightness);
+    return true;
+  }
 
   // ── الأسطح ───────────────────────────────────────────────────────────
   //
   // كان فيه توكن واحد اسمه `surface` بيعمل **شغلانتين مختلفتين** في ١٧ موضع:
-  // «الصفحة اللي كل حاجة قاعدة عليها»، و«شريحة بيضا فوق حاجة تانية» (زي
-  // الطبق الأبيض جوه بلاطة التصنيف الغاطسة، أو شارة الحالة فوق الكارت
-  // الأخضر). الاسم مكانش بيفرّق بينهم، فأي تغيير في قيمته كان بيقلب التسعة
-  // بتوع الدور التاني في صمت.
+  // «الصفحة اللي كل حاجة قاعدة عليها»، و«شريحة بيضا فوق حاجة تانية». الاسم
+  // مكانش بيفرّق بينهم، فأي تغيير في قيمته كان بيقلب التسعة بتوع الدور
+  // التاني في صمت.
 
   /// **الصفحة نفسها** — اللي كل حاجة قاعدة فوقه.
-  ///
-  /// التوكن القديم `surface` **اتحذف** عن قصد بدل ما يفضل alias — عشان أي
-  /// كود جديد يضطر يقرر: ده صفحة ولا شريحة مرفوعة؟
-  ///
-  /// **أوف-وايت دافي مش أبيض صافي.** لما الصفحة والكارت كانوا الاتنين
-  /// `#FFFFFF`، نظام العمق التلاتي كله كان بيعتمد على ظل ٤٪ — يعني
-  /// عمليًا مستوى واحد. دلوقتي فيه فرق إضاءة حقيقي، والظل بقى تأكيد
-  /// مش الإشارة الوحيدة.
-  static const Color page = AppColors.pageColor;
+  static Color get page => _palette.page;
 
-  /// **المحتوى المرفوع** — كارت، sheet، فوتر طايف، أو شريحة بيضا فوق سطح
-  /// ملوّن أو غاطس.
-  static const Color surfaceRaised = AppColors.whiteColor;
+  /// **المحتوى المرفوع** — كارت، sheet، فوتر طايف، أو شريحة فوق سطح ملوّن.
+  static Color get surfaceRaised => _palette.surfaceRaised;
 
   /// الكروم اللي المفروض يترجع لورا: البحث، الشيب غير المختار، الحقول.
   ///
   /// **قاعدة: مفيش نص أفتح من [textSecondary] يقعد هنا.** استخدم
-  /// [textOnSunken]. الـ `textTertiary` تباينه على الغاطس **3.11:1** — راسب.
-  ///
-  /// اتنقل من `#F6F8FA` (رمادي بارد) لـ `#F1EFEC` (دافي وأغمق) عشان يقعد
-  /// **تحت** الصفحة الجديدة مش فوقها. الفرق عن الكارت الأبيض طلع من ٦٫٥٪
-  /// لـ **١٤٫٨٪**.
-  static const Color surfaceSunken = AppColors.sunkenColor;
+  /// [textOnSunken] — الـ `textTertiary` تباينه على الغاطس **3.11:1** (راسب).
+  static Color get surfaceSunken => _palette.surfaceSunken;
 
-  /// سطح حبر غامق — البؤرة الوحيدة في الشاشة.
-  static const Color surfaceInk = AppColors.inkColor;
+  /// سطح بؤرة — البؤرة الوحيدة في الشاشة.
+  static Color get surfaceInk => _palette.surfaceInk;
 
-  /// خلفية خضرا فاتحة — للحالة المختارة بس.
-  static const Color surfaceAccentSoft = AppColors.greenColor505;
+  /// خلفية اللمسة الخفيفة — للحالة المختارة بس.
+  static Color get surfaceAccentSoft => _palette.accentSoft;
 
   /// **سطح أخضر غامق — نظير [surfaceInk] لما البؤرة تنبّه.**
   ///
-  /// كان الشريط بياخد [accent] نفسه لما الكرسي يجهز. و[accent] معمول
-  /// عشان يقعد **على** صفحة فاتحة، فتباينه محسوب مع الأبيض مش مع النص
-  /// اللي فوقه. لما بقى خلفية، النص الثانوي طلع **1.35:1** والعنوان
-  /// **3.76:1** — يعني أهم لحظة في الأبلكيشن كانت أقل شاشة مقروءة فيه.
-  static const Color surfaceAccentDeep = AppColors.greenColor700;
+  /// [accent] معمول عشان يقعد **على** صفحة، فتباينه محسوب مع الصفحة مش مع
+  /// النص اللي فوقه. لما بقى خلفية، النص الثانوي طلع **1.35:1** — يعني أهم
+  /// لحظة في الأبلكيشن كانت أقل شاشة مقروءة فيه.
+  static Color get surfaceAccentDeep => _palette.accentDeep;
 
-  /// سطح غامق — الـ snackbar وشريط «مفيش نت».
-  static const Color surfaceInverse = AppColors.greyColor700;
+  /// سطح مقلوب — الـ snackbar وشريط «مفيش نت».
+  static Color get surfaceInverse => _palette.surfaceInverse;
 
   // ── الحدود ───────────────────────────────────────────────────────────
 
-  static const Color border = AppColors.greyColor50;
-  static const Color borderStrong = AppColors.greyColor100;
+  static Color get border => _palette.border;
+  static Color get borderStrong => _palette.borderStrong;
 
   // ── النص ─────────────────────────────────────────────────────────────
 
-  static const Color textPrimary = AppColors.greyColor900;
-  static const Color textSecondary = AppColors.greyColor500;
-  static const Color textTertiary = AppColors.greyColor400;
-  static const Color textOnAccent = AppColors.whiteColor;
+  static Color get textPrimary => _palette.textPrimary;
+  static Color get textSecondary => _palette.textSecondary;
+  static Color get textTertiary => _palette.textTertiary;
 
-  /// أقل لون مسموح على [surfaceSunken]. مش توكن جديد بلون جديد — ده اسم
-  /// بيقول «الحد الأدنى هنا» عشان القاعدة تبقى مكتوبة مش محفوظة.
-  static const Color textOnSunken = AppColors.greyColor500;
+  /// نص على [accent].
+  ///
+  /// ⚠ **مش أبيض دايمًا.** في الغامق بينقلب لحبر غامق لأن اللمسة بتفتح.
+  /// عمر ما تكتب `Colors.white` على زرار — اقرا التوكن.
+  static Color get textOnAccent => _palette.textOnAccent;
 
-  /// نص على الحبر. **مش أبيض صافي** — الأبيض على شبه الأسود بيرجرج
-  /// وبيقرا رخيص. نفس تباين الصفحة الدافية (17.6:1).
-  static const Color textOnInk = AppColors.pageColor;
+  /// أقل لون مسموح على [surfaceSunken]. مش لون جديد — ده اسم بيقول «الحد
+  /// الأدنى هنا» عشان القاعدة تبقى مكتوبة مش محفوظة.
+  static Color get textOnSunken => _palette.textSecondary;
 
-  /// نص ثانوي على الحبر — 6.30:1.
-  static const Color textOnInkMuted = AppColors.inkMutedColor;
+  /// نص على [surfaceInk]. **مش أبيض صافي** — الأبيض على شبه الأسود بيرجرج.
+  static Color get textOnInk => _palette.textOnInk;
+
+  static Color get textOnInkMuted => _palette.textOnInkMuted;
+
+  /// نص أساسي على [surfaceAccentDeep] — 6.4:1.
+  ///
+  /// ⚠ **استخدم ده مش [textOnAccent]** على أي سطح أخضر غامق. [textOnAccent]
+  /// بينقلب لحبر في الوضع الغامق، وعلى `#00693C` بيدي **2.52:1**.
+  static Color get textOnAccentDeep => _palette.textOnAccentDeep;
 
   /// نص ثانوي على [surfaceAccentDeep] — 4.74:1.
-  ///
-  /// **مش نفس [textOnInkMuted]** عن قصد: الرمادي الدافي بتاع الحبر بيدي
-  /// 1.35:1 على الأخضر. لكل سطح غامق رماديه.
-  static const Color textOnAccentMuted = AppColors.greenInkMutedColor;
+  static Color get textOnAccentMuted => _palette.textOnAccentMuted;
+
+  /// نص على [surfaceInverse].
+  static Color get textOnInverse => _palette.textOnInverse;
 
   // ── اللهجة ───────────────────────────────────────────────────────────
 
-  /// الأخضر — **للزرار الأساسي والحالة المختارة بس.**
-  /// كان بيتستخدم في ٣٨ موضع (٢١٪ من كل مراجع الألوان) كأيقونة ونص ورابط
-  /// وخلفية وحد وحلقة تركيز — فبطّل يعلّم أي حاجة.
-  static const Color accent = AppColors.greenColor500;
+  /// الأخضر — **للزرار الأساسي والحالة المختارة وأيقونة التصنيف بس.**
+  /// كان بيتستخدم في ٣٨ موضع كأيقونة ونص ورابط وخلفية وحد وحلقة تركيز —
+  /// فبطّل يعلّم أي حاجة.
+  static Color get accent => _palette.accent;
 
-  /// حالة الضغط. `greenColor500` كان أغمق أخضر في السلّم فمكانش فيه لون
-  /// للضغط، و`400` أفتح فبيقرا hover مش press.
-  static const Color accentPressed = AppColors.greenColor600;
-
-  static const Color accentSoft = AppColors.greenColor505;
+  static Color get accentPressed => _palette.accentPressed;
+  static Color get accentSoft => _palette.accentSoft;
 
   // ── الحالات ──────────────────────────────────────────────────────────
 
-  static const Color danger = AppColors.errorColor100;
-  static const Color dangerSoft = AppColors.errorColor0;
-  static const Color dangerBorder = AppColors.errorColor50;
+  static Color get danger => _palette.danger;
+  static Color get dangerSoft => _palette.dangerSoft;
+  static Color get dangerBorder => _palette.dangerBorder;
 
-  static const Color warning = AppColors.warningColor200;
-  static const Color warningSoft = AppColors.warningColor0;
+  static Color get warning => _palette.warning;
+  static Color get warningSoft => _palette.warningSoft;
 
-  static const Color positive = AppColors.successColor200;
-  static const Color positiveSoft = AppColors.successColor0;
+  static Color get positive => _palette.positive;
+  static Color get positiveSoft => _palette.positiveSoft;
 
-  static const Color info = AppColors.blueColor200;
-  static const Color infoSoft = AppColors.blueColor0;
+  static Color get info => _palette.info;
+  static Color get infoSoft => _palette.infoSoft;
 
-  // ── الـ skeleton ─────────────────────────────────────────────────────
+  /// نجمة التقييم — دهبي. **مش [warning]** (ده بنّي عشان يعدّي كنص).
+  static Color get rating => _palette.rating;
 
-  /// الأساس والإضاءة. القديم كان `#F6F8FA` → `#F8F9FB` — فرق قيمتين،
-  /// يعني الـ shimmer تقريبًا مش باين.
-  static const Color skeletonBase = AppColors.greyColor50;
-  static const Color skeletonHighlight = AppColors.whiteColor;
+  // ── الـ skeleton والتعتيم ────────────────────────────────────────────
+
+  static Color get skeletonBase => _palette.skeletonBase;
+  static Color get skeletonHighlight => _palette.skeletonHighlight;
 
   /// طبقة التعتيم فوق الصور.
-  static Color get scrim => AppColors.greyColor900.withValues(alpha: .45);
-  static Color get scrimSoft => AppColors.greyColor900.withValues(alpha: .25);
+  static Color get scrim => _palette.scrimBase.withValues(alpha: .45);
+  static Color get scrimSoft => _palette.scrimBase.withValues(alpha: .25);
 }

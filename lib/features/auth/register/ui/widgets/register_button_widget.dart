@@ -1,14 +1,11 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/config/routes/routes.dart';
 import 'package:waqty_user_application/core/services/check_network.dart';
-import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
 import 'package:waqty_user_application/core/utils/app_constant.dart';
 import 'package:waqty_user_application/core/utils/extentions.dart';
-import 'package:waqty_user_application/core/utils/styles.dart';
-import 'package:waqty_user_application/core/widgets/button_widget.dart';
+import 'package:waqty_user_application/core/widgets/app_button_widget.dart';
 import 'package:waqty_user_application/features/auth/register/logic/register_cubit.dart';
 import 'package:waqty_user_application/features/auth/register/logic/register_state.dart';
 
@@ -45,17 +42,10 @@ class RegisterButtonWidget extends StatelessWidget {
         }
       },
       builder: (context, state) {
-        return ButtonWidget(
+        return AppButtonWidget(
+          label: context.tr('register.registerNowText'),
           isLoading: state is OnRegisterLoadingState,
-          borderRadius: 12,
-          buttonHeight: 50.h,
-          buttonText: context.tr('register.registerNowText'),
-          backGroundColor: AppColors.greenColor500,
-          borderColor: AppColors.greenColor500,
-          textStyle: TextStyles.font16whiteColorWeight600,
-          onPressed: () {
-            validateRegister(context);
-          },
+          onPressed: () => validateRegister(context),
         );
       },
     );

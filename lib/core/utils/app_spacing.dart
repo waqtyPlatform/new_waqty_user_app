@@ -1,7 +1,9 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-/// سلّم المسافات.
+/// سلّم المسافات — سلّم الـ design DNA
+/// (`4 · 8 · 16 · 20 · 28 · 40 · 56 · 80`) + الدرجات اللي الأبلكيشن محتاجها
+/// بينهم (`12 · 24 · 32 · 48`).
 ///
 /// قبل كده كل موضع كان بيكتب رقمه بإيده، والنتيجة إن ٣٣٪ من المسافات الرأسية
 /// و٤٢٪ من الأفقية كانت خارج أي شبكة (٢/٥/٦/١٠/١٤). وأكبر مسافة في الأبلكيشن
@@ -13,9 +15,14 @@ class AppSpacing {
   static const double s8 = 8;
   static const double s12 = 12;
   static const double s16 = 16;
+  static const double s20 = 20;
   static const double s24 = 24;
+  static const double s28 = 28;
   static const double s32 = 32;
+  static const double s40 = 40;
   static const double s48 = 48;
+  static const double s56 = 56;
+  static const double s80 = 80;
 
   /// الحد الأدنى لأي هدف لمس.
   ///
@@ -31,12 +38,12 @@ class AppSpacing {
 
   /// ارتفاع بيكبر مع مقياس الخط — **بس في الجزء اللي فيه نص**.
   ///
-  /// ده الحل الصح لمشكلة «الصندوق الثابت بيفيض مع تكبير الخط». الحل
-  /// الغلط إنك تخلي الصندوق كله يتضاعف: الحشوة والأيقونات مالهاش دعوة
-  /// بمقياس الخط، فبتطلع بلاطة فاضية وسط.
+  /// ده الحل الصح لمشكلة «الصندوق الثابت بيفيض مع تكبير الخط». الحل الغلط
+  /// إنك تخلي الصندوق كله يتضاعف: الحشوة والأيقونات مالهاش دعوة بمقياس الخط،
+  /// فبتطلع بلاطة فاضية وسط.
   ///
-  /// [fixed] الحشوة والأيقونات والمسافات · [text] مجموع ارتفاعات النص
-  /// عند مقياس ١٫٠.
+  /// [fixed] الحشوة والأيقونات والمسافات · [text] مجموع ارتفاعات النص عند
+  /// مقياس ١٫٠.
   static double scaledHeight(
     BuildContext context, {
     required double fixed,
@@ -50,21 +57,32 @@ class AppSpacing {
   // القاعدة تبقى مكتوبة، مش محفوظة في دماغ اللي كتبها.
 
   /// هامش الصفحة الأفقي.
-  static const double pageGutter = s16;
+  ///
+  /// **طلع من ١٦ لـ ٢٤** — من الـ DNA: `Single column mobile layout with 24px
+  /// horizontal padding`. الفرق مش تجميل: الهامش الأوسع بيدّي الكروت هوا
+  /// وبيخلي عمود النص أقصر، والسطر العربي القصير بيقرا أسرع.
+  static const double pageGutter = s24;
 
   /// بين قسم وقسم. **مفيش حاجة تانية بتعمل فاصل أقسام.**
   ///
-  /// طلع من ٣٢ لـ ٤٠ لما لابل القسم صغر من ١٨ لـ ١٢. **لما الخط يبطّل
-  /// يشيل الفصل، المسافة لازم تشيله** — لو سبنا ٣٢ مع لابل ١٢، حدود
-  /// الأقسام بتختفي والصفحة بترجع عمود واحد.
-  static const double sectionBreak = 40;
+  /// طلع من ٣٢ لـ ٤٠ لما لابل القسم صغر من ١٨ لـ ١٢. **لما الخط يبطّل يشيل
+  /// الفصل، المسافة لازم تشيله** — لو سبنا ٣٢ مع لابل ١٢، حدود الأقسام
+  /// بتختفي والصفحة بترجع عمود واحد.
+  static const double sectionBreak = s40;
 
-  /// بين لابل القسم والمحتوى بتاعه. قرّب من ١٢ لـ ٨ عشان اللابل يلزق
-  /// بمحتواه — الفصل بقى فوقه مش تحته.
+  /// بين لابل القسم والمحتوى بتاعه. قرّب من ١٢ لـ ٨ عشان اللابل يلزق بمحتواه
+  /// — الفصل بقى فوقه مش تحته.
   static const double headerToContent = s8;
 
-  static const double cardPadding = s12;
-  static const double cardPaddingLoose = s16;
+  /// حشوة الكارت — **١٦ من الـ DNA** (`Cards: 16px padding`).
+  ///
+  /// كانت ١٢، والتداخل مع استدارة الكارت ١٦ بقى مضبوط: ١٦ − ١٦ = صفر للصورة
+  /// الواصلة للحافة، و[AppRadius.xs] للمُدرجة.
+  static const double cardPadding = s16;
+
+  /// كارت فيه محتوى تقيل (تفاصيل، ملخص) — درجة واحدة أوسع.
+  static const double cardPaddingLoose = s20;
+
   static const double listRowGap = s12;
   static const double chipGap = s8;
 

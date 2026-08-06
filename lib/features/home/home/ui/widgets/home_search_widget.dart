@@ -27,7 +27,9 @@ class HomeSearchWidget extends StatelessWidget {
       // **غاطس.** ده كروم بحث، والمفروض يترجع لورا عشان الكروت اللي تحته
       // هي اللي تسحب العين. لو رفعناه بظل هيتنافس مع المحتوى.
       level: AppElevation.sunken,
-      radius: AppRadius.m,
+      // ١٢ — **نفس استدارة الحقول** من الـ DNA. ده كروم بحث، ولازم يقرا من
+      // نفس عيلة الحقول مش من عيلة الكروت.
+      radius: AppRadius.s,
       height: 52.h,
       padding: EdgeInsets.symmetric(horizontal: AppSpacing.s16.w),
       child: Row(

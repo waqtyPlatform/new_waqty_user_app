@@ -38,9 +38,12 @@ class AccountMenuItemWidget extends StatelessWidget {
   static const double hairlineIndent =
       AppSpacing.cardPadding + iconSize + AppSpacing.s12;
 
-  /// **الحسبة:** ٥٦ الأصلية = ٣٥ حشوة رأسية + ٢١ نص
-  /// (`bodyMdStrong` ١٤ × ١٫٥٠).
-  static const double _fixedPart = 35;
+  /// **الحسبة:** ٣١ حشوة رأسية + ٢١ نص (`bodyMdStrong` ١٤ × ١٫٥٠) = **٥٢**.
+  ///
+  /// كانت ٥٦. الصف ده مالوش غير سطر واحد وأيقونة ٢٠ — الحشوة ٣٥ كانت
+  /// بتخلي ٦٢٪ من الصف هوا. و٥٢ لسه **فوق الحد الأدنى للمس** (٤٤)، يعني
+  /// التقليل ماخدش من قابلية الضغط حاجة.
+  static const double _fixedPart = 31;
   static const double _textPart = 21;
 
   /// كان `56.h` أصم. عند مقياس خط ١٫٣ النص بيوصل ٢٧٫٣ فالسطر بيتخنق في

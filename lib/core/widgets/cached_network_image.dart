@@ -33,7 +33,7 @@ class CachedNetworkImageWidget extends StatelessWidget {
             color: AppSemanticColors.surfaceSunken,
             borderRadius: radius,
           ),
-          child: const Icon(
+          child: Icon(
             Icons.broken_image_rounded,
             color: AppSemanticColors.textTertiary,
           ),

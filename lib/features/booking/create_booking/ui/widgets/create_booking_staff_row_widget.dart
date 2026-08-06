@@ -2,7 +2,6 @@ import 'package:waqty_user_application/core/utils/app_radius.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/core/models/employee_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
 import 'package:waqty_user_application/core/utils/app_format.dart';
 import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
 import 'package:waqty_user_application/core/utils/app_spacing.dart';
@@ -51,7 +50,6 @@ class CreateBookingStaffRowWidget extends StatelessWidget {
                 EntityAvatarWidget(
                   name: selectedEmployee.name,
                   size: 36,
-                  radius: 18,
                 ),
               horizontalSpace(10),
               Expanded(
@@ -93,7 +91,7 @@ class CreateBookingStaffRowWidget extends StatelessWidget {
                     ? Container(
                         height: 40.r,
                         width: 40.r,
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           color: AppSemanticColors.surfaceSunken,
                           shape: BoxShape.circle,
                         ),
@@ -103,11 +101,7 @@ class CreateBookingStaffRowWidget extends StatelessWidget {
                           color: AppSemanticColors.textSecondary,
                         ),
                       )
-                    : EntityAvatarWidget(
-                        name: employee.name,
-                        size: 40,
-                        radius: 20,
-                      ),
+                    : EntityAvatarWidget(name: employee.name, size: 40),
                 title: Text(employee.name),
                 subtitle: Text(
                   employee.isAnyAvailable
@@ -115,7 +109,7 @@ class CreateBookingStaffRowWidget extends StatelessWidget {
                       : 'من ${AppFormat.money(employee.price)}',
                 ),
                 trailing: employee.uuid == selectedEmployee.uuid
-                    ? const Icon(
+                    ? Icon(
                         Icons.check_circle_rounded,
                         color: AppSemanticColors.accent,
                       )
@@ -152,13 +146,14 @@ class _AvatarStack extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: AppColors.whiteColor, width: 1.5),
+                // حلقة بلون الكارت اللي تحت الأفاتارات المتراكبة — بتفصلهم
+                // عن بعض. لازم تبقى لون **السطح** مش أبيض ثابت.
+                border: Border.all(
+                  color: AppSemanticColors.surfaceRaised,
+                  width: 1.5.r,
+                ),
               ),
-              child: EntityAvatarWidget(
-                name: shown[index].name,
-                size: 32,
-                radius: 16,
-              ),
+              child: EntityAvatarWidget(name: shown[index].name, size: 32),
             ),
           );
         }),

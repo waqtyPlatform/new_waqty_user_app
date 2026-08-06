@@ -3,9 +3,8 @@ import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
 import 'package:waqty_user_application/core/utils/app_text_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/button_widget.dart';
+import 'package:waqty_user_application/core/widgets/app_button_widget.dart';
 
 /// شيت التقييم — نجوم + تعليق اختياري.
 ///
@@ -65,8 +64,8 @@ class BookingRateSheetWidget extends StatelessWidget {
                         : Icons.star_outline_rounded,
                     size: 32.r,
                     color: star <= rating
-                        ? AppColors.warningColor3003
-                        : AppColors.greyColor200,
+                        ? AppSemanticColors.rating
+                        : AppSemanticColors.borderStrong,
                   ),
                 ),
               );
@@ -84,21 +83,17 @@ class BookingRateSheetWidget extends StatelessWidget {
               filled: true,
               fillColor: AppSemanticColors.surfaceSunken,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppRadius.m.r),
+                borderRadius: BorderRadius.circular(AppRadius.s.r),
                 borderSide: BorderSide.none,
               ),
             ),
           ),
           verticalSpace(8),
-          ButtonWidget(
+          AppButtonWidget(
+            label: 'إرسال التقييم',
             isLoading: isLoading,
-            isEnabled: rating > 0,
-            buttonText: 'إرسال التقييم',
-            backGroundColor: AppSemanticColors.accent,
-            borderColor: AppSemanticColors.accent,
-            textStyle: AppTextStyles.button,
-            buttonHeight: 52.h,
-            onPressed: onSubmit,
+            // `null` = معطّل. مفيش تقييم من غير نجوم.
+            onPressed: rating > 0 ? onSubmit : null,
           ),
         ],
       ),

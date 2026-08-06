@@ -7,6 +7,7 @@ import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
 import 'package:waqty_user_application/core/utils/app_spacing.dart';
 import 'package:waqty_user_application/core/utils/app_text_styles.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
+import 'package:waqty_user_application/core/widgets/app_pill_widget.dart';
 import 'package:waqty_user_application/core/widgets/app_row_widget.dart';
 import 'package:waqty_user_application/core/widgets/directional_chevron_widget.dart';
 
@@ -36,8 +37,15 @@ class ServiceProviderDetailsServiceRowWidget extends StatelessWidget {
       AppSpacing.cardPadding * 2 + AppSpacing.titleToSubtitle;
 
   /// **الحسبة عند مقياس خط ١٫٠:**
-  /// `bodyMdStrong` ١٤×١٫٥٠ = ٢١ · `caption` ١٢×١٫٤٠ = ١٦٫٨. **المجموع ٣٧٫٨.**
-  static const double _textPart = 37.8;
+  /// `bodyMdStrong` ١٤×١٫٥٠ = ٢١ · والسطر التاني ارتفاعه أطول حاجة فيه،
+  /// وهي السعر `cardTitle` ١٦×١٫٤٠ = ٢٢٫٤ (شارة المدة ١٤٫٣ + ٨ حشوة =
+  /// ٢٢٫٣، أقل منه بشعرة). المجموع الحسابي **٤٣٫٤**.
+  ///
+  /// الرقم هنا **٤٦**: فلاتر بيقرّب ارتفاع كل سطر لأعلى وقت التشكيل،
+  /// والحسبة الدقيقة كانت بتسيب **صفر فراغ** — فعند مقياس خط ١٫٣ الكسور
+  /// المتراكمة كانت بتفيّض الصف ٤ بكسل. الفراغ الزيادة بيتوزّع في الصف
+  /// (ارتفاعه مفروض)، فمالوش تكلفة — والناقص هو اللي بيفيض.
+  static const double _textPart = 46;
 
   /// أرضية زرار «احجز»: ٤٤ من `outlinedButtonTheme` + ٢٤ حشوة = **٦٨**.
   ///
@@ -85,7 +93,7 @@ class ServiceProviderDetailsServiceRowWidget extends StatelessWidget {
       // مفيش `leading`، فالخط الشعري بيبدأ من هامش الصفحة — تحت النص
       // بالظبط، وده الافتراضي بتاع [AppRowWidget].
       trailing: service.isCategory
-          ? const DirectionalChevronWidget(
+          ? DirectionalChevronWidget(
               size: 24,
               color: AppSemanticColors.textTertiary,
             )
@@ -102,8 +110,17 @@ class ServiceProviderDetailsServiceRowWidget extends StatelessWidget {
     style: AppTextStyles.bodyMdStrong,
   );
 
-  // السعر تحت الاسم مع المدة. كان عمود تالت لوحده جنب الزرار، فالصف كان
-  // تلات أعمدة على عرض ٣٧٥ — والاسم بيتقص بعد ١٢ حرف.
+  /// السعر تحت الاسم مع المدة. كان عمود تالت لوحده جنب الزرار، فالصف كان
+  /// تلات أعمدة على عرض ٣٧٥ — والاسم بيتقص بعد ١٢ حرف.
+  ///
+  /// ## المدة بقت شارة والسعر بقى رقم
+  ///
+  /// الاتنين كانوا سطر رمادي واحد (`٤٥ دقيقة · من ٢٥٠ ج.م`) بنفس الوزن
+  /// ونفس اللون. وهما **مش نفس النوع**: المدة قيد (بتخطط بيها يومك)،
+  /// والسعر هو اللي بتقارن بيه بين خدمة وخدمة.
+  ///
+  /// الشارة بتدي المدة حدود فبتقرا كحقيقة، و`cardTitle` بيدي السعر وزن
+  /// بيخليه ثاني أعلى صوت في الصف بعد الاسم.
   Widget _serviceLabel() => Column(
     mainAxisSize: MainAxisSize.min,
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -115,11 +132,22 @@ class ServiceProviderDetailsServiceRowWidget extends StatelessWidget {
         style: AppTextStyles.bodyMdStrong,
       ),
       verticalSpace(AppSpacing.titleToSubtitle),
-      Text(
-        '${AppFormat.duration(service.durationMinutes)} · من ${AppFormat.money(service.price)}',
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: AppTextStyles.caption,
+      Row(
+        children: [
+          AppPillWidget(
+            label: AppFormat.duration(service.durationMinutes),
+            icon: Icons.schedule_rounded,
+          ),
+          horizontalSpace(AppSpacing.s8),
+          Flexible(
+            child: Text(
+              AppFormat.money(service.price),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTextStyles.cardTitle,
+            ),
+          ),
+        ],
       ),
     ],
   );

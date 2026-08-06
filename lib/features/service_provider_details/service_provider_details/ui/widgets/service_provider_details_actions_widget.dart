@@ -76,7 +76,18 @@ class _ActionTile extends StatelessWidget {
         // غاطسة — دي كنترولات مساعدة، مش المحتوى.
         level: AppElevation.sunken,
         radius: AppRadius.m,
-        height: 64.h,
+        // **كان `64.h` أصم.**
+        //
+        // «الاتجاهات» على تلت العرض عند مقياس خط ١٫٣ **بتتلف سطرين**،
+        // فالعمود كان بيطلع ٦٧٫٧ في صندوق ٦٤ — فيضان ٤ بكسل. حاجتين
+        // اتظبطوا: الارتفاع بقى بيكبر مع النص، واللابل بقى سطر واحد مقصوص.
+        height: AppSpacing.scaledHeight(
+          context,
+          // أيقونة ٢٠ + مسافة ٤ + حشوة ٢٤.
+          fixed: 48,
+          // `captionInk` ١٢×١٫٤٠.
+          text: 16.8,
+        ).h,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -84,7 +95,12 @@ class _ActionTile extends StatelessWidget {
             // العين لأقل تلات أفعال أهمية في الصفحة.
             Icon(icon, size: 20.r, color: AppSemanticColors.textSecondary),
             verticalSpace(AppSpacing.s4),
-            Text(label, style: AppTextStyles.captionInk),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTextStyles.captionInk,
+            ),
           ],
         ),
       ),

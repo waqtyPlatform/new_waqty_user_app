@@ -83,7 +83,10 @@ class CreateBookingProposalsWidget extends StatelessWidget {
           Text('مفيش تحديد — بنعرض أقرب المواعيد', style: AppTextStyles.caption),
         ],
 
-        verticalSpace(AppSpacing.s24),
+        // ١٦ مش ٢٤. الفلتر والنتيجة **سؤال وجوابه** — مش قسمين مستقلين.
+        // الـ ٢٤ كانت بتفصلهم لدرجة إن العميل بيغيّر الفلتر ومايربطش
+        // التغيير باللي تحته.
+        verticalSpace(AppSpacing.s16),
         Text('أقرب المواعيد', style: AppTextStyles.bodyMdStrong),
         verticalSpace(AppSpacing.s8),
         _list(),
@@ -197,9 +200,20 @@ class _PeriodChip extends StatelessWidget {
         child: AnimatedContainer(
           duration: AppMotion.base,
           curve: AppMotion.standard,
+          // **٤٥ — فوق الحد الأدنى للمس (٤٤).**
+          //
+          // كانت الحشوة الرأسية ٨ حوالين نص ٢١، يعني الشيب **٣٧** — تحت
+          // الحد بسبع نقط. وده فلتر بيتداس بالإبهام وسط قايمة، مش لابل.
+          // شيبس المواعيد نفسها (`_SlotChip`) ٤٤ من زمان.
+          //
+          // ⚠ **الحل حشوة، مش `constraints` + `alignment`.** `Container`
+          // اللي عنده `alignment` بيفرد لأقصى عرض متاح — وجوه `Wrap`
+          // العرض المتاح هو الصف كله، فالتلات شيبس بقوا تلات صفوف كاملة.
+          // الأفقي فضل ١٢ زي ما كان: التلات نوافذ لازم يدخلوا في **سطر
+          // واحد** على ٣٧٥، و١٦ كانت بتنزّل «مساءً» لسطر تاني.
           padding: EdgeInsetsDirectional.symmetric(
             horizontal: AppSpacing.s12.w,
-            vertical: AppSpacing.s8.h,
+            vertical: AppSpacing.s12.h,
           ),
           decoration: BoxDecoration(
             borderRadius: radius,

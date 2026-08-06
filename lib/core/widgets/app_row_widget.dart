@@ -45,6 +45,17 @@ class AppRowWidget extends StatelessWidget {
   /// اتساب في الـ API عشان النداءات الموجودة ما تتكسرش.
   final double? hairlineIndent;
 
+  /// **ارتفاع الكارت كله — بالحشوة.**
+  ///
+  /// ده العقد اللي كل الصفوف مكتوبة عليه: `_fixedPart` في
+  /// `ProviderRowWidget` و`MyBookingRowWidget` وصف الخدمة **بيحسبوا حشوة
+  /// الكارت جوه الرقم**، والـ skeletons بترسم `SizedBox(heightOf)` وبتحط
+  /// حشوتها جواه.
+  ///
+  /// ⚠ الـ widget ده كان بيخالف العقد: بيدي الرقم للصندوق الداخلي **و**
+  /// يزوّد ٣٢ حشوة فوقه — يعني **كل كارت في الأبلكيشن كان أطول ٣٢ نقطة
+  /// من اللي اتحسب له**، وكل صف skeleton كان أقصر من صفه الحقيقي بنفس
+  /// الرقم (اللستة بتنطّ لما الداتا توصل).
   final double? height;
 
   const AppRowWidget({
@@ -60,6 +71,14 @@ class AppRowWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final padding = AppSpacing.cardPadding.r;
+
+    // الحشوة بتتشال من الارتفاع المطلوب — اللي بيوصل الصندوق الداخلي هو
+    // مساحة المحتوى. `clamp` عشان ارتفاع أصغر من الحشوة مايطلعش سالب.
+    final contentHeight = height == null
+        ? null
+        : (height! - padding * 2).clamp(0.0, double.infinity);
+
     return Padding(
       padding: EdgeInsetsDirectional.only(
         start: AppSpacing.pageGutter.w,
@@ -69,9 +88,9 @@ class AppRowWidget extends StatelessWidget {
       child: AppSurfaceWidget(
         onTap: onTap,
         radius: AppRadius.m,
-        padding: EdgeInsets.all(AppSpacing.cardPadding.r),
+        padding: EdgeInsets.all(padding),
         child: SizedBox(
-          height: height,
+          height: contentHeight,
           child: Row(
             children: [
               if (leading != null) ...[

@@ -1,133 +1,105 @@
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
-import 'package:waqty_user_application/core/utils/app_radius.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../utils/app_colors_white_theme.dart';
-import '../utils/styles.dart';
+import 'package:waqty_user_application/core/utils/app_radius.dart';
+import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
+import 'package:waqty_user_application/core/utils/app_spacing.dart';
+import 'package:waqty_user_application/core/utils/app_text_styles.dart';
 
-class AppDropDownField extends StatelessWidget {
-  final EdgeInsetsGeometry? contentPadding;
-  final InputBorder? focusedBorder;
-  final InputBorder? enabledBorder;
-  final InputBorder? errorBorder;
-  final InputBorder? focusedErrorBorder;
-  final TextStyle? inputTextStyle;
-  final TextStyle? hintStyle;
-  final TextStyle? textStyle;
-  final TextAlign? textAlign;
+/// قايمة منسدلة — **نفس شكل [AppTextFormField] بالظبط**.
+///
+/// كانت بتكتب حدودها الأربعة وحشوتها ولون قايمتها بإيدها بنفس الشكل اللي
+/// الحقل كان بيعمله — يعني نفس ٤٠ سطر متكرّرين في ملفين. أول ما استدارة
+/// الحقول اتغيّرت من ٢٠ لـ ١٢، الحقل اتغيّر والقايمة فضلت ٢٠ لو محدش فتح
+/// الملف ده.
+///
+/// دلوقتي الاتنين بيقروا من `inputDecorationTheme`، فالقاعدة مكتوبة في مكان
+/// واحد.
+class AppDropDownField<T> extends StatelessWidget {
+  /// اللابل اللي بيقعد فوق — نفس قاعدة [AppTextFormField].
+  final String? label;
 
   final String hintText;
-  final List<dynamic> items;
+  final List<T> items;
+  final T? value;
 
-  final Widget? suffixIcon;
-  final Color? backgroundColor;
-  final bool? autofocus;
+  /// النص اللي بيتعرض لكل عنصر. كان `element.name` على `dynamic` — يعني
+  /// أي نوع مالوش `name` كان بيقع **وقت التشغيل** مش وقت التحليل.
+  final String Function(T item) itemLabel;
+
+  final ValueChanged<T?> onChanged;
+  final FormFieldValidator<T>? validator;
   final Widget? prefixIcon;
-  final Function(dynamic) onChanged;
-  final Function() onTap;
-  final Function() onTapOutside;
+  final bool enabled;
 
   const AppDropDownField({
     super.key,
-    this.contentPadding,
-    this.focusedBorder,
-    this.enabledBorder,
-    this.errorBorder,
-    this.focusedErrorBorder,
-    this.inputTextStyle,
-    this.hintStyle,
-    this.textStyle,
-    this.textAlign,
+    this.label,
     required this.hintText,
     required this.items,
-    this.suffixIcon,
-    this.backgroundColor,
-    this.prefixIcon,
+    required this.itemLabel,
     required this.onChanged,
-    required this.onTap,
-    required this.onTapOutside,
-    this.autofocus = false,
+    this.value,
+    this.validator,
+    this.prefixIcon,
+    this.enabled = true,
   });
 
   @override
   Widget build(BuildContext context) {
-    return TapRegion(
-      onTapOutside: (_) {
-        onTapOutside();
-      },
-      child: DropdownButtonFormField<dynamic>(
-        autofocus: autofocus!,
-        dropdownColor: AppColors.whiteColor,
-
-        items: items.map((dynamic element) {
-          return DropdownMenuItem<dynamic>(
-            value: element,
-            child: Text(
-              element.name,
-              style: textStyle ?? AppTextStyles.bodyLg,
-            ),
-          );
-        }).toList(),
-        menuMaxHeight: 300.h,
-        onChanged: (dynamic item) {
-          onChanged(item!);
-        },
-        isExpanded: true,
-        decoration: InputDecoration(
-          isDense: true,
-
-          contentPadding:
-              contentPadding ??
-              EdgeInsets.symmetric(horizontal: 20.w, vertical: 18.h),
-          focusedBorder:
-              focusedBorder ??
-              OutlineInputBorder(
-                borderSide: BorderSide(
-                  color: AppColors.greyColor200,
-                  width: 1.3,
-                ),
-                borderRadius: BorderRadius.circular(AppRadius.l.r),
-              ),
-          enabledBorder:
-              enabledBorder ??
-              OutlineInputBorder(
-                borderSide: BorderSide(
-                  color: AppColors.greyColor200,
-                  width: 1.3,
-                ),
-                borderRadius: BorderRadius.circular(AppRadius.l.r),
-              ),
-          errorBorder:
-              errorBorder ??
-              OutlineInputBorder(
-                borderSide: BorderSide(
-                  color: AppColors.errorColor100,
-                  width: 1.3,
-                ),
-                borderRadius: BorderRadius.circular(AppRadius.l.r),
-              ),
-          focusedErrorBorder:
-              focusedErrorBorder ??
-              OutlineInputBorder(
-                borderSide: BorderSide(
-                  color: AppColors.errorColor100,
-                  width: 1.3,
-                ),
-                borderRadius: BorderRadius.circular(AppRadius.l.r),
-              ),
-          hintStyle: hintStyle ?? AppTextStyles.bodyLg,
-          hintText: hintText,
-          prefixIcon: prefixIcon,
-          suffixIcon: suffixIcon,
-          fillColor: backgroundColor ?? AppColors.whiteColor,
-          filled: true,
-        ),
-
-        style: textStyle ?? AppTextStyles.bodyLg,
-        onTap: () {
-          onTap();
-        },
+    final field = DropdownButtonFormField<T>(
+      initialValue: value,
+      isExpanded: true,
+      menuMaxHeight: 300.h,
+      dropdownColor: AppSemanticColors.surfaceRaised,
+      borderRadius: AppRadius.rS,
+      style: AppTextStyles.bodyLg,
+      icon: Icon(
+        Icons.keyboard_arrow_down_rounded,
+        color: AppSemanticColors.textSecondary,
+        size: 22.r,
       ),
+      validator: validator,
+      onChanged: enabled ? onChanged : null,
+      items: items
+          .map(
+            (item) => DropdownMenuItem<T>(
+              value: item,
+              child: Text(
+                itemLabel(item),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyles.bodyLg,
+              ),
+            ),
+          )
+          .toList(),
+      decoration: InputDecoration(
+        hintText: hintText,
+        prefixIcon: prefixIcon,
+        fillColor: enabled
+            ? AppSemanticColors.surfaceRaised
+            : AppSemanticColors.surfaceSunken,
+        contentPadding: EdgeInsetsDirectional.symmetric(
+          horizontal: AppSpacing.s16.w,
+          vertical: AppSpacing.s12.h,
+        ),
+      ),
+    );
+
+    if (label == null) return field;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsetsDirectional.only(
+            bottom: AppSpacing.s8.h,
+            start: AppSpacing.s4.w,
+          ),
+          child: Text(label!, style: AppTextStyles.fieldLabel),
+        ),
+        field,
+      ],
     );
   }
 }

@@ -174,7 +174,7 @@ class CreateBookingItemCardWidget extends StatelessWidget {
                 minHeight: AppSpacing.touchTarget.r,
               ),
               padding: EdgeInsets.zero,
-              icon: const Icon(
+              icon: Icon(
                 Icons.close_rounded,
                 color: AppSemanticColors.textTertiary,
               ),
@@ -231,13 +231,16 @@ class CreateBookingItemCardWidget extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        verticalSpace(AppSpacing.s16),
+        verticalSpace(AppSpacing.s12),
         CreateBookingStaffRowWidget(
           employees: item.employees,
           selectedEmployee: item.employee,
           onEmployeeSelected: onEmployeeSelected,
         ),
-        verticalSpace(AppSpacing.s24),
+        // ١٦ مش ٢٤ — كل اللي جوه الكارت خطوة واحدة («حدّد الميعاد»)،
+        // والمسافات جواها المفروض تجمّع مش تفصل. الفصل الحقيقي بين كارت
+        // خدمة وكارت الخدمة اللي بعدها.
+        verticalSpace(AppSpacing.s16),
 
         // **الاقتراحات هي الافتراضي، والشبكة ورا ضغطة.**
         //
@@ -276,8 +279,8 @@ class CreateBookingItemCardWidget extends StatelessWidget {
             onMonthChange: onMonthChange,
             onFullDayTap: onJoinWaitlist,
           ),
-          // ٢٤ في المكانين — نفس العلاقة بنفس القيمة.
-          verticalSpace(AppSpacing.s24),
+          // ١٦ في المكانين — نفس العلاقة بنفس القيمة.
+          verticalSpace(AppSpacing.s16),
           CreateBookingSlotsWidget(
             slots: item.slots,
             selectedSlot: item.selectedSlot,

@@ -3,97 +3,80 @@ import 'dart:ui' as ui;
 import 'package:country_code_picker/country_code_picker.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
-import 'package:waqty_user_application/core/utils/styles.dart';
+import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
+import 'package:waqty_user_application/core/utils/app_text_styles.dart';
 import 'package:waqty_user_application/core/widgets/app_text_field.dart';
 import 'package:waqty_user_application/features/auth/login/logic/login_cubit.dart';
-import 'package:waqty_user_application/features/auth/login/logic/login_state.dart';
 
+/// حقل التليفون.
+///
+/// **مالوش `BlocBuilder`.** كان ملفوف في واحد بيتفرّج على
+/// `OnChangeSelectedFieldState` عشان يلوّن خلفية الحقل أخضر فاتح وهو مركّز.
+/// الحقل دلوقتي بياخد **حد باللمسة** من `inputDecorationTheme` وقت التركيز —
+/// نفس الإشارة من غير حالة في الـ cubit ولا إعادة بناء عند كل ضغطة.
 class LoginPhoneNumberWidget extends StatelessWidget {
   const LoginPhoneNumberWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<LoginCubit, LoginState>(
-      buildWhen: (previous, current) {
-        return current is OnChangeSelectedFieldState;
-      },
-      builder: (context, state) {
-        return AppTextFormField(
-          hintText: context.tr('login.enterPhoneText'),
-          hintStyle: TextStyles.font16greyColor4002Weight500,
-          contentPadding: EdgeInsets.symmetric(
-            vertical: 11.h,
-            horizontal: 12.w,
-          ),
-          textStyle: TextStyles.font16greyColor900Weight400,
-          controller: LoginCubit.get(context).loginPhoneController,
-          enabledBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: AppColors.greyColor1001, width: 1),
-            borderRadius: BorderRadius.circular(10.r),
-          ),
+    final cubit = LoginCubit.get(context);
 
-          // **كود الدولة لازم يفضل LTR.**
-          //
-          // الواجهة عربي، والـ RTL بيقلب «+20» لـ «20+» — وده مش رقم
-          // موجود. أكواد الدول والتليفونات نص لاتيني حتى جوه واجهة
-          // عربي، وقلبها بيخلي العميل يشك إنه اختار بلد غلط.
-          prefixIcon: Directionality(
-            textDirection: ui.TextDirection.ltr,
-            child: SizedBox(
-            width: 115,
-            child: CountryCodePicker(
-              onChanged: (CountryCode code) {
-                LoginCubit.get(context).loginCountryCodeController.text = code
-                    .toString();
-              },
-              initialSelection: 'Eg',
-              favorite: const ['Eg'],
-              flagWidth: 20,
-              showFlag: true,
-              showCountryOnly: true,
-              showOnlyCountryWhenClosed: false,
-              alignLeft: true,
-              textStyle: TextStyle(color: AppColors.greyColor4002),
-              flagDecoration: BoxDecoration(
-                shape: BoxShape.rectangle,
-                borderRadius: BorderRadius.circular(2.r),
-              ),
-            ),
-            ),
+    return AppTextFormField(
+      label: context.tr("login.phoneText"),
+      hintText: context.tr('login.enterPhoneText'),
+      controller: cubit.loginPhoneController,
+      keyboardType: TextInputType.phone,
+      textInputAction: TextInputAction.next,
+      autofillHints: const [AutofillHints.telephoneNumber],
+      prefixIcon: _CountryPrefix(
+        onChanged: (code) => cubit.loginCountryCodeController.text = code,
+      ),
+      validator: (value) => (value == null || value.trim().isEmpty)
+          ? context.tr('login.enterPhoneText2')
+          : null,
+    );
+  }
+}
+
+/// منتقي كود الدولة.
+///
+/// **لازم يفضل LTR.** الواجهة عربي، والـ RTL بيقلب «+20» لـ «20+» — وده مش
+/// رقم موجود. أكواد الدول والتليفونات نص لاتيني حتى جوه واجهة عربي، وقلبها
+/// بيخلي العميل يشك إنه اختار بلد غلط.
+class _CountryPrefix extends StatelessWidget {
+  final ValueChanged<String> onChanged;
+
+  const _CountryPrefix({required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return Directionality(
+      textDirection: ui.TextDirection.ltr,
+      child: SizedBox(
+        width: 115.w,
+        child: CountryCodePicker(
+          onChanged: (CountryCode code) => onChanged(code.toString()),
+          // مصر — السوق اللي الأبلكيشن بيخدمه.
+          initialSelection: 'Eg',
+          favorite: const ['Eg'],
+          flagWidth: 20,
+          showFlag: true,
+          showCountryOnly: true,
+          showOnlyCountryWhenClosed: false,
+          alignLeft: true,
+          dialogBackgroundColor: AppSemanticColors.surfaceRaised,
+          dialogTextStyle: AppTextStyles.bodyMd,
+          searchStyle: AppTextStyles.bodyMd,
+          textStyle: AppTextStyles.bodyMd.copyWith(
+            color: AppSemanticColors.textSecondary,
           ),
-          focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: AppColors.greenColor500, width: 1),
-            borderRadius: BorderRadius.circular(10.r),
+          flagDecoration: BoxDecoration(
+            shape: BoxShape.rectangle,
+            borderRadius: BorderRadius.circular(2.r),
           ),
-          errorBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: AppColors.errorColor100, width: 1),
-            borderRadius: BorderRadius.circular(10.r),
-          ),
-          focusedErrorBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: AppColors.errorColor100, width: 1),
-            borderRadius: BorderRadius.circular(10.r),
-          ),
-          validator: (String? value) {
-            if (value == null || value.isEmpty) {
-              return context.tr('login.enterPhoneText2');
-            }
-            return null;
-          },
-          backgroundColor: LoginCubit.get(context).selectedFieldNumber == 1
-              ? AppColors.greenColor505
-              : AppColors.whiteColor,
-          onTap: () {
-            LoginCubit.get(context).changeSelectedField(1);
-          },
-          onTapOutside: () {
-            LoginCubit.get(context).changeSelectedField(0);
-          },
-          keyboardType: TextInputType.phone,
-        );
-      },
+        ),
+      ),
     );
   }
 }

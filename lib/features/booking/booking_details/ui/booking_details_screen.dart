@@ -10,7 +10,7 @@ import 'package:waqty_user_application/core/utils/app_spacing.dart';
 import 'package:waqty_user_application/core/utils/app_text_styles.dart';
 import 'package:waqty_user_application/core/utils/extentions.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/button_widget.dart';
+import 'package:waqty_user_application/core/widgets/app_button_widget.dart';
 import 'package:waqty_user_application/core/widgets/error_state_widget.dart';
 import 'package:waqty_user_application/core/widgets/loading_widget.dart';
 import 'package:waqty_user_application/features/booking/booking_details/logic/booking_details_cubit.dart';
@@ -67,7 +67,7 @@ class BookingDetailsScreen extends StatelessWidget {
 
           final booking = cubit.booking;
           if (booking == null) {
-            return const Center(
+            return Center(
               child: LoadingWidget(color: AppSemanticColors.accent),
             );
           }
@@ -188,13 +188,9 @@ class BookingDetailsScreen extends StatelessWidget {
               ),
             ),
             verticalSpace(AppSpacing.s16),
-            ButtonWidget(
-              isLoading: false,
-              buttonText: 'تأكيد الإلغاء',
-              backGroundColor: AppSemanticColors.danger,
-              borderColor: AppSemanticColors.danger,
-              textStyle: AppTextStyles.button,
-              buttonHeight: 52.h,
+            AppButtonWidget(
+              label: 'تأكيد الإلغاء',
+              variant: AppButtonVariant.danger,
               onPressed: () {
                 Navigator.of(sheetContext).pop();
                 cubit.cancelBooking();
@@ -260,13 +256,8 @@ class BookingDetailsScreen extends StatelessWidget {
               style: AppTextStyles.caption,
             ),
             verticalSpace(AppSpacing.s24),
-            ButtonWidget(
-              isLoading: false,
-              buttonText: 'تحب تحجز ميعاد تاني؟',
-              backGroundColor: AppSemanticColors.accent,
-              borderColor: AppSemanticColors.accent,
-              textStyle: AppTextStyles.button,
-              buttonHeight: 52.h,
+            AppButtonWidget(
+              label: 'تحب تحجز ميعاد تاني؟',
               onPressed: () {
                 Navigator.of(sheetContext).pop();
                 if (booking != null) _rebook(context, booking);

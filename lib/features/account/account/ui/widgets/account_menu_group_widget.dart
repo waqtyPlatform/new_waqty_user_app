@@ -18,7 +18,13 @@ import 'package:waqty_user_application/features/account/account/ui/widgets/accou
 /// مع بعض والباقي لأ». في الشاشات التانية الكارت كان بيحوّط عنصر واحد
 /// مالوش زمايل — فبقى إطار حوالين لا حاجة.
 class AccountMenuGroupWidget extends StatelessWidget {
-  final List<AccountMenuItemWidget> items;
+  /// `Widget` مش `AccountMenuItemWidget`: فيه صفوف بتلف نفسها في
+  /// `BlocBuilder` (زي «المظهر»)، والنوع الضيق كان بيمنعها من القايمة
+  /// وبيجبرها ترسم سطحها لوحدها بره الكارت.
+  ///
+  /// اللي داخل هنا لازم يفضل صف بارتفاع [AccountMenuItemWidget.heightOf] —
+  /// إزاحة الفاصل محسوبة على أساسه.
+  final List<Widget> items;
 
   const AccountMenuGroupWidget({super.key, required this.items});
 

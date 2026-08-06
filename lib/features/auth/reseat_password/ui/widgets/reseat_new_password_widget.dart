@@ -1,9 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
-import 'package:waqty_user_application/core/utils/styles.dart';
+import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
 import 'package:waqty_user_application/core/widgets/app_text_field.dart';
 import 'package:waqty_user_application/features/auth/reseat_password/logic/reseat_password_cubit.dart';
 import 'package:waqty_user_application/features/auth/reseat_password/logic/reseat_password_state.dart';
@@ -14,70 +12,32 @@ class ReseatNewPasswordWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<ReseatPasswordCubit, ReseatPasswordState>(
-      buildWhen: (previous, current) {
-        return current is OnChangeSelectedFieldState ||
-            current is IsNewPasswordVisibleState;
-      },
+      buildWhen: (previous, current) => current is IsNewPasswordVisibleState,
       builder: (context, state) {
+        final cubit = ReseatPasswordCubit.get(context);
+        final isHidden = cubit.isNewPasswordVisible;
+
         return AppTextFormField(
+          label: context.tr('reseatPassword.newPasswordText'),
           hintText: context.tr('reseatPassword.enterNewPasswordText'),
-          hintStyle: TextStyles.font16greyColor4002Weight500,
-          contentPadding: EdgeInsets.symmetric(
-            vertical: 11.h,
-            horizontal: 12.w,
-          ),
-
-          textStyle: TextStyles.font16greyColor900Weight400,
-          controller: ReseatPasswordCubit.get(
-            context,
-          ).reseatNewPasswordController,
-
-          isObscureText: ReseatPasswordCubit.get(context).isNewPasswordVisible,
-
-          suffixIcon: IconButton(
-            icon: Icon(
-              ReseatPasswordCubit.get(context).isNewPasswordVisible
-                  ? Icons.visibility
-                  : Icons.visibility_off,
-              color: AppColors.greyColor3003,
-            ),
-            onPressed: () {
-              ReseatPasswordCubit.get(context).changeNewPasswordLoginState();
-            },
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: AppColors.greyColor1001, width: 1),
-            borderRadius: BorderRadius.circular(10.r),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: AppColors.greenColor500, width: 1),
-            borderRadius: BorderRadius.circular(10.r),
-          ),
-          errorBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: AppColors.errorColor100, width: 1),
-            borderRadius: BorderRadius.circular(10.r),
-          ),
-          focusedErrorBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: AppColors.errorColor100, width: 1),
-            borderRadius: BorderRadius.circular(10.r),
-          ),
-          validator: (String? value) {
-            if (value == null || value.isEmpty) {
-              return context.tr('reseatPassword.enterNewPasswordText2');
-            }
-            return null;
-          },
-          backgroundColor:
-              ReseatPasswordCubit.get(context).selectedFieldNumber == 1
-              ? AppColors.greenColor505
-              : AppColors.whiteColor,
-          onTap: () {
-            ReseatPasswordCubit.get(context).changeSelectedField(1);
-          },
-          onTapOutside: () {
-            ReseatPasswordCubit.get(context).changeSelectedField(0);
-          },
+          controller: cubit.reseatNewPasswordController,
+          obscureText: isHidden,
           keyboardType: TextInputType.visiblePassword,
+          textInputAction: TextInputAction.next,
+          autofillHints: const [AutofillHints.newPassword],
+          suffixIcon: IconButton(
+            onPressed: cubit.changeNewPasswordLoginState,
+            tooltip: isHidden ? 'إظهار كلمة السر' : 'إخفاء كلمة السر',
+            icon: Icon(
+              isHidden
+                  ? Icons.visibility_off_rounded
+                  : Icons.visibility_rounded,
+              color: AppSemanticColors.textTertiary,
+            ),
+          ),
+          validator: (value) => (value == null || value.isEmpty)
+              ? context.tr('reseatPassword.enterNewPasswordText2')
+              : null,
         );
       },
     );

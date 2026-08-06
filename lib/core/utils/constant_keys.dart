@@ -6,6 +6,9 @@ class ConstantKeys {
   static const saveIsShowIsBoardingToShared = "IS_BOARDING";
   static const saveIsFirstRunToShared = "IS_FIRST_RUN";
 
+  /// وضع الثيم: `system` · `light` · `dark`.
+  static const saveThemeModeToShared = "THEME_MODE";
+
   ///sender setting
   static const saveEmailToShared = "EMAIL";
   static const savePhoneToShared = "PHONE";

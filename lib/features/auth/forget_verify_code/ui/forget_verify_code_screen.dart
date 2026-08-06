@@ -1,9 +1,9 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
+import 'package:waqty_user_application/core/utils/app_spacing.dart';
+import 'package:waqty_user_application/core/utils/app_text_styles.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/utils/styles.dart';
 import 'package:waqty_user_application/features/auth/forget_verify_code/logic/forget_verify_code_cubit.dart';
 import 'package:waqty_user_application/features/auth/forget_verify_code/ui/widgets/forget_code_text_field_widget.dart';
 import 'package:waqty_user_application/features/auth/forget_verify_code/ui/widgets/forget_verify_button_widget.dart';
@@ -16,51 +16,35 @@ class ForgetVerifyCodeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.whiteColor,
       resizeToAvoidBottomInset: true,
-
-      appBar: AppBar(
-        backgroundColor: AppColors.whiteColor,
-        elevation: 0,
-        leading: IconButton(
-          onPressed: () {
-            if (Navigator.canPop(context)) {
-              Navigator.pop(context);
-            }
-          },
-          icon: Icon(Icons.arrow_back, color: AppColors.greyColor900),
-        ),
-      ),
-
+      appBar: AppBar(),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: 24.w),
+          padding: EdgeInsetsDirectional.symmetric(
+            horizontal: AppSpacing.pageGutter.w,
+          ),
           child: Form(
             key: ForgetVerifyCodeCubit.get(context).forgetVerifyCodeKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                verticalSpace(16),
-
+                verticalSpace(AppSpacing.s16),
                 Text(
                   context.tr('verifyCode.title'),
-
-                  style: TextStyles.font24greyColor900Weight600,
+                  style: AppTextStyles.titleXl,
                 ),
-                verticalSpace(6),
+                verticalSpace(AppSpacing.s8),
                 Text(
                   context.tr('verifyCode.description'),
-                  style: TextStyles.font14greyColor4002Weight400,
+                  style: AppTextStyles.bodyMdMuted,
                 ),
-                verticalSpace(32),
-
+                verticalSpace(AppSpacing.s32),
                 ForgetCodeTextFieldWidget(email: email),
-
-                verticalSpace(48),
+                verticalSpace(AppSpacing.s32),
                 ResendCodeWidget(email: email),
-                verticalSpace(32),
+                verticalSpace(AppSpacing.s32),
                 ForgetVerifyButtonWidget(email: email),
-                verticalSpace(24),
+                verticalSpace(AppSpacing.s24),
               ],
             ),
           ),

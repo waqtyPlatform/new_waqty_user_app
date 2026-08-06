@@ -1,81 +1,44 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/core/models/booking_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_radius.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/core/widgets/app_pill_widget.dart';
 
 /// شارة حالة الحجز.
 ///
 /// اللفظ جاي من `BookingStatus.label` — الأسماء الداخلية زي `no_show`
 /// مصطلحات تقنية ومتتعرضش زي ما هي للعميل.
 ///
-/// اتنقلت هنا من جوه `my_booking_card_widget.dart` عشان صفحة التفاصيل كانت
-/// بتستوردها من ملف كارت اللستة — **وكانت بترسمها بحشوة تانية** (١٢/٤ بدل
-/// ١٠/٣)، فنفس الحالة كانت شكلها مختلف في الشاشتين.
+/// ## بقى غلاف رفيع فوق [AppPillWidget]
+///
+/// كان بيرسم `Container` بحشوته واستدارته بنفسه — يعني شارة الحالة شكلها
+/// مربوط بمكان تاني غير باقي شارات الأبلكيشن، وأول ما شكل الشارات اتغيّر
+/// كانت هتفضل على شكلها القديم.
+///
+/// اللي فاضل هنا هو **الترجمة بس**: حالة → لهجة. وده الشغل الوحيد اللي
+/// يخص الحجز فعلاً.
 class BookingStatusChipWidget extends StatelessWidget {
   final BookingStatus status;
 
   const BookingStatusChipWidget({super.key, required this.status});
 
   @override
-  Widget build(BuildContext context) {
-    final (background, foreground) = _colors;
-
-    return Container(
-      padding: EdgeInsetsDirectional.symmetric(
-        horizontal: AppSpacing.s8.w,
-        vertical: AppSpacing.s4.h,
-      ),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(AppRadius.pill.r),
-      ),
-      child: Text(
-        status.label,
-        style: AppTextStyles.overline.copyWith(color: foreground),
-      ),
-    );
-  }
+  Widget build(BuildContext context) =>
+      AppPillWidget(label: status.label, tone: _tone);
 
   /// **مفيش `_ =>` هنا بالقصد.**
   ///
-  /// الـ default كان بيبلع أي حالة جديدة ويطلّعها رمادية من غير ما حد
-  /// ياخد باله — وده بالظبط اللي خلّى أبلكيشن الموظف يرسم شارة مش
-  /// مقروءة. من غيره، أي حالة تتضاف للـ enum بتوقّف الـ build لحد ما حد
-  /// يقرر لونها.
-  (Color, Color) get _colors => switch (status) {
-    BookingStatus.confirmed => (
-      AppSemanticColors.accentSoft,
-      AppSemanticColors.accent,
-    ),
+  /// الـ default كان بيبلع أي حالة جديدة ويطلّعها رمادية من غير ما حد ياخد
+  /// باله — وده بالظبط اللي خلّى أبلكيشن الموظف يرسم شارة مش مقروءة. من
+  /// غيره، أي حالة تتضاف للـ enum بتوقّف الـ build لحد ما حد يقرر لونها.
+  AppPillTone get _tone => switch (status) {
+    BookingStatus.confirmed => AppPillTone.accent,
     // وصل ومستني — الأصفر بيقول «فيه حاجة بتحصل دلوقتي وتخصك».
-    BookingStatus.arrived => (
-      AppSemanticColors.warningSoft,
-      AppSemanticColors.warning,
-    ),
-    BookingStatus.waiting => (
-      AppSemanticColors.warningSoft,
-      AppSemanticColors.warning,
-    ),
-    BookingStatus.inProgress => (
-      AppSemanticColors.infoSoft,
-      AppSemanticColors.info,
-    ),
-    BookingStatus.completed => (
-      AppSemanticColors.positiveSoft,
-      AppSemanticColors.positive,
-    ),
-    BookingStatus.noShow => (
-      AppSemanticColors.dangerSoft,
-      AppSemanticColors.danger,
-    ),
+    BookingStatus.arrived => AppPillTone.warning,
+    BookingStatus.waiting => AppPillTone.warning,
+    BookingStatus.inProgress => AppPillTone.info,
+    BookingStatus.completed => AppPillTone.positive,
+    BookingStatus.noShow => AppPillTone.danger,
     // الإلغاء رمادي مش أحمر. الأحمر بيقرا «فيه مشكلة» والإلغاء غالبًا
     // العميل هو اللي عمله.
-    BookingStatus.cancelled => (
-      AppSemanticColors.surfaceSunken,
-      AppSemanticColors.textSecondary,
-    ),
+    BookingStatus.cancelled => AppPillTone.neutral,
   };
 }

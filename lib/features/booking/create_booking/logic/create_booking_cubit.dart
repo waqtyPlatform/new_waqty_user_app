@@ -72,6 +72,46 @@ class CreateBookingCubit extends Cubit<CreateBookingState> {
     }
   }
 
+  /// **سلة جاهزة — من غير أي تحميل.**
+  ///
+  /// ## ليه موجود
+  ///
+  /// الـ constructor العادي بيبدأ بسلة نص جاهزة وبيحمّل الأخصائيين
+  /// والتواريخ والمواعيد على مراحل (`enterDateTimeStep` → `_ensureLoaded`
+  /// → `loadProposalsFor` …). عشان توصّل الـ cubit لحالة **«كل خدمة ليها
+  /// ميعاد»** — وهي الحالة الوحيدة اللي خطوة الملخص بترسمها — لازم تشغّل
+  /// الفلو كله وتستنى كل مرحلة.
+  ///
+  /// وده **مابينفعش في الاختبارات**: الـ cubit بيشغّل مؤقت مهلة الحجز،
+  /// فـ`pumpAndSettle` عمره ما بيرجع، و`Future.delayed` بتاعة الـ mock
+  /// مابتتقدّمش جوه الـ fake async بتاع `flutter_test`.
+  ///
+  /// الـ constructor ده بياخد السلة **مبنية من برّه** ومابينادي ولا دالة
+  /// تحميل. الفرق الوحيد عن العادي هو **من فين السلة جت** — كل السلوك
+  /// اللي بعد كده (الأسعار، الزيارات، الفواصل، الـ payload) نفسه بالحرف،
+  /// فاللي الاختبار بيقيسه هو الكود الحقيقي مش نسخة منه.
+  ///
+  /// مفيد كمان في المعاينة وفي الـ mock scenarios لو احتجناها بعدين.
+  CreateBookingCubit.seeded({
+    required this.providerUuid,
+    required this.providerName,
+    required List<BookingDraftItem> draft,
+    BranchUiModel? branch,
+    BookingStep step = BookingStep.confirm,
+  }) : super(InitialState()) {
+    branches = MockProviders.branchesOf(providerUuid);
+    selectedBranch =
+        branch ?? (branches.isEmpty ? null : branches.first);
+    services = MockServices.ofProvider(providerUuid);
+
+    items.addAll(draft);
+    currentStep = step;
+
+    // العدّاد بيبدأ بعد آخر مفتاح مبذور — عشان أي `_addItem` بعد كده
+    // مايدّيش مفتاح متكرر.
+    _keyCounter = draft.length;
+  }
+
   final String providerUuid;
   final String providerName;
 

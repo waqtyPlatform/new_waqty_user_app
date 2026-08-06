@@ -4,10 +4,10 @@ import 'package:waqty_user_application/core/mock/mock_in_branch.dart';
 import 'package:waqty_user_application/core/models/booking_ui_model.dart';
 import 'package:waqty_user_application/core/models/in_branch_ui_model.dart';
 import 'package:waqty_user_application/core/utils/app_format.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
 import 'package:waqty_user_application/core/utils/app_spacing.dart';
 import 'package:waqty_user_application/core/utils/app_text_styles.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
+import 'package:waqty_user_application/core/widgets/app_pill_widget.dart';
 import 'package:waqty_user_application/core/widgets/app_row_widget.dart';
 import 'package:waqty_user_application/core/widgets/booking_status_chip_widget.dart';
 import 'package:waqty_user_application/features/booking/in_branch/ui/widgets/in_branch_chip_widget.dart';
@@ -35,29 +35,42 @@ import 'package:waqty_user_application/features/booking/in_branch/ui/widgets/in_
 /// عشرين تايمر شغّال في الخلفية عشان تقدير بيتغيّر كل ٢٠ ثانية. اللي بيـ poll
 /// هو الهيرو في الهوم وبلوك التفاصيل بس، وهما واحد في الشاشة.
 class MyBookingRowWidget extends StatelessWidget {
-  /// **الحسبة:** ١٢ حشوة فوق + ١٢ تحت (من [AppRowWidget]) = ٢٤، زائد
-  /// المسافات جوه عمود النص: ٤ (`titleToSubtitle`) + ٨ (`subtitleToMeta`)
-  /// = ١٢. **المجموع ٣٦.**
+  /// **الحسبة:** ١٦ حشوة فوق + ١٦ تحت (من [AppRowWidget]) = ٣٢، زائد
+  /// المسافات جوه عمود النص: ٤ (`titleToSubtitle`) + ٤ = **٤٠**.
   ///
-  /// كان ٤٠ في الكارت لأن المسافة قبل صف البيانات كانت `s12` مكتوبة بإيدها.
-  /// بقت `subtitleToMeta` — نفس الدور في كل الصفوف بنفس الرقم.
-  static const double _fixedPart = 36;
+  /// كان ٣٦ — الرقم اتكتب لما حشوة الكارت كانت ١٢، وما اتحدّثش لما بقت ١٦.
+  /// والمسافة قبل صف البيانات نزلت من ٨ لـ ٤: التلات سطور دول بيانات الحجز
+  /// نفسه، والفصل الحقيقي بين اسم المحل وبينهم.
+  static const double _fixedPart = 40;
 
   /// **الحسبة عند مقياس خط ١٫٠:**
-  /// `cardTitle` ١٦×١٫٤٠ = ٢٢٫٤ · `caption` ١٢×١٫٤٠ = ١٦٫٨ ·
-  /// `bodyMdStrong` ١٤×١٫٥٠ = ٢١. **المجموع ٦٠٫٢.**
+  /// `cardTitle` ١٦×١٫٤٠ = ٢٢٫٤ · `caption` ١٢×١٫٤٠ = ١٦٫٨ · وسطر البيانات
+  /// أطول حاجة فيه شارة الميعاد (١٤٫٣ + ٨ حشوة = ٢٢٫٣) أو السعر
+  /// (`bodyMdStrong` ٢١) — بنحجز ٢٢٫٤. المجموع **٦١٫٦**، والرقم هنا ٦٣
+  /// لتقريب فلاتر لارتفاع السطر.
   ///
   /// السطر الأول بيتحسب بالعنوان مش بالشارة: الشارة `overline` ١١×١٫٣٠ =
   /// ١٤٫٣ زائد ٨ حشوة رأسية = **٢٢٫٣** — أقصر من العنوان بعُشر بكسل،
-  /// فالعنوان هو اللي بيحدد الارتفاع دايمًا. وأيقونات البيانات ١٦ وصفها
-  /// نصه ٢١، فهي كمان مابتحددش حاجة.
-  static const double _textPart = 60.2;
+  /// فالعنوان هو اللي بيحدد الارتفاع دايمًا.
+  static const double _textPart = 63;
+
+  /// شارة «قيّم الخدمة» بتزوّد سطر — مسافة ٤ وحشوة الشارة ٨ ثابتين،
+  /// ونصها (`overline`) بيكبر مع المقياس.
+  static const double _ratingFixed = AppSpacing.s4 + AppSpacing.s8;
+  static const double _ratingText = 14.3;
 
   /// المصدر الوحيد للارتفاع — **و`MyBookingRowSkeletonWidget` بيقراه من هنا**.
-  static double heightOf(BuildContext context) => AppSpacing.scaledHeight(
+  ///
+  /// ⚠ [hasRatingLine] **لازم يتبعت.** شارة التقييم كانت بتترسم من غير ما
+  /// تتحسب خالص — يعني أي حجز مكتمل من غير تقييم كان صفه **بيفيض ٢٠ بكسل**.
+  /// الـ skeleton بيسيبها `false` لأنه مابيعرفش إيه اللي جاي.
+  static double heightOf(
+    BuildContext context, {
+    bool hasRatingLine = false,
+  }) => AppSpacing.scaledHeight(
     context,
-    fixed: _fixedPart,
-    text: _textPart,
+    fixed: _fixedPart + (hasRatingLine ? _ratingFixed : 0),
+    text: _textPart + (hasRatingLine ? _ratingText : 0),
   );
 
   final BookingUiModel booking;
@@ -80,7 +93,10 @@ class MyBookingRowWidget extends StatelessWidget {
 
     return AppRowWidget(
       onTap: onTap,
-      height: heightOf(context).h,
+      height: heightOf(
+        context,
+        hasRatingLine: booking.hasPendingRatings,
+      ).h,
       showHairline: showHairline,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -131,30 +147,36 @@ class MyBookingRowWidget extends StatelessWidget {
           // («فاهمين إن التقييم لكل خدمة؟»). رقم في الصف بيجاوب السؤال
           // قبل ما العميل يفتح أصلاً.
           if (booking.hasPendingRatings) ...[
-            verticalSpace(AppSpacing.titleToSubtitle),
-            Text(
-              booking.rateableItems.length == 1
+            verticalSpace(AppSpacing.s4),
+            // شارة مش نص أخضر — نفس لغة «أقرب موعد» في صف المحل: الحاجة
+            // اللي عايزة فعل من العميل بتاخد حدود وخلفية عشان تتفرّق عن
+            // الوصف اللي حواليها.
+            AppPillWidget(
+              label: booking.rateableItems.length == 1
                   ? 'قيّم الخدمة'
                   : 'قيّم ${AppFormat.digits(booking.rateableItems.length)} خدمات',
-              style: AppTextStyles.captionAccent,
+              icon: Icons.star_rounded,
+              tone: AppPillTone.accent,
             ),
           ],
-          verticalSpace(AppSpacing.subtitleToMeta),
+          verticalSpace(AppSpacing.s4),
           Row(
             children: [
-              _MetaIcon(icon: Icons.calendar_today_rounded),
-              horizontalSpace(AppSpacing.s4),
-              Text(
-                AppFormat.relativeDate(booking.startAt),
-                style: AppTextStyles.captionInk,
+              // **شارة واحدة بدل أربع عناصر.**
+              //
+              // كان: أيقونة + تاريخ + مسافة + أيقونة + وقت. الخمسة دول
+              // بيتمدّوا مع مقياس الخط، وعند ١٫٣ الصف كان **بيفيض ١٠٣
+              // بكسل عرضًا** — يعني السعر بيتقص من الشاشة في أهم صف.
+              //
+              // «النهاردة ٦:٠٠ م» نص واحد في شارة واحدة: أضيق، وبيقرا
+              // كوحدة زمنية واحدة بدل حاجتين جنب بعض.
+              Flexible(
+                child: AppPillWidget(
+                  label: AppFormat.relativeDateTime(booking.startAt),
+                  icon: Icons.calendar_today_rounded,
+                ),
               ),
-              horizontalSpace(AppSpacing.s12),
-              _MetaIcon(icon: Icons.access_time_rounded),
-              horizontalSpace(AppSpacing.s4),
-              Text(
-                AppFormat.time(booking.startAt),
-                style: AppTextStyles.captionInk,
-              ),
+              horizontalSpace(AppSpacing.s8),
               const Spacer(),
               // **الخصم بيبان من القايمة مش من التفاصيل بس.**
               //
@@ -193,17 +215,4 @@ class MyBookingRowWidget extends StatelessWidget {
       MockInBranch.forBooking(booking, DateTime.now());
 }
 
-/// أيقونة بيانات صغيرة — رمادية دايمًا، حجم موحّد.
-///
-/// كان فيه ١١ حجم أيقونة لـ ٢٤ أيقونة في الأبلكيشن. الأحجام بقت ٤ بس:
-/// **١٦ للبيانات · ٢٠ للأفعال · ٢٤ للتنقّل · ٣٢ للحالات الفاضية.**
-class _MetaIcon extends StatelessWidget {
-  final IconData icon;
-
-  const _MetaIcon({required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    return Icon(icon, size: 16.r, color: AppSemanticColors.textTertiary);
-  }
-}
+// `_MetaIcon` اتشال — التاريخ والوقت بقوا شارة واحدة، والأيقونة جوّاها.
