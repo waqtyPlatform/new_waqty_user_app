@@ -89,6 +89,8 @@ flutter:
     - assets/images/
     - assets/test/
     - assets/icons/
+    # فلاتر مابيدوّرش جوه الفولدرات الفرعية — لازم سطر مستقل لكل واحد.
+    - assets/icons/categories/
     - assets/languages/
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

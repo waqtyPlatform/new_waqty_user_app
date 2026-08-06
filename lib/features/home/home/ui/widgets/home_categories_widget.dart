@@ -10,6 +10,7 @@ import 'package:waqty_user_application/core/utils/app_spacing.dart';
 import 'package:waqty_user_application/core/utils/app_text_styles.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
 import 'package:waqty_user_application/core/widgets/app_surface_widget.dart';
+import 'package:waqty_user_application/core/widgets/category_icon_widget.dart';
 import 'package:waqty_user_application/core/widgets/skeleton_box_widget.dart';
 
 /// صف التصنيفات — **كارت لكل تصنيف، والعدد جواه**.
@@ -39,27 +40,28 @@ import 'package:waqty_user_application/core/widgets/skeleton_box_widget.dart';
 class HomeCategoriesWidget extends StatelessWidget {
   /// عرض الكارت.
   ///
-  /// **١١٦**: العدد بقى جوه الحشوة، فالعرض المتاح للنص ١١٦ − ٢٤ = ٩٢ —
-  /// كفاية لـ«مساج واسترخاء» على سطرين من غير قص.
-  static const double itemWidth = 116;
+  /// **١٢٤**: العرض المتاح للنص ١٢٤ − ٢٤ = ١٠٠ — «مساج واسترخاء» بيتقسم
+  /// على سطرين مريحين بدل ما يتزنق.
+  static const double itemWidth = 124;
 
   /// حشوة الكارت.
   static const double cardPadding = AppSpacing.s12;
 
   /// قطر الطبق الدائري جوه الكارت.
   ///
-  /// **٤٠ مش ٥٦**: بقى جوه كارت، والطبق اللي بيملا عرض الكارت بيقرا خلفية
-  /// مش أيقونة.
-  static const double plateSize = 40;
+  /// **٤٤ مش ٥٦**: بقى جوه كارت، والطبق اللي بيملا عرض الكارت بيقرا خلفية
+  /// مش أيقونة. و٤٤ هو نفسه [AppSpacing.touchTarget] — الطبق بيقرا كهدف
+  /// لمس حتى لو اللي بيتداس هو الكارت كله.
+  static const double plateSize = AppSpacing.touchTarget;
 
   /// مقاس الأيقونة جوه الطبق.
-  static const double iconSize = 22;
+  static const double iconSize = 24;
 
   /// المسافة بين كارت وكارت.
   static const double itemGap = AppSpacing.s12;
 
-  /// الجزء اللي مالوش دعوة بمقياس الخط: حشوة ١٢×٢ + طبق ٤٠ + ٨ + ٤.
-  /// **المجموع ٧٦.**
+  /// الجزء اللي مالوش دعوة بمقياس الخط: حشوة ١٢×٢ + طبق ٤٤ + ٨ + ٤.
+  /// **المجموع ٨٠.**
   static const double _fixedPart =
       (cardPadding * 2) + plateSize + AppSpacing.s8 + AppSpacing.s4;
 
@@ -176,9 +178,9 @@ class _CategoryItem extends StatelessWidget {
                     : AppGradients.plate,
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                _iconFor(category.name),
-                size: HomeCategoriesWidget.iconSize.r,
+              child: CategoryIconWidget(
+                categoryName: category.name,
+                size: HomeCategoriesWidget.iconSize,
                 // **خضرا — لون البراند.**
                 //
                 // كانت رمادية بحجة إن ٦ أيقونات خضرا بتخفّف قيمة الأخضر في
@@ -189,48 +191,51 @@ class _CategoryItem extends StatelessWidget {
               ),
             ),
             verticalSpace(AppSpacing.s8),
-            // `Expanded` عشان العدد يقعد على نفس الخط في كل الكروت. من
-            // غيره الاسم اللي سطر واحد بيرفع عدده فوق عن اللي سطرين، والصف
-            // بيقرا مايل.
+            // **الاسم والعدد ملزوقين في قاع الكارت.**
+            //
+            // قبل كده الاسم كان `Expanded` والعدد بعده — يعني الاسم بياخد
+            // مساحة سطرين وبيترسم في أولها، فالاسم اللي سطر واحد كان بيسيب
+            // **شريط فاضي** بينه وبين عدده في نص الكارت. الشريط ده كان أول
+            // حاجة العين تشوفها في الصف.
+            //
+            // دلوقتي الفراغ بيروح **فوق** الاسم، تحت الطبق — فبيقرا تنفّس
+            // مش فجوة. والعدد فضل على نفس الخط في كل الكروت زي ما كان.
             Expanded(
-              child: Text(
-                category.name,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: isSelected
-                    ? AppTextStyles.captionInk.copyWith(
-                        fontWeight: FontWeight.w600,
-                      )
-                    : AppTextStyles.captionInk,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    category.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    // **w600 دايمًا مش عند الاختيار بس.** ده عنوان الكارت،
+                    // والوزن العادي بيخليه يقرا كسطر وصف. حالة الاختيار
+                    // ليها إشارتين أقوى أصلاً — الحد واللون.
+                    style: AppTextStyles.captionInk.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  if (category.servicesCount > 0)
+                    verticalSpace(AppSpacing.s4),
+                  if (category.servicesCount > 0)
+                    Text(
+                      '${AppFormat.digits(category.servicesCount)} خدمة',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.overline.copyWith(
+                        color: AppSemanticColors.textSecondary,
+                      ),
+                    ),
+                ],
               ),
             ),
-            if (category.servicesCount > 0)
-              Text(
-                '${AppFormat.digits(category.servicesCount)} خدمة',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.overline.copyWith(
-                  color: AppSemanticColors.textSecondary,
-                ),
-              ),
           ],
         ),
       ),
     );
   }
 
-  /// أيقونة مؤقتة لحد ما صور التصنيفات تيجي من السيرفر.
-  ///
-  /// كلها `_rounded` — كان فيه خلط `_outlined`/`_rounded` في نفس الصف، وده
-  /// بيبان كأن الأيقونات من مكتبتين مختلفتين.
-  IconData _iconFor(String name) => switch (name) {
-    'حلاقة رجالي' => Icons.content_cut_rounded,
-    'كوافير حريمي' => Icons.face_retouching_natural_rounded,
-    'عناية بالبشرة' => Icons.spa_rounded,
-    'مساج واسترخاء' => Icons.self_improvement_rounded,
-    'أظافر' => Icons.back_hand_rounded,
-    _ => Icons.medical_services_rounded,
-  };
 }
 
 /// التحميل بشكل العنصر نفسه — **مش مستطيل واحد بمقاس البلاطة**.
