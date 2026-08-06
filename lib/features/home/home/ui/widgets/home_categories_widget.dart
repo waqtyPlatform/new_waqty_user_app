@@ -9,24 +9,27 @@ import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
 import 'package:waqty_user_application/core/utils/app_spacing.dart';
 import 'package:waqty_user_application/core/utils/app_text_styles.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
+import 'package:waqty_user_application/core/widgets/app_surface_widget.dart';
 import 'package:waqty_user_application/core/widgets/skeleton_box_widget.dart';
 
-/// صف التصنيفات — **طبق دائري لكل تصنيف**.
+/// صف التصنيفات — **كارت لكل تصنيف، والعدد جواه**.
 ///
-/// من الـ design DNA:
-/// > `Circular service category icons with stroke icons and amber highlight
-/// > ring for active state arranged in a horizontal scroll row`
+/// ## ليه رجع كارت بعد ما كان طبق دائري
 ///
-/// ## من بلاطة بيضا لطبق دائري
+/// النسخة اللي فاتت كانت دايرة سايبة والاسم والعدد نص طايح تحتها. اتشالت
+/// لسببين اتقالوا من الاستخدام الحقيقي:
 ///
-/// النسخة اللي قبل دي كانت بلاطة بيضا مرفوعة لكل تصنيف. البلاطة كانت بتحل
-/// مشكلة حقيقية («ده قابل للضغط؟») بس بتخلق واحدة تانية: **٦ كروت بيضا
-/// مرفوعة فوق صف الرئيسية بيتنافسوا مع كروت المحلات اللي تحتها بالظبط**،
-/// والاتنين بنفس السطح ونفس الظل ونفس الاستدارة.
+/// **١. العدد كان بيقرا إنه مش تابع لحاجة.** «٢٤ خدمة» كانت آخر سطر في
+/// عمود مالوش حدود، فمافيش حاجة بتقول إنها بتوصف التصنيف اللي فوقها —
+/// وبينها وبين اسم التصنيف مسافة زي المسافة بينها وبين اللي بعدها.
 ///
-/// الطبق الدائري بيفصل النوعين من غير ما يخسر إشارة الضغط: **الدايرة مش شكل
-/// كارت في الأبلكيشن كله**، فهي بتقرا كزرار تلقائيًا. والطبق غاطس مش مرفوع،
-/// فالكروت اللي تحت بتفضل هي الصوت الأعلى.
+/// **٢. الدايرة بتتقص وحش.** الصف بيسيب آخر عنصر مقصوص من الحافة عشان
+/// يقول «فيه كمان». الكارت المقصوص بيقرا كارت ناقص — إشارة مفهومة. **نص
+/// الدايرة بيقرا عطل رسم**، لأن الدايرة مالهاش حالة «نصها بس».
+///
+/// الاعتراض القديم (إن الكروت هتزاحم كروت المحلات اللي تحت) اتحل من غير ما
+/// نرجع للدايرة: الكارت هنا **غاطس مش مرفوع** ومقاسه نص كارت المحل، فبيقرا
+/// كصف كنترولات مش كصف محتوى.
 ///
 /// ## الحلقة
 ///
@@ -34,27 +37,36 @@ import 'package:waqty_user_application/core/widgets/skeleton_box_widget.dart';
 /// إشارة تانية جنب اللون — والقاعدة إن أي حالة اختيار لازمها إشارتين، عشان
 /// اللون لوحده بيضيع في الشمس وعلى شاشة رخيصة.
 class HomeCategoriesWidget extends StatelessWidget {
-  /// عرض العنصر.
+  /// عرض الكارت.
   ///
-  /// **٨٤ مش ١٠٠**: الطبق بقى ٥٦ ومفيش حشوة بلاطة تاكل من الجناب، فالعرض
-  /// المتاح للنص بقى ٨٤ كامل بدل ٧٦ — أوسع من الأول مع إن الرقم أصغر.
-  static const double itemWidth = 84;
+  /// **١١٦**: العدد بقى جوه الحشوة، فالعرض المتاح للنص ١١٦ − ٢٤ = ٩٢ —
+  /// كفاية لـ«مساج واسترخاء» على سطرين من غير قص.
+  static const double itemWidth = 116;
 
-  /// قطر الطبق الدائري.
-  static const double plateSize = 56;
+  /// حشوة الكارت.
+  static const double cardPadding = AppSpacing.s12;
+
+  /// قطر الطبق الدائري جوه الكارت.
+  ///
+  /// **٤٠ مش ٥٦**: بقى جوه كارت، والطبق اللي بيملا عرض الكارت بيقرا خلفية
+  /// مش أيقونة.
+  static const double plateSize = 40;
 
   /// مقاس الأيقونة جوه الطبق.
-  static const double iconSize = 26;
+  static const double iconSize = 22;
 
-  /// المسافة بين طبق وطبق.
+  /// المسافة بين كارت وكارت.
   static const double itemGap = AppSpacing.s12;
 
-  /// الجزء اللي مالوش دعوة بمقياس الخط: طبق ٥٦ + ٨ + ٤. **المجموع ٦٨.**
-  static const double _fixedPart = plateSize + AppSpacing.s8 + AppSpacing.s4;
+  /// الجزء اللي مالوش دعوة بمقياس الخط: حشوة ١٢×٢ + طبق ٤٠ + ٨ + ٤.
+  /// **المجموع ٧٦.**
+  static const double _fixedPart =
+      (cardPadding * 2) + plateSize + AppSpacing.s8 + AppSpacing.s4;
 
   /// النص عند مقياس ١٫٠: سطرين اسم (`captionInk` ١٢×١٫٤٠×٢ = ٣٣٫٦)
-  /// + العدد (`overline` ١١×١٫٣٠ = ١٤٫٣). **المجموع ٤٧٫٩.**
-  static const double _textPart = 47.9;
+  /// + العدد (`overline` ١١×١٫٣٠ = ١٤٫٣). المجموع الحسابي ٤٧٫٩، والرقم هنا
+  /// **٤٩** لأن فلاتر بيقرّب ارتفاع السطر لأعلى وقت التشكيل.
+  static const double _textPart = 49;
 
   /// الارتفاع الوحيد للصف — **والـ skeleton بيقراه من هنا**.
   ///
@@ -130,77 +142,78 @@ class _CategoryItem extends StatelessWidget {
     return Semantics(
       button: true,
       selected: isSelected,
-      child: InkWell(
+      child: AppSurfaceWidget(
         onTap: onTap,
-        borderRadius: AppRadius.rS,
-        child: SizedBox(
-          width: HomeCategoriesWidget.itemWidth.w,
-          child: Column(
-            children: [
-              AnimatedContainer(
-                duration: AppMotion.base,
-                curve: AppMotion.standard,
-                height: HomeCategoriesWidget.plateSize.r,
-                width: HomeCategoriesWidget.plateSize.r,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  // **قرص محدّب مش خرم.**
-                  //
-                  // الطبق المسطّح بيقرا كفراغ في الصفحة، وخمس دواير مسطّحة
-                  // ورا بعض بتقرا كصف عناصر نائبة. التدرّج المضوّي من فوق
-                  // بيخليها تقرا كأجسام، والفرق ده هو الفرق بين «صف تصنيفات»
-                  // و«placeholder».
-                  gradient: isSelected
-                      ? AppGradients.plateSelected
-                      : AppGradients.plate,
-                  shape: BoxShape.circle,
-                  border: isSelected
-                      ? Border.all(
-                          color: AppSemanticColors.accent,
-                          width: 2.r,
-                        )
-                      : null,
-                ),
-                child: Icon(
-                  _iconFor(category.name),
-                  size: HomeCategoriesWidget.iconSize.r,
-                  // **خضرا — لون البراند.**
-                  //
-                  // كانت رمادية بحجة إن ٦ أيقونات خضرا بتخفّف قيمة الأخضر في
-                  // الهوم. الحجة دي اتراجعنا عنها: الرمادي خلّى الصف يقرا
-                  // **معطّل**. والأخضر هنا مش بيزاحم حاجة — البؤرة الحقيقية
-                  // في الرئيسية شريط غامق بيكسب على أي أيقونة بالحجم واللون.
-                  color: AppSemanticColors.accent,
+        width: HomeCategoriesWidget.itemWidth.w,
+        // **غاطس مش مرفوع.** ده صف كنترولات فوق صف محتوى — لو اتساوى مع
+        // كروت المحلات في السطح والظل، الاتنين بيتنافسوا والعين بتتوه.
+        level: AppElevation.sunken,
+        color: isSelected ? AppSemanticColors.accentSoft : null,
+        radius: AppRadius.m,
+        padding: EdgeInsetsDirectional.all(
+          HomeCategoriesWidget.cardPadding.r,
+        ),
+        border: isSelected
+            ? Border.all(color: AppSemanticColors.accent, width: 2.r)
+            : null,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AnimatedContainer(
+              duration: AppMotion.base,
+              curve: AppMotion.standard,
+              height: HomeCategoriesWidget.plateSize.r,
+              width: HomeCategoriesWidget.plateSize.r,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                // **قرص محدّب مش خرم.**
+                //
+                // الطبق المسطّح بيقرا كفراغ في الكارت. التدرّج المضوّي من
+                // فوق بيخليه يقرا كجسم، والفرق ده هو الفرق بين «أيقونة
+                // تصنيف» و«مربع صورة ما حمّلتش».
+                gradient: isSelected
+                    ? AppGradients.plateSelected
+                    : AppGradients.plate,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                _iconFor(category.name),
+                size: HomeCategoriesWidget.iconSize.r,
+                // **خضرا — لون البراند.**
+                //
+                // كانت رمادية بحجة إن ٦ أيقونات خضرا بتخفّف قيمة الأخضر في
+                // الهوم. الحجة دي اتراجعنا عنها: الرمادي خلّى الصف يقرا
+                // **معطّل**. والأخضر هنا مش بيزاحم حاجة — البؤرة الحقيقية
+                // في الرئيسية شريط غامق بيكسب على أي أيقونة بالحجم واللون.
+                color: AppSemanticColors.accent,
+              ),
+            ),
+            verticalSpace(AppSpacing.s8),
+            // `Expanded` عشان العدد يقعد على نفس الخط في كل الكروت. من
+            // غيره الاسم اللي سطر واحد بيرفع عدده فوق عن اللي سطرين، والصف
+            // بيقرا مايل.
+            Expanded(
+              child: Text(
+                category.name,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: isSelected
+                    ? AppTextStyles.captionInk.copyWith(
+                        fontWeight: FontWeight.w600,
+                      )
+                    : AppTextStyles.captionInk,
+              ),
+            ),
+            if (category.servicesCount > 0)
+              Text(
+                '${AppFormat.digits(category.servicesCount)} خدمة',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyles.overline.copyWith(
+                  color: AppSemanticColors.textSecondary,
                 ),
               ),
-              verticalSpace(AppSpacing.s8),
-              // `Expanded` عشان العدد يقعد على نفس الخط في كل العناصر. من
-              // غيره الاسم اللي سطر واحد بيرفع عدده فوق عن اللي سطرين، والصف
-              // بيقرا مايل.
-              Expanded(
-                child: Text(
-                  category.name,
-                  maxLines: 2,
-                  textAlign: TextAlign.center,
-                  overflow: TextOverflow.ellipsis,
-                  style: isSelected
-                      ? AppTextStyles.captionInk.copyWith(
-                          fontWeight: FontWeight.w600,
-                        )
-                      : AppTextStyles.captionInk,
-                ),
-              ),
-              if (category.servicesCount > 0)
-                Text(
-                  '${AppFormat.digits(category.servicesCount)} خدمة',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.overline.copyWith(
-                    color: AppSemanticColors.textSecondary,
-                  ),
-                ),
-            ],
-          ),
+          ],
         ),
       ),
     );
@@ -233,22 +246,30 @@ class _CategorySkeleton extends StatelessWidget {
       // موجة واحدة للعنصر كله — اللي جواها `animate: false`، من غير كده كل
       // مستطيل بيعمل موجته لوحده والنتيجة وميض عشوائي.
       child: SkeletonGroupWidget(
-        child: Column(
-          children: [
-            // دايرة زي الطبق الحقيقي — الاستدارة نص القطر.
-            SkeletonBoxWidget(
-              width: HomeCategoriesWidget.plateSize,
-              height: HomeCategoriesWidget.plateSize,
-              radius: HomeCategoriesWidget.plateSize / 2,
-              animate: false,
-            ),
-            verticalSpace(AppSpacing.s8),
-            const SkeletonBoxWidget(width: 64, height: 10, animate: false),
-            verticalSpace(AppSpacing.s4),
-            const SkeletonBoxWidget(width: 44, height: 10, animate: false),
-            verticalSpace(AppSpacing.s8),
-            const SkeletonBoxWidget(width: 36, height: 8, animate: false),
-          ],
+        // نفس حشوة الكارت الحقيقي — من غيرها الـ skeleton بيبدأ من الحافة
+        // والصف بينطّ لما الداتا تيجي.
+        child: Padding(
+          padding: EdgeInsetsDirectional.all(
+            HomeCategoriesWidget.cardPadding.r,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // دايرة زي الطبق الحقيقي — الاستدارة نص القطر.
+              SkeletonBoxWidget(
+                width: HomeCategoriesWidget.plateSize,
+                height: HomeCategoriesWidget.plateSize,
+                radius: HomeCategoriesWidget.plateSize / 2,
+                animate: false,
+              ),
+              verticalSpace(AppSpacing.s8),
+              const SkeletonBoxWidget(width: 78, height: 10, animate: false),
+              verticalSpace(AppSpacing.s4),
+              const SkeletonBoxWidget(width: 52, height: 10, animate: false),
+              verticalSpace(AppSpacing.s8),
+              const SkeletonBoxWidget(width: 40, height: 8, animate: false),
+            ],
+          ),
         ),
       ),
     );
