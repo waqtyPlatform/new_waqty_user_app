@@ -77,16 +77,19 @@ class MockWaitlist {
       return <WaitlistUiModel>[
         _offered(now),
         _reviewing(now),
+        _changeRequested(now),
         _pending(now),
         _booked(now),
         _expired(now),
+        _rejectedByBranch(now),
+        _noSuitableTime(now),
       ];
     }
 
     // بنشيل اللي حجزه المؤقت خلص — نفس اللي `listForUser` بيعمله في
     // السيرفر (بيعمل expiry كسول على كل قراءة).
     return _entries
-        .map((e) => e.status == WaitlistStatus.offered && !e.isHoldActive(now)
+        .map((e) => e.status == WaitlistStatus.awaitingResponse && !e.isHoldActive(now)
             ? _asExpired(e)
             : e)
         .toList();
@@ -123,7 +126,7 @@ class MockWaitlist {
 
     final entry = WaitlistUiModel(
       uuid: 'wl-${_nextId++}',
-      status: WaitlistStatus.pending,
+      status: WaitlistStatus.waiting,
       providerName: provider.name,
       branchName: branch?.name ?? '',
       serviceName: service.name,
@@ -147,7 +150,7 @@ class MockWaitlist {
   /// عرض شغّال بعدّاد بينزل — ده اللي السيناريو معمول عشانه.
   static WaitlistUiModel _offered(DateTime now) => WaitlistUiModel(
     uuid: 'wl-offered',
-    status: WaitlistStatus.offered,
+    status: WaitlistStatus.awaitingResponse,
     providerName: 'صالون كابتن',
     branchName: 'فرع المعادي',
     serviceName: 'قص شعر',
@@ -161,7 +164,7 @@ class MockWaitlist {
 
   static WaitlistUiModel _expired(DateTime now) => WaitlistUiModel(
     uuid: 'wl-expired',
-    status: WaitlistStatus.expired,
+    status: WaitlistStatus.responseExpired,
     providerName: 'صالون كابتن',
     branchName: 'فرع المعادي',
     serviceName: 'قص شعر',
@@ -177,7 +180,7 @@ class MockWaitlist {
   /// بتوعد بميعاد محجوز وهو لسه ما اتحجزش لحد.
   static WaitlistUiModel _reviewing(DateTime now) => WaitlistUiModel(
     uuid: 'wl-reviewing',
-    status: WaitlistStatus.reviewing,
+    status: WaitlistStatus.underReview,
     providerName: 'صالون كابتن',
     branchName: 'فرع المعادي',
     serviceName: 'قص شعر',
@@ -187,10 +190,48 @@ class MockWaitlist {
     position: 2,
   );
 
+  /// العميل رد إن الميعاد مش مناسب — رجع للطابور مستني عرض تاني.
+  ///
+  /// v2 ضاف `POST /user/waitlist/{uuid}/request-change`، والسيرفر بيعامل
+  /// الحالة دي زي `waiting` بالظبط: بيسمح بـ`review` و`offer` عليها.
+  static WaitlistUiModel _changeRequested(DateTime now) => WaitlistUiModel(
+    uuid: 'wl-change-requested',
+    status: WaitlistStatus.changeRequested,
+    providerName: 'صالون كابتن',
+    branchName: 'فرع المعادي',
+    serviceName: 'حلاقة ذقن',
+    employeeName: 'أحمد محمود',
+    preferredAt: DateTime(now.year, now.month, now.day + 1, 16),
+    position: 3,
+  );
+
+  /// الفرع اعتذر عن الطلب — نهاية.
+  static WaitlistUiModel _rejectedByBranch(DateTime now) => WaitlistUiModel(
+    uuid: 'wl-rejected',
+    status: WaitlistStatus.rejectedByBranch,
+    providerName: 'استوديو جمال',
+    branchName: 'الفرع الرئيسي',
+    serviceName: 'بروتين',
+    preferredAt: DateTime(now.year, now.month, now.day - 1, 15),
+    position: 1,
+  );
+
+  /// الفرع عرض `MAX_OFFERS` مرة ومفيش واحد ناسب — نهاية محايدة.
+  static WaitlistUiModel _noSuitableTime(DateTime now) => WaitlistUiModel(
+    uuid: 'wl-no-suitable',
+    status: WaitlistStatus.noSuitableTime,
+    providerName: 'كوافير نور',
+    branchName: 'الفرع الرئيسي',
+    serviceName: 'سشوار',
+    employeeName: 'سارة عادل',
+    preferredAt: DateTime(now.year, now.month, now.day - 3, 12),
+    position: 2,
+  );
+
   /// اتحوّل لحجز فعلي — الإدخال خلص بنتيجة.
   static WaitlistUiModel _booked(DateTime now) => WaitlistUiModel(
     uuid: 'wl-booked',
-    status: WaitlistStatus.booked,
+    status: WaitlistStatus.converted,
     providerName: 'كوافير نور',
     branchName: 'الفرع الرئيسي',
     serviceName: 'صبغة',
@@ -201,7 +242,7 @@ class MockWaitlist {
 
   static WaitlistUiModel _pending(DateTime now) => WaitlistUiModel(
     uuid: 'wl-pending',
-    status: WaitlistStatus.pending,
+    status: WaitlistStatus.waiting,
     providerName: 'استوديو جمال',
     branchName: 'الفرع الرئيسي',
     serviceName: 'حمام كريم',
@@ -211,7 +252,7 @@ class MockWaitlist {
 
   static WaitlistUiModel _asExpired(WaitlistUiModel entry) => WaitlistUiModel(
     uuid: entry.uuid,
-    status: WaitlistStatus.expired,
+    status: WaitlistStatus.responseExpired,
     providerName: entry.providerName,
     branchName: entry.branchName,
     serviceName: entry.serviceName,

@@ -38,7 +38,7 @@ class WaitlistCardWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isOffered = entry.status == WaitlistStatus.offered;
+    final isOffered = entry.status == WaitlistStatus.awaitingResponse;
     final isHoldActive = entry.isHoldActive(now);
 
     return AppSurfaceWidget(

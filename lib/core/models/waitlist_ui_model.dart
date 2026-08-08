@@ -3,40 +3,71 @@ import 'package:waqty_user_application/core/utils/json_parse.dart';
 
 /// حالة إدخال في قائمة الانتظار.
 ///
-/// الأسماء من `BookingWaitlistEntry` في السيرفر بالحرف.
+/// **القايمة دي مطابقة لـ `BookingWaitlistEntry::STATUSES` بالظبط** — لا
+/// زيادة ولا نقصان، نفس قاعدة [BookingStatus]. الأسماء منقولة بالحرف.
+///
+/// ## الأسامي دي اتغيّرت كلها في waitlist v2
+///
+/// migration `2026_08_08_120000_upgrade_booking_waitlist_to_v2` غيّر
+/// **قيم النصوص نفسها**: `pending` بقى `waiting`، و`offered` بقى
+/// `awaiting_customer_response`، و`booked` بقى `converted`. الثوابت
+/// القديمة لسه في السيرفر بس كـ aliases بتشاور على القيم الجديدة —
+/// و`BookingWaitlistResource` بيبعت `$this->status` **خام** من غير أي
+/// تحويل.
+///
+/// يعني كل حالة تحت كانت بتقع على `pending` في الأبلكيشن، بما فيها
+/// العرض اللي عليه عدّاد شغّال والإدخال اللي بقى حجز مؤكد.
 enum WaitlistStatus {
-  /// مستني — الفرع لسه ما عرضش حاجة.
-  pending,
+  /// `waiting` — في الطابور، الفرع لسه ما عرضش حاجة.
+  waiting,
 
-  /// **ميعاد فضي والفرع بيراجع مين ياخده.**
+  /// `under_review` — **ميعاد فضي والفرع بيراجع مين ياخده.**
   ///
-  /// `BookingWaitlistService::markAvailabilityForReleasedBooking()` بيقلب
-  /// كل الإدخالات المطابقة لـ`reviewing` وبيحط `availability_detected_at`
-  /// أول ما حجز يتلغي. يعني دي **مش** حالة إدارية داخلية — دي اللحظة
-  /// اللي طلب العميل بقى فيها قريب من الحقيقة.
+  /// `markAvailabilityForReleasedBooking()` بيقلب الإدخالات المطابقة
+  /// عليها وبيحط `availability_detected_at` أول ما حجز يتلغي. مش حالة
+  /// إدارية داخلية — دي اللحظة اللي طلب العميل بقى فيها قريب من الحقيقة.
+  underReview,
+
+  /// `awaiting_customer_response` — الفرع عرض ميعاد وحاجزه، والدور على
+  /// العميل يرد.
+  awaitingResponse,
+
+  /// `change_requested` — **العميل رد وقال الميعاد ده مش مناسب.**
   ///
-  /// كانت بتقع على [pending] في `fromApi`، فالعميل كان بيشوف نفس الجملة
-  /// («لما ميعاد يفضى...») **بعد** ما الميعاد يفضى فعلاً.
-  reviewing,
+  /// حالة جديدة في v2 ومالهاش مقابل قديم. العرض اتقفل والإدخال رجع
+  /// للطابور مستني عرض تاني — فهي **شغّالة** مش نهاية. السيرفر بيعاملها
+  /// كده: بيسمح بـ`review` و`offer` و`suggest` عليها زي `waiting`.
+  changeRequested,
 
-  /// الفرع عرض ميعاد وحاجزه **٥ دقايق**.
-  offered,
+  /// `converted` — اتحوّل لحجز فعلي وموجود في «مواعيدي».
+  converted,
 
-  /// الحجز الـ٥ دقايق عدّى.
-  expired,
-
-  /// الفرع قبل نيابة عن العميل — لسه ما اتحوّلش لحجز.
-  accepted,
-
-  /// **اتحوّل لحجز فعلي وموجود في «مواعيدي».**
+  /// `cancelled_by_customer` — العميل خرج من القايمة بنفسه.
   ///
-  /// ⚠ كانت بتقع على [pending] كمان — يعني إدخال بقى حجز مؤكد كان
-  /// بيتعرض للعميل **«في قايمة الانتظار»**. أسوأ حالة في الجدول ده:
-  /// الأبلكيشن بيقول لسه مستني وهو خلاص واخد ميعاده.
-  booked,
+  /// ⚠ **منفصلة عن [rejectedByBranch] عن قصد.** الاتنين كانوا `cancelled`
+  /// واحدة، وده كان مقبول لما السيرفر مكانش بيفرّق. بقى بيفرّق، و«إنت
+  /// خرجت» و«الفرع ماقدرش يستوعبك» رسالتين مختلفتين تمامًا.
+  cancelledByCustomer,
 
-  /// العميل أو الفرع لغاه.
-  cancelled,
+  /// `rejected_by_branch` — الفرع رفض الطلب.
+  rejectedByBranch,
+
+  /// `response_expired` — العرض عدّى من غير رد.
+  ///
+  /// **مش نهاية.** السيرفر بيحطها جنب `waiting` في كل قايمة بيسمح فيها
+  /// بعرض جديد — يعني الفرع يقدر يعرض تاني على نفس الإدخال.
+  responseExpired,
+
+  /// `no_suitable_time` — الفرع عرض `MAX_OFFERS` مرة ومفيش واحد ناسب.
+  ///
+  /// نهاية، بس نهاية **محايدة**: محدش رفض حد، الأوقات هي اللي ما اتقابلتش.
+  noSuitableTime,
+
+  /// `request_period_expired` — اليوم اللي العميل كان مستنيه عدّى.
+  ///
+  /// بيتحط بـsweep مجدول (`ExpireWaitlistHolds`) على كل إدخال لسه شغّال
+  /// بعد ما فترة الطلب تفوت.
+  requestPeriodExpired,
 }
 
 extension WaitlistStatusLabel on WaitlistStatus {
@@ -49,28 +80,41 @@ extension WaitlistStatusLabel on WaitlistStatus {
   ///
   /// ذكر «قايمة الانتظار» بالاسم بيربط الكارت بالفعل اللي هو عمله.
   String get label => switch (this) {
-    WaitlistStatus.pending => 'في قايمة الانتظار',
+    WaitlistStatus.waiting => 'في قايمة الانتظار',
     // **مابيقولش «دورك جه»** — الفرع بيراجع مين ياخده، وممكن مايبقاش
     // إنت. الوعد بميعاد لسه ماتحجزش أسوأ من الانتظار نفسه.
-    WaitlistStatus.reviewing => 'فيه ميعاد فضي — الفرع بيراجع',
-    WaitlistStatus.offered => 'ميعاد فضي من قايمة الانتظار',
-    WaitlistStatus.expired => 'الميعاد راح',
-    WaitlistStatus.accepted => 'الفرع وافق',
-    WaitlistStatus.booked => 'اتحوّل لحجز',
-    WaitlistStatus.cancelled => 'ملغي',
+    WaitlistStatus.underReview => 'فيه ميعاد فضي — الفرع بيراجع',
+    WaitlistStatus.awaitingResponse => 'ميعاد فضي من قايمة الانتظار',
+    WaitlistStatus.changeRequested => 'طلبت ميعاد تاني',
+    WaitlistStatus.converted => 'اتحوّل لحجز',
+    WaitlistStatus.cancelledByCustomer => 'خرجت من القايمة',
+    WaitlistStatus.rejectedByBranch => 'الفرع اعتذر',
+    WaitlistStatus.responseExpired => 'الميعاد راح',
+    WaitlistStatus.noSuitableTime => 'مفيش ميعاد ناسب',
+    WaitlistStatus.requestPeriodExpired => 'اليوم عدّى',
   };
 
-  bool get isLive =>
-      this == WaitlistStatus.pending ||
-      this == WaitlistStatus.reviewing ||
-      this == WaitlistStatus.offered;
-
-  /// خلص بنتيجة — سواء العميل خد الميعاد ولا لأ.
+  /// لسه في القايمة وممكن ييجي عرض.
   ///
-  /// الفرق بينها وبين عكس [isLive]: `expired` مش نهاية، العميل ممكن
-  /// يدخل القائمة تاني ودي الرسالة اللي بتتقاله.
+  /// `changeRequested` جوّاها لأن السيرفر بيعاملها كده حرفيًا — بيسمح
+  /// بـ`review` و`offer` و`suggest` عليها زي `waiting` بالظبط.
+  bool get isLive =>
+      this == WaitlistStatus.waiting ||
+      this == WaitlistStatus.underReview ||
+      this == WaitlistStatus.awaitingResponse ||
+      this == WaitlistStatus.changeRequested;
+
+  /// خلص بنتيجة، وماينفعش يرجع منها.
+  ///
+  /// ⚠ **مش عكس [isLive].** `responseExpired` مش في الاتنين: العرض راح،
+  /// بس السيرفر لسه بيسمح بعرض تاني على نفس الإدخال — فهي مش نهاية،
+  /// وفي نفس الوقت مفيش حاجة شغّالة دلوقتي.
   bool get isSettled =>
-      this == WaitlistStatus.booked || this == WaitlistStatus.cancelled;
+      this == WaitlistStatus.converted ||
+      this == WaitlistStatus.cancelledByCustomer ||
+      this == WaitlistStatus.rejectedByBranch ||
+      this == WaitlistStatus.noSuitableTime ||
+      this == WaitlistStatus.requestPeriodExpired;
 
   /// ينفع يخرج من القائمة دلوقتي؟ — **مستني بس**.
   ///
@@ -81,21 +125,50 @@ extension WaitlistStatusLabel on WaitlistStatus {
   ///
   /// وقت العرض الشغّال الفرع بيتصل بيه — الخروج مش نية معقولة في اللحظة
   /// دي أصلاً. الإخفاء أرخص وأأمن من sheet تأكيد لطريق مالوش لازمة.
-  /// ⚠ **`reviewing` بيسمح بالخروج و`offered` لأ** — والفرق مقصود.
-  /// في `reviewing` الفرع بيراجع ورقة، مفيش حد بيتصل ومفيش عدّاد شغّال،
-  /// فالخروج قرار عادي. في `offered` فيه ميعاد **محجوز باسمك** والفرع
-  /// بيتصل — الخروج ساعتها بيرمي الميعاد لحد تاني من غير رجعة.
+  /// ⚠ **`underReview` بيسمح بالخروج و`awaitingResponse` لأ** — والفرق
+  /// مقصود. في `underReview` الفرع بيراجع ورقة، مفيش عدّاد شغّال، فالخروج
+  /// قرار عادي. في `awaitingResponse` فيه ميعاد **محجوز باسمك** والدور
+  /// عليك ترد — الخروج ساعتها بيرمي الميعاد لحد تاني من غير رجعة.
+  ///
+  /// `responseExpired` جوّاها: العرض راح ومفيش حاجة تتحرق، والعميل اللي
+  /// مابقاش عايز يستنى تاني لازم يلاقي مخرج.
   bool get canLeaveQueue =>
-      this == WaitlistStatus.pending || this == WaitlistStatus.reviewing;
+      this == WaitlistStatus.waiting ||
+      this == WaitlistStatus.underReview ||
+      this == WaitlistStatus.changeRequested ||
+      this == WaitlistStatus.responseExpired;
 
+  /// ⚠ **الأسامي القديمة متسيبة عن قصد.**
+  ///
+  /// `pending`/`offered`/`booked`/`rejected` مابقوش بيتكتبوا من السيرفر
+  /// خالص — الـ migration حوّل الصفوف والخدمة بتكتب القيم الجديدة. بس
+  /// صف قديم نجا من الترحيل، أو رد متخزّن في كاش، لازم يفضل مقروء.
+  /// السطور دي بتتشال لما نتأكد إن مفيش قيم قديمة في أي داتابيز شغّالة.
+  ///
+  /// و`_` بيقع على [waiting] مش على حاجة تانية: أي حالة مش معروفة معناها
+  /// «إحنا مش عارفين وصلت لفين»، وأقل ضرر إننا نقول إنه في الطابور بدل
+  /// ما نقول إنه خلص أو إن فيه عرض مستنيه.
   static WaitlistStatus fromApi(String? value) => switch (value) {
-    'reviewing' => WaitlistStatus.reviewing,
-    'offered' => WaitlistStatus.offered,
-    'expired' => WaitlistStatus.expired,
-    'accepted' => WaitlistStatus.accepted,
-    'booked' => WaitlistStatus.booked,
-    'cancelled' || 'rejected' => WaitlistStatus.cancelled,
-    _ => WaitlistStatus.pending,
+    // v2 — القيم اللي السيرفر بيبعتها فعلاً.
+    'waiting' => WaitlistStatus.waiting,
+    'under_review' => WaitlistStatus.underReview,
+    'awaiting_customer_response' => WaitlistStatus.awaitingResponse,
+    'change_requested' => WaitlistStatus.changeRequested,
+    'converted' => WaitlistStatus.converted,
+    'cancelled_by_customer' => WaitlistStatus.cancelledByCustomer,
+    'rejected_by_branch' => WaitlistStatus.rejectedByBranch,
+    'response_expired' => WaitlistStatus.responseExpired,
+    'no_suitable_time' => WaitlistStatus.noSuitableTime,
+    'request_period_expired' => WaitlistStatus.requestPeriodExpired,
+    // v1 — صفوف ما اتحوّلتش.
+    'pending' => WaitlistStatus.waiting,
+    'reviewing' => WaitlistStatus.underReview,
+    'offered' => WaitlistStatus.awaitingResponse,
+    'booked' || 'accepted' => WaitlistStatus.converted,
+    'rejected' => WaitlistStatus.rejectedByBranch,
+    'cancelled' => WaitlistStatus.cancelledByCustomer,
+    'expired' => WaitlistStatus.responseExpired,
+    _ => WaitlistStatus.waiting,
   };
 }
 
@@ -224,21 +297,38 @@ class WaitlistUiModel {
     //
     // نفس نبرة `offered` تحتها بالظبط — الفرع هو اللي بيتحرّك، وده اللي
     // بيحصل فعلاً. ترجع أول ما حاجة تقرا `app_device_tokens`.
-    WaitlistStatus.pending =>
+    WaitlistStatus.waiting =>
       'لما ميعاد يفضى في اليوم ده، الفرع هيتصل بيك',
     // **مافيش وعد هنا.** الميعاد فضي فعلاً، بس القائمة فيها ناس تانية
     // والفرع هو اللي بيرتّب. الجملة بتقول اللي حصل وبتوقف — أي «دورك
     // قرّب» هنا بتبقى وعد إحنا مش ضامنينه.
-    WaitlistStatus.reviewing =>
+    WaitlistStatus.underReview =>
       'فضي ميعاد والفرع بيشوف مين ياخده. لو اختارك هيتصل بيك',
-    // **الصدق هنا مقصود.** العميل مايقدرش يقبل بنفسه — مفيش endpoint.
-    WaitlistStatus.offered =>
+    // ⚠ **الجملة دي بقت ناقصة، مش غلط.**
+    //
+    // كانت مكتوبة عشان العميل **مايقدرش** يقبل بنفسه: `accept` كان تحت
+    // `/provider/` بس. waitlist v2 ضاف `POST /user/waitlist/{uuid}/accept`
+    // و`request-change` و`cancel` — يعني الفعل بقى في إيده.
+    //
+    // الجملة متسيبة صادقة (الفرع فعلاً بيتصل) لحد ما الأزرار نفسها
+    // تتبني. تغييرها دلوقتي بيوعد بزرار مش موجود على الشاشة، وده أوحش
+    // من إنها ناقصة. متسجّلة في اللي بعده مباشرة.
+    WaitlistStatus.awaitingResponse =>
       'الفرع هيتصل بيك يأكّد — خلّي التليفون معاك. '
           'لو الوقت خلص، الميعاد هيروح لحد تاني',
-    WaitlistStatus.expired =>
-      'الميعاد اترجّع للناس التانية. تقدر تدخل القائمة تاني',
-    WaitlistStatus.accepted => 'الفرع وافق — بيحوّله لحجز دلوقتي',
-    WaitlistStatus.booked => 'الحجز بقى مؤكد — هتلاقيه في مواعيدك',
-    WaitlistStatus.cancelled => 'مش في القائمة دلوقتي',
+    WaitlistStatus.changeRequested =>
+      'قلت إن الميعاد ده مش مناسب. الفرع هيدوّر على واحد تاني',
+    WaitlistStatus.responseExpired =>
+      'الميعاد اترجّع للناس التانية. لسه في القايمة وممكن ييجي عرض تاني',
+    WaitlistStatus.converted => 'الحجز بقى مؤكد — هتلاقيه في مواعيدك',
+    WaitlistStatus.cancelledByCustomer => 'خرجت من القايمة دي',
+    // **مش «مرفوض».** الرفض بيتقري كأن العميل عمل حاجة غلط.
+    WaitlistStatus.rejectedByBranch =>
+      'الفرع ما قدرش يستوعب الطلب ده',
+    // نهاية محايدة — محدش رفض حد، الأوقات هي اللي ما اتقابلتش.
+    WaitlistStatus.noSuitableTime =>
+      'جرّبنا كذا ميعاد ومفيش واحد ناسب. تقدر تحجز يوم تاني',
+    WaitlistStatus.requestPeriodExpired =>
+      'اليوم اللي كنت مستنيه عدّى. تقدر تدخل قايمة انتظار ليوم تاني',
   };
 }

@@ -38,7 +38,7 @@ void main() {
       final now = DateTime(2026, 8, 2, 14);
       final entry = MockWaitlist.forUser(now).first;
 
-      expect(entry.status, WaitlistStatus.offered);
+      expect(entry.status, WaitlistStatus.awaitingResponse);
       expect(MockWaitlist.holdMinutes, 5);
       expect(entry.remainingSeconds(now), 5 * 60);
       expect(entry.isHoldActive(now), isTrue);
@@ -90,7 +90,7 @@ void main() {
     test('نص pending مابيوعدش بإشعار', () {
       final pending = WaitlistUiModel(
         uuid: 'wl-1',
-        status: WaitlistStatus.pending,
+        status: WaitlistStatus.waiting,
         providerName: 'صالون كابتن',
         branchName: 'فرع المعادي',
         serviceName: 'قص شعر',
@@ -106,7 +106,7 @@ void main() {
       MockConfig.scenario = MockScenario.waitlistExpired;
       final entry = MockWaitlist.forUser(DateTime.now()).first;
 
-      expect(entry.status, WaitlistStatus.expired);
+      expect(entry.status, WaitlistStatus.responseExpired);
       expect(entry.isHoldActive(DateTime.now()), isFalse);
       expect(entry.status.isLive, isFalse);
     });
@@ -119,7 +119,7 @@ void main() {
         preferredAt: DateTime(2026, 8, 10, 18),
       );
 
-      expect(entry.status, WaitlistStatus.pending);
+      expect(entry.status, WaitlistStatus.waiting);
       expect(entry.holdExpiresAt, isNull);
       expect(MockWaitlist.forUser(DateTime.now()), contains(entry));
 
@@ -209,10 +209,123 @@ void main() {
     /// الخروج كان ظاهر وقت العدّاد كمان — دوسة غلط بتدّي ميعادك لحد تاني
     /// وإنت مستني الفرع يتصل.
     test('الخروج من القائمة مقفول وقت العرض الشغّال', () {
-      expect(WaitlistStatus.pending.canLeaveQueue, isTrue);
-      expect(WaitlistStatus.offered.canLeaveQueue, isFalse);
+      expect(WaitlistStatus.waiting.canLeaveQueue, isTrue);
+      expect(WaitlistStatus.awaitingResponse.canLeaveQueue, isFalse);
       // الاتنين لسه `isLive` — الفرق مقصود.
-      expect(WaitlistStatus.offered.isLive, isTrue);
+      expect(WaitlistStatus.awaitingResponse.isLive, isTrue);
+    });
+  });
+
+  /// **waitlist v2 غيّر قيم النصوص نفسها.**
+  ///
+  /// `2026_08_08_120000_upgrade_booking_waitlist_to_v2` نقل `pending` لـ
+  /// `waiting` و`offered` لـ`awaiting_customer_response` و`booked` لـ
+  /// `converted`، وضاف ٤ حالات جديدة. و`BookingWaitlistResource` بيبعت
+  /// `$this->status` خام.
+  ///
+  /// قبل الإصلاح ده، **٨ من الـ١٠ كانوا بيقعوا على «في قايمة الانتظار»** —
+  /// بما فيهم العرض اللي عليه عدّاد شغّال والإدخال اللي بقى حجز مؤكد.
+  group('waitlist v2 — قيم السيرفر', () {
+    /// نفس `BookingWaitlistEntry::STATUSES` بالترتيب.
+    const serverStatuses = <String, WaitlistStatus>{
+      'waiting': WaitlistStatus.waiting,
+      'under_review': WaitlistStatus.underReview,
+      'awaiting_customer_response': WaitlistStatus.awaitingResponse,
+      'change_requested': WaitlistStatus.changeRequested,
+      'converted': WaitlistStatus.converted,
+      'cancelled_by_customer': WaitlistStatus.cancelledByCustomer,
+      'rejected_by_branch': WaitlistStatus.rejectedByBranch,
+      'response_expired': WaitlistStatus.responseExpired,
+      'no_suitable_time': WaitlistStatus.noSuitableTime,
+      'request_period_expired': WaitlistStatus.requestPeriodExpired,
+    };
+
+    test('كل حالة في السيرفر ليها مقابل — ومفيش واحدة بتقع على waiting', () {
+      serverStatuses.forEach((wire, expected) {
+        expect(
+          WaitlistUiModel.fromJson(_entryJson(status: wire)).status,
+          expected,
+          reason: '«$wire» مابتتقرأش صح',
+        );
+      });
+    });
+
+    test('الأبلكيشن مطابق للسيرفر ١:١ — لا زيادة ولا نقصان', () {
+      // enum أكبر معناه حالة اخترعناها؛ أصغر معناه حالة هتقع على waiting.
+      expect(WaitlistStatus.values.length, serverStatuses.length);
+      expect(
+        serverStatuses.values.toSet().length,
+        WaitlistStatus.values.length,
+        reason: 'فيه قيمتين من السيرفر بيوصلوا لنفس الحالة',
+      );
+    });
+
+    test('العرض الشغّال مابيتقريش «في الانتظار»', () {
+      // أخطر واحدة: `awaiting_customer_response` معناه فيه ميعاد محجوز
+      // باسمك وعدّاد بينزل. لو وقع على waiting، العميل بيقرا «مستني»
+      // والميعاد بيروح وهو مش عارف إنه كان قدامه.
+      final parsed = WaitlistUiModel.fromJson(
+        _entryJson(status: 'awaiting_customer_response'),
+      );
+
+      expect(parsed.status, WaitlistStatus.awaitingResponse);
+      expect(parsed.status, isNot(WaitlistStatus.waiting));
+      expect(parsed.status.canLeaveQueue, isFalse);
+    });
+
+    test('الخروج من القايمة والنهايات متسقين مع السيرفر', () {
+      // `change_requested` شغّالة — السيرفر بيسمح بـoffer عليها زي waiting.
+      expect(WaitlistStatus.changeRequested.isLive, isTrue);
+      expect(WaitlistStatus.changeRequested.isSettled, isFalse);
+
+      // `response_expired` مش في الاتنين: العرض راح بس ممكن ييجي واحد تاني.
+      expect(WaitlistStatus.responseExpired.isLive, isFalse);
+      expect(WaitlistStatus.responseExpired.isSettled, isFalse);
+      expect(WaitlistStatus.responseExpired.canLeaveQueue, isTrue);
+
+      // التلاتة دول نهايات مايرجعش منها.
+      for (final ending in <WaitlistStatus>[
+        WaitlistStatus.converted,
+        WaitlistStatus.noSuitableTime,
+        WaitlistStatus.requestPeriodExpired,
+      ]) {
+        expect(ending.isSettled, isTrue, reason: '$ending المفروض نهاية');
+        expect(ending.canLeaveQueue, isFalse);
+      }
+    });
+
+    test('«خرجت» و«الفرع اعتذر» رسالتين مختلفتين', () {
+      // كانوا `cancelled` واحدة لما السيرفر مكانش بيفرّق. بقى بيفرّق.
+      expect(
+        WaitlistStatus.cancelledByCustomer.label,
+        isNot(WaitlistStatus.rejectedByBranch.label),
+      );
+    });
+
+    test('القيم القديمة لسه بتتقرا — صف ما اتحوّلش', () {
+      expect(
+        WaitlistUiModel.fromJson(_entryJson(status: 'pending')).status,
+        WaitlistStatus.waiting,
+      );
+      expect(
+        WaitlistUiModel.fromJson(_entryJson(status: 'offered')).status,
+        WaitlistStatus.awaitingResponse,
+      );
+      expect(
+        WaitlistUiModel.fromJson(_entryJson(status: 'booked')).status,
+        WaitlistStatus.converted,
+      );
+    });
+
+    test('حالة مش معروفة بتقع على waiting مش على نهاية', () {
+      // لو السيرفر ضاف حالة تالتة، أقل ضرر إننا نقول «في الطابور» بدل
+      // ما نقول «خلص» أو «فيه عرض مستنيك».
+      final parsed = WaitlistUiModel.fromJson(
+        _entryJson(status: 'some_future_status'),
+      );
+
+      expect(parsed.status, WaitlistStatus.waiting);
+      expect(parsed.status.isSettled, isFalse);
     });
   });
 
@@ -226,7 +339,7 @@ void main() {
 
       expect(
         WaitlistUiModel.fromJson(entry).status,
-        WaitlistStatus.reviewing,
+        WaitlistStatus.underReview,
       );
     });
 
@@ -234,22 +347,22 @@ void main() {
       // الإدخال بقى حجز مؤكد، والأبلكيشن كان بيقول «في قايمة الانتظار».
       final parsed = WaitlistUiModel.fromJson(_entryJson(status: 'booked'));
 
-      expect(parsed.status, WaitlistStatus.booked);
+      expect(parsed.status, WaitlistStatus.converted);
       expect(parsed.status.isLive, isFalse);
       expect(parsed.status.isSettled, isTrue);
-      expect(parsed.status.label, isNot(WaitlistStatus.pending.label));
+      expect(parsed.status.label, isNot(WaitlistStatus.waiting.label));
     });
 
     test('reviewing شغّالة وبيتقال فيها اللي حصل من غير وعد', () {
-      expect(WaitlistStatus.reviewing.isLive, isTrue);
-      expect(WaitlistStatus.reviewing.isSettled, isFalse);
+      expect(WaitlistStatus.underReview.isLive, isTrue);
+      expect(WaitlistStatus.underReview.isSettled, isFalse);
     });
 
     test('الخروج مسموح في reviewing ومقفول في offered', () {
       // في `reviewing` مفيش عدّاد ومفيش ميعاد محجوز باسمك — الخروج قرار
       // عادي. في `offered` الخروج بيرمي ميعاد محجوز لحد تاني.
-      expect(WaitlistStatus.reviewing.canLeaveQueue, isTrue);
-      expect(WaitlistStatus.offered.canLeaveQueue, isFalse);
+      expect(WaitlistStatus.underReview.canLeaveQueue, isTrue);
+      expect(WaitlistStatus.awaitingResponse.canLeaveQueue, isFalse);
     });
 
     test('كل حالة ليها لابل وشرح مختلفين', () {
@@ -279,8 +392,8 @@ void main() {
       MockConfig.scenario = MockScenario.waitlistHistory;
       final entries = MockWaitlist.forUser(DateTime.now());
 
-      expect(entries.any((e) => e.status == WaitlistStatus.reviewing), isTrue);
-      expect(entries.any((e) => e.status == WaitlistStatus.booked), isTrue);
+      expect(entries.any((e) => e.status == WaitlistStatus.underReview), isTrue);
+      expect(entries.any((e) => e.status == WaitlistStatus.converted), isTrue);
       expect(entries.any((e) => e.status.isLive), isTrue);
       expect(entries.any((e) => e.status.isSettled), isTrue);
     });
