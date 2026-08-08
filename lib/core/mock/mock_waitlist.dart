@@ -67,6 +67,21 @@ class MockWaitlist {
     if (scenario == MockScenario.waitlistExpired) {
       return <WaitlistUiModel>[_expired(now), ..._entries];
     }
+    if (scenario == MockScenario.waitlistReviewing) {
+      return <WaitlistUiModel>[_reviewing(now), ..._entries];
+    }
+    // القايمة الكاملة — كل حالة مرة واحدة. الشاشة المستقلة هي المكان
+    // الوحيد اللي بتتشاف فيه الحالات جنب بعض، والكارت في الرئيسية
+    // بيعرض الشغّال بس.
+    if (scenario == MockScenario.waitlistHistory) {
+      return <WaitlistUiModel>[
+        _offered(now),
+        _reviewing(now),
+        _pending(now),
+        _booked(now),
+        _expired(now),
+      ];
+    }
 
     // بنشيل اللي حجزه المؤقت خلص — نفس اللي `listForUser` بيعمله في
     // السيرفر (بيعمل expiry كسول على كل قراءة).
@@ -153,6 +168,45 @@ class MockWaitlist {
     employeeName: 'أحمد محمود',
     preferredAt: DateTime(now.year, now.month, now.day, 18),
     position: 1,
+  );
+
+  /// ميعاد فضي والفرع لسه بيرتّب مين ياخده.
+  ///
+  /// **مفيش عدّاد هنا بالقصد** — `availability_detected_at` بيتحط بس،
+  /// والحجز المؤقت مابيبدأش غير مع `offer()`. لو حطينا عدّاد، الشاشة
+  /// بتوعد بميعاد محجوز وهو لسه ما اتحجزش لحد.
+  static WaitlistUiModel _reviewing(DateTime now) => WaitlistUiModel(
+    uuid: 'wl-reviewing',
+    status: WaitlistStatus.reviewing,
+    providerName: 'صالون كابتن',
+    branchName: 'فرع المعادي',
+    serviceName: 'قص شعر',
+    employeeName: 'أحمد محمود',
+    preferredAt: DateTime(now.year, now.month, now.day, 18),
+    // **مش ١.** الترتيب هو السبب إن الحالة دي مش وعد: فيه واحد قدامه.
+    position: 2,
+  );
+
+  /// اتحوّل لحجز فعلي — الإدخال خلص بنتيجة.
+  static WaitlistUiModel _booked(DateTime now) => WaitlistUiModel(
+    uuid: 'wl-booked',
+    status: WaitlistStatus.booked,
+    providerName: 'كوافير نور',
+    branchName: 'الفرع الرئيسي',
+    serviceName: 'صبغة',
+    employeeName: 'سارة عادل',
+    preferredAt: DateTime(now.year, now.month, now.day - 2, 13),
+    position: 1,
+  );
+
+  static WaitlistUiModel _pending(DateTime now) => WaitlistUiModel(
+    uuid: 'wl-pending',
+    status: WaitlistStatus.pending,
+    providerName: 'استوديو جمال',
+    branchName: 'الفرع الرئيسي',
+    serviceName: 'حمام كريم',
+    preferredAt: DateTime(now.year, now.month, now.day + 3, 11),
+    position: 4,
   );
 
   static WaitlistUiModel _asExpired(WaitlistUiModel entry) => WaitlistUiModel(

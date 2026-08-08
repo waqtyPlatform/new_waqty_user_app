@@ -71,8 +71,18 @@ enum MockScenario {
   /// الميعاد راح وإحنا بنأكد — خطّاف الـ `:15`.
   slotLostAtConfirm,
 
+  /// ميعاد فضي والفرع بيراجع مين ياخده — قبل العرض بخطوة.
+  ///
+  /// الحالة دي اللي `markAvailabilityForReleasedBooking()` بيطلّعها أول
+  /// ما حجز يتلغي. الأبلكيشن كان بيقع بيها على `pending`، فالعميل كان
+  /// بيشوف «لما ميعاد يفضى» بعد ما الميعاد فضي.
+  waitlistReviewing,
+
   /// الفرع عرض ميعاد والحجز المؤقت ٥ دقايق شغّال.
   waitlistOffered,
+
+  /// كل حالات القائمة مرة واحدة — لشاشة قايمة الانتظار المستقلة.
+  waitlistHistory,
 
   /// الحجز المؤقت عدّى.
   waitlistExpired,
@@ -115,7 +125,9 @@ enum MockScenario {
     MockScenario.waitingNoEstimate => 'في الانتظار · من غير تقدير',
     MockScenario.inService => 'في الخدمة',
     MockScenario.slotLostAtConfirm => 'الميعاد راح وإحنا بنأكد',
+    MockScenario.waitlistReviewing => 'ميعاد فضي — الفرع بيراجع',
     MockScenario.waitlistOffered => 'عرض بعدّاد 5 دقايق',
+    MockScenario.waitlistHistory => 'قايمة الانتظار · كل الحالات',
     MockScenario.waitlistExpired => 'الحجز المؤقت عدّى',
     MockScenario.completedUnrated => 'مكتمل · من غير تقييم',
     MockScenario.completedPartiallyRated => 'مكتمل · تقييم جزئي',
@@ -148,7 +160,11 @@ enum MockScenario {
       'من غير رقم — الشاشة لسه بتطمّن ولا بقت فاضية؟ (قرار BE-17)',
     MockScenario.inService => 'محتاج يبقى فيه أي حاجة هنا أصلاً؟',
     MockScenario.slotLostAtConfirm => 'الفشل بيحس إنه غلطته ولا غلطة الأبلكيشن؟',
+    MockScenario.waitlistReviewing =>
+      '«فيه ميعاد بس مش مضمون ليك» — بتطمّن ولا بتوتّر؟',
     MockScenario.waitlistOffered => '5 دقايق كفاية؟ وبيحاولوا يقبلوا بنفسهم؟',
+    MockScenario.waitlistHistory =>
+      'العميل فاهم الفرق بين الحالات؟ وعارف اللي خلص من اللي شغّال؟',
     MockScenario.waitlistExpired => 'ضياع الميعاد مقبول ولا محبط؟',
     MockScenario.completedUnrated => 'فاهمين إن التقييم لكل خدمة؟',
     MockScenario.completedPartiallyRated => '«قيد المراجعة» بتطمّن ولا بتقلق؟',

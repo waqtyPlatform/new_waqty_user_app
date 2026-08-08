@@ -122,7 +122,9 @@ class MockBookings {
     // بيدوس على السيناريو ويشوف نفس الخمس حجوزات — فيفتكر إن المبدّل
     // مش شغال، وهو أصلاً كان بيفتكر كده.
     MockScenario.slotLostAtConfirm ||
+    MockScenario.waitlistReviewing ||
     MockScenario.waitlistOffered ||
+    MockScenario.waitlistHistory ||
     MockScenario.waitlistExpired => const <BookingUiModel>[],
     // النهايات وحالات النظام — الليستة الكاملة، عشان التبويب القادمة
     // مايبقاش فاضي وإحنا بنجرّب حاجة في تبويب تاني.

@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/core/models/waitlist_ui_model.dart';
 import 'package:waqty_user_application/core/utils/app_format.dart';
+import 'package:waqty_user_application/core/utils/app_radius.dart';
 import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
 import 'package:waqty_user_application/core/utils/app_spacing.dart';
 import 'package:waqty_user_application/core/utils/app_text_styles.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
 import 'package:waqty_user_application/core/widgets/app_surface_widget.dart';
+import 'package:waqty_user_application/core/widgets/directional_chevron_widget.dart';
 
 /// كارت إدخال في قائمة انتظار.
 ///
@@ -155,11 +157,20 @@ class WaitlistSectionWidget extends StatelessWidget {
   final DateTime now;
   final ValueChanged<String>? onRemove;
 
+  /// بيفتح شاشة قايمة الانتظار الكاملة. `null` = مايبانش السطر.
+  ///
+  /// القسم ده بيتعرض في مكانين بمعنيين مختلفين: في الرئيسية بيعرض
+  /// **العروض الشغّالة بس**، وفي تبويب الحجوزات بيعرض كل الإدخالات.
+  /// «عرض الكل» ليها معنى في التاني بس — في الرئيسية هي بتقول للعميل
+  /// إن فيه حاجة مخبّية وهو أصلاً واقف قدام العدّاد.
+  final VoidCallback? onSeeAll;
+
   const WaitlistSectionWidget({
     super.key,
     required this.entries,
     required this.now,
     this.onRemove,
+    this.onSeeAll,
   });
 
   @override
@@ -177,8 +188,47 @@ class WaitlistSectionWidget extends StatelessWidget {
           ),
           verticalSpace(AppSpacing.listRowGap),
         ],
+        if (onSeeAll != null) _SeeAllRow(onTap: onSeeAll!),
         verticalSpace(AppSpacing.s8),
       ],
+    );
+  }
+}
+
+/// «كل قوايم الانتظار ›» — بيوصّل للحالات اللي القسم ده مابيعرضهاش.
+class _SeeAllRow extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _SeeAllRow({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: AppRadius.rXs,
+      child: Padding(
+        // **`touchTarget` مش حشوة على العين.** السطر ده نص وسهم، وارتفاعه
+        // الطبيعي أقل من ٤٤ — والقاعدة `.r` مش `.h`.
+        padding: EdgeInsetsDirectional.symmetric(
+          horizontal: AppSpacing.s8.w,
+        ),
+        child: SizedBox(
+          height: AppSpacing.touchTarget.r,
+          child: Row(
+            children: [
+              Text(
+                'كل قوايم الانتظار',
+                style: AppTextStyles.captionAccent,
+              ),
+              horizontalSpace(AppSpacing.s4),
+              DirectionalChevronWidget(
+                size: 16,
+                color: AppSemanticColors.accent,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

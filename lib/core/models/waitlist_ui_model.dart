@@ -8,14 +8,32 @@ enum WaitlistStatus {
   /// مستني — الفرع لسه ما عرضش حاجة.
   pending,
 
+  /// **ميعاد فضي والفرع بيراجع مين ياخده.**
+  ///
+  /// `BookingWaitlistService::markAvailabilityForReleasedBooking()` بيقلب
+  /// كل الإدخالات المطابقة لـ`reviewing` وبيحط `availability_detected_at`
+  /// أول ما حجز يتلغي. يعني دي **مش** حالة إدارية داخلية — دي اللحظة
+  /// اللي طلب العميل بقى فيها قريب من الحقيقة.
+  ///
+  /// كانت بتقع على [pending] في `fromApi`، فالعميل كان بيشوف نفس الجملة
+  /// («لما ميعاد يفضى...») **بعد** ما الميعاد يفضى فعلاً.
+  reviewing,
+
   /// الفرع عرض ميعاد وحاجزه **٥ دقايق**.
   offered,
 
   /// الحجز الـ٥ دقايق عدّى.
   expired,
 
-  /// اتحوّل لحجز فعلي.
+  /// الفرع قبل نيابة عن العميل — لسه ما اتحوّلش لحجز.
   accepted,
+
+  /// **اتحوّل لحجز فعلي وموجود في «مواعيدي».**
+  ///
+  /// ⚠ كانت بتقع على [pending] كمان — يعني إدخال بقى حجز مؤكد كان
+  /// بيتعرض للعميل **«في قايمة الانتظار»**. أسوأ حالة في الجدول ده:
+  /// الأبلكيشن بيقول لسه مستني وهو خلاص واخد ميعاده.
+  booked,
 
   /// العميل أو الفرع لغاه.
   cancelled,
@@ -32,14 +50,27 @@ extension WaitlistStatusLabel on WaitlistStatus {
   /// ذكر «قايمة الانتظار» بالاسم بيربط الكارت بالفعل اللي هو عمله.
   String get label => switch (this) {
     WaitlistStatus.pending => 'في قايمة الانتظار',
+    // **مابيقولش «دورك جه»** — الفرع بيراجع مين ياخده، وممكن مايبقاش
+    // إنت. الوعد بميعاد لسه ماتحجزش أسوأ من الانتظار نفسه.
+    WaitlistStatus.reviewing => 'فيه ميعاد فضي — الفرع بيراجع',
     WaitlistStatus.offered => 'ميعاد فضي من قايمة الانتظار',
     WaitlistStatus.expired => 'الميعاد راح',
-    WaitlistStatus.accepted => 'اتحوّل لحجز',
+    WaitlistStatus.accepted => 'الفرع وافق',
+    WaitlistStatus.booked => 'اتحوّل لحجز',
     WaitlistStatus.cancelled => 'ملغي',
   };
 
   bool get isLive =>
-      this == WaitlistStatus.pending || this == WaitlistStatus.offered;
+      this == WaitlistStatus.pending ||
+      this == WaitlistStatus.reviewing ||
+      this == WaitlistStatus.offered;
+
+  /// خلص بنتيجة — سواء العميل خد الميعاد ولا لأ.
+  ///
+  /// الفرق بينها وبين عكس [isLive]: `expired` مش نهاية، العميل ممكن
+  /// يدخل القائمة تاني ودي الرسالة اللي بتتقاله.
+  bool get isSettled =>
+      this == WaitlistStatus.booked || this == WaitlistStatus.cancelled;
 
   /// ينفع يخرج من القائمة دلوقتي؟ — **مستني بس**.
   ///
@@ -50,12 +81,19 @@ extension WaitlistStatusLabel on WaitlistStatus {
   ///
   /// وقت العرض الشغّال الفرع بيتصل بيه — الخروج مش نية معقولة في اللحظة
   /// دي أصلاً. الإخفاء أرخص وأأمن من sheet تأكيد لطريق مالوش لازمة.
-  bool get canLeaveQueue => this == WaitlistStatus.pending;
+  /// ⚠ **`reviewing` بيسمح بالخروج و`offered` لأ** — والفرق مقصود.
+  /// في `reviewing` الفرع بيراجع ورقة، مفيش حد بيتصل ومفيش عدّاد شغّال،
+  /// فالخروج قرار عادي. في `offered` فيه ميعاد **محجوز باسمك** والفرع
+  /// بيتصل — الخروج ساعتها بيرمي الميعاد لحد تاني من غير رجعة.
+  bool get canLeaveQueue =>
+      this == WaitlistStatus.pending || this == WaitlistStatus.reviewing;
 
   static WaitlistStatus fromApi(String? value) => switch (value) {
+    'reviewing' => WaitlistStatus.reviewing,
     'offered' => WaitlistStatus.offered,
     'expired' => WaitlistStatus.expired,
     'accepted' => WaitlistStatus.accepted,
+    'booked' => WaitlistStatus.booked,
     'cancelled' || 'rejected' => WaitlistStatus.cancelled,
     _ => WaitlistStatus.pending,
   };
@@ -188,13 +226,19 @@ class WaitlistUiModel {
     // بيحصل فعلاً. ترجع أول ما حاجة تقرا `app_device_tokens`.
     WaitlistStatus.pending =>
       'لما ميعاد يفضى في اليوم ده، الفرع هيتصل بيك',
+    // **مافيش وعد هنا.** الميعاد فضي فعلاً، بس القائمة فيها ناس تانية
+    // والفرع هو اللي بيرتّب. الجملة بتقول اللي حصل وبتوقف — أي «دورك
+    // قرّب» هنا بتبقى وعد إحنا مش ضامنينه.
+    WaitlistStatus.reviewing =>
+      'فضي ميعاد والفرع بيشوف مين ياخده. لو اختارك هيتصل بيك',
     // **الصدق هنا مقصود.** العميل مايقدرش يقبل بنفسه — مفيش endpoint.
     WaitlistStatus.offered =>
       'الفرع هيتصل بيك يأكّد — خلّي التليفون معاك. '
           'لو الوقت خلص، الميعاد هيروح لحد تاني',
     WaitlistStatus.expired =>
       'الميعاد اترجّع للناس التانية. تقدر تدخل القائمة تاني',
-    WaitlistStatus.accepted => 'الحجز بقى مؤكد — هتلاقيه في مواعيدك',
+    WaitlistStatus.accepted => 'الفرع وافق — بيحوّله لحجز دلوقتي',
+    WaitlistStatus.booked => 'الحجز بقى مؤكد — هتلاقيه في مواعيدك',
     WaitlistStatus.cancelled => 'مش في القائمة دلوقتي',
   };
 }

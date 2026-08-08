@@ -8,6 +8,17 @@ import 'package:waqty_user_application/core/mock/mock_waitlist.dart';
 import 'package:waqty_user_application/core/models/booking_ui_model.dart';
 import 'package:waqty_user_application/core/models/waitlist_ui_model.dart';
 
+/// رد `GET /user/waitlist` بشكله الحقيقي — كائنات متداخلة مش أسامي مسطّحة.
+Map<String, dynamic> _entryJson({required String status}) => <String, dynamic>{
+  'uuid': 'wl-json',
+  'status': status,
+  'provider': <String, dynamic>{'uuid': 'prv-1', 'name': 'صالون كابتن'},
+  'branch': <String, dynamic>{'uuid': 'brn-1', 'name': 'فرع المعادي'},
+  'service': <String, dynamic>{'uuid': 'srv-1', 'name': 'قص شعر'},
+  'preferred_at': '2026-08-10T18:00:00+03:00',
+  'position': 2,
+};
+
 void main() {
   setUp(() {
     MockConfig.delay = Duration.zero;
@@ -202,6 +213,76 @@ void main() {
       expect(WaitlistStatus.offered.canLeaveQueue, isFalse);
       // الاتنين لسه `isLive` — الفرق مقصود.
       expect(WaitlistStatus.offered.isLive, isTrue);
+    });
+  });
+
+  /// **الحالتين اللي الأبلكيشن مكانش شايفهم.**
+  ///
+  /// `fromApi` كانت بترمي أي قيمة مش معروفة على `pending`، والسيرفر عنده
+  /// ٧ حالات والأبلكيشن عنده ٥.
+  group('دورة حياة السيرفر كاملة', () {
+    test('reviewing مابتقعش على pending', () {
+      final entry = _entryJson(status: 'reviewing');
+
+      expect(
+        WaitlistUiModel.fromJson(entry).status,
+        WaitlistStatus.reviewing,
+      );
+    });
+
+    test('booked مابتقعش على pending — دي كانت بتكدب على العميل', () {
+      // الإدخال بقى حجز مؤكد، والأبلكيشن كان بيقول «في قايمة الانتظار».
+      final parsed = WaitlistUiModel.fromJson(_entryJson(status: 'booked'));
+
+      expect(parsed.status, WaitlistStatus.booked);
+      expect(parsed.status.isLive, isFalse);
+      expect(parsed.status.isSettled, isTrue);
+      expect(parsed.status.label, isNot(WaitlistStatus.pending.label));
+    });
+
+    test('reviewing شغّالة وبيتقال فيها اللي حصل من غير وعد', () {
+      expect(WaitlistStatus.reviewing.isLive, isTrue);
+      expect(WaitlistStatus.reviewing.isSettled, isFalse);
+    });
+
+    test('الخروج مسموح في reviewing ومقفول في offered', () {
+      // في `reviewing` مفيش عدّاد ومفيش ميعاد محجوز باسمك — الخروج قرار
+      // عادي. في `offered` الخروج بيرمي ميعاد محجوز لحد تاني.
+      expect(WaitlistStatus.reviewing.canLeaveQueue, isTrue);
+      expect(WaitlistStatus.offered.canLeaveQueue, isFalse);
+    });
+
+    test('كل حالة ليها لابل وشرح مختلفين', () {
+      final labels = WaitlistStatus.values.map((s) => s.label).toSet();
+      final explanations = <String>{};
+
+      for (final status in WaitlistStatus.values) {
+        explanations.add(
+          WaitlistUiModel(
+            uuid: 'x',
+            status: status,
+            providerName: 'م',
+            branchName: 'ف',
+            serviceName: 'خ',
+            preferredAt: DateTime(2026, 8, 10, 18),
+            position: 1,
+          ).explanation,
+        );
+      }
+
+      // لابل مكرر معناه حالتين بيتقروا واحدة على الشاشة.
+      expect(labels.length, WaitlistStatus.values.length);
+      expect(explanations.length, WaitlistStatus.values.length);
+    });
+
+    test('سيناريو كل الحالات بيوري الشغّال والخالص مع بعض', () {
+      MockConfig.scenario = MockScenario.waitlistHistory;
+      final entries = MockWaitlist.forUser(DateTime.now());
+
+      expect(entries.any((e) => e.status == WaitlistStatus.reviewing), isTrue);
+      expect(entries.any((e) => e.status == WaitlistStatus.booked), isTrue);
+      expect(entries.any((e) => e.status.isLive), isTrue);
+      expect(entries.any((e) => e.status.isSettled), isTrue);
     });
   });
 

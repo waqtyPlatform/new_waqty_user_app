@@ -15,6 +15,7 @@ import 'package:waqty_user_application/features/booking/create_booking/ui/create
 import 'package:waqty_user_application/features/booking/my_bookings/ui/widgets/my_booking_row_widget.dart';
 import 'package:waqty_user_application/features/booking/my_bookings/ui/widgets/my_bookings_notice_widget.dart';
 import 'package:waqty_user_application/features/booking/my_bookings/ui/widgets/my_bookings_tabs_widget.dart';
+import 'package:waqty_user_application/features/booking/waitlist/ui/waitlist_screen.dart';
 import 'package:waqty_user_application/features/booking/waitlist/logic/waitlist_cubit.dart';
 import 'package:waqty_user_application/features/booking/waitlist/logic/waitlist_state.dart';
 import 'package:waqty_user_application/features/booking/waitlist/ui/widgets/waitlist_card_widget.dart';
@@ -91,6 +92,10 @@ class MyBookingsScreen extends StatelessWidget {
           entries: state.entries,
           now: DateTime.now(),
           onRemove: WaitlistCubit.get(context).removeEntry,
+          // الشاشة الكاملة بتوري كمان اللي **خلص** — اتحوّل لحجز أو
+          // الميعاد راح. القسم هنا بيعرض الشغّال، وده صح: التبويب بيجاوب
+          // «أنا مستني إيه؟» مش «حصل إيه قبل كده؟».
+          onSeeAll: () => WaitlistScreen.push(context),
         );
       },
     );
