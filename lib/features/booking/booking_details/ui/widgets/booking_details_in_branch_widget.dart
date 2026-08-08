@@ -26,7 +26,9 @@ class BookingDetailsInBranchWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // الحجز اللي مش في الفرع مالوش بلوك — ومابنعملّوش cubit ولا مؤقت.
-    if (!shouldShowInBranch(booking)) return const SizedBox.shrink();
+    if (!shouldShowInBranch(booking, DateTime.now())) {
+      return const SizedBox.shrink();
+    }
 
     return BlocProvider<InBranchCubit>(
       create: (_) => InBranchCubit(booking: booking)..start(),

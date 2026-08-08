@@ -383,9 +383,15 @@ void main() {
 
       // `canCancel` في البصمة عشان `cancelWindowClosed` **كل فرقها هو
       // ده** — من غيره البصمة مابتشوفش الحاجة اللي السيناريو معمول عشانها.
+      //
+      // وحالة كل زيارة لنفس السبب بالظبط: بقى ينفع سيناريوهين يتطابقوا في
+      // كل حاجة ويفترقوا في إن زيارة خلصت والتانية لأ — وده فرق **بيبان
+      // على الشاشة**، بلوك «إنت في الفرع» بيظهر ولا لأ.
       String describe(List<BookingUiModel> list) => list
           .map((b) =>
-              '${b.status.name}:${b.branchUuid}:${b.canCancel}:${b.items.map((i) => '${i.serviceUuid}@${i.startAt}=${i.price}/${i.ratingStatus.name}').join(',')}')
+              '${b.status.name}:${b.branchUuid}:${b.canCancel}'
+              ':${b.visits.map((v) => '${v.uuid}=${v.status.name}').join('+')}'
+              ':${b.items.map((i) => '${i.serviceUuid}@${i.startAt}=${i.price}/${i.ratingStatus.name}').join(',')}')
           .join(' , ');
 
       final waitlist = MockWaitlist.forUser(DateTime.now())

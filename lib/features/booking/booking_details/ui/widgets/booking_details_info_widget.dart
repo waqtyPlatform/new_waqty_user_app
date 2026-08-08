@@ -222,14 +222,14 @@ class BookingDetailsInfoWidget extends StatelessWidget {
             ],
             Expanded(
               child: Text(
-                AppFormat.fullDate(visits[i].first.startAt),
+                AppFormat.fullDate(visits[i].startAt),
                 style: AppTextStyles.bodyMdStrong,
               ),
             ),
           ],
         ),
         verticalSpace(AppSpacing.headerToContent),
-        ...visits[i].map(_itemLine),
+        ...visits[i].items.map(_itemLine),
       ],
     ];
   }

@@ -20,6 +20,7 @@ import 'package:waqty_user_application/features/booking/booking_details/ui/widge
 import 'package:waqty_user_application/features/booking/booking_details/ui/widgets/booking_details_in_branch_widget.dart';
 import 'package:waqty_user_application/features/booking/booking_details/ui/widgets/booking_rate_sheet_widget.dart';
 import 'package:waqty_user_application/features/booking/create_booking/ui/create_booking_sheet.dart';
+import 'package:waqty_user_application/features/booking/in_branch/ui/widgets/in_branch_block_widget.dart';
 import 'package:waqty_user_application/core/widgets/booking_status_chip_widget.dart';
 import 'package:waqty_user_application/core/widgets/directional_chevron_widget.dart';
 
@@ -106,10 +107,14 @@ class BookingDetailsScreen extends StatelessWidget {
               // مطلوب، وحالة الحجز مابتتغيّرش والصفحة مفتوحة فمافيش
               // حركة بتتقتل.
               // الـ widget بيخفي نفسه لما الحجز مش في الفرع — والشرط
-              // بقى `isInBranch` مش `isUpcoming`. حجز بكرة **مالوش**
-              // حالة فرع، والقديم كان بيبني `BranchQueueCubit` بمؤقت
-              // لكل حجز جاي حتى لو معاده الأسبوع الجاي.
-              if (booking.status.isInBranch) ...[
+              // بقى حالة **الزيارة الحالية** مش `isUpcoming`. حجز بكرة
+              // **مالوش** حالة فرع، والقديم كان بيبني `BranchQueueCubit`
+              // بمؤقت لكل حجز جاي حتى لو معاده الأسبوع الجاي.
+              //
+              // ⚠ **نفس الدالة اللي جوه الـ widget بالظبط.** لو الاتنين
+              // اختلفوا، الشرط ده بيعدّي والـ widget بيرجّع `shrink` —
+              // فتفضل مسافة فاضية تحتها من غير أي حاجة فوقها.
+              if (shouldShowInBranch(booking, DateTime.now())) ...[
                 BookingDetailsInBranchWidget(booking: booking),
                 verticalSpace(AppSpacing.s16),
               ],

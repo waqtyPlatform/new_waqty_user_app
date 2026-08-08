@@ -117,8 +117,14 @@ class InBranchBlockWidget extends StatelessWidget {
   }
 }
 
-/// بيقرر البلوك يظهر ولا لأ من حالة الحجز.
+/// بيقرر البلوك يظهر ولا لأ من حالة **الزيارة الحالية**.
 ///
 /// الحجز اللي مش في الفرع مالوش بلوك — **مش بلوك فاضي**. سطح مرفوع فيه
 /// شرطة بيقرا كأنه معطّل، والشاشة بتبان مليانة خانات مكسورة.
-bool shouldShowInBranch(BookingUiModel booking) => booking.status.isInBranch;
+///
+/// ⚠ **الزيارة هي اللي بتقرر مش الحجز.** الحجز الأب بياخد حالة ملمومة من
+/// زياراته، فحجز بزيارتين اللي أولاهم `arrived` بيبقى `arrived` كله —
+/// والشرط القديم كان بيوري «إنت في الفرع» في الست ساعات اللي بين
+/// الزيارتين والعميل قاعد في بيته.
+bool shouldShowInBranch(BookingUiModel booking, DateTime now) =>
+    booking.currentVisit(now).status.isInBranch;

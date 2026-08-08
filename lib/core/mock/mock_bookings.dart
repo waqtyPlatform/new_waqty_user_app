@@ -357,6 +357,13 @@ class MockBookings {
       status: BookingStatus.confirmed,
       canCancel: true,
       notes: 'لو ينفع أخصائية ست يبقى أحسن',
+      // الزيارتين لسه قدام — الخريطة هنا **صريحة عن قصد** رغم إنها نفس
+      // حالة الحجز. الـ fixture ده هو اللي بيثبت إن زيارة متأخرة عن
+      // التانية بأسبوع مابتاخدش حالة الفرع بدري.
+      visitStatuses: const <String, BookingStatus>{
+        'v1': BookingStatus.confirmed,
+        'v2': BookingStatus.confirmed,
+      },
       items: <BookingItemUiModel>[
         _item(
           seed: 'MC7RA1',
@@ -382,11 +389,20 @@ class MockBookings {
       ],
     );
 
-  /// رحلتين في **نفس اليوم**.
+  /// رحلتين في **نفس اليوم** — والزيارة الأولى شغّالة دلوقتي.
   ///
   /// الحالة اللي التجميع باليوم كان بيكسرها: العميل بيجي الصبح ويمشي،
   /// ويرجع بالليل. لو اتعرضوا زيارة واحدة، الفرع بيعمل check-in الساعة
   /// ١٠ والعميل يفضل «واصل» لحد بالليل.
+  ///
+  /// ⚠ **الـ fixture كان `inDays: 5` فالحالة دي مكانش ينفع تتشاف أصلاً.**
+  /// التعليق فوق بيوصف موقف بيحصل **النهاردة** — عميل واقف في الفرع
+  /// دلوقتي وليه زيارة تانية بالليل. بميعاد بعد خمس أيام، الحجز كان
+  /// بيقعد في «القادمة» ساكت ومحدش شاف الباج اللي السيناريو معمول عشانه.
+  ///
+  /// دلوقتي: زيارة ١ بدأت من ٢٠ دقيقة و`in_progress`، زيارة ٢ بالليل
+  /// و`confirmed`. الحجز الأب `in_progress` زي ما السيرفر هيلمّه. الكود
+  /// القديم بيوري «إنت في الفرع» على الاتنين طول اليوم.
   static BookingUiModel get _twoVisitsSameDay => BookingUiModel(
       uuid: _ulid('MDJ5'),
       providerUuid: 'prv-5',
@@ -395,16 +411,25 @@ class MockBookings {
       branchName: 'الفرع الرئيسي',
       branchAddress: 'شارع الجمهورية، المهندسين، القاهرة',
       imagePath: '',
-      status: BookingStatus.confirmed,
+      status: BookingStatus.inProgress,
+      // **`true` رغم إن الحجز `in_progress`** — ودي مش سهوة.
+      // `Booking::getCanCancelAttribute()` بيبص على **نهاية أي عنصر**:
+      // طول ما فيه عنصر لسه ما خلصش، الإلغاء مفتوح. زيارة ٢ بعد ٦ ساعات،
+      // فالسيرفر هيقول `can_cancel: true` وإحنا بنعكس السيرفر مش بنحسب.
       canCancel: true,
+      visitStatuses: const <String, BookingStatus>{
+        'v1': BookingStatus.inProgress,
+        'v2': BookingStatus.confirmed,
+      },
       items: <BookingItemUiModel>[
         _item(
           seed: 'MDJ5A1',
           serviceUuid: 'srv-9',
           serviceName: 'صبغة',
           employeeName: 'نهى سمير',
-          inDays: 5,
-          atHour: 10,
+          inDays: 0,
+          atHour: 0,
+          minutesFromNow: -20,
           durationMinutes: 90,
           price: 600,
         ),
@@ -414,8 +439,10 @@ class MockBookings {
           serviceUuid: 'srv-5',
           serviceName: 'حمام كريم',
           employeeName: 'نهى سمير',
-          inDays: 5,
-          atHour: 20,
+          // ٦ ساعات بعد الزيارة الأولى — الفجوة اللي الباج بيعيش فيها.
+          inDays: 0,
+          atHour: 0,
+          minutesFromNow: 360,
           durationMinutes: 30,
           price: 180,
         ),
