@@ -56,6 +56,14 @@ enum MockScenario {
   /// في الطابور.
   waitingInBranch,
 
+  /// في الطابور — **من غير أي تقدير زمني**.
+  ///
+  /// ده الشكل اللي السيرفر بيوفّره النهاردة فعلاً: `waiting` موجودة كحالة،
+  /// والتوقّع الزمني مالوش عمود ولا حساب خالص. يتشغّل جنب
+  /// [waitingInBranch] والفرق بينهم هو **قرار BE-17**: المدى يستاهل
+  /// نطلب من الباك إند يبنيه، ولا «لسه مع عميل» لوحدها بتطمّن زيّه؟
+  waitingNoEstimate,
+
   /// الخدمة شغالة دلوقتي.
   inService,
 
@@ -104,6 +112,7 @@ enum MockScenario {
     MockScenario.manyBookings => 'عميل بـ40 حجز',
     MockScenario.arrivedInBranch => 'وصل الفرع',
     MockScenario.waitingInBranch => 'في الانتظار',
+    MockScenario.waitingNoEstimate => 'في الانتظار · من غير تقدير',
     MockScenario.inService => 'في الخدمة',
     MockScenario.slotLostAtConfirm => 'الميعاد راح وإحنا بنأكد',
     MockScenario.waitlistOffered => 'عرض بعدّاد 5 دقايق',
@@ -135,6 +144,8 @@ enum MockScenario {
     MockScenario.manyBookings => 'القايمة الطويلة بتفضل قابلة للاستعمال؟',
     MockScenario.arrivedInBranch => '«إنت لسه داخل المحل — ده بيقولك إيه؟»',
     MockScenario.waitingInBranch => 'التقدير بالشخص والوقت بيتصدّق أكتر من رقم الدور؟',
+    MockScenario.waitingNoEstimate =>
+      'من غير رقم — الشاشة لسه بتطمّن ولا بقت فاضية؟ (قرار BE-17)',
     MockScenario.inService => 'محتاج يبقى فيه أي حاجة هنا أصلاً؟',
     MockScenario.slotLostAtConfirm => 'الفشل بيحس إنه غلطته ولا غلطة الأبلكيشن؟',
     MockScenario.waitlistOffered => '5 دقايق كفاية؟ وبيحاولوا يقبلوا بنفسهم؟',
@@ -161,5 +172,6 @@ enum MockScenario {
   bool get isInBranch =>
       this == MockScenario.arrivedInBranch ||
       this == MockScenario.waitingInBranch ||
+      this == MockScenario.waitingNoEstimate ||
       this == MockScenario.inService;
 }

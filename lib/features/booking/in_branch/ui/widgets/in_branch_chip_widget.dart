@@ -58,7 +58,11 @@ class InBranchChipWidget extends StatelessWidget {
 
   String get _label => switch (data.status) {
     BookingStatus.arrived => 'هننده عليك',
-    BookingStatus.waiting => data.estimateLabel,
+    // من غير تقدير، الشيبة بتقول **الحالة** بدل الرقم. `estimateLabel`
+    // بترجّع فاضي ساعتها، وشيبة فاضية بتسيب دايرة ملوّنة مالهاش معنى
+    // على الصف — أسوأ من إنها ماتبانش.
+    BookingStatus.waiting =>
+      data.hasLiveEstimate ? data.estimateLabel : 'في الانتظار',
     BookingStatus.inProgress => 'جاري تنفيذها',
     _ => '',
   };

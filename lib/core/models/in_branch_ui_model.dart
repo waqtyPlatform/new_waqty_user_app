@@ -83,7 +83,12 @@ class InBranchUiModel {
     // «لسه مع عميل» نزلت من العنوان هنا. الفاصل بيفصل الحقيقة (هو مشغول)
     // عن التقدير (وده تخمين) — العميل يقدر يصدّق الأولى حتى لو التانية
     // طلعت غلط.
-    BookingStatus.waiting => 'لسه مع عميل · $estimateLabel',
+    //
+    // ⚠ **لما مفيش تقدير، الفاصل بيتشال معاه.** الجزء اللي على الشمال هو
+    // الحقيقي، وهو اللي بيفضل. الفاصل مالوش شغل من غير حاجة على ناحيته
+    // التانية.
+    BookingStatus.waiting =>
+      hasLiveEstimate ? 'لسه مع عميل · $estimateLabel' : 'لسه مع عميل',
     BookingStatus.inProgress => expectedFinishAt == null
         ? ''
         : 'متوقع تخلص ${AppFormat.time(expectedFinishAt!)}',
@@ -98,10 +103,21 @@ class InBranchUiModel {
   ///
   /// (القاعدة دي كانت مكتوبة في `QueueUiModel` واتنقلت معاها — هي أحسن
   /// حاجة في الكود القديم.)
+  /// ⚠ **بترجّع `''` لما مفيش تقدير — مش كلمة بديلة.**
+  ///
+  /// كانت بترجّع «دقايق». وده بيقرا زي وحدة قياس اتعلّقت ورا رقم اتمسح:
+  /// السطر كان بيطلع **«لسه مع عميل · دقايق»**، فاصل بيوعد بمعلومة
+  /// وماوراهوش حاجة. والأسوأ إن `hasLiveEstimate` بترجّع `false` صح في
+  /// الحالة دي، فبتخفي لابل «تقدير» — يعني الكلمة الوحيدة اللي كانت
+  /// هتقول للعميل إن ده تخمين هي بالظبط اللي بتختفي، والكلام الباقي
+  /// بيتقري كأنه حقيقة.
+  ///
+  /// السلسلة الفاضية بتخلي كل مستهلك **يقرر** يعمل إيه بدل ما ياخد نص
+  /// جاهز مالوش معنى. المستهلكين بيسألوا [hasLiveEstimate] الأول.
   String get estimateLabel {
     final low = estimateLow?.inMinutes ?? 0;
     final high = estimateHigh?.inMinutes ?? 0;
-    if (high <= 0) return 'دقايق';
+    if (high <= 0) return '';
     if (low <= 5) return 'أقل من ${AppFormat.digits(high)} دقيقة';
     return 'تقريبًا ${AppFormat.digits(low)}–${AppFormat.digits(high)} دقيقة';
   }

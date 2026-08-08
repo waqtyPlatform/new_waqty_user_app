@@ -98,6 +98,12 @@ class MockBookings {
     MockScenario.waitingInBranch => <BookingUiModel>[
       _inBranch(BookingStatus.waiting),
     ],
+    // **نفس الحجز بالظبط** — الفرق كله في `MockInBranch` اللي بيرجّع
+    // تقدير فاضي. لازم يفضلوا متطابقين عشان جلسة الاختبار تقارن الشاشتين
+    // ومفيش متغيّر تاني بيتحرّك معاهم.
+    MockScenario.waitingNoEstimate => <BookingUiModel>[
+      _inBranch(BookingStatus.waiting),
+    ],
     MockScenario.inService => <BookingUiModel>[
       _inBranch(BookingStatus.inProgress),
     ],

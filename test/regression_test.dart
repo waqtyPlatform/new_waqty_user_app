@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:waqty_user_application/core/mock/mock_bookings.dart';
 import 'package:waqty_user_application/core/mock/mock_config.dart';
 import 'package:waqty_user_application/core/mock/mock_employees.dart';
+import 'package:waqty_user_application/core/mock/mock_in_branch.dart';
 import 'package:waqty_user_application/core/mock/mock_providers.dart';
 import 'package:waqty_user_application/core/mock/mock_scenario.dart';
 import 'package:waqty_user_application/core/mock/mock_waitlist.dart';
@@ -398,10 +399,26 @@ void main() {
           .map((e) => '${e.status.name}:${e.serviceName}')
           .join(' , ');
 
+      // **بلوك «إنت في الفرع» جزء من اللي التستر بيشوفه.**
+      //
+      // `waitingInBranch` و`waitingNoEstimate` بيعرضوا **نفس الحجز
+      // بالظبط** — وده مقصود، عشان المقارنة بينهم تبقى على متغيّر واحد.
+      // الفرق كله عايش في `MockInBranch`. من غير السطر ده البصمة بتشوف
+      // السيناريوهين متطابقين وبتفشل على تطابق حقيقي ومقصود.
+      //
+      // بناخد `hasLiveEstimate` مش النص: التقدير نفسه بيتحرّك مع ساعة
+      // الجهاز، فالنص كان هيدّي بصمات مختلفة كل ثانية ويخفي أي تصادم
+      // حقيقي ورا فرق وهمي.
+      final inBranch = MockBookings.upcoming
+          .map((b) => MockInBranch.forBooking(b, DateTime.now()))
+          .map((d) => d == null ? '—' : '${d.status.name}/${d.hasLiveEstimate}')
+          .join(' , ');
+
       return 'قادمة[${describe(MockBookings.upcoming)}] '
           'سابقة[${describe(MockBookings.past)}] '
           'إشعارات[${describe(MockBookings.notices)}] '
-          'انتظار[$waitlist]';
+          'انتظار[$waitlist] '
+          'في الفرع[$inBranch]';
     }
 
     /// دول بيتحكموا من `MockConfig` (تأخير · خطأ · فاضي) مش من الـ
