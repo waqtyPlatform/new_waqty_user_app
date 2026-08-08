@@ -33,8 +33,18 @@ enum MockScenario {
   /// محل بفرعين بمواعيد مختلفة.
   twoBranches,
 
+  /// نفس المحل بفرعين — بس المرة دي **الأسعار والطاقم مختلفين**.
+  ///
+  /// مش تكرار لـ[twoBranches]: ده بيسأل «العميل واخد باله هو حاجز في أنهي
+  /// فرع؟»، ودي بتسأل «واخد باله إن اللي قدامه اتغيّر لما غيّره؟» — سؤالين
+  /// مختلفين وكل واحد بيتجاب في جلسة لوحده.
+  twoBranchesDifferentPricing,
+
   /// اليوم المختار مقفول — مفيش مواعيد خالص.
   branchClosedToday,
+
+  /// الميعاد بدأ خلاص فالإلغاء اتقفل — الحالة اللي النص بيتعرض فيها.
+  cancelWindowClosed,
 
   /// عميل قديم عنده ٤٠ حجز — بيشغّل الترقيم.
   manyBookings,
@@ -88,7 +98,9 @@ enum MockScenario {
     MockScenario.multiVisitTwoDays => 'زيارتين · يومين',
     MockScenario.multiVisitSameDay => 'زيارتين · نفس اليوم',
     MockScenario.twoBranches => 'محل بفرعين',
+    MockScenario.twoBranchesDifferentPricing => 'فرعين بأسعار وطاقم مختلفين',
     MockScenario.branchClosedToday => 'الفرع مقفول',
+    MockScenario.cancelWindowClosed => 'الميعاد بدأ — الإلغاء مقفول',
     MockScenario.manyBookings => 'عميل بـ40 حجز',
     MockScenario.arrivedInBranch => 'وصل الفرع',
     MockScenario.waitingInBranch => 'في الانتظار',
@@ -115,7 +127,11 @@ enum MockScenario {
     MockScenario.multiVisitTwoDays => 'الناس فاهمة «حجز واحد، رحلتين»؟',
     MockScenario.multiVisitSameDay => 'حد بيلاقي كنترول الدمج ولا بيستخدمه؟',
     MockScenario.twoBranches => 'العميل واخد باله هو حاجز في أنهي فرع؟',
+    MockScenario.twoBranchesDifferentPricing =>
+      'لما غيّر الفرع، واخد باله إن السعر والأخصائيين اتغيّروا؟',
     MockScenario.branchClosedToday => 'الفرق بين «مقفول» و«محجوز بالكامل» بيوصل؟',
+    // من غير `**` — المبدّل بيعرض النص خام، والنجوم بتطلع على الشاشة.
+    MockScenario.cancelWindowClosed => 'العميل فاهم ليه مش قادر يلغي؟',
     MockScenario.manyBookings => 'القايمة الطويلة بتفضل قابلة للاستعمال؟',
     MockScenario.arrivedInBranch => '«إنت لسه داخل المحل — ده بيقولك إيه؟»',
     MockScenario.waitingInBranch => 'التقدير بالشخص والوقت بيتصدّق أكتر من رقم الدور؟',
@@ -132,6 +148,14 @@ enum MockScenario {
     MockScenario.emptyState => 'الفاضي متميّز عن الخطأ؟',
     MockScenario.slowNetwork => 'الـ skeletons بتطمّن ولا بتوتّر؟',
   };
+
+  /// كل المحلات ليها فرعين في السيناريو ده؟
+  ///
+  /// من غير كده السيناريو بيبقى تعليمة شفهية («افتح صالون كابتن») — اسم في
+  /// القايمة مالوش أثر. أي محل التستر يفتحه بيوصله لاختيار الفرع.
+  bool get hasTwoBranches =>
+      this == MockScenario.twoBranches ||
+      this == MockScenario.twoBranchesDifferentPricing;
 
   /// الحجز الظاهر في السيناريو ده حالته جوه الفرع؟
   bool get isInBranch =>

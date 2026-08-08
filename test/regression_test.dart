@@ -1,12 +1,16 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:waqty_user_application/core/mock/mock_bookings.dart';
 import 'package:waqty_user_application/core/mock/mock_config.dart';
+import 'package:waqty_user_application/core/mock/mock_employees.dart';
 import 'package:waqty_user_application/core/mock/mock_providers.dart';
 import 'package:waqty_user_application/core/mock/mock_scenario.dart';
 import 'package:waqty_user_application/core/mock/mock_waitlist.dart';
 import 'package:waqty_user_application/core/models/booking_ui_model.dart';
+import 'package:waqty_user_application/core/models/service_ui_model.dart';
+import 'package:waqty_user_application/features/booking/booking_details/logic/booking_details_cubit.dart';
 import 'package:waqty_user_application/features/booking/create_booking/logic/create_booking_cubit.dart';
 import 'package:waqty_user_application/features/booking/create_booking/logic/create_booking_state.dart';
+import 'package:waqty_user_application/features/service_provider_details/service_provider_details/logic/service_provider_details_cubit.dart';
 
 /// باجات اتلقت في مراجعة شغل الأسابيع ١–٣.
 ///
@@ -50,6 +54,154 @@ void main() {
       for (final row in <BookingUiModel>[rows.first, rows[20], rows.last]) {
         expect(MockBookings.byUuid(row.uuid).uuid, row.uuid);
       }
+    });
+  });
+
+  /// **«احجز تاني» من التفاصيل كان بيوقّع العميل على مختار الخدمات.**
+  ///
+  /// المدخل التاني لنفس الـ sheet (بطاقة الإشعار في «مواعيدي») كان بيبعت
+  /// `serviceUuid` من الأول، فنفس الزرار بالظبط كان بيدّي نتيجتين مختلفتين
+  /// على حسب العميل دخل منين. والتعليق اللي في الشاشة كان بيقول إن ده
+  /// مستحيل لأن `serviceUuid` مش موجود — وهو حقل **مطلوب** من الأصل.
+  group('«احجز تاني» بيتخطى اختيار الخدمة', () {
+    test('الخدمة بتتحط في السلة والخطوة بتبقى الميعاد', () {
+      final booking = MockBookings.upcoming.first;
+
+      // نفس النداء اللي `_rebook` بيعمله بالظبط.
+      final cubit = CreateBookingCubit(
+        providerUuid: booking.providerUuid,
+        providerName: booking.providerName,
+        initialBranchUuid: booking.branchUuid,
+        initialServiceUuid: booking.items.first.serviceUuid,
+      );
+
+      expect(cubit.currentStep, BookingStep.dateTime);
+      expect(cubit.items.single.service.uuid, booking.items.first.serviceUuid);
+      addTearDown(cubit.close);
+    });
+
+    /// الحقل اللي التعليق القديم كان بيقول إنه مش موجود.
+    test('كل بند في كل حجز عنده serviceUuid', () {
+      for (final booking in <BookingUiModel>[
+        ...MockBookings.upcoming,
+        ...MockBookings.past,
+      ]) {
+        for (final item in booking.items) {
+          expect(
+            item.serviceUuid,
+            isNotEmpty,
+            reason: '«${item.serviceName}» في ${booking.uuid} من غير uuid',
+          );
+        }
+      }
+    });
+  });
+
+  /// **العميل كان بيكتب رأيه والأبلكيشن بيرميه.**
+  ///
+  /// نفس الباج اللي `cancelBooking` اتصلّح منه — واتصلّح في نصه بس.
+  group('تعليق التقييم بيوصل', () {
+    test('اللي اتكتب بيتخزّن على الخدمة', () async {
+      MockConfig.scenario = MockScenario.completedUnrated;
+      final booking = MockBookings.past.first;
+      final item = booking.rateableItems.first;
+
+      final cubit = BookingDetailsCubit(bookingUuid: booking.uuid)
+        ..startRating(item)
+        ..changeRating(4);
+      cubit.rateCommentController.text = '  الحلاقة كانت ممتازة  ';
+
+      await cubit.submitRating();
+
+      expect(item.rating, 4);
+      // مقصوص من الجناب — نفس اللي `cancelBooking` بيعمله بالظبط.
+      expect(item.ratingComment, 'الحلاقة كانت ممتازة');
+      // والحقل بيتفضّى بعد الإرسال عشان التقييم اللي بعده يبدأ نضيف.
+      expect(cubit.rateCommentController.text, isEmpty);
+
+      await cubit.close();
+    });
+
+    test('من غير تعليق مافيش حاجة تتعرض', () async {
+      MockConfig.scenario = MockScenario.completedUnrated;
+      final booking = MockBookings.past.first;
+      final item = booking.rateableItems.first;
+
+      final cubit = BookingDetailsCubit(bookingUuid: booking.uuid)
+        ..startRating(item)
+        ..changeRating(5);
+
+      await cubit.submitRating();
+
+      expect(item.rating, 5);
+      expect(item.ratingComment, isEmpty);
+
+      await cubit.close();
+    });
+  });
+
+  /// **`changeBranch` كان بيحطّ الفرع ويـ`emit` وبس.**
+  ///
+  /// وتعليقه فوقه بيقول «بيحمّل الخدمات من الأول» — يعني التوثيق كان
+  /// بيوصف كود مش موجود. النتيجة إن العميل بيغيّر الفرع وبيفضل بيبصّ على
+  /// أسعار وأخصائيين الفرع اللي ساب.
+  group('تغيير الفرع في شاشة المحل بيعيد التحميل فعلاً', () {
+    test('الأسعار والأخصائيين بيتغيّروا', () async {
+      final cubit = ServiceProviderDetailsCubit(providerUuid: 'prv-1');
+      await cubit.loadDetails();
+
+      final before = cubit.services.map((s) => s.price).toList();
+      final staffBefore = cubit.employees.map((e) => e.uuid).toList();
+      expect(before, isNotEmpty);
+      expect(staffBefore, isNotEmpty);
+
+      await cubit.changeBranch(cubit.branches[1]);
+
+      expect(cubit.services.map((s) => s.price), isNot(before));
+      expect(cubit.employees.map((e) => e.uuid), isNot(staffBefore));
+      expect(cubit.isReloadingBranch, isFalse);
+
+      await cubit.close();
+    });
+
+    /// **الشارة فوق كانت بتقول ٢٥٠ والصف تحتها بيقول ٢٩٠.**
+    ///
+    /// `ProviderUiModel.priceFrom` و`servicesCount` مستوى **المحل**، فأول
+    /// ما الأسعار بقت فرعية بقوا بيناقضوا القايمة اللي تحتيهم على نفس
+    /// الشاشة من غير سكرول.
+    test('«يبدأ من» وعدد الخدمات بيتحسبوا من خدمات الفرع', () async {
+      final cubit = ServiceProviderDetailsCubit(providerUuid: 'prv-1');
+      await cubit.loadDetails();
+
+      double cheapest(List<ServiceUiModel> list) => list
+          .where((s) => !s.isCategory && s.price > 0)
+          .map((s) => s.price)
+          .reduce((a, b) => a < b ? a : b);
+
+      final before = cheapest(cubit.services);
+      await cubit.changeBranch(cubit.branches[1]);
+
+      expect(cheapest(cubit.services), greaterThan(before));
+
+      await cubit.close();
+    });
+
+    /// الأخصائيين كانوا بيتحمّلوا بـ`forService('')` — نص فاضي بيقع في
+    /// الـ `null` بتاع خريطة الخدمات فبيرجّع الفريق كله **بالصدفة**.
+    test('الأخصائيين طاقم الفرع مش الفريق كله بالصدفة', () async {
+      final cubit = ServiceProviderDetailsCubit(providerUuid: 'prv-1');
+      await cubit.loadDetails();
+
+      expect(cubit.employees.map((e) => e.uuid), MockEmployees.rosterOf().map((e) => e.uuid));
+      expect(cubit.employees.any((e) => e.isAnyAvailable), isFalse);
+
+      await cubit.changeBranch(cubit.branches[1]);
+      expect(
+        cubit.employees.map((e) => e.uuid),
+        MockEmployees.rosterOf(branchIndex: 1).map((e) => e.uuid),
+      );
+
+      await cubit.close();
     });
   });
 
@@ -160,6 +312,55 @@ void main() {
     });
   });
 
+  /// **النص كان بيقول قاعدة السيرفر مالهاش وجود.**
+  ///
+  /// `Booking::getCanCancelAttribute()` بيقفل الإلغاء لما الميعاد
+  /// **يعدّي** — مش عشان هو في نفس اليوم. والفيكستشر كانت مشفّرة نفس
+  /// سوء الفهم، فأي حد يقراها كان هيعيد استنتاج النص الغلط.
+  group('نافذة الإلغاء', () {
+    test('حجز النهاردة اللي لسه ما بدأش ينفع يتلغي', () {
+      MockConfig.scenario = MockScenario.happyPath;
+      final booking = MockBookings.upcoming.single;
+
+      expect(booking.canCancel, isTrue);
+    });
+
+    test('الميعاد اللي بدأ الإلغاء عنده مقفول', () {
+      MockConfig.scenario = MockScenario.cancelWindowClosed;
+      final booking = MockBookings.upcoming.single;
+
+      expect(booking.canCancel, isFalse);
+      // بدأ فعلاً — مش «النهاردة» وبس.
+      expect(booking.items.first.startAt.isBefore(DateTime.now()), isTrue);
+      // ولسه في «القادمة» عشان الفرع ما علّمش الوصول، وده اللي بيخلي
+      // العميل يلاقيه ويدوس عليه.
+      expect(booking.status, BookingStatus.confirmed);
+    });
+
+    /// الحالة دي مكانش ليها fixture خالص، فالنص عمره ما اتشاف في سياقه.
+    test('فيه سيناريو واحد بالظبط بيوصّل للحالة دي', () {
+      final producing = <MockScenario>[];
+
+      for (final scenario in MockScenario.values) {
+        MockConfig.scenario = scenario;
+        if (MockBookings.upcoming.any((b) => !b.canCancel)) {
+          producing.add(scenario);
+        }
+      }
+
+      // حالات الفرع بتديها كمان — وده **صح** بقاعدة السيرفر: «وصل»
+      // و«مستني» و«في الخدمة» كلهم معناهم إن الميعاد بدأ.
+      expect(producing, contains(MockScenario.cancelWindowClosed));
+      for (final scenario in producing) {
+        expect(
+          scenario == MockScenario.cancelWindowClosed || scenario.isInBranch,
+          isTrue,
+          reason: '«${scenario.title}» بيقفل الإلغاء من غير ما الميعاد يبدأ',
+        );
+      }
+    });
+  });
+
   group('كل سيناريو ليه بصمة مختلفة', () {
     /// بصمة السيناريو = **اللي التستر بيشوفه أول ما يدوس عليه**.
     ///
@@ -180,9 +381,11 @@ void main() {
     String fingerprintOf(MockScenario scenario) {
       MockConfig.scenario = scenario;
 
+      // `canCancel` في البصمة عشان `cancelWindowClosed` **كل فرقها هو
+      // ده** — من غيره البصمة مابتشوفش الحاجة اللي السيناريو معمول عشانها.
       String describe(List<BookingUiModel> list) => list
           .map((b) =>
-              '${b.status.name}:${b.branchUuid}:${b.items.map((i) => '${i.serviceUuid}@${i.startAt}=${i.price}/${i.ratingStatus.name}').join(',')}')
+              '${b.status.name}:${b.branchUuid}:${b.canCancel}:${b.items.map((i) => '${i.serviceUuid}@${i.startAt}=${i.price}/${i.ratingStatus.name}').join(',')}')
           .join(' , ');
 
       final waitlist = MockWaitlist.forUser(DateTime.now())

@@ -76,6 +76,16 @@ class BookingItemUiModel {
 
   RatingStatus ratingStatus;
 
+  /// اللي العميل كتبه مع النجوم. فاضي = ماكتبش حاجة.
+  ///
+  /// **مش final** لنفس سبب [rating].
+  ///
+  /// ⚠ **مواصفة الـ endpoint دلوقتي بتاخد `booking_item_id` والنجوم بس.**
+  /// إضافة الحقل ده للعقد **طلب للباك إند مش عائق** — الحقل بيتكتب محليًا
+  /// وبيتعرض، وبيتقرا من الرد لو السيرفر بعته. اللي مكانش ينفع يفضل هو إن
+  /// الأبلكيشن **يسأل العميل يكتب** وبعدين يرمي اللي كتبه.
+  String ratingComment;
+
   BookingItemUiModel({
     required this.uuid,
     required this.visitUuid,
@@ -88,6 +98,7 @@ class BookingItemUiModel {
     this.originalPrice,
     this.rating,
     this.ratingStatus = RatingStatus.none,
+    this.ratingComment = '',
   });
 
   /// من رد `GET /api/user/bookings/{uuid}` — عنصر جوه `visits[].items[]`.
@@ -121,6 +132,9 @@ class BookingItemUiModel {
       rating: JsonParse.intOrNull(rating['rating'] ?? rating['stars']),
       ratingStatus: RatingStatusLabel.fromApi(
         JsonParse.stringValue(rating['status'], fallback: 'none'),
+      ),
+      ratingComment: JsonParse.stringValue(
+        rating['comment'] ?? rating['review'],
       ),
     );
   }

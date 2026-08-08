@@ -135,10 +135,17 @@ class BookingDetailsScreen extends StatelessWidget {
   /// و«زي المرة اللي فاتت» هو السلوك الغالب عند الكوافير والباربر، فده
   /// أعلى لحظة نية في الشاشة كلها وكانت بتترمي.
   ///
-  /// **الخدمة لسه مش متحدّدة مسبقًا.** ده محتاج `serviceUuid` على
-  /// `BookingItemUiModel` وهو مش موجود — بيتضاف مع شغل التقييم لكل خدمة
-  /// (البند 1.4) لأنه لازم ليه برضه. لحد ساعتها العميل بيقع على مختار
-  /// الخدمات بتاع المحل الصح، وده أحسن من الرجوع لليستة.
+  /// **الخدمة بتتحدّد مسبقًا** — زي بطاقة الإشعار في «مواعيدي» بالظبط.
+  ///
+  /// كان مكتوب هنا إن ده مستحيل لأن `serviceUuid` مش موجود على
+  /// `BookingItemUiModel`. **هو موجود** وحقل مطلوب من الأصل
+  /// (`booking_item_ui_model.dart:51`)، و`my_bookings_screen.dart` كان
+  /// بيبعته فعلاً. يعني مكانش فيه قرار تصميم — كان فيه مدخلين لنفس الـ
+  /// sheet وواحد بس بينفّذ صح، والعميل بياخد نتيجة أحسن أو أوحش على حسب
+  /// دخل منين.
+  ///
+  /// أول خدمة بس، زي المدخل التاني. حجز بكذا خدمة محتاج `List<String>` على
+  /// الـ sheet — والاتساق بين المدخلين أهم من ده دلوقتي.
   Future<void> _rebook(BuildContext context, BookingUiModel booking) async {
     final didBook = await CreateBookingSheet.show(
       context,
@@ -147,6 +154,7 @@ class BookingDetailsScreen extends StatelessWidget {
       // نفس فرع الحجز القديم — «زي المرة اللي فاتت» معناها نفس المكان
       // كمان، مش أول فرع في القايمة.
       branchUuid: booking.branchUuid,
+      serviceUuid: booking.items.first.serviceUuid,
     );
 
     if (didBook == true && context.mounted) {

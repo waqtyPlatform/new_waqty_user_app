@@ -80,8 +80,19 @@ class BookingDetailsCubit extends Cubit<BookingDetailsState> {
 
     emit(RateLoadingState());
 
+    // **التعليق بيتقرا فعلاً** — نفس اللي اتعمل في `cancelBooking` فوق.
+    //
+    // `rateCommentController` كان بيتعمل وبيتمسح وبيتربط في الشاشة
+    // وبيتـ dispose، و**محدش بيقرا `.text`**. العميل بيكتب رأيه في خدمة
+    // خلصت وبنرميه.
+    //
+    // ⚠ المواصفة الحالية بتاخد `booking_item_id` والنجوم بس، فالحقل ده
+    // **طلب للباك إند**. بس ده مايبررش إننا نسأل ونرمي.
+    final comment = rateCommentController.text.trim();
+
     // TODO(api): POST /api/user/bookings/{uuid}/rate
     //   الـ body بياخد `booking_item_id` — التقييم للخدمة مش للحجز.
+    //   و`comment` لسه مش في العقد — طلب مفتوح للباك إند.
     await Future.delayed(const Duration(milliseconds: 700));
 
     // **`pending` مش `published`.** السيرفر بيعمل التقييم
@@ -89,7 +100,9 @@ class BookingDetailsCubit extends Cubit<BookingDetailsState> {
     // لو وريناه منشور على طول، العميل يروح يدوّر عليه ومايلاقيهوش.
     item.rating = myRating;
     item.ratingStatus = RatingStatus.pending;
+    item.ratingComment = comment;
 
+    rateCommentController.clear();
     ratingItem = null;
     emit(RateSuccessState());
   }

@@ -33,6 +33,12 @@ class WaitlistCubit extends Cubit<WaitlistState> {
       onResume: load,
       onPause: _stopTimer,
     );
+
+    // الانضمام بيحصل من **جوه sheet** ممكن تكون مدفوعة من شاشة مش تحت
+    // الـ provider ده — فمافيش طريق مباشر ينده `load()`. الإشارة بتحل ده
+    // من غير ما الـ sheet تعرف حاجة عن الشجرة. يوم الربط بتتشال ومحلها
+    // إعادة القراءة بعد رد الـ `POST`.
+    MockWaitlist.revision.addListener(load);
   }
 
   /// TODO(api): GET /user/waitlist
@@ -51,32 +57,19 @@ class WaitlistCubit extends Cubit<WaitlistState> {
     emit(WaitlistReadyState(entries, tick: _tick));
   }
 
-  /// TODO(api): POST /user/waitlist
+  /// **الخروج من القائمة.**
   ///
-  /// الـ body: `{branch_uuid, service_uuid, employee_uuid?,
-  /// preferred_date, preferred_time, notes?}` — زي
-  /// `UserWaitlistController::store` بالظبط.
-  void addEntry({
-    required String providerName,
-    required String branchName,
-    required String serviceName,
-    required DateTime preferredAt,
-    String? employeeName,
-  }) {
-    MockWaitlist.add(
-      providerName: providerName,
-      branchName: branchName,
-      serviceName: serviceName,
-      preferredAt: preferredAt,
-      employeeName: employeeName,
-    );
-    load();
-  }
-
-  void removeEntry(String uuid) {
-    MockWaitlist.removeByUuid(uuid);
-    load();
-  }
+  /// TODO(api): DELETE /api/user/waitlist/{uuid}
+  ///
+  /// ⚠ **الـ endpoint ده مش موجود.** `load` و`joinWaitlist` بيشاوروا على
+  /// راوتس مبنية فعلاً (`routes/api.php:642-645`)، ودي **طلب للباك إند**
+  /// لسه ما اتعملش. لحد ما يتعمل، الشيل محلي بس — والعميل اللي خرج من
+  /// القائمة وقفل الأبلكيشن هيلاقي نفسه فيها تاني.
+  ///
+  /// الزرار موجود عشان ده **الفعل الوحيد** اللي الميزة بتديه للعميل: هو
+  /// مايقدرش يقبل عرض بنفسه (`accept` تحت `/provider/`)، فلو شيلنا
+  /// الخروج كمان بتبقى حاجة بتتعمل **عليه** مش معاه.
+  void removeEntry(String uuid) => MockWaitlist.removeByUuid(uuid);
 
   /// المؤقت بيشتغل **بس** لما فيه حجز مؤقت شغّال.
   void _syncTimer() {
@@ -110,6 +103,7 @@ class WaitlistCubit extends Cubit<WaitlistState> {
 
   @override
   Future<void> close() {
+    MockWaitlist.revision.removeListener(load);
     _stopTimer();
     _lifecycle?.dispose();
     return super.close();

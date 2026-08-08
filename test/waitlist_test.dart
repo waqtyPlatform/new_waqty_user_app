@@ -1,7 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:waqty_user_application/core/mock/mock_bookings.dart';
 import 'package:waqty_user_application/core/mock/mock_config.dart';
+import 'package:waqty_user_application/core/mock/mock_providers.dart';
 import 'package:waqty_user_application/core/mock/mock_scenario.dart';
+import 'package:waqty_user_application/core/mock/mock_services.dart';
 import 'package:waqty_user_application/core/mock/mock_waitlist.dart';
 import 'package:waqty_user_application/core/models/booking_ui_model.dart';
 import 'package:waqty_user_application/core/models/waitlist_ui_model.dart';
@@ -12,6 +14,7 @@ void main() {
     // الإلغاءات والإشعارات المقفولة `static` — من غير التصفير دي
     // بتتسرّب بين الاختبارات زي ما بتعيش بين الشاشات في الأبلكيشن.
     MockBookings.resetSession();
+    MockWaitlist.reset();
   });
   tearDown(() {
     MockConfig.scenario = MockScenario.happyPath;
@@ -68,6 +71,26 @@ void main() {
       expect(entry.explanation, isNot(contains('أكّد دلوقتي')));
     });
 
+    /// **`pending` كان بيوعد بإشعار مفيش transport ليه.**
+    ///
+    /// «هنبلّغك أول ما ميعاد يفضى» — و`app_device_tokens` بيتكتب فيه ومحدش
+    /// بيقراه. الجملة اللي تحتها على بعد سطر (`offered`) كانت صادقة، فالمشكلة
+    /// مكانتش عدم معرفة، كانت سطر اتنسي.
+    test('نص pending مابيوعدش بإشعار', () {
+      final pending = WaitlistUiModel(
+        uuid: 'wl-1',
+        status: WaitlistStatus.pending,
+        providerName: 'صالون كابتن',
+        branchName: 'فرع المعادي',
+        serviceName: 'قص شعر',
+        preferredAt: DateTime(2026, 8, 10, 14),
+        position: 2,
+      );
+
+      expect(pending.explanation, contains('الفرع'));
+      expect(pending.explanation, isNot(contains('هنبلّغك')));
+    });
+
     test('الحجز اللي عدّى بيبقى expired', () {
       MockConfig.scenario = MockScenario.waitlistExpired;
       final entry = MockWaitlist.forUser(DateTime.now()).first;
@@ -79,9 +102,9 @@ void main() {
 
     test('الإضافة بتبدأ pending — الفرع لسه ما عرضش', () {
       final entry = MockWaitlist.add(
-        providerName: 'صالون كابتن',
-        branchName: 'فرع المعادي',
-        serviceName: 'قص شعر',
+        providerUuid: 'prv-1',
+        branchUuid: 'brn-1',
+        serviceUuid: 'srv-1',
         preferredAt: DateTime(2026, 8, 10, 18),
       );
 
@@ -92,12 +115,100 @@ void main() {
       MockWaitlist.removeByUuid(entry.uuid);
       expect(MockWaitlist.forUser(DateTime.now()), isNot(contains(entry)));
     });
+
+    /// **كان بياخد أسامي — الشكل المعكوس بتاع الـ API.**
+    ///
+    /// `UserWaitlistController::store` بياخد uuids وبيرجّع كائنات فيها
+    /// الأسامي، فالـ mock كان بيخلّي يوم الربط إعادة كتابة مش تغيير سطر.
+    test('الأسامي بتتشتق من الـ uuids', () {
+      final entry = MockWaitlist.add(
+        providerUuid: 'prv-1',
+        branchUuid: 'brn-2',
+        serviceUuid: 'srv-1',
+        preferredAt: DateTime(2026, 8, 10, 18),
+      );
+
+      expect(entry.providerName, MockProviders.byUuid('prv-1').name);
+      expect(
+        entry.branchName,
+        MockProviders.branchByUuid(
+          providerUuid: 'prv-1',
+          branchUuid: 'brn-2',
+        )!.name,
+      );
+      expect(entry.serviceName, MockServices.byUuid('srv-1').name);
+      // «أي أخصائي متاح» بيتبعت فاضي — فمفيش اسم يتعرض.
+      expect(entry.employeeName, isNull);
+    });
+
+    /// **`wl-${_entries.length + 1}` كان بيتكرر بعد أي شيل.**
+    ///
+    /// `[wl-2, wl-1]` → تشيل `wl-2` → الطول ١ → الإضافة اللي بعدها `wl-2`
+    /// تاني، و`removeByUuid` بتبقى ملتبسة على uuid موجود مرتين.
+    test('الـ uuid مابيتكررش بعد الشيل', () {
+      DateTime at(int hour) => DateTime(2026, 8, 10, hour);
+      final seen = <String>{};
+
+      final first = MockWaitlist.add(
+        providerUuid: 'prv-1',
+        branchUuid: 'brn-1',
+        serviceUuid: 'srv-1',
+        preferredAt: at(10),
+      );
+      final second = MockWaitlist.add(
+        providerUuid: 'prv-1',
+        branchUuid: 'brn-1',
+        serviceUuid: 'srv-2',
+        preferredAt: at(12),
+      );
+      MockWaitlist.removeByUuid(second.uuid);
+      final third = MockWaitlist.add(
+        providerUuid: 'prv-1',
+        branchUuid: 'brn-1',
+        serviceUuid: 'srv-2',
+        preferredAt: at(14),
+      );
+
+      seen.addAll(<String>[first.uuid, second.uuid, third.uuid]);
+      expect(seen.length, 3);
+    });
+
+    /// **«ضفناك — هتلاقيها في مواعيدك» كانت بتكدب.**
+    ///
+    /// `WaitlistCubit` بيقرا وقت `start` والرجوع من الخلفية بس، ومحدش كان
+    /// بيقوله إن فيه كتابة حصلت.
+    test('أي كتابة بتنبّه المشتركين', () {
+      var beats = 0;
+      void listener() => beats++;
+      MockWaitlist.revision.addListener(listener);
+      addTearDown(() => MockWaitlist.revision.removeListener(listener));
+
+      final entry = MockWaitlist.add(
+        providerUuid: 'prv-1',
+        branchUuid: 'brn-1',
+        serviceUuid: 'srv-1',
+        preferredAt: DateTime(2026, 8, 10, 18),
+      );
+      expect(beats, 1);
+
+      MockWaitlist.removeByUuid(entry.uuid);
+      expect(beats, 2);
+    });
+
+    /// الخروج كان ظاهر وقت العدّاد كمان — دوسة غلط بتدّي ميعادك لحد تاني
+    /// وإنت مستني الفرع يتصل.
+    test('الخروج من القائمة مقفول وقت العرض الشغّال', () {
+      expect(WaitlistStatus.pending.canLeaveQueue, isTrue);
+      expect(WaitlistStatus.offered.canLeaveQueue, isFalse);
+      // الاتنين لسه `isLive` — الفرق مقصود.
+      expect(WaitlistStatus.offered.isLive, isTrue);
+    });
   });
 
   group('5.4 + ج٤ — حلقة الإلغاء', () {
     test('السبب بيتخزّن وبيتعرض', () {
-      // حجز النهاردة `canCancel: false` بقاعدة السيرفر، فبنستخدم
-      // سيناريو فيه حجز بعيد ينفع يتلغي.
+      // سيناريو فيه حجز ينفع يتلغي — الإلغاء بيتقفل لما الميعاد
+      // **يبدأ**، مش عشان هو النهاردة.
       MockConfig.scenario = MockScenario.multiServiceOneVisit;
       final target = MockBookings.upcoming.firstWhere((b) => b.canCancel);
       MockBookings.markCancelled(target.uuid, reason: 'ظروف طارئة');
@@ -110,8 +221,8 @@ void main() {
     });
 
     test('الملغي بيخرج من «القادمة» على طول', () {
-      // حجز النهاردة `canCancel: false` بقاعدة السيرفر، فبنستخدم
-      // سيناريو فيه حجز بعيد ينفع يتلغي.
+      // سيناريو فيه حجز ينفع يتلغي — الإلغاء بيتقفل لما الميعاد
+      // **يبدأ**، مش عشان هو النهاردة.
       MockConfig.scenario = MockScenario.multiServiceOneVisit;
       final target = MockBookings.upcoming.firstWhere((b) => b.canCancel);
       MockBookings.markCancelled(target.uuid, reason: '');

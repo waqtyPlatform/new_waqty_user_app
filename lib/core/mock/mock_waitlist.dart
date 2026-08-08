@@ -1,5 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:waqty_user_application/core/mock/mock_config.dart';
+import 'package:waqty_user_application/core/mock/mock_employees.dart';
+import 'package:waqty_user_application/core/mock/mock_providers.dart';
 import 'package:waqty_user_application/core/mock/mock_scenario.dart';
+import 'package:waqty_user_application/core/mock/mock_services.dart';
 import 'package:waqty_user_application/core/models/waitlist_ui_model.dart';
 
 /// MOCK — يتشال عند ربط: GET /user/waitlist · POST /user/waitlist
@@ -18,6 +22,40 @@ class MockWaitlist {
   /// `static` عن قصد: الشاشة بتتقفل وتتفتح والإدخال لازم يفضل. يوم
   /// الربط ده بيبقى نداء شبكة والليستة دي بتتشال.
   static final List<WaitlistUiModel> _entries = <WaitlistUiModel>[];
+
+  /// **بينبض كل ما القائمة تتغيّر.**
+  ///
+  /// الـ sheet بتقول للعميل «ضفناك — هتلاقيها في مواعيدك»، وهو بيروح
+  /// مواعيدي ومايلاقيش حاجة: `WaitlistCubit` بيقرا وقت `start` ووقت
+  /// الرجوع من الخلفية بس، ومحدش بيقوله إن فيه كتابة حصلت. يعني الشاشة
+  /// كانت بتكدب بالحرف.
+  ///
+  /// ⚠ **ليه إشارة مش نداء `load()` عند كل موضع.** الـ `WaitlistCubit`
+  /// بيتعمل **جوه** `ButtonNavigationBarScreen`، فالشاشات المدفوعة (تفاصيل
+  /// المحل، تفاصيل الحجز) مش تحته في الشجرة — و`WaitlistCubit.get(context)`
+  /// من عندهم بترمي. والانضمام من صفحة المحل هو الطريق الغالب أصلاً.
+  ///
+  /// نفس شكل `MockConfig.scenarioListenable` — الـ mock بيقول «اتغيّرت»
+  /// واللي مهتم بيسمع، من غير ما يعرف مين شغّاله ولا فين هو في الشجرة.
+  /// يوم الربط دي بتتشال ومحلها إعادة القراءة بعد رد الـ `POST`.
+  static final ValueNotifier<int> revision = ValueNotifier<int>(0);
+
+  /// عدّاد بيزيد بس — **مش `_entries.length + 1`**.
+  ///
+  /// الطول بيرجع لورا بعد أي شيل: `[wl-2, wl-1]` → تشيل `wl-2` → الطول ١ →
+  /// الإضافة اللي بعدها بتبقى `wl-2` تاني. و`removeByUuid` بتبقى ملتبسة
+  /// على uuid موجود مرتين في نفس الجلسة.
+  static int _nextId = 1;
+
+  /// **للاختبارات بس** — نظير [MockBookings.resetSession].
+  ///
+  /// الليستة `static` عشان الإدخال يعيش بين الشاشات، وده صح في الأبلكيشن
+  /// وغلط في الاختبارات: إدخال من اختبار بيظهر في اللي بعده.
+  static void reset() {
+    _entries.clear();
+    _nextId = 1;
+    revision.value = 0;
+  }
 
   /// إدخالات العميل — **حسب السيناريو**.
   static List<WaitlistUiModel> forUser(DateTime now) {
@@ -43,30 +81,53 @@ class MockWaitlist {
   ///
   /// الإدخال بيتولد `pending` و`source = 'user_api'` وبترتيب في قائمة
   /// الفرع، زي ما `BookingWaitlistService` بيعمل بالظبط.
+  ///
+  /// ## بياخد uuids مش أسامي
+  ///
+  /// كان بياخد `providerName`/`branchName`/`serviceName` — يعني الشكل
+  /// **المعكوس** بتاع الـ API: `UserWaitlistController::store` بياخد
+  /// `{branch_uuid, service_uuid, employee_uuid?}` وبيرجّع كائنات متداخلة
+  /// فيها الأسامي، و`WaitlistUiModel.fromJson` بتقراها كده أصلاً.
+  ///
+  /// يوم الربط ده كان معناه إعادة كتابة كل نداء بدل تغيير سطر النداء —
+  /// وده بالظبط اللي `MockSource` مكتوب إنه موجود عشان يمنعه. الأسامي
+  /// بتتحل من الـ uuids هنا، زي ما السيرفر بيعمل.
   static WaitlistUiModel add({
-    required String providerName,
-    required String branchName,
-    required String serviceName,
+    required String providerUuid,
+    required String branchUuid,
+    required String serviceUuid,
     required DateTime preferredAt,
-    String? employeeName,
+    String? employeeUuid,
   }) {
+    final provider = MockProviders.byUuid(providerUuid);
+    final branch = MockProviders.branchByUuid(
+      providerUuid: providerUuid,
+      branchUuid: branchUuid,
+    );
+    final service = MockServices.byUuid(serviceUuid);
+
     final entry = WaitlistUiModel(
-      uuid: 'wl-${_entries.length + 1}',
+      uuid: 'wl-${_nextId++}',
       status: WaitlistStatus.pending,
-      providerName: providerName,
-      branchName: branchName,
-      serviceName: serviceName,
-      employeeName: employeeName,
+      providerName: provider.name,
+      branchName: branch?.name ?? '',
+      serviceName: service.name,
+      employeeName: employeeUuid == null || employeeUuid.isEmpty
+          ? null
+          : MockEmployees.byUuid(employeeUuid).name,
       preferredAt: preferredAt,
       position: _entries.length + 2,
     );
 
     _entries.insert(0, entry);
+    revision.value++;
     return entry;
   }
 
-  static void removeByUuid(String uuid) =>
-      _entries.removeWhere((e) => e.uuid == uuid);
+  static void removeByUuid(String uuid) {
+    _entries.removeWhere((e) => e.uuid == uuid);
+    revision.value++;
+  }
 
   /// عرض شغّال بعدّاد بينزل — ده اللي السيناريو معمول عشانه.
   static WaitlistUiModel _offered(DateTime now) => WaitlistUiModel(

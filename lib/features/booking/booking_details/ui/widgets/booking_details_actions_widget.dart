@@ -82,9 +82,16 @@ class BookingDetailsActionsWidget extends StatelessWidget {
                     color: AppSemanticColors.textSecondary,
                   ),
                   horizontalSpace(AppSpacing.s8),
+                  // **القاعدة الحقيقية إن الميعاد بدأ، مش إنه النهاردة.**
+                  //
+                  // `Booking::getCanCancelAttribute()` بيرجّع false لما
+                  // الميعاد **يعدّي**، مش عشان هو في نفس اليوم. حجز
+                  // النهاردة ٦م وإنت بتبصّ ٢ظ `can_cancel: true` — فالنص
+                  // القديم كان بيمنع العميل من حاجة مسموحة له، ويبعته
+                  // يكلّم الفرع في مشكلة مش موجودة.
                   Expanded(
                     child: Text(
-                      'حجز النهاردة مش هينفع يتلغي من الأبلكيشن — كلّم الفرع لو محتاج تعدّل',
+                      'الميعاد ده بدأ خلاص — كلّم الفرع لو محتاج تعدّل أو تلغي',
                       style: AppTextStyles.caption,
                     ),
                   ),

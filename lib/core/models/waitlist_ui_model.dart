@@ -41,6 +41,17 @@ extension WaitlistStatusLabel on WaitlistStatus {
   bool get isLive =>
       this == WaitlistStatus.pending || this == WaitlistStatus.offered;
 
+  /// ينفع يخرج من القائمة دلوقتي؟ — **مستني بس**.
+  ///
+  /// ⚠ **مش [isLive].** الخروج كان ظاهر في الحالتين، يعني الزرار كان قابل
+  /// للدوس **وسط عدّاد الـ٥ دقايق** ومن غير أي تأكيد. والدوسة الغلط هناك
+  /// مش رجوع فيها: الميعاد بيروح لحد تاني فورًا، وهو بالظبط اللي كان
+  /// مستني منه رد.
+  ///
+  /// وقت العرض الشغّال الفرع بيتصل بيه — الخروج مش نية معقولة في اللحظة
+  /// دي أصلاً. الإخفاء أرخص وأأمن من sheet تأكيد لطريق مالوش لازمة.
+  bool get canLeaveQueue => this == WaitlistStatus.pending;
+
   static WaitlistStatus fromApi(String? value) => switch (value) {
     'offered' => WaitlistStatus.offered,
     'expired' => WaitlistStatus.expired,
@@ -168,8 +179,15 @@ class WaitlistUiModel {
   /// الوقت خلص، الميعاد بيروح لحد تاني فعلاً — دي مش تهديد، دي اللي
   /// `BookingWaitlistService` بيعمله لما الحجز المؤقت ينتهي.
   String get explanation => switch (status) {
+    // كان «هنبلّغك أول ما ميعاد يفضى» — **وعد بإشعار مفيش transport ليه.**
+    // `app_device_tokens` بيتكتب فيه ومحدش بيقراه: مفيش sender ولا job ولا
+    // listener ولا package. يعني الجملة دي كانت بتقول للعميل «سيبها علينا»
+    // وهو مش هيوصله حاجة أبدًا.
+    //
+    // نفس نبرة `offered` تحتها بالظبط — الفرع هو اللي بيتحرّك، وده اللي
+    // بيحصل فعلاً. ترجع أول ما حاجة تقرا `app_device_tokens`.
     WaitlistStatus.pending =>
-      'هنبلّغك أول ما ميعاد يفضى في اليوم ده',
+      'لما ميعاد يفضى في اليوم ده، الفرع هيتصل بيك',
     // **الصدق هنا مقصود.** العميل مايقدرش يقبل بنفسه — مفيش endpoint.
     WaitlistStatus.offered =>
       'الفرع هيتصل بيك يأكّد — خلّي التليفون معاك. '

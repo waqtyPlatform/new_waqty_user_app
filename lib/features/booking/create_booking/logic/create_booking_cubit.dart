@@ -63,10 +63,24 @@ class CreateBookingCubit extends Cubit<CreateBookingState> {
             orElse: () => branches.first,
           );
 
-    services = MockServices.ofProvider(providerUuid);
+    // **بسعر الفرع المختار** — نفس اللي صفحة المحل بتعرضه.
+    //
+    // كانت `ofProvider` (سعر الفرع الرئيسي دايمًا)، فالعميل الواقف على
+    // الفرع التاني كان يشوف ٢٩٠ في الصفحة ويدوس فيلاقي ٢٥٠ في الـ sheet.
+    // تناقض في ضغطة واحدة، وهو بالظبط اللي بُعد الفرع اتعمل عشانه.
+    services = MockServices.ofBranch(
+      providerUuid: providerUuid,
+      branchUuid: selectedBranch?.uuid,
+    );
 
     if (initialServiceUuid != null && initialServiceUuid.isNotEmpty) {
-      final service = MockServices.byUuid(initialServiceUuid);
+      // من القايمة المسعّرة الأول. الـ fallback لـ`byUuid` للخدمة اللي
+      // مش متاحة في الفرع ده — «احجز تاني» بيقدر يجيب خدمة اتحجزت قبل
+      // كده في فرع تاني.
+      final service = services.firstWhere(
+        (s) => s.uuid == initialServiceUuid,
+        orElse: () => MockServices.byUuid(initialServiceUuid),
+      );
       _addItem(service);
       currentStep = BookingStep.dateTime;
     }
@@ -236,6 +250,11 @@ class CreateBookingCubit extends Cubit<CreateBookingState> {
 
     // الفرع اتغيّر — الأخصائيين والمواعيد كلها بتختلف، فكل اختيارات
     // التوقيت في السلة بتتلغي. الخدمات نفسها بتفضل.
+    //
+    // ⚠ **الأسعار في السلة مابتتسعّرش من جديد هنا.** إعادة التسعير جوه
+    // الـ sheet معناها إن خدمة في السلة ممكن تختفي من الفرع الجديد،
+    // ومفيش تعامل مع ده — والسؤال «نشيلها؟ نسيبها بسعرها القديم؟ نمنع
+    // التغيير؟» سؤال منتج مش توصيلة. أسبوع ٢.
     for (final item in items) {
       _clearScheduling(item);
     }
@@ -734,16 +753,15 @@ class CreateBookingCubit extends Cubit<CreateBookingState> {
     final preferredAt =
         item.takenSlot?.startAt ?? item.selectedDate ?? DateTime.now();
 
-    // TODO(api): POST /api/user/waitlist
-    //   {branch_uuid, service_uuid, employee_uuid?, preferred_date,
-    //    preferred_time}
+    // TODO(api): POST /api/user/waitlist — النداء اللي تحت **هو** جسم الطلب
+    //   حقل بحقل، فيوم الربط بيتغيّر سطر النداء بس.
     MockWaitlist.add(
-      providerName: providerName,
-      branchName: selectedBranch?.name ?? '',
-      serviceName: item.service.name,
+      providerUuid: providerUuid,
+      branchUuid: selectedBranch?.uuid ?? '',
+      serviceUuid: item.service.uuid,
       preferredAt: preferredAt,
       // نفس قاعدة الحجز: «أي أخصائي متاح» بيتبعت **فاضي**، مش باسم.
-      employeeName: item.employee.isAnyAvailable ? null : item.employee.name,
+      employeeUuid: item.employee.isAnyAvailable ? null : item.employee.uuid,
     );
 
     emit(JoinedWaitlistState(serviceName: item.service.name));
@@ -815,8 +833,14 @@ class CreateBookingCubit extends Cubit<CreateBookingState> {
     emit(CreateBookingSuccessState());
   }
 
-  /// حجز النهاردة مايتلغيش بعد التأكيد — قاعدة موجودة في السيرفر
-  /// والعميل مكانش بيعرفها غير بعد ما يقع فيها.
+  /// فيه خدمة النهاردة؟ — **فلتر أهمية للتنبيه، مش قاعدة الإلغاء**.
+  ///
+  /// ⚠ القاعدة الحقيقية في `Booking::getCanCancelAttribute()` إن الإلغاء
+  /// بيتقفل لما الميعاد **يبدأ**، مش عشان هو في نفس اليوم. الاسم هنا كان
+  /// بيتقرا كأنه القاعدة نفسها، والنص اللي فوقه كان بيقول كده بالحرف.
+  ///
+  /// اللي بيفضل صح إن ميعاد النهاردة هو الوحيد اللي نافذة إلغائه ممكن
+  /// تقفل قبل ما العميل يفتح الأبلكيشن تاني — فالتنبيه يلزم هنا وبس.
   ///
   /// **أي** خدمة النهاردة بتكفي: العميل بيرتبط بالحجز كله، ولو أول
   /// زيارة النهاردة يبقى مربوط دلوقتي.

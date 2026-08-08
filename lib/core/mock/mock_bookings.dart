@@ -50,10 +50,19 @@ class MockBookings {
     double? originalPrice,
     int? rating,
     RatingStatus ratingStatus = RatingStatus.none,
+    String ratingComment = '',
+    int? minutesFromNow,
   }) {
-    final startAt = _today.add(
-      Duration(days: inDays, hours: atHour, minutes: atMinute),
-    );
+    // **إزاحة من دلوقتي، مش من نص الليل.**
+    //
+    // الحساب العادي بيبني الميعاد من `_today` + ساعات، فحالة زي «الميعاد
+    // بدأ من نص ساعة» بتبقى صح أو غلط على حسب الساعة اللي التستر فاتح
+    // فيها الأبلكيشن. الإزاحة النسبية بتدّي نفس الحالة في أي وقت.
+    final startAt = minutesFromNow != null
+        ? DateTime.now().add(Duration(minutes: minutesFromNow))
+        : _today.add(
+            Duration(days: inDays, hours: atHour, minutes: atMinute),
+          );
     return BookingItemUiModel(
       uuid: _ulid(seed),
       visitUuid: visitUuid,
@@ -66,6 +75,7 @@ class MockBookings {
       originalPrice: originalPrice,
       rating: rating,
       ratingStatus: ratingStatus,
+      ratingComment: ratingComment,
     );
   }
 
@@ -98,6 +108,8 @@ class MockBookings {
     MockScenario.multiVisitSameDay => <BookingUiModel>[_twoVisitsSameDay],
     MockScenario.manyBookings => _many,
     MockScenario.twoBranches => _sameProviderTwoBranches,
+    MockScenario.twoBranchesDifferentPricing => _secondBranchPricing,
+    MockScenario.cancelWindowClosed => <BookingUiModel>[_cancelWindowClosed],
     MockScenario.branchClosedToday => <BookingUiModel>[_afterClosedDay],
     // **فاضي بالقصد.** التلاتة دول بيعيشوا في فلو الحجز وفي كارت قائمة
     // الانتظار، مش في ليستة المواعيد. لو حطينا حجوزات فوقهم، التستر
@@ -120,6 +132,15 @@ class MockBookings {
   /// الحجز.
   static List<BookingUiModel> get past =>
       _terminal.where((b) => b.status == BookingStatus.completed).toList();
+
+  /// التبويب اللي الـ cubit طالبه — **بيرجّع القايمة كاملة، مش صفحة**.
+  ///
+  /// التقطيع بيقعد في `MockSource.fetchPage` عشان حساب الترقيم يفضل في
+  /// مكان واحد. وهنا بيقعد **التبويب** عشان الـ cubit مايفضلش بيقرا حالته
+  /// من getter بيقرا حقل بيتغيّر تحته وسط الـ `await` — وده كان بيخلي صفحة
+  /// من تبويب تتلحق على تبويب تاني.
+  static List<BookingUiModel> forTab({required bool upcoming}) =>
+      upcoming ? MockBookings.upcoming : past;
 
   /// النهايات اللي مش مكتملة — بتتعرض كإشعار يتقفل مش كصف دايم.
   static List<BookingUiModel> get notices => _terminal
@@ -172,15 +193,22 @@ class MockBookings {
         branchAddress: '12 شارع 9، المعادي، القاهرة',
         imagePath: '',
         status: BookingStatus.confirmed,
-        canCancel: i > 0,
+        // **كان `i > 0`** — يعني أول حجز (النهاردة) مقفول الإلغاء، نفس
+        // سوء الفهم بتاع «النهاردة = ممنوع». وكان **بيعتمد على الساعة**
+        // كمان: الحجز ده ١٠ص، فقبل العاشرة كان مايبدأش والفيكستشر بتقول
+        // إنه بدأ.
+        //
+        // السيناريو ده سؤاله الترقيم، مش الإلغاء. حالة «الإلغاء مقفول»
+        // ليها `cancelWindowClosed`.
+        canCancel: true,
         items: <BookingItemUiModel>[
           _item(
             seed: 'P${i.toString().padLeft(3, '0')}A',
             serviceUuid: 'srv-1',
             serviceName: 'قص شعر',
             employeeName: 'أحمد محمود',
-            // موزّعين على الأيام الجاية عشان الترتيب يبان طبيعي.
-            inDays: i,
+            // من **بكرة** — عشان مفيش واحد فيهم يكون بدأ وقت التجربة.
+            inDays: i + 1,
             atHour: 10 + (i % 8),
             durationMinutes: 45,
             price: 250,
@@ -220,9 +248,9 @@ class MockBookings {
 
   /// الليستة الكاملة.
   ///
-  /// فيها واحد **النهاردة** بالقصد — عشان نتأكد إن زرار الإلغاء بيتخفي
-  /// (`canCancel: false`)، ودي القاعدة اللي السيرفر فارضها ومحدش كان
-  /// بيقولها للعميل.
+  /// فيها واحد **النهاردة** بالقصد — بس `canCancel: true`، لأن الميعاد
+  /// لسه ما بدأش. حالة «الإلغاء مقفول» ليها سيناريو لوحدها دلوقتي
+  /// ([MockScenario.cancelWindowClosed]).
   static List<BookingUiModel> get _allUpcoming => <BookingUiModel>[
     _singleService,
     _threeServices,
@@ -240,7 +268,14 @@ class MockBookings {
       branchAddress: '12 شارع 9، المعادي، القاهرة',
       imagePath: '',
       status: BookingStatus.confirmed,
-      canCancel: false, // النهاردة — الإلغاء مش مسموح
+      // **كان `false` بتعليق «النهاردة — الإلغاء مش مسموح».**
+      //
+      // الفيكستشر كانت مشفّرة نفس سوء الفهم بتاع النص: القاعدة في
+      // `Booking::getCanCancelAttribute()` إن الميعاد **يعدّي**، مش إنه في
+      // نفس اليوم. حجز النهاردة ٦م وإنت بتبصّ ٢ظ `can_cancel: true`.
+      //
+      // ولو سبناها غلط، أول واحد يقرا الداتا هيعيد استنتاج النص الغلط.
+      canCancel: true,
       items: <BookingItemUiModel>[
         _item(
           seed: 'M9Q4A1',
@@ -473,6 +508,102 @@ class MockBookings {
     ),
   ];
 
+  /// **الميعاد بدأ من نص ساعة والإلغاء اتقفل.**
+  ///
+  /// الحالة دي مكانش ليها fixture خالص — يعني النص اللي بيتعرض فيها
+  /// («حجز النهاردة مش هينفع يتلغي») **عمره ما اتشاف في سياقه**، وعشان
+  /// كده فضل غلط كل الوقت ده.
+  ///
+  /// لسه `confirmed` مش `inProgress`: الفرع ما علّمش الوصول، وده اللي
+  /// بيحصل فعلاً كتير. الحجز بيفضل تحت «القادمة» فالعميل بيلاقيه ويدوس.
+  static BookingUiModel get _cancelWindowClosed => BookingUiModel(
+    uuid: _ulid('CWC1'),
+    providerUuid: 'prv-1',
+    providerName: 'صالون كابتن',
+    branchUuid: 'brn-1',
+    branchName: 'فرع المعادي',
+    branchAddress: '12 شارع 9، المعادي، القاهرة',
+    imagePath: '',
+    status: BookingStatus.confirmed,
+    // بقاعدة السيرفر: الميعاد عدّى، فالإلغاء اتقفل.
+    canCancel: false,
+    items: <BookingItemUiModel>[
+      _item(
+        seed: 'CWC1A1',
+        serviceUuid: 'srv-1',
+        serviceName: 'قص شعر',
+        employeeName: 'أحمد محمود',
+        // مالهمش لازمة مع `minutesFromNow` — بس الـ helper بيطلبهم.
+        inDays: 0,
+        atHour: 0,
+        durationMinutes: 45,
+        price: 250,
+        minutesFromNow: -30,
+      ),
+    ],
+  );
+
+  /// **نفس الخدمة في الفرعين بسعرين** — دي حجة السيناريو كلها.
+  ///
+  /// الحجزين على **نفس الخدمة** (`srv-1` قص شعر) في فرعين، بـ٢٥٠ و٢٩٠.
+  /// الفرق مش مصادفة: هو `MockServices` بيحسبه بمعامل الفرع، فالقايمة
+  /// بتقول نفس اللي صفحة المحل هتقوله لما التستر يغيّر الفرع.
+  ///
+  /// ليه فيكستشر لوحدها بدل ما ترجّع فاضي: `regression_test` بيطلب إن كل
+  /// سيناريو تكون بصمته مختلفة، والفاضي بيتصادم مع تلات سيناريوهات تانية
+  /// بتستخدمه.
+  static List<BookingUiModel> get _secondBranchPricing => <BookingUiModel>[
+    BookingUiModel(
+      uuid: _ulid('BPR1'),
+      providerUuid: 'prv-1',
+      providerName: 'صالون كابتن',
+      branchUuid: 'brn-1',
+      branchName: 'فرع المعادي',
+      branchAddress: '12 شارع 9، المعادي، القاهرة',
+      imagePath: '',
+      status: BookingStatus.confirmed,
+      canCancel: true,
+      items: <BookingItemUiModel>[
+        _item(
+          seed: 'BPR1A1',
+          serviceUuid: 'srv-1',
+          serviceName: 'قص شعر',
+          employeeName: 'أحمد محمود',
+          inDays: 2,
+          atHour: 12,
+          durationMinutes: 45,
+          price: 250,
+        ),
+      ],
+    ),
+    BookingUiModel(
+      uuid: _ulid('BPR2'),
+      providerUuid: 'prv-1',
+      providerName: 'صالون كابتن',
+      branchUuid: 'brn-2',
+      branchName: 'فرع مدينة نصر',
+      branchAddress: '45 شارع مصطفى النحاس، مدينة نصر، القاهرة',
+      imagePath: '',
+      status: BookingStatus.confirmed,
+      canCancel: true,
+      items: <BookingItemUiModel>[
+        _item(
+          seed: 'BPR2A1',
+          serviceUuid: 'srv-1',
+          // نفس الخدمة بالحرف — والفرق في السعر بس.
+          serviceName: 'قص شعر',
+          // وأحمد مش هنا أصلاً، فالحجز مع حد تاني.
+          employeeName: 'محمد سيد',
+          inDays: 4,
+          atHour: 19,
+          durationMinutes: 45,
+          // ٢٥٠ × ١٫١٥ مقرّبة لأقرب ٥ — نفس حساب `MockServices._pricedAt`.
+          price: 290,
+        ),
+      ],
+    ),
+  ];
+
   /// اليوم مقفول فالعميل حجز في **أول يوم شغل بعده**.
   ///
   /// الحجز في فرع مدينة نصر عشان يبان إنه اختيار تاني مش الافتراضي،
@@ -639,6 +770,9 @@ class MockBookings {
           price: 500,
           rating: 5,
           ratingStatus: RatingStatus.published,
+          // عشان طريق عرض التعليق يبقى عليه داتا من غير ما حد يقعد يكتب
+          // في التقييم كل جلسة تجربة.
+          ratingComment: 'كريم محترم والمكان هادي، هرجع تاني أكيد',
         ),
         _item(
           seed: 'F7S2A2',

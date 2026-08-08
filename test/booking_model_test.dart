@@ -206,6 +206,56 @@ void main() {
       expect(booking.status.canRate, isFalse);
       expect(booking.rateableItems, isEmpty);
     });
+
+    /// **الأبلكيشن كان بيسأل العميل يكتب رأيه وبيرميه.**
+    ///
+    /// `rateCommentController` كان بيتعمل وبيتمسح وبيتربط في الشاشة
+    /// وبيتـ dispose — وولا سطر بيقرا `.text`.
+    group('تعليق التقييم', () {
+      test('بيتقرا من الرد', () {
+        final item = BookingItemUiModel.fromJson(<String, dynamic>{
+          'uuid': 'itm-1',
+          'visit_uuid': 'v1',
+          'service': <String, dynamic>{'uuid': 'srv-1', 'name': 'قص شعر'},
+          'employee': <String, dynamic>{'name': 'أحمد'},
+          'start_at': '2026-08-01 14:00:00',
+          'duration_minutes': 45,
+          'booked_price': 250,
+          'rating': <String, dynamic>{
+            'rating': 5,
+            'status': 'published',
+            'comment': 'ممتاز',
+          },
+        });
+
+        expect(item.rating, 5);
+        expect(item.ratingComment, 'ممتاز');
+      });
+
+      test('مفيش تعليق = نص فاضي مش null', () {
+        final item = BookingItemUiModel.fromJson(<String, dynamic>{
+          'uuid': 'itm-2',
+          'visit_uuid': 'v1',
+          'service': <String, dynamic>{'uuid': 'srv-1', 'name': 'قص شعر'},
+          'employee': <String, dynamic>{'name': 'أحمد'},
+          'start_at': '2026-08-01 14:00:00',
+          'duration_minutes': 45,
+          'booked_price': 250,
+        });
+
+        expect(item.ratingComment, isEmpty);
+      });
+
+      test('الفيكستشر المنشورة عليها تعليق يتعرض', () {
+        MockConfig.scenario = MockScenario.completedPartiallyRated;
+        final booking = MockBookings.past.first;
+
+        final published = booking.items.firstWhere(
+          (i) => i.ratingStatus == RatingStatus.published,
+        );
+        expect(published.ratingComment, isNotEmpty);
+      });
+    });
   });
 
   group('السيناريوهات', () {

@@ -18,6 +18,7 @@ import 'package:waqty_user_application/features/service_provider_details/service
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/logic/service_provider_details_state.dart';
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/widgets/service_provider_details_actions_widget.dart';
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/widgets/service_provider_details_booking_bar_widget.dart';
+import 'package:waqty_user_application/core/widgets/skeleton_box_widget.dart';
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/widgets/service_provider_details_branch_row_widget.dart';
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/widgets/service_provider_details_header_widget.dart';
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/widgets/service_provider_details_meta_widget.dart';
@@ -74,7 +75,9 @@ class ServiceProviderDetailsScreen extends StatelessWidget {
           // الـ Scaffold بيقصّ ارتفاع الـ body بمقداره لوحده، فآخر صف في
           // الليستة مابيتغطّاش — والحل بالـ Stack كان بيحتاج حشوة سفلية
           // مكتوبة بالإيد لازم تتظبط كل ما الشريط يتغيّر.
-          bottomNavigationBar: cubit.services.isEmpty
+          // `isReloadingBranch` في الشرط عشان الشريط مايختفيش ويرجع في
+          // اللحظة اللي الخدمات فيها بتتحمّل — الوميض بيقرا عطل.
+          bottomNavigationBar: cubit.services.isEmpty && !cubit.isReloadingBranch
               ? null
               : ServiceProviderDetailsBookingBarWidget(
                   services: cubit.services,
@@ -102,7 +105,10 @@ class ServiceProviderDetailsScreen extends StatelessWidget {
                   delegate: SliverChildListDelegate([
                     // الاسم والتصنيف اتنقلوا **فوق الصورة** في الهيدر —
                     // كانوا هنا مكرّرين تحت لوح ملوّن بلا سياق.
-                    ServiceProviderDetailsMetaWidget(provider: provider),
+                    ServiceProviderDetailsMetaWidget(
+                      provider: provider,
+                      services: cubit.services,
+                    ),
 
                     if (branch != null) ...[
                       verticalSpace(AppSpacing.s16),
@@ -135,11 +141,38 @@ class ServiceProviderDetailsScreen extends StatelessWidget {
                     // العنوان شايل الفاصل ٤٠ بنفسه. قبل كده الفاصل قبل
                     // «الخدمات» كان ٢٤ وقبل «الأخصائيين» ١٦ — **نفس
                     // العلاقة البنيوية بقيمتين مختلفتين**.
-                    if (cubit.services.isNotEmpty)
+                    if (cubit.services.isNotEmpty || cubit.isReloadingBranch)
                       const AppSectionHeaderWidget(title: 'الخدمات'),
                   ]),
                 ),
               ),
+
+              // **الأسعار بتتغيّر مع الفرع، فالصفوف بتتحمّل من الأول.**
+              //
+              // من غير الـ skeleton الصفوف بتفضل على أسعار الفرع القديم
+              // لحد ما التحميل يخلص — وده أوحش من الفراغ: العميل بيبص على
+              // أرقام مش بتاعة المكان اللي هو مختاره دلوقتي.
+              if (cubit.isReloadingBranch)
+                SliverToBoxAdapter(
+                  child: SkeletonGroupWidget(
+                    child: Column(
+                      children: List<Widget>.generate(
+                        3,
+                        (_) => Padding(
+                          padding: EdgeInsetsDirectional.symmetric(
+                            horizontal: AppSpacing.pageGutter.w,
+                            vertical: AppSpacing.s12.h,
+                          ),
+                          child: const SkeletonBoxWidget(
+                            width: double.infinity,
+                            height: 40,
+                            animate: false,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
 
               // **الخدمات بره الهامش عن قصد.**
               //
@@ -148,7 +181,7 @@ class ServiceProviderDetailsScreen extends StatelessWidget {
               // الشعري كان هيقف قبل حافة الشاشة بـ ١٦ — يعني بيرسم حد
               // لكارت مش موجود. سلايفر لوحده أنضف من هامش سالب.
               SliverList.builder(
-                itemCount: cubit.services.length,
+                itemCount: cubit.isReloadingBranch ? 0 : cubit.services.length,
                 itemBuilder: (context, index) {
                   final service = cubit.services[index];
 
@@ -203,7 +236,13 @@ class ServiceProviderDetailsScreen extends StatelessWidget {
     ServiceProviderDetailsCubit cubit,
     ServiceUiModel category,
   ) async {
-    final children = MockServices.childrenOf(category.uuid);
+    // **بسعر الفرع المختار.** لو الصف بيقول ٢٩٠ والـ sheet اللي بيفتح
+    // منه بيقول ٤٠٠، الـ prototype بيناقض نفسه في ضغطة واحدة.
+    final children = MockServices.childrenOfBranch(
+      category.uuid,
+      providerUuid: cubit.providerUuid,
+      branchUuid: cubit.selectedBranch?.uuid,
+    );
     if (children.isEmpty) return;
 
     final picked = await showModalBottomSheet<ServiceUiModel>(

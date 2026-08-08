@@ -25,6 +25,14 @@ class ServiceProviderDetailsCubit extends Cubit<ServiceProviderDetailsState> {
 
   bool isWorkingHoursExpanded = false;
 
+  /// الخدمات والأخصائيين بيتحمّلوا دلوقتي بعد تغيير فرع.
+  ///
+  /// `bool` في الـ cubit مش state class جديدة: الـ builder في الشاشة
+  /// catch-all وبيقرا `cubit.services` مباشرة، فحالة جديدة مش هتضيف حاجة —
+  /// والـ `bool` بيخلي قسم الخدمات يوري skeleton من غير أي احتمال إن
+  /// الهيدر يتفضّى.
+  bool isReloadingBranch = false;
+
   Future<void> loadDetails() async {
     emit(DetailsLoadingState());
 
@@ -43,21 +51,59 @@ class ServiceProviderDetailsCubit extends Cubit<ServiceProviderDetailsState> {
     branches = MockProviders.branchesOf(providerUuid);
     selectedBranch = branches.isEmpty ? null : branches.first;
 
-    // TODO(api): GET /api/public/services?provider_uuid=
-    services = MockServices.ofProvider(providerUuid);
-
-    // TODO(api): GET /api/public/employees?provider_uuid=
-    employees = MockEmployees.forService(
-      '',
-    ).where((e) => !e.isAnyAvailable).toList();
+    await _loadBranchScoped();
 
     emit(DetailsSuccessState());
   }
 
-  /// المواعيد والأسعار والأخصائيين بيختلفوا من فرع للتاني، فتغيير الفرع
-  /// بيحمّل الخدمات من الأول.
-  void changeBranch(BranchUiModel branch) {
+  /// الخدمات والأخصائيين **بتوع الفرع المختار**.
+  ///
+  /// كان `MockEmployees.forService('')` — نص فاضي بيقع في الـ `null` بتاع
+  /// خريطة الخدمات فبيرجّع الفريق كله بالصدفة. النتيجة كانت صح والكلام
+  /// كان غلط، وده أسوأ من الاتنين: مفيش حاجة تكسر لما الفلتر الحقيقي
+  /// يتضاف، فمحدش بياخد باله.
+  Future<void> _loadBranchScoped() async {
+    final branchIndex = MockProviders.branchIndexOf(
+      providerUuid: providerUuid,
+      branchUuid: selectedBranch?.uuid,
+    );
+
+    // TODO(api): GET /api/public/services?provider_uuid=&branch_uuid=
+    final servicesResult = await MockSource.fetch(
+      MockServices.ofBranch(
+        providerUuid: providerUuid,
+        branchUuid: selectedBranch?.uuid,
+      ),
+    );
+
+    // TODO(api): GET /api/public/employees?provider_uuid=&branch_uuid=
+    final employeesResult = await MockSource.fetch(
+      MockEmployees.rosterOf(branchIndex: branchIndex),
+    );
+
+    services = servicesResult.getOrElse(() => const <ServiceUiModel>[]);
+    employees = employeesResult.getOrElse(() => const <EmployeeUiModel>[]);
+  }
+
+  /// **بيعيد التحميل فعلاً دلوقتي.**
+  ///
+  /// التعليق ده كان مكتوب هنا والجسم كان بيحطّ الفرع ويـ`emit` وبس —
+  /// الأسعار والأخصائيين بتوع الفرع القديم بيفضلوا على الشاشة. والعميل
+  /// بياخد قراره على أرقام مش بتاعة المكان اللي هيروحه.
+  ///
+  /// اسم الفرع بيتغيّر **قبل** الانتظار: ده معلومة محلية ومش مستنية أي
+  /// نداء، والهيدر لازم يرد على الدوسة على طول.
+  ///
+  /// ⚠ **شبكة المواعيد لسه مش فرعية** — `MockSlots` مالهاش بُعد فرع.
+  /// مكتوبة في `TODO(mock)` هناك.
+  Future<void> changeBranch(BranchUiModel branch) async {
     selectedBranch = branch;
+    isReloadingBranch = true;
+    emit(OnBranchChangedState());
+
+    await _loadBranchScoped();
+
+    isReloadingBranch = false;
     emit(OnBranchChangedState());
   }
 

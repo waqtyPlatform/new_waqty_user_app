@@ -57,7 +57,9 @@ class WaitlistCardWidget extends StatelessWidget {
                   style: AppTextStyles.sectionLabel,
                 ),
               ),
-              if (onRemove != null && entry.status.isLive)
+              // `canLeaveQueue` مش `isLive` — الخروج بيختفي وقت العرض
+              // الشغّال. السبب مكتوب على الـ getter نفسها.
+              if (onRemove != null && entry.status.canLeaveQueue)
                 InkWell(
                   onTap: onRemove,
                   child: Padding(

@@ -261,6 +261,22 @@ class BookingDetailsInfoWidget extends StatelessWidget {
                   verticalSpace(AppSpacing.titleToSubtitle),
                   _ratingPill(item),
                 ],
+                // **كلام العميل بيرجع له.**
+                //
+                // مش جوه الشارة عن قصد — تعليق من سطرين مايدخلش في pill،
+                // والشارة معمولة للنجوم والحالة.
+                //
+                // سطرين وقص: ده صف في كارت مش شاشة تقييم، والمقصود إنه
+                // يشوف كلامه وصل مش يقراه من الأول.
+                if (item.ratingComment.isNotEmpty) ...[
+                  verticalSpace(AppSpacing.titleToSubtitle),
+                  Text(
+                    item.ratingComment,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.caption,
+                  ),
+                ],
               ],
             ),
           ),

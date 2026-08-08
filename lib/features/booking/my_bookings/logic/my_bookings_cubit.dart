@@ -42,15 +42,24 @@ class MyBookingsCubit extends Cubit<MyBookingsState> {
     _page = 1;
     isLoadingMore = false;
 
-    // TODO(api): GET /api/user/bookings?upcoming=true&page=1&per_page=15
-    final result = await MockSource.fetchList(_pageOf(1));
+    final requestedTab = selectedTab;
+
+    // TODO(api): GET /api/user/bookings?upcoming={selectedTab == 0}&page=1&per_page=15
+    final result = await MockSource.fetchPage(
+      MockBookings.forTab(upcoming: requestedTab == 0),
+      page: 1,
+      perPage: perPage,
+    );
+
+    if (selectedTab != requestedTab) return;
 
     result.fold((failure) => emit(MyBookingsErrorState(message: failure)), (
-      data,
+      page,
     ) {
-      bookings = data;
-      hasMore = data.length >= perPage && _source.length > data.length;
-      emit(data.isEmpty ? MyBookingsEmptyState() : MyBookingsSuccessState());
+      bookings = page.data;
+      _page = page.currentPage;
+      hasMore = page.hasMore;
+      emit(page.isEmpty ? MyBookingsEmptyState() : MyBookingsSuccessState());
     });
   }
 
@@ -65,21 +74,37 @@ class MyBookingsCubit extends Cubit<MyBookingsState> {
     isLoadingMore = true;
     emit(MyBookingsLoadingMoreState());
 
-    // TODO(api): GET /api/user/bookings?page={_page + 1}&per_page=15
-    final result = await MockSource.fetchList(_pageOf(_page + 1));
+    // **التبويب بيتصوّر قبل الانتظار.**
+    //
+    // لو العميل غيّر التبويب والطلب لسه شغّال، الرد الراجع بتاع التبويب
+    // **القديم** كان بيتلحق على قايمة التبويب الجديد — «القادمة» فيها
+    // حجوزات خلصت. الحارس ده بيرمي الرد المتأخر، وهو نفس الشكل اللي نداء
+    // الـ HTTP هيحتاجه يوم الربط.
+    final requestedTab = selectedTab;
+
+    // TODO(api): GET /api/user/bookings?upcoming={selectedTab == 0}&page={_page + 1}&per_page=15
+    final result = await MockSource.fetchPage(
+      MockBookings.forTab(upcoming: requestedTab == 0),
+      page: _page + 1,
+      perPage: perPage,
+    );
+
+    if (selectedTab != requestedTab) return;
 
     result.fold(
       (failure) {
         // فشل صفحة إضافية **مش** بيمسح اللي قدام العميل. بيرجع زي ما هو
-        // ويقدر يجرّب تاني بالسحب.
+        // ويقدر يجرّب تاني بالسحب. و`hasMore` بتتقفل عشان التحميل التلقائي
+        // يقف — مش لأن السيرفر قال مفيش كمان.
         isLoadingMore = false;
         hasMore = false;
         emit(MyBookingsSuccessState());
       },
-      (data) {
-        _page += 1;
-        bookings = <BookingUiModel>[...bookings, ...data];
-        hasMore = bookings.length < _source.length;
+      (page) {
+        // من الظرف مش `+= 1` — السيرفر هو اللي بيقرر إنت جبت أنهي صفحة.
+        _page = page.currentPage;
+        bookings = <BookingUiModel>[...bookings, ...page.data];
+        hasMore = page.hasMore;
         isLoadingMore = false;
         emit(MyBookingsSuccessState());
       },
@@ -104,18 +129,6 @@ class MyBookingsCubit extends Cubit<MyBookingsState> {
   void dismissNotice(String uuid) {
     MockBookings.dismissNotice(uuid);
     emit(OnTabChangedState());
-  }
-
-  List<BookingUiModel> get _source =>
-      selectedTab == 0 ? MockBookings.upcoming : MockBookings.past;
-
-  /// شريحة الصفحة من الـ mock — بيقلّد `LengthAwarePaginator`.
-  List<BookingUiModel> _pageOf(int page) {
-    final all = _source;
-    final start = (page - 1) * perPage;
-    if (start >= all.length) return <BookingUiModel>[];
-    final end = start + perPage;
-    return all.sublist(start, end > all.length ? all.length : end);
   }
 
   static MyBookingsCubit get(context) => BlocProvider.of(context);
