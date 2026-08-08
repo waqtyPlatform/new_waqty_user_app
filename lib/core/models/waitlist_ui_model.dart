@@ -1,3 +1,4 @@
+import 'package:waqty_user_application/core/models/waitlist_message_ui_model.dart';
 import 'package:waqty_user_application/core/utils/app_format.dart';
 import 'package:waqty_user_application/core/utils/json_parse.dart';
 
@@ -125,13 +126,16 @@ extension WaitlistStatusLabel on WaitlistStatus {
   ///
   /// وقت العرض الشغّال الفرع بيتصل بيه — الخروج مش نية معقولة في اللحظة
   /// دي أصلاً. الإخفاء أرخص وأأمن من sheet تأكيد لطريق مالوش لازمة.
-  /// ⚠ **`underReview` بيسمح بالخروج و`awaitingResponse` لأ** — والفرق
-  /// مقصود. في `underReview` الفرع بيراجع ورقة، مفيش عدّاد شغّال، فالخروج
-  /// قرار عادي. في `awaitingResponse` فيه ميعاد **محجوز باسمك** والدور
-  /// عليك ترد — الخروج ساعتها بيرمي الميعاد لحد تاني من غير رجعة.
   ///
-  /// `responseExpired` جوّاها: العرض راح ومفيش حاجة تتحرق، والعميل اللي
-  /// مابقاش عايز يستنى تاني لازم يلاقي مخرج.
+  /// ⚠ **الحسبة دي اتشالت من الشاشة.** بقت `WaitlistUiModel.canCancel`
+  /// اللي جاية من السيرفر — نفس القاعدة اللي `BookingUiModel.canCancel`
+  /// ماشية عليها: بوليان واحد بيتقرا، مش شرط بيتحسب في مكانين.
+  ///
+  /// السبب اللي فوق كمان **مابقاش قايم**: كان الخروج بيتخفي وقت العرض
+  /// لأن العميل مكانش يقدر يعمل أي حاجة تانية، فالدوسة الغلط كانت خسارة
+  /// صافية. waitlist v2 ضاف له «أقبل» و«اطلب ميعاد تاني»، فالخروج بقى
+  /// اختيار تالت جنب اتنين معقولين مش الفعل الوحيد المتاح.
+  @Deprecated('اقرا WaitlistUiModel.canCancel من السيرفر')
   bool get canLeaveQueue =>
       this == WaitlistStatus.waiting ||
       this == WaitlistStatus.underReview ||
@@ -232,6 +236,43 @@ class WaitlistUiModel {
   /// رسالة الفرع مع العرض. `null` = ماكتبش حاجة.
   final String? offerMessage;
 
+  // ── صلاحيات السيرفر ──────────────────────────────────────────────────
+  //
+  // **بتتقرا مابتتحسبش.** نفس قاعدة `BookingUiModel.canCancel`: الشرط
+  // الحقيقي عايش في `BookingWaitlistResource` جنب الحالة والمهلة، وأي
+  // نسخة منه في الأبلكيشن بتفترق عنه أول ما السيرفر يعدّل قاعدة.
+  //
+  // waitlist v2 كشفهم كلهم: `can_accept` · `can_request_change` ·
+  // `can_cancel` — وقبلها كان العميل **مايقدرش** يعمل أي واحدة منهم.
+
+  /// يقبل العرض بنفسه. `POST /user/waitlist/{uuid}/accept`
+  final bool canAccept;
+
+  /// يطلب ميعاد تاني. `POST /user/waitlist/{uuid}/request-change`
+  final bool canRequestChange;
+
+  /// يخرج من القايمة. `POST /user/waitlist/{uuid}/cancel`
+  final bool canCancel;
+
+  // ── المحادثة ─────────────────────────────────────────────────────────
+
+  /// خيط الرسايل بينه وبين الفرع.
+  ///
+  /// بيوصل على `GET /user/waitlist/{uuid}` بس — الليستة مابتحملهوش،
+  /// فبيفضل فاضي في كارت الرئيسية.
+  final List<WaitlistMessageUiModel> messages;
+
+  /// الخيط مقفول — الطلب خلص فمفيش رد بعد كده.
+  final bool conversationReadOnly;
+
+  /// كام عرض اتبعت، ومن كام. `attempt_count` و`MAX_OFFERS` في السيرفر.
+  ///
+  /// بيتعرض للعميل عشان «الفرع جرّب معاك تلات مرات» تفسّر ليه الطلب
+  /// خلص بـ`noSuitableTime` بدل ما تبان نهاية عشوائية.
+  final int attemptCount;
+
+  final int maxAttempts;
+
   const WaitlistUiModel({
     required this.uuid,
     required this.status,
@@ -246,7 +287,20 @@ class WaitlistUiModel {
     this.offeredEndAt,
     this.offeredEmployeeName,
     this.offerMessage,
+    this.canAccept = false,
+    this.canRequestChange = false,
+    this.canCancel = false,
+    this.messages = const <WaitlistMessageUiModel>[],
+    this.conversationReadOnly = true,
+    this.attemptCount = 0,
+    this.maxAttempts = 3,
   });
+
+  /// فيه فعل واحد على الأقل متاح للعميل دلوقتي؟
+  ///
+  /// الكارت بيرسم منطقة الأزرار على أساسها — منطقة فاضية بحدود بتقرا
+  /// كأنها معطّلة، وأوحش من إنها ماتبانش.
+  bool get hasActions => canAccept || canRequestChange || canCancel;
 
   /// فيه ميعاد معروض يتعرض للعميل؟
   bool get hasOffer => offeredStartAt != null;
@@ -309,6 +363,22 @@ class WaitlistUiModel {
           offer['employee_name'] as String? ??
           JsonParse.mapValue(json['offered_employee'])['name'] as String?,
       offerMessage: offer['message'] as String?,
+      canAccept: JsonParse.boolValue(json['can_accept']),
+      canRequestChange: JsonParse.boolValue(json['can_request_change']),
+      canCancel: JsonParse.boolValue(json['can_cancel']),
+      // الأحداث اللي مالهاش ترجمة بتتشال هنا مش في الـ widget — عشان
+      // «المحادثة فاضية» تبقى صادقة بدل ما تعد سطور مش هتترسم.
+      messages: JsonParse.mapListValue(json['messages'])
+          .map(WaitlistMessageUiModel.fromJson)
+          .where((message) => message.isVisible)
+          .toList(),
+      // الافتراضي `true`: خيط مقفول بيخفي خانة الكتابة، وده أأمن من إننا
+      // نوري خانة على طلب خلص فيرمي الرد ٤٢٢.
+      conversationReadOnly: JsonParse.boolValue(
+        json['conversation_read_only'],
+        fallback: true,
+      ),
+      attemptCount: JsonParse.intValue(json['attempt_count']),
     );
   }
 

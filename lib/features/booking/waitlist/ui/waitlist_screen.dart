@@ -12,6 +12,7 @@ import 'package:waqty_user_application/core/widgets/loading_widget.dart';
 import 'package:waqty_user_application/features/booking/waitlist/logic/waitlist_cubit.dart';
 import 'package:waqty_user_application/features/booking/waitlist/logic/waitlist_state.dart';
 import 'package:waqty_user_application/features/booking/waitlist/ui/widgets/waitlist_card_widget.dart';
+import 'package:waqty_user_application/features/booking/waitlist/ui/widgets/waitlist_change_request_sheet.dart';
 
 /// كل إدخالات العميل في قوائم الانتظار.
 ///
@@ -103,15 +104,33 @@ class WaitlistScreen extends StatelessWidget {
               return WaitlistCardWidget(
                 entry: entry,
                 now: now,
-                onRemove: entry.status.canLeaveQueue
-                    ? () => WaitlistCubit.get(context).removeEntry(entry.uuid)
-                    : null,
+                // الصلاحيات من السيرفر — الكارت هو اللي بيقرر يرسم إيه،
+                // والشاشة بتوصّل الأفعال بس.
+                onRemove: () => WaitlistCubit.get(context).leaveQueue(entry.uuid),
+                onAccept: () => WaitlistCubit.get(context).acceptOffer(entry.uuid),
+                onRequestChange: () => _requestChange(context, entry),
               );
             },
           );
         },
       ),
     );
+  }
+
+  /// بياخد السبب من الـ sheet وبيبعته.
+  ///
+  /// الـ cubit مابياخدش `context`، والـ sheet لازم تتقفل الأول عشان
+  /// إعادة القراءة تحصل والكارت الجديد يترسم — فالترتيب ده مقصود.
+  static Future<void> _requestChange(
+    BuildContext context,
+    WaitlistUiModel entry,
+  ) async {
+    final cubit = WaitlistCubit.get(context);
+    final reason = await WaitlistChangeRequestSheet.show(context, entry);
+
+    if (reason == null) return;
+
+    cubit.requestChange(entry.uuid, reason);
   }
 
   /// الشغّال فوق، وجوّه الشغّال العرض المحجوز فوق الكل.

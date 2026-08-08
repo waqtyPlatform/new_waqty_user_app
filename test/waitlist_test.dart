@@ -6,6 +6,7 @@ import 'package:waqty_user_application/core/mock/mock_scenario.dart';
 import 'package:waqty_user_application/core/mock/mock_services.dart';
 import 'package:waqty_user_application/core/mock/mock_waitlist.dart';
 import 'package:waqty_user_application/core/models/booking_ui_model.dart';
+import 'package:waqty_user_application/core/models/waitlist_message_ui_model.dart';
 import 'package:waqty_user_application/core/models/waitlist_ui_model.dart';
 
 /// رد `GET /user/waitlist` بشكله الحقيقي — كائنات متداخلة مش أسامي مسطّحة.
@@ -213,6 +214,160 @@ void main() {
       expect(WaitlistStatus.awaitingResponse.canLeaveQueue, isFalse);
       // الاتنين لسه `isLive` — الفرق مقصود.
       expect(WaitlistStatus.awaitingResponse.isLive, isTrue);
+    });
+  });
+
+  /// **أفعال العميل — اللي waitlist v2 ضافها.**
+  ///
+  /// قبل v2 العميل مكانش يقدر يعمل ولا حاجة: `accept` كانت تحت
+  /// `/provider/` بس، والأبلكيشن كان بيعرض عدّاد ٥ دقايق وجملة «استنى
+  /// مكالمة» — عدّاد من غير مخرج.
+  group('أفعال العميل', () {
+    WaitlistUiModel offered() {
+      MockConfig.scenario = MockScenario.waitlistOffered;
+      return MockWaitlist.forUser(DateTime.now()).first;
+    }
+
+    test('العرض الشغّال بيتيح التلات أفعال', () {
+      final entry = offered();
+
+      expect(entry.canAccept, isTrue);
+      expect(entry.canRequestChange, isTrue);
+      expect(entry.canCancel, isTrue);
+      expect(entry.hasActions, isTrue);
+    });
+
+    test('القبول بيحوّل الطلب لحجز', () {
+      final entry = offered();
+      MockWaitlist.accept(entry.uuid);
+
+      final after = MockWaitlist.forUser(DateTime.now()).first;
+      expect(after.status, WaitlistStatus.converted);
+      expect(after.status.isSettled, isTrue);
+      // المهلة والعرض بيتمسحوا — الميعاد بقى حجز، والعدّاد مالوش معنى.
+      expect(after.isHoldActive(DateTime.now()), isFalse);
+      expect(after.offeredStartAt, isNull);
+    });
+
+    test('بعد القبول مفيش أفعال متاحة', () {
+      final entry = offered();
+      MockWaitlist.accept(entry.uuid);
+
+      final after = MockWaitlist.forUser(DateTime.now()).first;
+      expect(after.hasActions, isFalse);
+      expect(after.conversationReadOnly, isTrue);
+    });
+
+    test('طلب ميعاد تاني بيرجّع الطلب للطابور', () {
+      final entry = offered();
+      MockWaitlist.requestChange(entry.uuid, 'الميعاد بدري عليّا');
+
+      final after = MockWaitlist.forUser(DateTime.now()).first;
+      expect(after.status, WaitlistStatus.changeRequested);
+      // شغّال لسه — السيرفر بيسمح بعرض تاني على الحالة دي.
+      expect(after.status.isLive, isTrue);
+      expect(after.offeredStartAt, isNull);
+    });
+
+    test('السبب بيتسجّل في الخيط', () {
+      final entry = offered();
+      MockWaitlist.requestChange(entry.uuid, 'الميعاد بدري عليّا');
+
+      final after = MockWaitlist.forUser(DateTime.now()).first;
+      final mine = after.messages.where((m) => m.sender.isMine).toList();
+
+      expect(mine, isNotEmpty);
+      expect(mine.last.body, 'الميعاد بدري عليّا');
+    });
+
+    test('آخر محاولة بتقفل الطلب بدل ما ترجّعه', () {
+      // `MAX_OFFERS` — الفرع جرّب كل مرّاته. السيرفر بيقفل بـ
+      // `no_suitable_time` مش بيرجّع الطلب لطابور مالوش نهاية.
+      final entry = offered();
+      final exhausted = WaitlistUiModel(
+        uuid: entry.uuid,
+        status: entry.status,
+        providerName: entry.providerName,
+        branchName: entry.branchName,
+        serviceName: entry.serviceName,
+        preferredAt: entry.preferredAt,
+        position: entry.position,
+        canRequestChange: true,
+        attemptCount: 3,
+      );
+
+      expect(exhausted.attemptCount, exhausted.maxAttempts);
+    });
+
+    test('الخروج بيشيل الطلب من القايمة', () {
+      final entry = offered();
+      MockWaitlist.cancel(entry.uuid);
+
+      expect(
+        MockWaitlist.forUser(DateTime.now()).any((e) => e.uuid == entry.uuid),
+        isFalse,
+      );
+    });
+
+    test('الفعل الممنوع مابيعملش حاجة', () {
+      // الكارت بيخفي الزرار، بس الـ mock مايفترضش إن الواجهة حرست.
+      MockConfig.scenario = MockScenario.waitlistReviewing;
+      final entry = MockWaitlist.forUser(DateTime.now()).first;
+
+      expect(entry.canAccept, isFalse);
+      MockWaitlist.accept(entry.uuid);
+
+      expect(
+        MockWaitlist.forUser(DateTime.now()).first.status,
+        WaitlistStatus.underReview,
+      );
+    });
+
+    test('الرسايل بتتقرا من الرد', () {
+      final parsed = WaitlistUiModel.fromJson(<String, dynamic>{
+        ..._entryJson(status: 'awaiting_customer_response'),
+        'conversation_read_only': false,
+        'messages': <Map<String, dynamic>>[
+          <String, dynamic>{
+            'uuid': 'm1',
+            'sender_type': 'provider',
+            'sender_name': 'ريسيبشن',
+            'body': 'فضي ميعاد بدري',
+            'created_at': '2026-08-10T17:00:00+03:00',
+          },
+          <String, dynamic>{
+            'uuid': 'm2',
+            'sender_type': 'system',
+            'body': '',
+            'created_at': '2026-08-10T17:01:00+03:00',
+            'metadata': <String, dynamic>{'event': 'offer_sent'},
+          },
+        ],
+      });
+
+      expect(parsed.messages, hasLength(2));
+      expect(parsed.messages.first.sender, WaitlistMessageSender.branch);
+      // الحدث بيتترجم لجملة — الداشبورد بيعرض `offer_sent` خام لأن اللي
+      // بيقراه موظف، والعميل لازم يقرا كلام.
+      expect(parsed.messages.last.displayBody, 'الفرع عرض عليك ميعاد');
+    });
+
+    test('حدث مش معروف مابيتعرضش أصلاً', () {
+      final parsed = WaitlistUiModel.fromJson(<String, dynamic>{
+        ..._entryJson(status: 'waiting'),
+        'messages': <Map<String, dynamic>>[
+          <String, dynamic>{
+            'uuid': 'm1',
+            'sender_type': 'system',
+            'body': '',
+            'created_at': '2026-08-10T17:00:00+03:00',
+            'metadata': <String, dynamic>{'event': 'some_future_event'},
+          },
+        ],
+      });
+
+      // عرض `some_future_event` للعميل أوحش من إن السطر مايبانش.
+      expect(parsed.messages, isEmpty);
     });
   });
 

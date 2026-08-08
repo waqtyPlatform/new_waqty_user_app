@@ -59,17 +59,39 @@ class WaitlistCubit extends Cubit<WaitlistState> {
 
   /// **الخروج من القائمة.**
   ///
-  /// TODO(api): DELETE /api/user/waitlist/{uuid}
+  /// TODO(api): POST /api/user/waitlist/{uuid}/cancel
   ///
-  /// ⚠ **الـ endpoint ده مش موجود.** `load` و`joinWaitlist` بيشاوروا على
-  /// راوتس مبنية فعلاً (`routes/api.php:642-645`)، ودي **طلب للباك إند**
-  /// لسه ما اتعملش. لحد ما يتعمل، الشيل محلي بس — والعميل اللي خرج من
-  /// القائمة وقفل الأبلكيشن هيلاقي نفسه فيها تاني.
+  /// ⚠ التعليق القديم هنا كان بيقول إن الـ endpoint ده **مش موجود** وإنه
+  /// طلب للباك إند لسه ما اتعملش، وإن الشيل محلي بس. **الكلام ده بقى
+  /// غلط**: waitlist v2 عمل الراوت، ومعاه `accept` و`request-change`.
+  void leaveQueue(String uuid) {
+    MockWaitlist.cancel(uuid);
+    MockWaitlist.removeByUuid(uuid);
+  }
+
+  /// **العميل بيقبل العرض بنفسه.**
   ///
-  /// الزرار موجود عشان ده **الفعل الوحيد** اللي الميزة بتديه للعميل: هو
-  /// مايقدرش يقبل عرض بنفسه (`accept` تحت `/provider/`)، فلو شيلنا
-  /// الخروج كمان بتبقى حاجة بتتعمل **عليه** مش معاه.
-  void removeEntry(String uuid) => MockWaitlist.removeByUuid(uuid);
+  /// TODO(api): POST /api/user/waitlist/{uuid}/accept
+  ///
+  /// ده أهم فعل اتضاف في v2. قبله كان `accept` تحت `/provider/` بس —
+  /// يعني الموظف بيقبل نيابة عن العميل جوه مهلة العميل نفسه مش شايفها،
+  /// والأبلكيشن كان بيعرض عدّاد من غير أي زرار جنبه.
+  void acceptOffer(String uuid) => MockWaitlist.accept(uuid);
+
+  /// **الميعاد المعروض مش مناسب — هات غيره.**
+  ///
+  /// TODO(api): POST /api/user/waitlist/{uuid}/request-change
+  ///
+  /// [note] **مطلوبة** في السيرفر. ومنطقي: الفرع لو ماعرفش إيه المشكلة
+  /// هيبعت نفس النوع من العروض تاني، والمحاولات معدودة.
+  void requestChange(String uuid, String note) =>
+      MockWaitlist.requestChange(uuid, note);
+
+  /// رسالة في خيط الطلب.
+  ///
+  /// TODO(api): POST /api/user/waitlist/{uuid}/conversation
+  void sendMessage(String uuid, String body) =>
+      MockWaitlist.sendMessage(uuid, body);
 
   /// المؤقت بيشتغل **بس** لما فيه حجز مؤقت شغّال.
   void _syncTimer() {

@@ -7,6 +7,7 @@ import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
 import 'package:waqty_user_application/core/utils/app_spacing.dart';
 import 'package:waqty_user_application/core/utils/app_text_styles.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
+import 'package:waqty_user_application/core/widgets/app_button_widget.dart';
 import 'package:waqty_user_application/core/widgets/app_surface_widget.dart';
 import 'package:waqty_user_application/core/widgets/directional_chevron_widget.dart';
 
@@ -29,11 +30,19 @@ class WaitlistCardWidget extends StatelessWidget {
   final DateTime now;
   final VoidCallback? onRemove;
 
+  /// العميل بيقبل الميعاد المعروض. `null` = الكارت للعرض بس.
+  final VoidCallback? onAccept;
+
+  /// العميل بيطلب ميعاد تاني — بياخد السبب من sheet.
+  final VoidCallback? onRequestChange;
+
   const WaitlistCardWidget({
     super.key,
     required this.entry,
     required this.now,
     this.onRemove,
+    this.onAccept,
+    this.onRequestChange,
   });
 
   @override
@@ -59,9 +68,13 @@ class WaitlistCardWidget extends StatelessWidget {
                   style: AppTextStyles.sectionLabel,
                 ),
               ),
-              // `canLeaveQueue` مش `isLive` — الخروج بيختفي وقت العرض
-              // الشغّال. السبب مكتوب على الـ getter نفسها.
-              if (onRemove != null && entry.status.canLeaveQueue)
+              // **`entry.canCancel` من السيرفر، مش شرط محسوب هنا.**
+              //
+              // الخروج كان بيتخفي وقت العرض الشغّال عشان العميل مكانش
+              // يقدر يعمل حاجة تانية، فالدوسة الغلط كانت خسارة صافية.
+              // بقى جنبه «أقبل» و«ميعاد تاني»، فهو اختيار تالت مش الفعل
+              // الوحيد — والسيرفر هو اللي بيقول مسموح ولا لأ.
+              if (onRemove != null && entry.canCancel)
                 InkWell(
                   onTap: onRemove,
                   child: Padding(
@@ -136,6 +149,39 @@ class WaitlistCardWidget extends StatelessWidget {
 
           verticalSpace(AppSpacing.s8),
           Text(entry.explanation, style: AppTextStyles.caption),
+
+          // **الأزرار اللي العدّاد كان مستنيها.**
+          //
+          // الشاشة كانت بتعرض مهلة بتنزل وجملة بتقول «استنى مكالمة» —
+          // عدّاد من غير فعل بيقرا قلق من غير مخرج. waitlist v2 ادّى
+          // العميل الفعلين دول، فالرقم بقى ليه معنى.
+          //
+          // بيتحطوا على `canAccept` من السيرفر مش على الحالة: السيرفر
+          // بيشترط إن المهلة لسه شغّالة كمان، والشرط ده عايش هناك.
+          if (entry.canAccept || entry.canRequestChange) ...[
+            verticalSpace(AppSpacing.s12),
+            Row(
+              children: [
+                if (entry.canAccept && onAccept != null)
+                  Expanded(
+                    child: AppButtonWidget(
+                      label: 'أقبل الميعاد',
+                      onPressed: onAccept,
+                    ),
+                  ),
+                if (entry.canAccept && entry.canRequestChange)
+                  horizontalSpace(AppSpacing.s8),
+                if (entry.canRequestChange && onRequestChange != null)
+                  Expanded(
+                    child: AppButtonWidget(
+                      label: 'ميعاد تاني',
+                      onPressed: onRequestChange,
+                      variant: AppButtonVariant.secondary,
+                    ),
+                  ),
+              ],
+            ),
+          ],
         ],
       ),
     );
@@ -186,6 +232,8 @@ class WaitlistSectionWidget extends StatelessWidget {
   final List<WaitlistUiModel> entries;
   final DateTime now;
   final ValueChanged<String>? onRemove;
+  final ValueChanged<String>? onAccept;
+  final ValueChanged<WaitlistUiModel>? onRequestChange;
 
   /// بيفتح شاشة قايمة الانتظار الكاملة. `null` = مايبانش السطر.
   ///
@@ -201,6 +249,8 @@ class WaitlistSectionWidget extends StatelessWidget {
     required this.now,
     this.onRemove,
     this.onSeeAll,
+    this.onAccept,
+    this.onRequestChange,
   });
 
   @override
@@ -215,6 +265,9 @@ class WaitlistSectionWidget extends StatelessWidget {
             entry: entry,
             now: now,
             onRemove: onRemove == null ? null : () => onRemove!(entry.uuid),
+            onAccept: onAccept == null ? null : () => onAccept!(entry.uuid),
+            onRequestChange:
+                onRequestChange == null ? null : () => onRequestChange!(entry),
           ),
           verticalSpace(AppSpacing.listRowGap),
         ],
