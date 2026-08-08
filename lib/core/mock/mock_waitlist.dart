@@ -148,6 +148,14 @@ class MockWaitlist {
   }
 
   /// عرض شغّال بعدّاد بينزل — ده اللي السيناريو معمول عشانه.
+  ///
+  /// ⚠ **الميعاد المعروض مقصود إنه غير المطلوب.** العميل طلب ٦م والفرع
+  /// عرض ٤:٣٠. ده مش تنويع في الـ fixture — ده الحالة الطبيعية: العرض
+  /// بيحصل عشان الفرع لقى ميعاد **تاني**، ولو المطلوب كان متاح العميل
+  /// كان حجزه ومكانش دخل قايمة انتظار أصلاً.
+  ///
+  /// الـ fixture القديم كان بيخلي الاتنين واحد، فالباج اللي بيعرض
+  /// المطلوب مكان المعروض مكانش ينفع يتشاف.
   static WaitlistUiModel _offered(DateTime now) => WaitlistUiModel(
     uuid: 'wl-offered',
     status: WaitlistStatus.awaitingResponse,
@@ -160,6 +168,11 @@ class MockWaitlist {
     // بيبدأ من ٥ دقايق كاملة كل ما الشاشة تتفتح — عشان العرض يبان من
     // أوله بدل ما يمسك العدّاد في نصه.
     holdExpiresAt: now.add(const Duration(minutes: holdMinutes)),
+    offeredStartAt: DateTime(now.year, now.month, now.day, 16, 30),
+    offeredEndAt: DateTime(now.year, now.month, now.day, 17, 0),
+    // أخصائي مختلف كمان — بيحصل لما اللي العميل طالبه مش هو اللي فضي.
+    offeredEmployeeName: 'مصطفى سيد',
+    offerMessage: 'فضي ميعاد بدري شوية، لو يناسبك احجزه',
   );
 
   static WaitlistUiModel _expired(DateTime now) => WaitlistUiModel(

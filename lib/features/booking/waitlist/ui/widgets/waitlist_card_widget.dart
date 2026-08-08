@@ -92,12 +92,42 @@ class WaitlistCardWidget extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
           verticalSpace(AppSpacing.titleToSubtitle),
+          // ⚠ **`displayAt` مش `preferredAt`.**
+          //
+          // لما يبقى فيه عرض، الميعاد المعروض هو اللي يهم — والسطر ده كان
+          // بيعرض اللي العميل طلبه جنب عدّاد بينزل، يعني ساعة مش هي
+          // المحجوزة له وهو فاكرها هي.
           Text(
-            '${AppFormat.relativeDate(entry.preferredAt)}'
-            ' · ${AppFormat.time(entry.preferredAt)}'
-            '${entry.employeeName == null ? '' : ' · مع ${entry.employeeName}'}',
+            '${AppFormat.relativeDate(entry.displayAt)}'
+            ' · ${AppFormat.time(entry.displayAt)}'
+            '${entry.displayEmployeeName == null ? '' : ' · مع ${entry.displayEmployeeName}'}',
             style: AppTextStyles.caption,
           ),
+
+          // العرض على ميعاد غير المطلوب؟ **قوله صراحة.**
+          //
+          // من غير السطر ده، العميل اللي طلب ٦م وشايف ٤م هيفتكرها غلطة
+          // في الأبلكيشن مش عرض مختلف — والعرض بيروح وهو بيتأكد.
+          if (entry.offerDiffersFromPreferred) ...[
+            verticalSpace(AppSpacing.s4),
+            Text(
+              'إنت طلبت ${AppFormat.time(entry.preferredAt)}'
+              ' — ده أقرب ميعاد فضي',
+              style: AppTextStyles.overline.copyWith(
+                color: AppSemanticColors.textSecondary,
+              ),
+            ),
+          ],
+
+          if (entry.offerMessage != null && entry.offerMessage!.isNotEmpty) ...[
+            verticalSpace(AppSpacing.s4),
+            Text(
+              entry.offerMessage!,
+              style: AppTextStyles.caption,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
 
           if (isOffered && isHoldActive) ...[
             verticalSpace(AppSpacing.s12),

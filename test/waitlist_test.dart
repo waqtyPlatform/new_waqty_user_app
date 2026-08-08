@@ -216,6 +216,110 @@ void main() {
     });
   });
 
+  /// **الميعاد المعروض مش الميعاد المطلوب.**
+  ///
+  /// الكارت كان بيعرض `preferredAt` جنب عدّاد الـ٥ دقايق. العرض بيحصل
+  /// أصلاً عشان الفرع لقى ميعاد **تاني** — لو المطلوب كان متاح، العميل
+  /// كان حجزه ومكانش دخل قايمة انتظار. يعني في الحالة الوحيدة اللي فيها
+  /// عدّاد، الرقم اللي جنبه كان غلط بحكم التعريف.
+  group('الميعاد المعروض', () {
+    /// رد فيه عرض شغّال بشكل v2 — `current_offer` جوّاه الميعاد الحقيقي.
+    // المواعيد بتتقارن ككائنات مش بـ`.hour`: `DateTime.tryParse` على نص
+    // فيه offset بيرجّع UTC، فـ`.hour` بيدي ساعة المنطقة الصفرية مش
+    // المكتوبة في النص.
+    final preferred = DateTime.parse('2026-08-10T18:00:00+03:00');
+    final offered = DateTime.parse('2026-08-10T16:30:00+03:00');
+
+    Map<String, dynamic> offerJson() => <String, dynamic>{
+      ..._entryJson(status: 'awaiting_customer_response'),
+      'employee': <String, dynamic>{'uuid': 'emp-1', 'name': 'أحمد محمود'},
+      'hold_remaining_seconds': 300,
+      'offered_start_at': '2026-08-10T16:30:00+03:00',
+      'offered_end_at': '2026-08-10T17:00:00+03:00',
+      'offered_employee': <String, dynamic>{'name': 'مصطفى سيد'},
+      'current_offer': <String, dynamic>{
+        'uuid': 'off-1',
+        'attempt_number': 1,
+        'status': 'active',
+        'employee_name': 'مصطفى سيد',
+        'start_at': '2026-08-10T16:30:00+03:00',
+        'end_at': '2026-08-10T17:00:00+03:00',
+        'message': 'فضي ميعاد بدري شوية',
+      },
+    };
+
+    test('الكارت بيعرض الميعاد المعروض مش المطلوب', () {
+      final entry = WaitlistUiModel.fromJson(offerJson());
+
+      // المطلوب ٦م، المعروض ٤:٣٠. `displayAt` لازم تدي المعروض.
+      expect(entry.preferredAt.isAtSameMomentAs(preferred), isTrue);
+      expect(entry.offeredStartAt!.isAtSameMomentAs(offered), isTrue);
+      expect(entry.displayAt, entry.offeredStartAt);
+      expect(entry.displayAt, isNot(entry.preferredAt));
+    });
+
+    test('الأخصائي المعروض بيسبق اللي العميل طلبه', () {
+      final entry = WaitlistUiModel.fromJson(offerJson());
+
+      expect(entry.employeeName, 'أحمد محمود');
+      expect(entry.displayEmployeeName, 'مصطفى سيد');
+    });
+
+    test('من غير عرض بيقع على المطلوب', () {
+      final entry = WaitlistUiModel.fromJson(_entryJson(status: 'waiting'));
+
+      expect(entry.hasOffer, isFalse);
+      expect(entry.displayAt, entry.preferredAt);
+      expect(entry.displayEmployeeName, entry.employeeName);
+      expect(entry.offerDiffersFromPreferred, isFalse);
+    });
+
+    test('current_offer بيسبق الحقول المسطّحة', () {
+      // الحقول المسطّحة نسخة على الإدخال الأب وممكن تبقى بايتة من محاولة
+      // اتقفلت. الصف النشط هو الحقيقة.
+      final json = offerJson();
+      json['offered_start_at'] = '2026-08-10T09:00:00+03:00';
+
+      final entry = WaitlistUiModel.fromJson(json);
+
+      expect(entry.offeredStartAt!.isAtSameMomentAs(offered), isTrue);
+    });
+
+    test('بيقع على الحقول المسطّحة لما current_offer مش موجود', () {
+      final json = offerJson()..remove('current_offer');
+      final entry = WaitlistUiModel.fromJson(json);
+
+      expect(entry.offeredStartAt!.isAtSameMomentAs(offered), isTrue);
+      expect(entry.displayEmployeeName, 'مصطفى سيد');
+    });
+
+    test('الاختلاف عن المطلوب بيتقال صراحة', () {
+      expect(
+        WaitlistUiModel.fromJson(offerJson()).offerDiffersFromPreferred,
+        isTrue,
+      );
+    });
+
+    test('العرض على نفس الميعاد المطلوب مابيقولش إنه مختلف', () {
+      final json = offerJson();
+      json['current_offer']['start_at'] = '2026-08-10T18:00:00+03:00';
+
+      final entry = WaitlistUiModel.fromJson(json);
+
+      expect(entry.hasOffer, isTrue);
+      expect(entry.offerDiffersFromPreferred, isFalse);
+    });
+
+    test('سيناريو العرض في الـmock بيعرض ميعاد مختلف', () {
+      // من غير كده الباج مايتشافش في الأبلكيشن مهما اتفتح السيناريو.
+      MockConfig.scenario = MockScenario.waitlistOffered;
+      final entry = MockWaitlist.forUser(DateTime.now()).first;
+
+      expect(entry.hasOffer, isTrue);
+      expect(entry.offerDiffersFromPreferred, isTrue);
+    });
+  });
+
   /// **waitlist v2 غيّر قيم النصوص نفسها.**
   ///
   /// `2026_08_08_120000_upgrade_booking_waitlist_to_v2` نقل `pending` لـ

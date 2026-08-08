@@ -201,6 +201,7 @@ class WaitlistUiModel {
   /// `null` = العميل مافرقتش معاه — زي «أي أخصائي متاح» في الحجز.
   final String? employeeName;
 
+  /// **الميعاد اللي العميل طلبه**، مش اللي الفرع عرضه.
   final DateTime preferredAt;
 
   /// ترتيبي في قائمة انتظار الفرع — بيتحسب في السيرفر.
@@ -208,6 +209,28 @@ class WaitlistUiModel {
 
   /// إمتى الحجز المؤقت بيقع. `null` لما مفيش عرض شغّال.
   final DateTime? holdExpiresAt;
+
+  /// **بداية الميعاد اللي الفرع عارضه فعلاً.** `null` لما مفيش عرض.
+  ///
+  /// ⚠ **ده مش [preferredAt]، ولا المفروض يبقى زيه.**
+  ///
+  /// العرض بيحصل أصلاً عشان الفرع لقى ميعاد **تاني** فاضي — لو كان
+  /// الميعاد المطلوب متاح، العميل كان حجزه من الأول ومكانش دخل قايمة
+  /// انتظار. يعني الاتنين مختلفين **بحكم التعريف** في الحالة الوحيدة
+  /// اللي بيهم فيها عرض.
+  ///
+  /// الكارت كان بيعرض [preferredAt] جنب عدّاد الـ٥ دقايق — يعني العميل
+  /// بيقرا ساعة مش هي المحجوزة له، ويروح المحل في الميعاد الغلط. والباج
+  /// ده بيبان معقول تمامًا، عشان كده عاش.
+  final DateTime? offeredStartAt;
+
+  final DateTime? offeredEndAt;
+
+  /// الأخصائي في العرض — ممكن يختلف عن [employeeName] اللي العميل طلبه.
+  final String? offeredEmployeeName;
+
+  /// رسالة الفرع مع العرض. `null` = ماكتبش حاجة.
+  final String? offerMessage;
 
   const WaitlistUiModel({
     required this.uuid,
@@ -219,10 +242,32 @@ class WaitlistUiModel {
     required this.position,
     this.employeeName,
     this.holdExpiresAt,
+    this.offeredStartAt,
+    this.offeredEndAt,
+    this.offeredEmployeeName,
+    this.offerMessage,
   });
+
+  /// فيه ميعاد معروض يتعرض للعميل؟
+  bool get hasOffer => offeredStartAt != null;
+
+  /// الميعاد اللي **يتعرض على الكارت** — المعروض لو موجود، وإلا المطلوب.
+  ///
+  /// الاختيار ده هو الإصلاح كله: أي حتة بتعرض وقت لازم تعدّي من هنا،
+  /// عشان محدش يكتب `preferredAt` بالغلط في سياق فيه عرض.
+  DateTime get displayAt => offeredStartAt ?? preferredAt;
+
+  /// الأخصائي اللي يتعرض — بنفس المنطق.
+  String? get displayEmployeeName =>
+      hasOffer ? (offeredEmployeeName ?? employeeName) : employeeName;
+
+  /// العرض على ميعاد غير اللي العميل طلبه؟ — لو أيوة لازم يتقال صراحة.
+  bool get offerDiffersFromPreferred =>
+      offeredStartAt != null && !offeredStartAt!.isAtSameMomentAs(preferredAt);
 
   factory WaitlistUiModel.fromJson(Map<String, dynamic> json) {
     final holdSeconds = JsonParse.intOrNull(json['hold_remaining_seconds']);
+    final offer = JsonParse.mapValue(json['current_offer']);
 
     return WaitlistUiModel(
       uuid: JsonParse.stringValue(json['uuid']),
@@ -248,6 +293,22 @@ class WaitlistUiModel {
       holdExpiresAt: holdSeconds == null || holdSeconds <= 0
           ? null
           : DateTime.now().add(Duration(seconds: holdSeconds)),
+      // **`current_offer` هو المصدر، والحقول المسطّحة احتياطي.**
+      //
+      // waitlist v2 نقل العروض لجدول `booking_waitlist_offers` بمحاولات
+      // مرقّمة، و`current_offer` هو الصف النشط منها. الحقول المسطّحة
+      // (`offered_start_at`…) نسخة على الإدخال الأب، وممكن تبقى بايتة من
+      // محاولة قديمة لو الصف اتقفل من غير ما تتمسح.
+      offeredStartAt:
+          JsonParse.dateOrNull(offer['start_at']) ??
+          JsonParse.dateOrNull(json['offered_start_at']),
+      offeredEndAt:
+          JsonParse.dateOrNull(offer['end_at']) ??
+          JsonParse.dateOrNull(json['offered_end_at']),
+      offeredEmployeeName:
+          offer['employee_name'] as String? ??
+          JsonParse.mapValue(json['offered_employee'])['name'] as String?,
+      offerMessage: offer['message'] as String?,
     );
   }
 
