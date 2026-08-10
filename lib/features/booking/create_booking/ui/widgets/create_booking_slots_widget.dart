@@ -1,17 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/core/models/slot_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_format.dart';
-import 'package:waqty_user_application/core/utils/app_motion.dart';
-import 'package:waqty_user_application/core/utils/app_radius.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/app_surface_widget.dart';
-import 'package:waqty_user_application/core/widgets/app_pill_widget.dart';
-import 'package:waqty_user_application/core/widgets/empty_state_widget.dart';
-import 'package:waqty_user_application/core/widgets/skeleton_box_widget.dart';
 
 /// المواعيد — مقسّمة صباحًا / بعد الظهر / مساءً، ٣ في الصف.
 ///
@@ -47,7 +38,7 @@ class CreateBookingSlotsWidget extends StatelessWidget {
     if (isLoading) {
       // shimmer في نفس الشبكة ٣ في الصف — عشان مفيش حاجة تتزحلق لما
       // المواعيد الحقيقية توصل.
-      return SkeletonGroupWidget(
+      return AppSkeletonGroupWidget(
         child: Wrap(
           spacing: AppSpacing.chipGap.w,
           runSpacing: AppSpacing.chipGap.h,
@@ -55,11 +46,10 @@ class CreateBookingSlotsWidget extends StatelessWidget {
             9,
             // الارتفاع بيتقرا من الشيب نفسه — فمفيش إزاحة لما المواعيد
             // الحقيقية توصل.
-            (_) => SkeletonBoxWidget(
+            (_) => AppSkeletonBoxWidget(
               width: 96,
               height: _SlotChip.height,
               radius: AppRadius.pill,
-              animate: false,
             ),
           ),
         ),
@@ -72,10 +62,11 @@ class CreateBookingSlotsWidget extends StatelessWidget {
       // ده طلب قابل قدامه عرض فاضي — مش «مقفول» اللي بيقفل الكلام.
       // `POST /user/waitlist` مبني وشغال في السيرفر، والأبلكيشن كان
       // بيرد على اليوم المليان بطريق مسدود.
-      return EmptyStateWidget(
+      return AppEmptyStateWidget(
         icon: Icons.event_busy_outlined,
         title: 'اليوم ده مليان',
-        message: 'جرّب يوم تاني من الشريط اللي فوق، أو خلينا نبلّغك أول ما يفضى',
+        message:
+            'جرّب يوم تاني من الشريط اللي فوق، أو خلينا نبلّغك أول ما يفضى',
         actionLabel: onJoinWaitlist == null ? null : 'ضيفني لقائمة الانتظار',
         onAction: onJoinWaitlist,
       );

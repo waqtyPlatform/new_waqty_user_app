@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/features/booking/waitlist/logic/waitlist_cubit.dart';
 import 'package:waqty_user_application/features/booking/waitlist/logic/waitlist_state.dart';
 import 'package:waqty_user_application/features/booking/waitlist/ui/widgets/waitlist_card_widget.dart';

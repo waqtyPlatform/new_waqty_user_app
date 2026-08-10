@@ -1,14 +1,11 @@
+import 'package:waqty_user_application/core/widgets/discount_price_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/core/mock/mock_in_branch.dart';
 import 'package:waqty_user_application/core/models/booking_ui_model.dart';
 import 'package:waqty_user_application/core/models/in_branch_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_format.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/app_pill_widget.dart';
-import 'package:waqty_user_application/core/widgets/app_row_widget.dart';
 import 'package:waqty_user_application/core/widgets/booking_status_chip_widget.dart';
 import 'package:waqty_user_application/features/booking/in_branch/ui/widgets/in_branch_chip_widget.dart';
 
@@ -35,43 +32,45 @@ import 'package:waqty_user_application/features/booking/in_branch/ui/widgets/in_
 /// عشرين تايمر شغّال في الخلفية عشان تقدير بيتغيّر كل ٢٠ ثانية. اللي بيـ poll
 /// هو الهيرو في الهوم وبلوك التفاصيل بس، وهما واحد في الشاشة.
 class MyBookingRowWidget extends StatelessWidget {
-  /// **الحسبة:** ١٦ حشوة فوق + ١٦ تحت (من [AppRowWidget]) = ٣٢، زائد
-  /// المسافات جوه عمود النص: ٤ (`titleToSubtitle`) + ٤ = **٤٠**.
+  /// **الحسبة:** ١٢ حشوة فوق + ١٢ تحت (من [AppRowWidget]) = ٢٤، زائد
+  /// المسافات جوه عمود النص: ٤ (`titleToSubtitle`) + ٤ = **٣٢**.
   ///
-  /// كان ٣٦ — الرقم اتكتب لما حشوة الكارت كانت ١٢، وما اتحدّثش لما بقت ١٦.
+  /// ⚠ **مشتق من التوكنز مش رقم مكتوب.** الرقم ده اتكتب ٣٦ أول ما الحشوة
+  /// كانت ١٢، وبقى ٤٠ لما بقت ١٦ — ومع الكيت رجعت ١٢ تاني. تلات مرات
+  /// نفس الرقم يتصلّح بالإيد كفاية: خلّيه يقرا من التوكن.
+  ///
   /// والمسافة قبل صف البيانات نزلت من ٨ لـ ٤: التلات سطور دول بيانات الحجز
   /// نفسه، والفصل الحقيقي بين اسم المحل وبينهم.
-  static const double _fixedPart = 40;
+  static const double _fixedPart =
+      (AppSpacing.cardPadding * 2) + AppSpacing.titleToSubtitle + AppSpacing.s4;
 
   /// **الحسبة عند مقياس خط ١٫٠:**
   /// `cardTitle` ١٦×١٫٤٠ = ٢٢٫٤ · `caption` ١٢×١٫٤٠ = ١٦٫٨ · وسطر البيانات
   /// أطول حاجة فيه شارة الميعاد (١٤٫٣ + ٨ حشوة = ٢٢٫٣) أو السعر
-  /// (`bodyMdStrong` ٢١) — بنحجز ٢٢٫٤. المجموع **٦١٫٦**، والرقم هنا ٦٣
+  /// (`bodyMdStrong` ٢١) — بنحجز ٢٤٫٨. المجموع الحسابي **٦٤**، والرقم هنا ٦٨ — تلات سطور، وفلاتر بيقرّب كل واحد فيهم لأعلى
   /// لتقريب فلاتر لارتفاع السطر.
   ///
-  /// السطر الأول بيتحسب بالعنوان مش بالشارة: الشارة `overline` ١١×١٫٣٠ =
-  /// ١٤٫٣ زائد ٨ حشوة رأسية = **٢٢٫٣** — أقصر من العنوان بعُشر بكسل،
-  /// فالعنوان هو اللي بيحدد الارتفاع دايمًا.
-  static const double _textPart = 63;
+  /// الشارة `captionStrong` ١٢×١٫٤٠ =
+  /// ١٦٫٨ زائد ٨ حشوة رأسية = **٢٤٫٨** — أطول من العنوان، فهي اللي
+  /// بتحدد ارتفاع السطر التالت.
+  static const double _textPart = 68;
 
   /// شارة «قيّم الخدمة» بتزوّد سطر — مسافة ٤ وحشوة الشارة ٨ ثابتين،
-  /// ونصها (`overline`) بيكبر مع المقياس.
+  /// ونصها (`captionStrong` = ١٢×١٫٤٠) بيكبر مع المقياس.
   static const double _ratingFixed = AppSpacing.s4 + AppSpacing.s8;
-  static const double _ratingText = 14.3;
+  static const double _ratingText = 16.8;
 
   /// المصدر الوحيد للارتفاع — **و`MyBookingRowSkeletonWidget` بيقراه من هنا**.
   ///
   /// ⚠ [hasRatingLine] **لازم يتبعت.** شارة التقييم كانت بتترسم من غير ما
   /// تتحسب خالص — يعني أي حجز مكتمل من غير تقييم كان صفه **بيفيض ٢٠ بكسل**.
   /// الـ skeleton بيسيبها `false` لأنه مابيعرفش إيه اللي جاي.
-  static double heightOf(
-    BuildContext context, {
-    bool hasRatingLine = false,
-  }) => AppSpacing.scaledHeight(
-    context,
-    fixed: _fixedPart + (hasRatingLine ? _ratingFixed : 0),
-    text: _textPart + (hasRatingLine ? _ratingText : 0),
-  );
+  static double heightOf(BuildContext context, {bool hasRatingLine = false}) =>
+      AppSpacing.scaledHeight(
+        context,
+        fixed: _fixedPart + (hasRatingLine ? _ratingFixed : 0),
+        text: _textPart + (hasRatingLine ? _ratingText : 0),
+      );
 
   final BookingUiModel booking;
   final VoidCallback onTap;
@@ -93,10 +92,7 @@ class MyBookingRowWidget extends StatelessWidget {
 
     return AppRowWidget(
       onTap: onTap,
-      height: heightOf(
-        context,
-        hasRatingLine: booking.hasPendingRatings,
-      ).h,
+      height: heightOf(context, hasRatingLine: booking.hasPendingRatings).h,
       showHairline: showHairline,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -188,10 +184,7 @@ class MyBookingRowWidget extends StatelessWidget {
               // بيمرّ على القايمة، مابيفتحش كل حجز. سعر مشطوب جنب السعر
               // الجديد بيقول القصة في نص ثانية من غير لابل ولا لون صارخ.
               if (booking.hasDiscount) ...[
-                Text(
-                  AppFormat.money(booking.originalPrice!),
-                  style: AppTextStyles.captionStruck,
-                ),
+                DiscountPriceWidget(amount: booking.originalPrice!),
                 horizontalSpace(AppSpacing.s4),
               ],
               Text(

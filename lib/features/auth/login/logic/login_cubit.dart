@@ -22,12 +22,12 @@ class LoginCubit extends Cubit<LoginState> {
   // `inputDecorationTheme`، فالحالة دي بقت بتعيد بناء حقلين مع كل ضغطة
   // من غير ما تغيّر حاجة على الشاشة.
 
-  bool isPasswordVisibleLogin = true;
-
-  changePasswordLoginState() {
-    isPasswordVisibleLogin = !isPasswordVisibleLogin;
-    emit(IsPasswordVisibleState());
-  }
+  // **حالة إظهار كلمة السر اتشالت من هنا.**
+  //
+  // كانت `bool` + دالة + `State` في تلات cubits — تسع أعضاء كل
+  // شغلهم يقلبوا أيقونة عين. `AppPasswordFieldWidget` بتاع الكيت
+  // شايلها جواه، فضغطة العين بقت تبني الحقل بس بدل ما تبني الشاشة
+  // كلها (٦ حقول في التسجيل).
 
   Future<void> login() async {
     emit(OnLoginLoadingState());

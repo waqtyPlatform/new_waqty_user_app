@@ -1,15 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/core/models/waitlist_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_format.dart';
-import 'package:waqty_user_application/core/utils/app_radius.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/app_button_widget.dart';
-import 'package:waqty_user_application/core/widgets/app_surface_widget.dart';
-import 'package:waqty_user_application/core/widgets/directional_chevron_widget.dart';
 
 /// كارت إدخال في قائمة انتظار.
 ///
@@ -63,10 +56,7 @@ class WaitlistCardWidget extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: Text(
-                  entry.status.label,
-                  style: AppTextStyles.sectionLabel,
-                ),
+                child: Text(entry.status.label, style: AppTextStyles.overline),
               ),
               // **`entry.canCancel` من السيرفر، مش شرط محسوب هنا.**
               //
@@ -201,7 +191,7 @@ class _Countdown extends StatelessWidget {
         Icon(
           Icons.timer_outlined,
           size: 18.r,
-          color: AppSemanticColors.accent,
+          color: AppSemanticColors.accentText,
         ),
         horizontalSpace(AppSpacing.s8),
         // `ltr` عشان النقطتين مايتنقلوش — «٤:٣٢» مش «٣٢:٤».
@@ -209,16 +199,11 @@ class _Countdown extends StatelessWidget {
           label,
           textDirection: TextDirection.ltr,
           style: AppTextStyles.titleLg.copyWith(
-            color: AppSemanticColors.accent,
+            color: AppSemanticColors.accentText,
           ),
         ),
         horizontalSpace(AppSpacing.s8),
-        Expanded(
-          child: Text(
-            'محجوز ليك',
-            style: AppTextStyles.caption,
-          ),
-        ),
+        Expanded(child: Text('محجوز ليك', style: AppTextStyles.caption)),
       ],
     );
   }
@@ -266,8 +251,9 @@ class WaitlistSectionWidget extends StatelessWidget {
             now: now,
             onRemove: onRemove == null ? null : () => onRemove!(entry.uuid),
             onAccept: onAccept == null ? null : () => onAccept!(entry.uuid),
-            onRequestChange:
-                onRequestChange == null ? null : () => onRequestChange!(entry),
+            onRequestChange: onRequestChange == null
+                ? null
+                : () => onRequestChange!(entry),
           ),
           verticalSpace(AppSpacing.listRowGap),
         ],
@@ -292,21 +278,16 @@ class _SeeAllRow extends StatelessWidget {
       child: Padding(
         // **`touchTarget` مش حشوة على العين.** السطر ده نص وسهم، وارتفاعه
         // الطبيعي أقل من ٤٤ — والقاعدة `.r` مش `.h`.
-        padding: EdgeInsetsDirectional.symmetric(
-          horizontal: AppSpacing.s8.w,
-        ),
+        padding: EdgeInsetsDirectional.symmetric(horizontal: AppSpacing.s8.w),
         child: SizedBox(
           height: AppSpacing.touchTarget.r,
           child: Row(
             children: [
-              Text(
-                'كل قوايم الانتظار',
-                style: AppTextStyles.captionAccent,
-              ),
+              Text('كل قوايم الانتظار', style: AppTextStyles.captionAccent),
               horizontalSpace(AppSpacing.s4),
               DirectionalChevronWidget(
                 size: 16,
-                color: AppSemanticColors.accent,
+                color: AppSemanticColors.accentText,
               ),
             ],
           ),

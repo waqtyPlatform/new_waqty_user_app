@@ -55,9 +55,9 @@ class PaginatedUiModel<T> {
     final meta = json['pagination'] ?? json['meta'] ?? json;
     final page = JsonParse.mapValue(meta);
 
-    final items = JsonParse.mapListValue(json['data'])
-        .map(itemFromJson)
-        .toList();
+    final items = JsonParse.mapListValue(
+      json['data'],
+    ).map(itemFromJson).toList();
 
     return PaginatedUiModel<T>(
       data: items,

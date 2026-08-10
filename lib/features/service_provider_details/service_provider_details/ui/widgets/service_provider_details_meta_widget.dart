@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/core/models/provider_ui_model.dart';
 import 'package:waqty_user_application/core/models/service_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_format.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/widgets/app_pill_widget.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 
 /// شريط شارات تحت هيدر المحل: **المسافة · عدد الخدمات · يبدأ من**.
 ///

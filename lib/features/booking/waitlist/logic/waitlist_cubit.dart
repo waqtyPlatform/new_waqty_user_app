@@ -29,10 +29,7 @@ class WaitlistCubit extends Cubit<WaitlistState> {
     emit(const WaitlistLoadingState());
     load();
 
-    _lifecycle = AppLifecycleListener(
-      onResume: load,
-      onPause: _stopTimer,
-    );
+    _lifecycle = AppLifecycleListener(onResume: load, onPause: _stopTimer);
 
     // الانضمام بيحصل من **جوه sheet** ممكن تكون مدفوعة من شاشة مش تحت
     // الـ provider ده — فمافيش طريق مباشر ينده `load()`. الإشارة بتحل ده

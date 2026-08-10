@@ -145,6 +145,5 @@ class BookingItemUiModel {
   DateTime get day => DateTime(startAt.year, startAt.month, startAt.day);
 
   /// فيه خصم فعلي؟ (`originalPrice` أعلى من المدفوع)
-  bool get hasDiscount =>
-      originalPrice != null && originalPrice! > price;
+  bool get hasDiscount => originalPrice != null && originalPrice! > price;
 }

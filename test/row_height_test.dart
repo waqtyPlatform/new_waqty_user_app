@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:waqty_user_application/config/themes/app_theme.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/mock/mock_providers.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/widgets/app_surface_widget.dart';
 import 'package:waqty_user_application/core/widgets/provider_row_widget.dart';
 import 'package:waqty_user_application/core/widgets/provider_row_skeleton_widget.dart';
 
@@ -78,9 +75,7 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    final rendered = tester
-        .getSize(find.byType(AppSurfaceWidget).first)
-        .height;
+    final rendered = tester.getSize(find.byType(AppSurfaceWidget).first).height;
 
     return (rendered: rendered, expected: expected);
   }

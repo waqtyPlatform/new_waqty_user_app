@@ -1,15 +1,10 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/core/services/check_network.dart';
 import 'package:waqty_user_application/core/utils/app_constant.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
-import 'package:waqty_user_application/core/utils/assets_manager.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/extentions.dart';
-import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/app_button_widget.dart';
 import 'package:waqty_user_application/features/auth/reseat_password/logic/reseat_password_cubit.dart';
 import 'package:waqty_user_application/features/auth/reseat_password/logic/reseat_password_state.dart';
 
@@ -69,48 +64,34 @@ class ReseatButtonWidget extends StatelessWidget {
     }
   }
 
-  /// شكل الـ dialog كله من `dialogTheme` — كان مكتوب بالإيد بأبيض صريح
-  /// وستايلات من `TextStyles` القديمة.
+  /// **[AppDialogWidget] مش `AlertDialog` مكتوب بالإيد.**
+  ///
+  /// اللي اتشال: `insetPadding` محسوب بالإيد، و`Column` بحشوات
+  /// `verticalSpace` متكتوبة، و`Image.asset(doneImage)`.
+  ///
+  /// صورة الـ«تمام» بقت أيقونة: الـPNG كان أصل براند مالوش مقاس معلن،
+  /// وبيتمدّ على عرض الـdialog من غير سقف. أيقونة الكيت (٤٠ نقطة بلون
+  /// `accentText`) نفس الرسالة، وبتتبع الوضع الغامق لوحدها — الـPNG لأ.
   static void showDialogChangePasswordDone(BuildContext context) {
-    showDialog<void>(
-      context: context,
+    AppDialogWidget.show<void>(
+      context,
       barrierDismissible: false,
-      builder: (dialogContext) => AlertDialog(
-        insetPadding: EdgeInsets.symmetric(
-          horizontal: AppSpacing.pageGutter.w,
-          vertical: AppSpacing.s24.h,
+      icon: Icons.check_circle_rounded,
+      title: context.tr('passwordChangedDone.title'),
+      message: context.tr('passwordChangedDone.description'),
+      actions: (dialogContext) => [
+        AppButtonWidget(
+          label: context.tr('passwordChangedDone.buttonText'),
+          // أربع `pop()` ورا بعض: الـ dialog + إعادة التعيين + الكود +
+          // نسيت كلمة السر — يعني بيرجع لشاشة الدخول.
+          onPressed: () {
+            Navigator.of(dialogContext).pop();
+            context.pop();
+            context.pop();
+            context.pop();
+          },
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Center(child: Image.asset(ImageAsset.doneImage)),
-            verticalSpace(AppSpacing.s24),
-            Text(
-              context.tr('passwordChangedDone.title'),
-              style: AppTextStyles.sectionHeader,
-              textAlign: TextAlign.center,
-            ),
-            verticalSpace(AppSpacing.s8),
-            Text(
-              context.tr('passwordChangedDone.description'),
-              textAlign: TextAlign.center,
-              style: AppTextStyles.bodyMdMuted,
-            ),
-            verticalSpace(AppSpacing.s24),
-            AppButtonWidget(
-              label: context.tr('passwordChangedDone.buttonText'),
-              // أربع `pop()` ورا بعض: الـ dialog + إعادة التعيين + الكود +
-              // نسيت كلمة السر — يعني بيرجع لشاشة الدخول.
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                context.pop();
-                context.pop();
-                context.pop();
-              },
-            ),
-          ],
-        ),
-      ),
+      ],
     );
   }
 }

@@ -1,15 +1,10 @@
+import 'package:waqty_user_application/core/widgets/discount_price_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/core/models/booking_item_ui_model.dart';
 import 'package:waqty_user_application/core/models/booking_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_format.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/app_hairline_widget.dart';
-import 'package:waqty_user_application/core/widgets/app_pill_widget.dart';
-import 'package:waqty_user_application/core/widgets/app_surface_widget.dart';
 
 /// تفاصيل الحجز — **تلات مجموعات**: فين · إيه وإمتى · بكام.
 ///
@@ -103,10 +98,7 @@ class BookingDetailsInfoWidget extends StatelessWidget {
               // resource** — فالعميل كان بيشوف رقم أقل من اللي في القايمة
               // من غير أي تفسير، والرقم من غير سبب بيتقري «غلطة».
               if (booking.hasDiscount) ...[
-                Text(
-                  AppFormat.money(booking.originalPrice!),
-                  style: AppTextStyles.captionStruck,
-                ),
+                DiscountPriceWidget(amount: booking.originalPrice!),
                 horizontalSpace(AppSpacing.s8),
               ],
               Text(
@@ -217,7 +209,7 @@ class BookingDetailsInfoWidget extends StatelessWidget {
         Row(
           children: [
             if (visits.length > 1) ...[
-              Text(_visitTitle(i), style: AppTextStyles.sectionLabel),
+              Text(_visitTitle(i), style: AppTextStyles.overline),
               horizontalSpace(AppSpacing.s8),
             ],
             Expanded(
@@ -325,7 +317,7 @@ class BookingDetailsInfoWidget extends StatelessWidget {
   Widget _labelled(String label, String value) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(label, style: AppTextStyles.sectionLabel),
+      Text(label, style: AppTextStyles.overline),
       verticalSpace(AppSpacing.s4),
       Text(value, style: AppTextStyles.bodyMd),
     ],

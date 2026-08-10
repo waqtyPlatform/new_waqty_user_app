@@ -1,40 +1,19 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:waqty_user_application/config/themes/app_theme.dart';
-import 'package:waqty_user_application/config/themes/theme_cubit.dart';
-import 'package:waqty_user_application/core/utils/app_gradients.dart';
-import 'package:waqty_user_application/core/utils/app_palette.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 
-/// نسبة التباين بين لونين — نفس معادلة WCAG 2.1.
-double _contrast(Color a, Color b) {
-  final la = _luminance(a);
-  final lb = _luminance(b);
-  return (math.max(la, lb) + 0.05) / (math.min(la, lb) + 0.05);
-}
-
-double _luminance(Color c) {
-  double channel(double v) =>
-      v <= 0.03928 ? v / 12.92 : math.pow((v + 0.055) / 1.055, 2.4).toDouble();
-
-  return 0.2126 * channel(c.r) + 0.7152 * channel(c.g) + 0.0722 * channel(c.b);
-}
+import 'wcag.dart';
 
 /// **الوضع الغامق.**
 ///
 /// التوكنز كلها `static getters` بتقرا من palette عام، يعني الاختبارات هنا
-/// بتلمس **حالة عامة**. كل اختبار بيرجّع الوضع الفاتح في `tearDown` عشان
-/// الترتيب مايفرقش.
+/// بتلمس **حالة عامة**. الـ `tearDown` بيرجّع الفاتح بعد كل اختبار عشان
+/// الترتيب مايفرقش — من غيره اختبار بينسى يرجّع بيكسّر اللي بعده.
 void main() {
-  const small = 4.5;
-  const large = 3.0;
-
   tearDown(() => AppSemanticColors.apply(Brightness.light));
 
-  group('التبديل بيشتغل', () {
+  group('١ · التبديل بيشتغل', () {
     test('الافتراضي فاتح', () {
       expect(AppSemanticColors.isDark, isFalse);
       expect(AppSemanticColors.palette, same(AppPalette.light));
@@ -52,33 +31,27 @@ void main() {
       expect(AppSemanticColors.apply(Brightness.dark), isFalse);
     });
 
-    test('الصفحة والحبر بيقلبوا فعلاً مش بيفضلوا زي ما هما', () {
+    test('الصفحة بتغمق والنص بيفتح — مش بس بيتغيّروا', () {
       final lightPage = AppSemanticColors.page;
       final lightText = AppSemanticColors.textPrimary;
 
       AppSemanticColors.apply(Brightness.dark);
 
-      expect(AppSemanticColors.page, isNot(lightPage));
-      expect(AppSemanticColors.textPrimary, isNot(lightText));
-      // الصفحة الغامقة لازم تبقى **أغمق** من الفاتحة، والنص أفتح.
+      expect(luminance(AppSemanticColors.page), lessThan(luminance(lightPage)));
       expect(
-        _luminance(AppSemanticColors.page),
-        lessThan(_luminance(lightPage)),
-      );
-      expect(
-        _luminance(AppSemanticColors.textPrimary),
-        greaterThan(_luminance(lightText)),
+        luminance(AppSemanticColors.textPrimary),
+        greaterThan(luminance(lightText)),
       );
     });
   });
 
-  group('ترتيب الأسطح متحفظ عليه في الوضعين', () {
-    /// الكارت لازم يقعد **فوق** الصفحة، والغاطس **تحتها** — الترتيب ده هو
+  group('٢ · ترتيب الأسطح متحفظ عليه في الوضعين', () {
+    /// الكارت لازم يقعد **فوق** الصفحة والغاطس **تحتها** — الترتيب ده هو
     /// نظام العمق كله. لو اتقلب في الغامق، الكروت بتغطس والبحث بيطفو.
     void expectOrdering() {
-      final page = _luminance(AppSemanticColors.page);
-      final raised = _luminance(AppSemanticColors.surfaceRaised);
-      final sunken = _luminance(AppSemanticColors.surfaceSunken);
+      final page = luminance(AppSemanticColors.page);
+      final raised = luminance(AppSemanticColors.surfaceRaised);
+      final sunken = luminance(AppSemanticColors.surfaceSunken);
 
       expect(raised, greaterThan(page), reason: 'الكارت لازم يبقى أفتح');
       expect(sunken, lessThan(page), reason: 'الغاطس لازم يبقى أغمق');
@@ -90,335 +63,430 @@ void main() {
       AppSemanticColors.apply(Brightness.dark);
       expectOrdering();
     });
+
+    test('الحبر بينقلب: أغمق حاجة في الفاتح، أفتح حاجة في الغامق', () {
+      // لوح أسود على صفحة سودا مش بؤرة، هو اختفاء.
+      expect(
+        luminance(AppSemanticColors.surfaceInk),
+        lessThan(luminance(AppSemanticColors.surfaceSunken)),
+        reason: 'في الفاتح الحبر لازم يبقى أغمق حاجة',
+      );
+
+      AppSemanticColors.apply(Brightness.dark);
+
+      expect(
+        luminance(AppSemanticColors.surfaceInk),
+        greaterThan(luminance(AppSemanticColors.surfaceRaised)),
+        reason: 'في الغامق الحبر لازم يبقى أفتح من الكارت',
+      );
+    });
   });
 
-  group('النص على الصفحة الغامقة', () {
+  group('٣ · النص على الصفحة الغامقة', () {
     setUp(() => AppSemanticColors.apply(Brightness.dark));
 
-    test('الأساسي فوق الحد', () {
-      expect(
-        _contrast(AppSemanticColors.textPrimary, AppSemanticColors.page),
-        greaterThan(small),
-      );
+    test('الأساسي والثانوي بيعدّوا على الصفحة والكارت', () {
+      for (final surface in <String, Color>{
+        'page': AppSemanticColors.page,
+        'surfaceRaised': AppSemanticColors.surfaceRaised,
+      }.entries) {
+        expect(
+          contrast(AppSemanticColors.textPrimary, surface.value),
+          greaterThan(kAaSmall),
+          reason: 'الأساسي وقع على ${surface.key}',
+        );
+        expect(
+          contrast(AppSemanticColors.textSecondary, surface.value),
+          greaterThan(kAaSmall),
+          reason: 'الثانوي وقع على ${surface.key}',
+        );
+      }
     });
 
-    test('الثانوي فوق الحد', () {
+    test('textOnSunken بيعدّي على الغاطس', () {
       expect(
-        _contrast(AppSemanticColors.textSecondary, AppSemanticColors.page),
-        greaterThan(small),
-      );
-    });
-
-    /// الثالثي هو أضعف لون نص في السلّم — لو عدّى، اللي فوقه عدّى.
-    test('الثالثي فوق الحد', () {
-      expect(
-        _contrast(AppSemanticColors.textTertiary, AppSemanticColors.page),
-        greaterThan(small),
-      );
-    });
-
-    test('الثانوي على السطح الغاطس فوق الحد', () {
-      expect(
-        _contrast(
+        contrast(
           AppSemanticColors.textOnSunken,
           AppSemanticColors.surfaceSunken,
         ),
-        greaterThan(small),
+        greaterThan(kAaSmall),
       );
     });
   });
 
-  group('اللمسة بتفتح في الغامق — ومعاها النص اللي عليها بينقلب', () {
-    /// `#009354` على صفحة `#121110` بيدي 4.76:1 — عدّى بالعافية. الغامق
-    /// بياخد `#00CC77` (8.9:1)، والاختبار ده بيثبّت إن الفرق ده موجود.
-    test('اللمسة الغامقة أوضح على صفحتها من الفاتحة', () {
-      final lightRatio = _contrast(
+  group('٤ · اللمسة بتفتح — ونصّها بينقلب', () {
+    test('الأخضر الغامق تباينه على الصفحة أعلى من الفاتح', () {
+      final lightRatio = contrast(
         AppSemanticColors.accent,
         AppSemanticColors.page,
       );
 
       AppSemanticColors.apply(Brightness.dark);
-
-      final darkRatio = _contrast(
+      final darkRatio = contrast(
         AppSemanticColors.accent,
         AppSemanticColors.page,
       );
 
-      expect(darkRatio, greaterThan(small));
+      expect(darkRatio, greaterThan(kAaLarge));
       expect(darkRatio, greaterThan(lightRatio));
     });
 
-    /// **ده أهم اختبار في الملف.**
-    ///
-    /// لو `textOnAccent` فضل أبيض في الغامق، نص الزرار الأساسي كان هيبقى
-    /// أبيض على `#00CC77` = **2.12:1**. الاختبار بيقيس الزرار كوحدة: النص
-    /// على ملء اللمسة.
-    test('نص الزرار الأساسي مقروء على ملء اللمسة في الغامق', () {
+    test('النص على اللمسة بيعدّي عتبة الرسومات في الوضعين', () {
+      // ⚠ **عتبة الرسومات مش عتبة النص، وده مقصود.**
+      //
+      // `accent` مسموح يشيل أيقونة أو شكل كبير، **مش نص متن**. في الفاتح
+      // الأبيض عليه **3.96:1** — عدّى 3.0 ورسب 4.5. أي تعبئة خضرا تحتها
+      // نص بتاخد `accentDeep` (المجموعة ٥ بتقيسها بـ 4.5).
+      //
+      // الاختبار ده بيمنع حاجتين: إن اللمسة تغمق لدرجة إن الأيقونة عليها
+      // تختفي، وإن حد يفتكر إن الرقم ده سهو.
+      for (final brightness in Brightness.values) {
+        AppSemanticColors.apply(brightness);
+        expect(
+          contrast(AppSemanticColors.textOnAccent, AppSemanticColors.accent),
+          greaterThan(kAaLarge),
+          reason: 'الرسم على اللمسة اختفى في $brightness',
+        );
+      }
+
+      // وفي الغامق بس، اللمسة بتفتح كفاية إن نصّها يعدّي AA كامل.
       AppSemanticColors.apply(Brightness.dark);
       expect(
-        _contrast(AppSemanticColors.textOnAccent, AppSemanticColors.accent),
-        greaterThan(small),
+        contrast(AppSemanticColors.textOnAccent, AppSemanticColors.accent),
+        greaterThan(kAaSmall),
       );
     });
 
-    test('الأبيض على اللمسة الغامقة كان هيسقط — ده اللي التوكن بيمنعه', () {
+    test('الأبيض على اللمسة الغامقة راسب — ده سبب انقلاب التوكن', () {
       AppSemanticColors.apply(Brightness.dark);
       expect(
-        _contrast(const Color(0xffFFFFFF), AppSemanticColors.accent),
-        lessThan(large),
+        contrast(const Color(0xffFFFFFF), AppSemanticColors.accent),
+        lessThan(kAaLarge),
+        reason: 'لو ده عدّى، textOnAccent مش محتاج ينقلب',
       );
     });
   });
 
-  group('السطح الأخضر الغامق — نفس اللون في الوضعين', () {
-    test('اللون ما اتغيّرش', () {
-      final light = AppSemanticColors.surfaceAccentDeep;
+  group('٥ · السطح الأخضر الغامق — نفس اللون في الوضعين', () {
+    test('accentDeep مابيتغيّرش حرفيًا', () {
+      final lightDeep = AppSemanticColors.surfaceAccentDeep;
       AppSemanticColors.apply(Brightness.dark);
-      expect(AppSemanticColors.surfaceAccentDeep, light);
+      expect(AppSemanticColors.surfaceAccentDeep, lightDeep);
     });
 
-    test('نصه الأساسي مقروء في الوضعين', () {
+    test('نصّه بيعدّي في الوضعين', () {
       for (final brightness in Brightness.values) {
         AppSemanticColors.apply(brightness);
         expect(
-          _contrast(
+          contrast(
             AppSemanticColors.textOnAccentDeep,
             AppSemanticColors.surfaceAccentDeep,
           ),
-          greaterThan(small),
-          reason: 'وقع في $brightness',
+          greaterThan(kAaSmall),
+          reason: 'النص الأساسي على الأخضر الغامق وقع في $brightness',
         );
-      }
-    });
-
-    test('نصه الثانوي مقروء في الوضعين', () {
-      for (final brightness in Brightness.values) {
-        AppSemanticColors.apply(brightness);
         expect(
-          _contrast(
+          contrast(
             AppSemanticColors.textOnAccentMuted,
             AppSemanticColors.surfaceAccentDeep,
           ),
-          greaterThan(small),
-          reason: 'وقع في $brightness',
+          greaterThan(kAaSmall),
+          reason: 'النص الثانوي على الأخضر الغامق وقع في $brightness',
         );
       }
     });
 
-    /// **الباج اللي `textOnAccentDeep` اتعمل عشانه.**
-    ///
-    /// `textOnAccent` بينقلب لحبر غامق في الوضع الغامق، وعلى الأخضر الغامق
-    /// بيدي 2.52:1 — يعني شريط «الكرسي جاهز» كان هيختفي بالليل. لو حد رجّع
-    /// `textOnAccent` مكانه، الاختبار ده هو اللي هيمسكه.
-    test('`textOnAccent` على السطح الأخضر بيسقط في الغامق', () {
-      AppSemanticColors.apply(Brightness.dark);
-      expect(
-        _contrast(
-          AppSemanticColors.textOnAccent,
-          AppSemanticColors.surfaceAccentDeep,
-        ),
-        lessThan(large),
-      );
-    });
+    test(
+      'textOnAccent على الأخضر الغامق بيرسب — الباج اللي التوكن اتعمل عشانه',
+      () {
+        AppSemanticColors.apply(Brightness.dark);
+        expect(
+          contrast(
+            AppSemanticColors.textOnAccent,
+            AppSemanticColors.surfaceAccentDeep,
+          ),
+          lessThan(kAaSmall),
+          reason: 'لو ده عدّى، textOnAccentDeep مالوش لازمة',
+        );
+      },
+    );
   });
 
-  group('الأسطح المقلوبة والحالات', () {
-    test('نص الـ snackbar مقروء في الوضعين', () {
+  group('٦ · الأسطح المقلوبة والحالات', () {
+    test('نص الـ snackbar بيعدّي في الوضعين', () {
       for (final brightness in Brightness.values) {
         AppSemanticColors.apply(brightness);
         expect(
-          _contrast(
+          contrast(
             AppSemanticColors.textOnInverse,
             AppSemanticColors.surfaceInverse,
           ),
-          greaterThan(small),
-          reason: 'وقع في $brightness',
+          greaterThan(kAaSmall),
+          reason: 'المقلوب وقع في $brightness',
         );
       }
     });
 
-    test('ألوان الحالات مقروءة على أسطحها الخفيفة في الوضعين', () {
+    test('كل زوج حالة/soft بيعدّي في الوضعين', () {
+      // thunks مش قيم — لازم يتقروا **بعد** apply مش قبله.
       final pairs = <String, (Color, Color) Function()>{
-        'danger': () =>
-            (AppSemanticColors.danger, AppSemanticColors.dangerSoft),
+        'dangerOnSoft': () =>
+            (AppSemanticColors.dangerOnSoft, AppSemanticColors.dangerSoft),
         'warning': () =>
             (AppSemanticColors.warning, AppSemanticColors.warningSoft),
         'positive': () =>
             (AppSemanticColors.positive, AppSemanticColors.positiveSoft),
         'info': () => (AppSemanticColors.info, AppSemanticColors.infoSoft),
+        'danger على الكارت': () =>
+            (AppSemanticColors.danger, AppSemanticColors.surfaceRaised),
       };
 
       for (final brightness in Brightness.values) {
         AppSemanticColors.apply(brightness);
         for (final entry in pairs.entries) {
-          final (ink, surface) = entry.value();
+          final (fg, bg) = entry.value();
           expect(
-            _contrast(ink, surface),
-            greaterThan(small),
+            contrast(fg, bg),
+            greaterThan(kAaSmall),
             reason: '${entry.key} وقع في $brightness',
           );
         }
       }
     });
 
-    /// **مفيش نسبة تباين هنا عن قصد.**
-    ///
-    /// الدهبي على أبيض لمعانه قريب منه (1.72:1) — بس ده مش القياس الصح
-    /// للنجمة: الفرق بين «مقيّمة» و«مش مقيّمة» بيتقال بـ**تلات إشارات** —
-    /// الشكل (`star_rounded` مقابل `star_outline_rounded`)، والملء، واللون.
-    /// نسبة اللمعان لوحدها بتقيس واحدة منهم وبتسقط اللي عليها الشغل.
-    ///
-    /// اللي بيتقاس هنا هو العقد اللي ممكن يتكسر بالغلط: **النجمة توكن
-    /// مستقل**. لو حد وحّدها مع [AppSemanticColors.warning] بكرة، أول
-    /// تغيير في لون التحذير هياخد النجمة معاه.
-    test('نجمة التقييم توكن مستقل في الوضعين', () {
+    test('نص زرار الحذف بينقلب — والأبيض راسب في الغامق', () {
+      for (final brightness in Brightness.values) {
+        AppSemanticColors.apply(brightness);
+        expect(
+          contrast(AppSemanticColors.textOnDanger, AppSemanticColors.danger),
+          greaterThan(kAaSmall),
+          reason: 'نص زرار الحذف وقع في $brightness',
+        );
+      }
+
+      // النفي اللي بيثبّت سبب وجود التوكن.
+      AppSemanticColors.apply(Brightness.dark);
+      expect(
+        contrast(const Color(0xffFFFFFF), AppSemanticColors.danger),
+        lessThan(kAaLarge),
+        reason: 'لو ده عدّى، textOnDanger مش محتاج ينقلب',
+      );
+    });
+
+    test('accentText بيعدّي على كل سطح في الوضعين', () {
+      for (final brightness in Brightness.values) {
+        AppSemanticColors.apply(brightness);
+        for (final surface in <String, Color>{
+          'page': AppSemanticColors.page,
+          'surfaceRaised': AppSemanticColors.surfaceRaised,
+          'surfaceSunken': AppSemanticColors.surfaceSunken,
+          'accentSoft': AppSemanticColors.surfaceAccentSoft,
+        }.entries) {
+          expect(
+            contrast(AppSemanticColors.accentText, surface.value),
+            greaterThan(kAaSmall),
+            reason: 'accentText وقع على ${surface.key} في $brightness',
+          );
+        }
+      }
+    });
+
+    test('الحدود باينة على الكارت في الوضعين', () {
+      // ⚠ ده الاختبار اللي WCAG مابيغطيهوش وهو اللي بيفشل في صمت.
+      for (final brightness in Brightness.values) {
+        AppSemanticColors.apply(brightness);
+        expect(
+          contrast(AppSemanticColors.border, AppSemanticColors.surfaceRaised),
+          greaterThan(kBorderVisible),
+          reason: 'الحد اختفى على الكارت في $brightness',
+        );
+        expect(
+          contrast(
+            AppSemanticColors.borderStrong,
+            AppSemanticColors.surfaceRaised,
+          ),
+          greaterThan(1.5),
+          reason: 'الحد القوي اختفى على الكارت في $brightness',
+        );
+      }
+    });
+
+    test('نجمة التقييم توكن مستقل — اختبار من غير تباين', () {
+      // الإضاءة مقياس غلط لنجمة. الحاجة اللي بتتكسر فعلًا إن حد يلمّ
+      // rating على warning عشان الاتنين «أصفر».
       for (final brightness in Brightness.values) {
         AppSemanticColors.apply(brightness);
         expect(
           AppSemanticColors.rating,
           isNot(AppSemanticColors.warning),
-          reason: 'اتوحّدت مع التحذير في $brightness',
+          reason: 'التقييم بقى بنّي في $brightness',
+        );
+        expect(AppSemanticColors.rating, isNot(AppSemanticColors.borderStrong));
+      }
+    });
+
+    test('الـ skeleton لطيف — الوميض مش ستروب', () {
+      for (final brightness in Brightness.values) {
+        AppSemanticColors.apply(brightness);
+        expect(
+          luminance(AppSemanticColors.skeletonHighlight),
+          greaterThan(luminance(AppSemanticColors.skeletonBase)),
+          reason: 'الموجة لازم تبقى أفتح من الأرضية في $brightness',
         );
         expect(
-          AppSemanticColors.rating,
-          isNot(AppSemanticColors.borderStrong),
-          reason: 'النجمة المليانة زي الفاضية في $brightness',
+          contrast(
+            AppSemanticColors.skeletonHighlight,
+            AppSemanticColors.skeletonBase,
+          ),
+          lessThan(1.5),
+          reason: 'الفرق كبير أوي — ده بيقرا ستروب في $brightness',
         );
       }
     });
 
-    test('هوية الكيان بتنقلب مع الوضع والتباين بيفضل عالي', () {
-      // نفس عدد التدرّجات في الوضعين — الفهرس محسوب من الاسم، فلو العدد
-      // اختلف نفس المحل كان هياخد لون تاني بالليل.
-      expect(
-        AppPalette.light.entityGrounds.length,
-        AppPalette.dark.entityGrounds.length,
-      );
+    test('ألوان الكيانات بتعدّي في الوضعين', () {
+      for (final brightness in Brightness.values) {
+        AppSemanticColors.apply(brightness);
+        final grounds = AppSemanticColors.palette.entityGrounds;
+        final inks = AppSemanticColors.palette.entityInks;
 
-      for (var i = 0; i < AppPalette.light.entityGrounds.length; i++) {
-        for (final palette in [AppPalette.light, AppPalette.dark]) {
+        expect(grounds.length, inks.length);
+        expect(grounds.length, AppPalette.light.entityGrounds.length);
+
+        for (var i = 0; i < grounds.length; i++) {
           expect(
-            _contrast(palette.entityInks[i], palette.entityGrounds[i]),
-            greaterThan(small),
-            reason: 'التدرّج $i وقع في ${palette.brightness}',
+            contrast(inks[i], grounds[i]),
+            greaterThan(kAaSmall),
+            reason: 'الكيان $i وقع في $brightness',
           );
         }
+      }
+    });
 
-        // الفاتح لمعانه عالي والغامق واطي — يعني فعلاً اتقلبوا.
+    test('أرضيات الكيانات بتنقلب فعلًا — مش نفس اللون في الوضعين', () {
+      final lightGrounds = AppPalette.light.entityGrounds;
+      final darkGrounds = AppPalette.dark.entityGrounds;
+
+      for (var i = 0; i < lightGrounds.length; i++) {
         expect(
-          _luminance(AppPalette.dark.entityGrounds[i]),
-          lessThan(_luminance(AppPalette.light.entityGrounds[i])),
+          luminance(darkGrounds[i]),
+          lessThan(luminance(lightGrounds[i])),
+          reason: 'أرضية الكيان $i ما غمقتش في الوضع الغامق',
         );
       }
     });
   });
 
-  /// **الغسلات بتغيّر لون السطح تحت النص.**
-  ///
-  /// كل الحساب اللي فوق بيقيس النص على **لون واحد**. أول ما اتحط تدرّج على
-  /// لوح البؤرة، السطح بقى مدى ألوان — والنص بيتقرا على المدى كله مش على
-  /// نقطة البداية. فالقياس بيتعمل على **كل نقطة توقّف في التدرّج**.
-  ///
-  /// ده اللي بيخلي زيادة `_lift` في `AppGradients` حاجة الاختبار بيرد
-  /// عليها، مش حاجة حد يكتشفها بعينه بالليل.
-  group('غسلات AppGradients', () {
-    /// كل ألوان التدرّج — نقطة الضوء ولون السطح.
-    List<Color> stopsOf(Gradient gradient) => gradient.colors;
+  group('٧ · الغسلات — التباين بيتقاس عند كل نقطة توقّف', () {
+    // ⚠ **مش على لون السطح.** الغسلة بتغيّر اللون تحت النص، فقياس التباين
+    // على اللون الأساسي بيقيس حاجة مش موجودة على الشاشة. أي غسلة على سطح
+    // شايل نص لازم كل نقطة توقّف فيها تتقاس لوحدها.
+    List<Color> stopsOf(Gradient g) => g.colors;
 
-    test('نص لوح الحبر مقروء على الغسلة كلها في الوضعين', () {
+    test('لوح الحبر — النص عليه بيعدّي عند كل نقطة في الوضعين', () {
       for (final brightness in Brightness.values) {
         AppSemanticColors.apply(brightness);
-
         for (final stop in stopsOf(AppGradients.ink)) {
           expect(
-            _contrast(AppSemanticColors.textOnInk, stop),
-            greaterThan(small),
-            reason: 'النص الأساسي وقع على $stop في $brightness',
+            contrast(AppSemanticColors.textOnInk, stop),
+            greaterThan(kAaSmall),
+            reason: 'النص الأساسي على نقطة $stop في $brightness',
           );
           expect(
-            _contrast(AppSemanticColors.textOnInkMuted, stop),
-            greaterThan(small),
-            reason: 'النص الثانوي وقع على $stop في $brightness',
+            contrast(AppSemanticColors.textOnInkMuted, stop),
+            greaterThan(kAaSmall),
+            reason: 'النص الثانوي على نقطة $stop في $brightness',
           );
         }
       }
     });
 
-    /// ⚠ الشريط الأخضر هامشه فوق AA **٠٫٢٤ بس** على النص الثانوي، فغسلته
-    /// معمولة تغمق مش تفتح. الاختبار ده بيثبّت الاتجاه: أي نقطة في التدرّج
-    /// لازم تبقى **أغمق أو زي** السطح الأساسي.
-    test('غسلة الشريط الأخضر بتغمق مش بتفتح', () {
+    test('الشريط الأخضر — النص عليه بيعدّي عند كل نقطة في الوضعين', () {
       for (final brightness in Brightness.values) {
         AppSemanticColors.apply(brightness);
-        final base = _luminance(AppSemanticColors.surfaceAccentDeep);
-
-        for (final stop in stopsOf(AppGradients.accentDeep)) {
+        for (final stop in stopsOf(AppGradients.brandBand)) {
           expect(
-            _luminance(stop),
-            lessThanOrEqualTo(base + 0.0001),
-            reason: 'الغسلة فتّحت الشريط عند $stop في $brightness',
+            contrast(AppSemanticColors.textOnAccentDeep, stop),
+            greaterThan(kAaSmall),
+            reason: 'الأساسي على نقطة $stop في $brightness',
           );
           expect(
-            _contrast(AppSemanticColors.textOnAccentMuted, stop),
-            greaterThan(small),
-            reason: 'النص الثانوي وقع على $stop في $brightness',
+            contrast(AppSemanticColors.textOnAccentMuted, stop),
+            greaterThan(kAaSmall),
+            reason: 'الثانوي على نقطة $stop في $brightness',
           );
         }
       }
     });
 
-    /// الطبق شايل أيقونة مش نص — والأيقونة رسمة، فحدها ٣:١ مش ٤٫٥.
-    test('أيقونة التصنيف بتبان على الطبق في الوضعين', () {
+    test('الشريط الأخضر بيفتّح مش بيغمّق — اتجاه الغسلة مقصود', () {
       for (final brightness in Brightness.values) {
         AppSemanticColors.apply(brightness);
-
-        for (final gradient in [AppGradients.plate, AppGradients.plateSelected]) {
-          for (final stop in stopsOf(gradient)) {
-            expect(
-              _contrast(AppSemanticColors.accent, stop),
-              greaterThan(large),
-              reason: 'الأيقونة وقعت على $stop في $brightness',
-            );
-          }
+        final stops = stopsOf(AppGradients.brandBand);
+        final base = luminance(AppSemanticColors.surfaceAccentDeep);
+        for (final stop in stops) {
+          expect(
+            luminance(stop),
+            greaterThanOrEqualTo(base - 0.0001),
+            reason: 'الغسلة غمّقت في $brightness — ده مصدر ضوء مش ظل',
+          );
         }
       }
     });
 
-    /// الهالة بتقعد **ورا** المحتوى وبتنتهي عند شفافية صفر — لو حد رفع
-    /// الشفافية دي بقت طبقة لون فوق الصفحة وبتاكل من تباين النص عليها.
-    test('هالة الصفحة بتخلص شفافة', () {
+    test('اللوح الغاطس — النص عليه بيعدّي عند كل نقطة', () {
+      for (final brightness in Brightness.values) {
+        AppSemanticColors.apply(brightness);
+        for (final stop in stopsOf(AppGradients.plate)) {
+          expect(
+            contrast(AppSemanticColors.textOnSunken, stop),
+            greaterThan(kAaSmall),
+            reason: 'الغاطس: نقطة $stop في $brightness',
+          );
+        }
+        for (final stop in stopsOf(AppGradients.plateSelected)) {
+          expect(
+            contrast(AppSemanticColors.textPrimary, stop),
+            greaterThan(kAaSmall),
+            reason: 'المختار: نقطة $stop في $brightness',
+          );
+        }
+      }
+    });
+
+    test('وهج الصفحة بينتهي شفاف تمامًا', () {
       for (final brightness in Brightness.values) {
         AppSemanticColors.apply(brightness);
         final stops = stopsOf(AppGradients.pageGlow);
-
-        expect(stops.last.a, 0, reason: 'مابتخلصش شفافة في $brightness');
         expect(
-          stops.first.a,
-          lessThan(0.15),
-          reason: 'الهالة بقت طبقة لون في $brightness',
+          stops.last.a,
+          0,
+          reason: 'آخر نقطة مش شفافة — هيبان للوهج حافة في $brightness',
         );
+        expect(stops.first.a, lessThan(0.15));
       }
     });
   });
 
-  /// `appTheme()` بيقرا `AppTextStyles`، واللي بيحسب الـ `sp` من `ScreenUtil`
-  /// — فلازم يتهيّأ الأول. عشان كده الاختبارات دي `testWidgets` مش `test`.
-  group('الثيم بيتبني من الـ palette الشغّال', () {
+  group('٨ · الثيم بيتبني من الـ palette الشغّال', () {
+    // ⚠ `testWidgets` مش `test`: `AppTextStyles` بيستخدم `.sp` فمحتاج
+    // `ScreenUtil` تكون اتهيّأت، و`appTheme()` بيقرا الـ textTheme.
     Future<ThemeData> buildTheme(WidgetTester tester) async {
-      late ThemeData theme;
+      late ThemeData built;
       await tester.pumpWidget(
         ScreenUtilInit(
           designSize: const Size(375, 812),
+          minTextAdapt: true,
           builder: (context, _) {
-            theme = appTheme();
+            built = appTheme();
             return const SizedBox.shrink();
           },
         ),
       );
-      return theme;
+      return built;
     }
 
-    testWidgets('إضاءة الثيم بتطابق التوكنز', (tester) async {
+    testWidgets('إضاءة الثيم = إضاءة التوكنز في الوضعين', (tester) async {
       for (final brightness in Brightness.values) {
         AppSemanticColors.apply(brightness);
         final theme = await buildTheme(tester);
@@ -431,44 +499,56 @@ void main() {
       }
     });
 
-    /// أول ما `primary` يبقى أخضر، الـ `surfaceTint` بياخده تلقائيًا وكل
-    /// سطح مرفوع بياخد مسحة خضرا — الـ AppBar وقت السكرول والـ sheets.
-    testWidgets('surfaceTint شفاف في الوضعين', (tester) async {
+    testWidgets('surfaceTint شفاف — فخ M3 مقفول', (tester) async {
       for (final brightness in Brightness.values) {
         AppSemanticColors.apply(brightness);
         final theme = await buildTheme(tester);
-        expect(theme.colorScheme.surfaceTint, Colors.transparent);
+        expect(theme.colorScheme.surfaceTint.a, 0);
+        expect(theme.appBarTheme.surfaceTintColor?.a, 0);
       }
     });
-  });
 
-  group('ThemeCubit.resolve', () {
-    test('الاختيار اليدوي بيكسب على الجهاز', () {
-      expect(
-        ThemeCubit.resolve(ThemeMode.light, Brightness.dark),
-        Brightness.light,
-      );
-      expect(
-        ThemeCubit.resolve(ThemeMode.dark, Brightness.light),
-        Brightness.dark,
-      );
+    testWidgets('الزرار الأساسي بيتعبّي بالأخضر الغامق مش باللمسة', (
+      tester,
+    ) async {
+      // قرار D6 بيتقفل هنا: لو حد رجّع `accent` مكان `accentDeep`،
+      // نص الزرار بيرجع 3.96:1.
+      for (final brightness in Brightness.values) {
+        AppSemanticColors.apply(brightness);
+        final theme = await buildTheme(tester);
+        final style = theme.elevatedButtonTheme.style!;
+        final bg = style.backgroundColor!.resolve({})!;
+        final fg = style.foregroundColor!.resolve({})!;
+
+        expect(bg, AppSemanticColors.surfaceAccentDeep);
+        expect(
+          contrast(fg, bg),
+          greaterThan(kAaSmall),
+          reason: 'نص الزرار الأساسي وقع في $brightness',
+        );
+      }
     });
 
-    test('«حسب الجهاز» بيتبع الجهاز', () {
-      expect(
-        ThemeCubit.resolve(ThemeMode.system, Brightness.dark),
-        Brightness.dark,
-      );
-      expect(
-        ThemeCubit.resolve(ThemeMode.system, Brightness.light),
-        Brightness.light,
-      );
-    });
+    testWidgets('كل الخط بيعدّي على IBMPlexSansArabic — مفيش DMSans', (
+      tester,
+    ) async {
+      final theme = await buildTheme(tester);
+      final styles = <String, TextStyle?>{
+        'bodyLarge': theme.textTheme.bodyLarge,
+        'bodyMedium': theme.textTheme.bodyMedium,
+        'titleMedium': theme.textTheme.titleMedium,
+        'labelLarge': theme.textTheme.labelLarge,
+        'hintStyle': theme.inputDecorationTheme.hintStyle,
+        'labelStyle': theme.inputDecorationTheme.labelStyle,
+      };
 
-    test('لكل وضع اسم عربي وأيقونة', () {
-      for (final mode in ThemeMode.values) {
-        expect(ThemeCubit.labelOf(mode), isNotEmpty);
-        expect(ThemeCubit.iconOf(mode), isNotNull);
+      expect(theme.textTheme.bodyLarge, isNotNull);
+      for (final entry in styles.entries) {
+        expect(
+          entry.value?.fontFamily,
+          'IBMPlexSansArabic',
+          reason: '${entry.key} خرج بره الخط',
+        );
       }
     });
   });

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:waqty_user_application/core/models/provider_ui_model.dart';
-import 'package:waqty_user_application/core/widgets/empty_state_widget.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/widgets/provider_row_skeleton_widget.dart';
 import 'package:waqty_user_application/core/widgets/provider_row_widget.dart';
 
@@ -48,10 +48,10 @@ class HomeNearbyWidget extends StatelessWidget {
     }
 
     if (providers.isEmpty) {
-      // من غير هامش صفحة عن قصد: [EmptyStateWidget] شايل ٣٢ أفقي بنفسه —
+      // من غير هامش صفحة عن قصد: [AppEmptyStateWidget] شايل ٣٢ أفقي بنفسه —
       // أكبر من الهامش ١٦ أصلًا، فلفّه في هامش تاني بيطلّعه ٤٨ ويضيّق
       // الرسالة على شاشة ٣٧٥ من غير سبب.
-      return EmptyStateWidget(
+      return AppEmptyStateWidget(
         icon: Icons.location_off_outlined,
         title: 'مفيش أماكن قريبة',
         message: 'مفيش حاجة في النطاق الحالي — جرّب توسّعه',

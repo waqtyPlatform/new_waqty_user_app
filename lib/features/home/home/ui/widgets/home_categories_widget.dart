@@ -1,17 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/core/models/category_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_format.dart';
-import 'package:waqty_user_application/core/utils/app_gradients.dart';
-import 'package:waqty_user_application/core/utils/app_motion.dart';
-import 'package:waqty_user_application/core/utils/app_radius.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/app_surface_widget.dart';
 import 'package:waqty_user_application/core/widgets/category_icon_widget.dart';
-import 'package:waqty_user_application/core/widgets/skeleton_box_widget.dart';
 
 /// صف التصنيفات — **كارت لكل تصنيف، والعدد جواه**.
 ///
@@ -66,20 +58,17 @@ class HomeCategoriesWidget extends StatelessWidget {
       (cardPadding * 2) + plateSize + AppSpacing.s8 + AppSpacing.s4;
 
   /// النص عند مقياس ١٫٠: سطرين اسم (`captionInk` ١٢×١٫٤٠×٢ = ٣٣٫٦)
-  /// + العدد (`overline` ١١×١٫٣٠ = ١٤٫٣). المجموع الحسابي ٤٧٫٩، والرقم هنا
-  /// **٤٩** لأن فلاتر بيقرّب ارتفاع السطر لأعلى وقت التشكيل.
-  static const double _textPart = 49;
+  /// + العدد (`overline` ١٠×١٫٣٠ = ١٣). المجموع الحسابي ٤٦٫٦، والرقم هنا
+  /// **٤٨** لأن فلاتر بيقرّب ارتفاع السطر لأعلى وقت التشكيل.
+  static const double _textPart = 48;
 
   /// الارتفاع الوحيد للصف — **والـ skeleton بيقراه من هنا**.
   ///
   /// الرقم الثابت كان بيفيض عند مقياس خط ١٫٣ (`OVERFLOWED BY 8.4 PIXELS` على
   /// «مساج واسترخاء»). الحل مش رقم أكبر — الحل إن الجزء اللي فيه نص يكبر مع
   /// النص لوحده.
-  static double itemHeight(BuildContext context) => AppSpacing.scaledHeight(
-    context,
-    fixed: _fixedPart,
-    text: _textPart,
-  );
+  static double itemHeight(BuildContext context) =>
+      AppSpacing.scaledHeight(context, fixed: _fixedPart, text: _textPart);
 
   final List<CategoryUiModel> categories;
   final bool isLoading;
@@ -152,9 +141,7 @@ class _CategoryItem extends StatelessWidget {
         level: AppElevation.sunken,
         color: isSelected ? AppSemanticColors.accentSoft : null,
         radius: AppRadius.m,
-        padding: EdgeInsetsDirectional.all(
-          HomeCategoriesWidget.cardPadding.r,
-        ),
+        padding: EdgeInsetsDirectional.all(HomeCategoriesWidget.cardPadding.r),
         border: isSelected
             ? Border.all(color: AppSemanticColors.accent, width: 2.r)
             : null,
@@ -187,7 +174,7 @@ class _CategoryItem extends StatelessWidget {
                 // الهوم. الحجة دي اتراجعنا عنها: الرمادي خلّى الصف يقرا
                 // **معطّل**. والأخضر هنا مش بيزاحم حاجة — البؤرة الحقيقية
                 // في الرئيسية شريط غامق بيكسب على أي أيقونة بالحجم واللون.
-                color: AppSemanticColors.accent,
+                color: AppSemanticColors.accentText,
               ),
             ),
             verticalSpace(AppSpacing.s8),
@@ -216,8 +203,7 @@ class _CategoryItem extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  if (category.servicesCount > 0)
-                    verticalSpace(AppSpacing.s4),
+                  if (category.servicesCount > 0) verticalSpace(AppSpacing.s4),
                   if (category.servicesCount > 0)
                     Text(
                       '${AppFormat.digits(category.servicesCount)} خدمة',
@@ -235,7 +221,6 @@ class _CategoryItem extends StatelessWidget {
       ),
     );
   }
-
 }
 
 /// التحميل بشكل العنصر نفسه — **مش مستطيل واحد بمقاس البلاطة**.
@@ -250,7 +235,7 @@ class _CategorySkeleton extends StatelessWidget {
       height: HomeCategoriesWidget.itemHeight(context).h,
       // موجة واحدة للعنصر كله — اللي جواها `animate: false`، من غير كده كل
       // مستطيل بيعمل موجته لوحده والنتيجة وميض عشوائي.
-      child: SkeletonGroupWidget(
+      child: AppSkeletonGroupWidget(
         // نفس حشوة الكارت الحقيقي — من غيرها الـ skeleton بيبدأ من الحافة
         // والصف بينطّ لما الداتا تيجي.
         child: Padding(
@@ -261,18 +246,17 @@ class _CategorySkeleton extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // دايرة زي الطبق الحقيقي — الاستدارة نص القطر.
-              SkeletonBoxWidget(
+              AppSkeletonBoxWidget(
                 width: HomeCategoriesWidget.plateSize,
                 height: HomeCategoriesWidget.plateSize,
                 radius: HomeCategoriesWidget.plateSize / 2,
-                animate: false,
               ),
               verticalSpace(AppSpacing.s8),
-              const SkeletonBoxWidget(width: 78, height: 10, animate: false),
+              const AppSkeletonBoxWidget(width: 78, height: 10),
               verticalSpace(AppSpacing.s4),
-              const SkeletonBoxWidget(width: 52, height: 10, animate: false),
+              const AppSkeletonBoxWidget(width: 52, height: 10),
               verticalSpace(AppSpacing.s8),
-              const SkeletonBoxWidget(width: 40, height: 8, animate: false),
+              const AppSkeletonBoxWidget(width: 40, height: 8),
             ],
           ),
         ),

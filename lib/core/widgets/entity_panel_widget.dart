@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:waqty_user_application/core/utils/app_entity_tint.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 
 /// لوح الكيان **الكبير** — كارت الصف الأفقي (١٤٤×٨٤) وهيدر صفحة المحل
 /// (٣٧٥×٢٣٢).
@@ -33,16 +32,23 @@ class EntityPanelWidget extends StatelessWidget {
               color: tint.ground,
               // غسلة في الركن **المقابل** للحرف — مش تدرّج على اللوح كله.
               // التدرّج الكامل بيقرا «خلفية مولّدة»؛ الغسلة الركنية بتقرا ضوء.
-              gradient: RadialGradient(
-                center: const AlignmentDirectional(1.0, -1.0),
-                radius: 1.1,
-                colors: [tint.groundDeep, tint.ground],
-                stops: const [0, 0.75],
+              //
+              // الكيت مالوش `entityGroundsDeep`، فالغسلة بتتولّد من لون
+              // واحد عن طريق `AppGradients.wash` — نفس مصدر الضوء الركني
+              // اللي كل أسطح الكيت ماشية عليه. **ماتولّدش الغامق بـ
+              // `Color.lerp`** — ده لون خام في widget.
+              gradient: AppGradients.wash(
+                tint.ground,
+                AppSemanticColors.surfaceRaised,
               ),
             ),
-            child: initial == null
+            child: name.trim().isEmpty
                 // اسم فاضي على لوح ١٤٤px: علامة استفهام ضخمة مش تصميم،
                 // دي رسالة خطأ. أرضية ملوّنة ساكتة أحسن.
+                //
+                // الشرط بقى على **الاسم** مش على ناتج `initialOf`: الكيت
+                // بيرجّع `'؟'` كبديل مرئي بدل `null`، فالمقارنة القديمة
+                // بقت دايمًا `false` والفرع مات في صمت.
                 ? const SizedBox.expand()
                 : Align(
                     // **`AlignmentDirectional` مش `Alignment`.** الإزاحة
@@ -59,7 +65,7 @@ class EntityPanelWidget extends StatelessWidget {
                         applyHeightToFirstAscent: false,
                         applyHeightToLastDescent: false,
                       ),
-                      style: AppTextStyles.entityGlyph(
+                      style: AppTextStyles.numeric(
                         glyph,
                       ).copyWith(color: tint.ink),
                     ),

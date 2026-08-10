@@ -13,5 +13,3 @@ class DetailsErrorState extends ServiceProviderDetailsState {
 
 /// الفرع اتغيّر — الخدمات والمواعيد بتتحمّل من الأول.
 class OnBranchChangedState extends ServiceProviderDetailsState {}
-
-class OnWorkingHoursToggledState extends ServiceProviderDetailsState {}

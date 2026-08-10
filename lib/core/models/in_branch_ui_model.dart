@@ -1,5 +1,5 @@
 import 'package:waqty_user_application/core/models/booking_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_format.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 
 /// حالة العميل **وهو واقف في الفرع**.
 ///
@@ -89,9 +89,10 @@ class InBranchUiModel {
     // التانية.
     BookingStatus.waiting =>
       hasLiveEstimate ? 'لسه مع عميل · $estimateLabel' : 'لسه مع عميل',
-    BookingStatus.inProgress => expectedFinishAt == null
-        ? ''
-        : 'متوقع تخلص ${AppFormat.time(expectedFinishAt!)}',
+    BookingStatus.inProgress =>
+      expectedFinishAt == null
+          ? ''
+          : 'متوقع تخلص ${AppFormat.time(expectedFinishAt!)}',
     _ => '',
   };
 

@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:waqty_user_application/core/utils/app_radius.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/app_row_widget.dart';
-import 'package:waqty_user_application/core/widgets/skeleton_box_widget.dart';
 import 'package:waqty_user_application/features/booking/my_bookings/ui/widgets/my_booking_row_widget.dart';
 
 /// التحميل بشكل [MyBookingRowWidget] بالظبط.
@@ -18,7 +15,7 @@ class MyBookingRowSkeletonWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SkeletonGroupWidget(
+    return AppSkeletonGroupWidget(
       child: AppRowWidget(
         height: MyBookingRowWidget.heightOf(context),
         showHairline: showHairline,
@@ -30,26 +27,25 @@ class MyBookingRowSkeletonWidget extends StatelessWidget {
           children: [
             Row(
               children: [
-                const SkeletonBoxWidget(width: 132, height: 14, animate: false),
+                const AppSkeletonBoxWidget(width: 132, height: 14),
                 const Spacer(),
                 // بشكل الشارة — `pill` وعرض كلمتين. مستطيل مربّع هنا كان
                 // بيخلي التحميل يقرا جدول مش صف فيه حالة.
-                const SkeletonBoxWidget(
+                const AppSkeletonBoxWidget(
                   width: 56,
                   height: 18,
                   radius: AppRadius.pill,
-                  animate: false,
                 ),
               ],
             ),
             verticalSpace(AppSpacing.s8),
-            const SkeletonBoxWidget(width: 168, height: 10, animate: false),
+            const AppSkeletonBoxWidget(width: 168, height: 10),
             verticalSpace(AppSpacing.s8),
             Row(
               children: [
-                const SkeletonBoxWidget(width: 120, height: 10, animate: false),
+                const AppSkeletonBoxWidget(width: 120, height: 10),
                 const Spacer(),
-                const SkeletonBoxWidget(width: 44, height: 12, animate: false),
+                const AppSkeletonBoxWidget(width: 44, height: 12),
               ],
             ),
           ],

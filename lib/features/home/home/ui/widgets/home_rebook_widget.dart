@@ -1,16 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/core/models/booking_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_format.dart';
-import 'package:waqty_user_application/core/utils/app_radius.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/app_hairline_widget.dart';
-import 'package:waqty_user_application/core/widgets/app_surface_widget.dart';
-import 'package:waqty_user_application/core/widgets/directional_chevron_widget.dart';
-import 'package:waqty_user_application/core/widgets/entity_avatar_widget.dart';
 
 /// **«زي المرة اللي فاتت؟»** — كارت درجة أولى في الهوم.
 ///
@@ -59,14 +51,14 @@ class HomeRebookWidget extends StatelessWidget {
               Icon(
                 Icons.replay_rounded,
                 size: 16.r,
-                color: AppSemanticColors.accent,
+                color: AppSemanticColors.accentText,
               ),
               horizontalSpace(AppSpacing.s4),
               Expanded(
                 child: Text(
                   'زي المرة اللي فاتت؟',
-                  style: AppTextStyles.sectionLabel.copyWith(
-                    color: AppSemanticColors.accent,
+                  style: AppTextStyles.overline.copyWith(
+                    color: AppSemanticColors.accentText,
                   ),
                 ),
               ),
@@ -106,7 +98,11 @@ class HomeRebookWidget extends StatelessWidget {
               // للحجز كله. في حجز بتلات أخصائيين، أول حرف من أول واحد
               // فيهم معلومة عشوائية بتاخد ٤٤ بكسل.
               if (_singleEmployee != null) ...[
-                EntityAvatarWidget(name: _singleEmployee!, size: 28),
+                EntityAvatarWidget(
+                  name: _singleEmployee!,
+                  size: 28,
+                  shape: AvatarShape.person,
+                ),
                 horizontalSpace(AppSpacing.s8),
               ],
               Expanded(
@@ -124,7 +120,7 @@ class HomeRebookWidget extends StatelessWidget {
               horizontalSpace(AppSpacing.s8),
               DirectionalChevronWidget(
                 size: 18,
-                color: AppSemanticColors.accent,
+                color: AppSemanticColors.accentText,
               ),
             ],
           ),

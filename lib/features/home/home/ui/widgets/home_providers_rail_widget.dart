@@ -1,15 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/core/models/provider_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_format.dart';
-import 'package:waqty_user_application/core/utils/app_radius.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/app_pill_widget.dart';
-import 'package:waqty_user_application/core/widgets/app_surface_widget.dart';
 import 'package:waqty_user_application/core/widgets/entity_panel_widget.dart';
-import 'package:waqty_user_application/core/widgets/skeleton_box_widget.dart';
 
 /// صف أفقي للمحلات.
 ///
@@ -52,11 +46,8 @@ class HomeProvidersRailWidget extends StatelessWidget {
   static const double _textPart = 76;
 
   /// كان ٢٠٨ رقم ثابت — يعني بيفيض مع تكبير الخط بدل ما يكبر معاه.
-  static double cardHeight(BuildContext context) => AppSpacing.scaledHeight(
-    context,
-    fixed: _fixedPart,
-    text: _textPart,
-  );
+  static double cardHeight(BuildContext context) =>
+      AppSpacing.scaledHeight(context, fixed: _fixedPart, text: _textPart);
 
   final List<ProviderUiModel> providers;
   final bool isLoading;
@@ -84,7 +75,7 @@ class HomeProvidersRailWidget extends StatelessWidget {
         separatorBuilder: (_, __) => horizontalSpace(AppSpacing.listRowGap),
         itemBuilder: (context, index) {
           if (isLoading) {
-            return SkeletonBoxWidget(
+            return AppSkeletonBoxWidget(
               width: cardWidth,
               height: height,
               radius: AppRadius.m,

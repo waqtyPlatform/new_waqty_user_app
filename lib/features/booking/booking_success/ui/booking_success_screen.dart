@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/config/routes/routes.dart';
-import 'package:waqty_user_application/core/utils/app_motion.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/extentions.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/app_button_widget.dart';
 
 /// شاشة النجاح — **شاشة كاملة، مش toast**.
 ///
@@ -114,7 +110,7 @@ class _SuccessMark extends StatelessWidget {
         child: Icon(
           Icons.check_rounded,
           size: 48.r,
-          color: AppSemanticColors.accent,
+          color: AppSemanticColors.accentText,
         ),
       ),
     );

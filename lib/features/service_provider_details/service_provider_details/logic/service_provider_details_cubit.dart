@@ -23,7 +23,8 @@ class ServiceProviderDetailsCubit extends Cubit<ServiceProviderDetailsState> {
   List<ServiceUiModel> services = <ServiceUiModel>[];
   List<EmployeeUiModel> employees = <EmployeeUiModel>[];
 
-  bool isWorkingHoursExpanded = false;
+  // حالة فتح مواعيد العمل اتشالت من هنا — `AppAccordionWidget` شايلها
+  // جواه، فالضغطة بقت تبني اللوح بس مش الصفحة كلها.
 
   /// الخدمات والأخصائيين بيتحمّلوا دلوقتي بعد تغيير فرع.
   ///
@@ -105,11 +106,6 @@ class ServiceProviderDetailsCubit extends Cubit<ServiceProviderDetailsState> {
 
     isReloadingBranch = false;
     emit(OnBranchChangedState());
-  }
-
-  void toggleWorkingHours() {
-    isWorkingHoursExpanded = !isWorkingHoursExpanded;
-    emit(OnWorkingHoursToggledState());
   }
 
   static ServiceProviderDetailsCubit get(context) => BlocProvider.of(context);

@@ -184,10 +184,7 @@ class MockSlots {
   ///  • **مليان** طلب قابل قدامه عرض فاضي. ده **أحسن مدخل لقائمة
   ///    الانتظار في المنتج كله**، وكان متعرض كطريق مسدود.
   ///  • **عدّى** — النهاردة وخلص ميعاده. لا مقفول ولا مليان.
-  static DayAvailability dayStatus(
-    DateTime date, {
-    int durationMinutes = 45,
-  }) {
+  static DayAvailability dayStatus(DateTime date, {int durationMinutes = 45}) {
     final day = _dateOnly(date);
 
     if (_isClosed(day)) return DayAvailability.closed;

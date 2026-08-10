@@ -114,8 +114,7 @@ class CreateBookingCubit extends Cubit<CreateBookingState> {
     BookingStep step = BookingStep.confirm,
   }) : super(InitialState()) {
     branches = MockProviders.branchesOf(providerUuid);
-    selectedBranch =
-        branch ?? (branches.isEmpty ? null : branches.first);
+    selectedBranch = branch ?? (branches.isEmpty ? null : branches.first);
     services = MockServices.ofProvider(providerUuid);
 
     items.addAll(draft);
@@ -498,13 +497,12 @@ class CreateBookingCubit extends Cubit<CreateBookingState> {
       ),
     );
 
-    result.fold(
-      (failure) => emit(CreateBookingErrorState(message: failure)),
-      (data) {
-        item.proposals = data;
-        emit(OnSelectionChangedState());
-      },
-    );
+    result.fold((failure) => emit(CreateBookingErrorState(message: failure)), (
+      data,
+    ) {
+      item.proposals = data;
+      emit(OnSelectionChangedState());
+    });
   }
 
   Future<void> loadDatesFor(String key) async {
@@ -577,17 +575,18 @@ class CreateBookingCubit extends Cubit<CreateBookingState> {
       ),
     );
 
-    result.fold(
-      (failure) => emit(CreateBookingErrorState(message: failure)),
-      (data) {
-        item.slots = data;
-        emit(OnSelectionChangedState());
-      },
-    );
+    result.fold((failure) => emit(CreateBookingErrorState(message: failure)), (
+      data,
+    ) {
+      item.slots = data;
+      emit(OnSelectionChangedState());
+    });
   }
 
   String _cacheKey(BookingDraftItem item, DateTime month) {
-    final employeeKey = item.employee.isAnyAvailable ? 'any' : item.employee.uuid;
+    final employeeKey = item.employee.isAnyAvailable
+        ? 'any'
+        : item.employee.uuid;
     return '${selectedBranch?.uuid}|${item.service.uuid}|$employeeKey'
         '|${month.year}-${month.month}';
   }
@@ -596,7 +595,8 @@ class CreateBookingCubit extends Cubit<CreateBookingState> {
 
   double get totalPrice => items.fold<double>(0, (sum, i) => sum + i.price);
 
-  int get totalDuration => items.fold<int>(0, (sum, i) => sum + i.durationMinutes);
+  int get totalDuration =>
+      items.fold<int>(0, (sum, i) => sum + i.durationMinutes);
 
   int get scheduledCount => items.where((i) => i.isScheduled).length;
 

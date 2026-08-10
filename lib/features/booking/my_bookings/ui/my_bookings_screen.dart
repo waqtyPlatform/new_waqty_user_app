@@ -2,19 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/config/routes/routes.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/extentions.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/empty_state_widget.dart';
-import 'package:waqty_user_application/core/widgets/error_state_widget.dart';
 import 'package:waqty_user_application/features/booking/my_bookings/logic/my_bookings_cubit.dart';
 import 'package:waqty_user_application/features/booking/my_bookings/logic/my_bookings_state.dart';
 import 'package:waqty_user_application/features/booking/my_bookings/ui/widgets/my_booking_row_skeleton_widget.dart';
 import 'package:waqty_user_application/features/booking/create_booking/ui/create_booking_sheet.dart';
 import 'package:waqty_user_application/features/booking/my_bookings/ui/widgets/my_booking_row_widget.dart';
 import 'package:waqty_user_application/features/booking/my_bookings/ui/widgets/my_bookings_notice_widget.dart';
-import 'package:waqty_user_application/features/booking/my_bookings/ui/widgets/my_bookings_tabs_widget.dart';
 import 'package:waqty_user_application/features/booking/waitlist/ui/waitlist_screen.dart';
 import 'package:waqty_user_application/features/booking/waitlist/logic/waitlist_cubit.dart';
 import 'package:waqty_user_application/features/booking/waitlist/logic/waitlist_state.dart';
@@ -33,24 +29,37 @@ class MyBookingsScreen extends StatelessWidget {
 
         return Column(
           children: [
+            // **[AppScreenHeaderWidget] من غير `onBack`** — ده تبويب مش
+            // شاشة مدفوعة، فمافيش دايرة رجوع. الارتفاع بيكبر مع مقياس
+            // الخط بدل ما يفضل `titleLg` في `Row` مالوش ارتفاع معرّف.
             Padding(
               padding: EdgeInsetsDirectional.only(
                 start: AppSpacing.pageGutter.w,
                 end: AppSpacing.pageGutter.w,
                 top: AppSpacing.s8.h,
               ),
-              child: Row(
-                children: [Text('حجوزاتي', style: AppTextStyles.titleLg)],
-              ),
+              child: const AppScreenHeaderWidget(title: 'حجوزاتي'),
             ),
             verticalSpace(AppSpacing.headerToContent),
+            // **[AppTabBarWidget] مش مقسّم بحبّة بتزحلق.**
+            //
+            // التقسيم هنا **حالات لنفس المحتوى** (حجز قادم / حجز خلص) —
+            // وده تعريف التبويب في الكيت. المقسّم بيغيّر **مدى** نفس
+            // المحتوى (الشهر ده / الشهر اللي فات)، وده مش اللي بيحصل.
+            //
+            // اللي اتشال معاه: ٧٨ سطر `Stack` + `AnimatedAlign` +
+            // `FractionallySizedBox`، والارتفاع الخام `48.h`.
             Padding(
               padding: EdgeInsetsDirectional.symmetric(
                 horizontal: AppSpacing.pageGutter.w,
               ),
-              child: MyBookingsTabsWidget(
-                selectedTab: cubit.selectedTab,
-                onTabChanged: cubit.changeTab,
+              child: AppTabBarWidget<int>(
+                value: cubit.selectedTab,
+                onChanged: cubit.changeTab,
+                tabs: const [
+                  AppSegment(value: 0, label: 'القادمة'),
+                  AppSegment(value: 1, label: 'السابقة'),
+                ],
               ),
             ),
             verticalSpace(AppSpacing.headerToContent),
@@ -154,7 +163,7 @@ class MyBookingsScreen extends StatelessWidget {
         padding: EdgeInsetsDirectional.symmetric(
           horizontal: AppSpacing.pageGutter.w,
         ),
-        child: ErrorStateWidget(
+        child: AppErrorStateWidget(
           message: state.message,
           onRetry: cubit.loadBookings,
         ),
@@ -217,12 +226,12 @@ class MyBookingsScreen extends StatelessWidget {
           return false;
         },
         child: ListView.builder(
-        // **من غير السطر ده الـ `RefreshIndicator` ميت.**
-        //
-        // تلات صفوف × ٩٦٫٢ + ٣٢ = ٣٢١ في نافذة ~٥٧٤ — يعني المحتوى أقصر
-        // من الشاشة، فالـ `ListView` بيرفض السحب أصلاً والمؤشر عمره ما
-        // بيتنادى. والتحويل من كروت لصفوف قصّر القايمة أكتر، فالباج بقى
-        // مضمون بدل ما كان محتمل.
+          // **من غير السطر ده الـ `RefreshIndicator` ميت.**
+          //
+          // تلات صفوف × ٩٦٫٢ + ٣٢ = ٣٢١ في نافذة ~٥٧٤ — يعني المحتوى أقصر
+          // من الشاشة، فالـ `ListView` بيرفض السحب أصلاً والمؤشر عمره ما
+          // بيتنادى. والتحويل من كروت لصفوف قصّر القايمة أكتر، فالباج بقى
+          // مضمون بدل ما كان محتمل.
           physics: const AlwaysScrollableScrollPhysics(),
           padding: padding,
           // صف زيادة للمؤشر لما فيه صفحة جاية.
@@ -246,13 +255,11 @@ class MyBookingsScreen extends StatelessWidget {
                 padding: EdgeInsetsDirectional.symmetric(
                   vertical: AppSpacing.s16.h,
                 ),
-                child: const Center(
-                  child: SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                ),
+                // `AppLoadingWidget` مش `CircularProgressIndicator` عاري:
+                // المقاس والسُمك كانوا رقمين خام (`20` و`strokeWidth: 2`)،
+                // وده مؤشر التحميل الوحيد في الأبلكيشن اللي كان بيرسم
+                // بمقاس مختلف عن باقي المؤشرات.
+                child: const Center(child: AppLoadingWidget(size: 20)),
               );
             }
 
@@ -266,7 +273,7 @@ class MyBookingsScreen extends StatelessWidget {
   Widget _emptyState(BuildContext context, MyBookingsCubit cubit) {
     final isUpcoming = cubit.selectedTab == 0;
 
-    return EmptyStateWidget(
+    return AppEmptyStateWidget(
       icon: Icons.event_note_outlined,
       title: isUpcoming ? 'مفيش حجوزات جاية' : 'مفيش حجوزات سابقة',
       message: isUpcoming

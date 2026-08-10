@@ -651,7 +651,10 @@ void main() {
       MockConfig.scenario = MockScenario.waitlistHistory;
       final entries = MockWaitlist.forUser(DateTime.now());
 
-      expect(entries.any((e) => e.status == WaitlistStatus.underReview), isTrue);
+      expect(
+        entries.any((e) => e.status == WaitlistStatus.underReview),
+        isTrue,
+      );
       expect(entries.any((e) => e.status == WaitlistStatus.converted), isTrue);
       expect(entries.any((e) => e.status.isLive), isTrue);
       expect(entries.any((e) => e.status.isSettled), isTrue);

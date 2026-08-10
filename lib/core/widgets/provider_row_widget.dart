@@ -1,13 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/core/models/provider_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_format.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/app_pill_widget.dart';
-import 'package:waqty_user_application/core/widgets/app_row_widget.dart';
-import 'package:waqty_user_application/core/widgets/entity_avatar_widget.dart';
 
 /// المكان **كصف في قايمة**.
 ///
@@ -34,29 +29,36 @@ class ProviderRowWidget extends StatelessWidget {
   static const double hairlineIndent =
       AppSpacing.pageGutter + avatarSize + AppSpacing.listRowGap;
 
-  /// ١٦ حشوة فوق + ١٦ تحت (من [AppRowWidget]) = ٣٢، زائد المسافات جوه عمود
+  /// ١٢ حشوة فوق + ١٢ تحت (من [AppRowWidget]) = ٢٤، زائد المسافات جوه عمود
   /// النص: ٤ + ٤ + ٤ = ١٢، زائد حشوة الشارة الرأسية (٤ فوق + ٤ تحت) = ٨.
-  /// **المجموع ٥٢.**
+  /// **المجموع ٤٤.**
+  ///
+  /// ⚠ **مشتق من التوكنز مش رقم مكتوب.** كان ٥٢ مكتوب بالإيد لما
+  /// `cardPadding` كانت ١٦؛ الكيت نزّلها ١٢ والرقم فضل مكانه، يعني ٨
+  /// بكسل هوا ميت في كل صف مقدّم خدمة وفي الـ skeleton بتاعه. الاختبار
+  /// ماكانش هيمسكها: [AppRowWidget] بيطرح حشوته من الارتفاع قبل الصندوق
+  /// الداخلي، فالمرسوم بيساوي المحسوب مهما كانت الحشوة.
   ///
   /// المسافة بين المنطقة وسطر البيانات نزلت من ٨ لـ ٤: التلات سطور دول
   /// **بيانات المحل نفسه** ومش محتاجين فصل بينهم — الفصل الحقيقي بين
   /// الاسم وبينهم، وده لسه ٤ لأن الوزن هو اللي بيفصل مش المسافة.
-  static const double _fixedPart = 52;
+  static const double _fixedPart =
+      (AppSpacing.cardPadding * 2) + (AppSpacing.s4 * 3) + AppSpacing.s8;
 
   /// عند مقياس ١٫٠: `cardTitle` ٢٢٫٤ + `caption` ١٦٫٨ + `captionInk` ١٦٫٨
-  /// + نص الشارة (`overline` ١١×١٫٣٠ = ١٤٫٣). المجموع الحسابي **٧٠٫٣**،
-  /// والرقم هنا ٧٢ لأن فلاتر بيقرّب ارتفاع السطر لأعلى وقت التشكيل.
-  static const double _textPart = 72;
+  /// + نص الشارة (`captionStrong` ١٢×١٫٤٠ = ١٦٫٨). المجموع الحسابي **٧٢٫٨**،
+  /// والرقم هنا ٧٥ لأن فلاتر بيقرّب ارتفاع السطر لأعلى وقت التشكيل.
+  ///
+  /// كان ٧٢ لما الشارة كانت `overline` (١١sp). شارة الكيت `captionStrong`،
+  /// يعني سطرها زاد ٢٫٥ مش نقص — عكس اللي التقليم الأول افترضه.
+  static const double _textPart = 75;
 
   /// المصدر الوحيد للارتفاع — **و`ProviderRowSkeletonWidget` بيقراه من هنا**.
   ///
   /// مساحة الشارة محجوزة حتى لو المحل مالوش موعد قريب. لو الارتفاع اتحسب
   /// على اللي ظاهر، اللستة كانت هترقص بين صف وصف.
-  static double heightOf(BuildContext context) => AppSpacing.scaledHeight(
-    context,
-    fixed: _fixedPart,
-    text: _textPart,
-  );
+  static double heightOf(BuildContext context) =>
+      AppSpacing.scaledHeight(context, fixed: _fixedPart, text: _textPart);
 
   final ProviderUiModel provider;
   final VoidCallback onTap;
@@ -79,7 +81,6 @@ class ProviderRowWidget extends StatelessWidget {
       onTap: onTap,
       height: heightOf(context).h,
       showHairline: showHairline,
-      hairlineIndent: hairlineIndent,
       // **`entity` مش `person`** — ده محل مش أخصائي. المربّع المستدير بيقرا
       // «مكان» والدايرة بتقرا «حد».
       leading: EntityAvatarWidget(

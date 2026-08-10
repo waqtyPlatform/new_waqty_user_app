@@ -1,12 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/config/themes/theme_cubit.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
-import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/features/account/account/ui/widgets/account_menu_item_widget.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 
 /// صف «المظهر» في قايمة الحساب.
 ///
@@ -15,6 +10,8 @@ import 'package:waqty_user_application/features/account/account/ui/widgets/accou
 /// السويتش بيعرف حالتين، والحالات هنا **تلاتة**: فاتح، غامق، و«حسب الجهاز».
 /// والتالتة هي الافتراضية وهي اللي معظم الناس هتسيبها — يعني السويتش كان
 /// هيضطر يمثّل الحالة الافتراضية كواحدة من التانيتين ويكدب.
+///
+/// (والكيت شايل `AppToggleWidget` فعلاً — بس هو حالتين، فمش هو.)
 ///
 /// ## تنبيه: التبديل بيرجّع الشاشة للرئيسية
 ///
@@ -26,10 +23,10 @@ class AccountThemeItemWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<ThemeCubit, ThemeMode>(
-      builder: (context, mode) => AccountMenuItemWidget(
+      builder: (context, mode) => AppMenuRowWidget(
         icon: ThemeCubit.iconOf(mode),
-        label: 'المظهر',
-        trailingText: ThemeCubit.labelOf(mode),
+        title: 'المظهر',
+        subtitle: ThemeCubit.labelOf(mode),
         onTap: () => _showSheet(context, mode),
       ),
     );
@@ -40,46 +37,38 @@ class AccountThemeItemWidget extends StatelessWidget {
     // `Navigator` تانية، فـ `context` جواه **مش تحت الـ BlocProvider**.
     final cubit = ThemeCubit.get(context);
 
-    showModalBottomSheet<void>(
-      context: context,
-      useSafeArea: true,
-      builder: (sheetContext) => Padding(
-        padding: EdgeInsetsDirectional.only(
-          start: AppSpacing.pageGutter.w,
-          end: AppSpacing.pageGutter.w,
-          top: AppSpacing.s8.h,
-          bottom: AppSpacing.s16.h,
-        ),
-        child: Column(
+    // **`AppSheetWidget.show` بيرجّع الاختيار، والشاشة هي اللي بتنفّذه.**
+    //
+    // الـ sheet مابيناديش `setMode` من جواه — ده مبدأ الكيت: اللي بينده
+    // هو اللي بيقفل وهو اللي بيتصرّف. فالترتيب هنا مضمون: الورقة بتقفل
+    // الأول، وبعدين الوضع بيتغيّر ويرمي الشجرة. لو اتعكس، الـ `Navigator`
+    // اللي الورقة قاعدة فيه بيتحذف وهي لسه مفتوحة.
+    AppSheetWidget.show<ThemeMode>(
+      context,
+      title: 'المظهر',
+      // `content` بيتبني **قبل** ما الورقة تتفتح، فمالوش `sheetContext`.
+      // الـ `Builder` بيدّي واحد جوه شجرة الورقة — من غيره `Navigator.of`
+      // بتشتغل صح بالصدفة (بتلاقي نفس الـ Navigator) وبتكسر أول ما حاجة
+      // تانية تتحط فوق الورقة.
+      content: Builder(
+        builder: (sheetContext) => Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('المظهر', style: AppTextStyles.sectionHeader),
-            verticalSpace(AppSpacing.s8),
-            ...ThemeMode.values.map(
-              (mode) => ListTile(
-                leading: Icon(
-                  ThemeCubit.iconOf(mode),
-                  color: mode == current
-                      ? AppSemanticColors.accent
-                      : AppSemanticColors.textSecondary,
-                ),
-                title: Text(ThemeCubit.labelOf(mode)),
-                trailing: mode == current
-                    ? Icon(
-                        Icons.check_circle_rounded,
-                        color: AppSemanticColors.accent,
-                      )
-                    : null,
-                onTap: () {
-                  Navigator.of(sheetContext).pop();
-                  cubit.setMode(mode);
-                },
+            for (final mode in ThemeMode.values)
+              AppChoiceRowWidget(
+                title: ThemeCubit.labelOf(mode),
+                selected: mode == current,
+                style: AppChoiceStyle.radio,
+                onTap: () => Navigator.of(sheetContext).pop(mode),
               ),
-            ),
           ],
         ),
       ),
-    );
+      // الاختيار **هو** الفعل — زرار «تأكيد» تحت تلات اختيارات بيزوّد
+      // ضغطة على قرار راجع في ضغطة.
+      actions: (_) => const [],
+    ).then((picked) {
+      if (picked != null) cubit.setMode(picked);
+    });
   }
 }

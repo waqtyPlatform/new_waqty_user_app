@@ -16,19 +16,12 @@ class ReseatPasswordCubit extends Cubit<ReseatPasswordState> {
   // `selectedFieldNumber` اتشال — التركيز بقى بيتقال بحد باللمسة من
   // `inputDecorationTheme` مش بخلفية خضرا فاتحة.
 
-  bool isNewPasswordVisible = true;
-
-  changeNewPasswordLoginState() {
-    isNewPasswordVisible = !isNewPasswordVisible;
-    emit(IsNewPasswordVisibleState());
-  }
-
-  bool isConfirmNewPasswordVisible = true;
-
-  changeConfirmNewPasswordLoginState() {
-    isConfirmNewPasswordVisible = !isConfirmNewPasswordVisible;
-    emit(IsConfirmNewPasswordVisibleState());
-  }
+  // **حالة إظهار كلمة السر اتشالت من هنا.**
+  //
+  // كانت `bool` + دالة + `State` في تلات cubits — تسع أعضاء كل
+  // شغلهم يقلبوا أيقونة عين. `AppPasswordFieldWidget` بتاع الكيت
+  // شايلها جواه، فضغطة العين بقت تبني الحقل بس بدل ما تبني الشاشة
+  // كلها (٦ حقول في التسجيل).
 
   Future<void> resetPassword(String email, String otp) async {
     emit(ResetPasswordLoadingState());

@@ -1,13 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:waqty_user_application/core/utils/app_format.dart';
-import 'package:waqty_user_application/core/utils/app_radius.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/app_hairline_widget.dart';
-import 'package:waqty_user_application/core/widgets/app_pill_widget.dart';
 import 'package:waqty_user_application/features/booking/create_booking/logic/booking_draft_item.dart';
 import 'package:waqty_user_application/features/booking/create_booking/logic/create_booking_cubit.dart';
 
@@ -98,10 +92,14 @@ class CreateBookingSummaryWidget extends StatelessWidget {
                 ],
               ),
               // أكبر خط في الشاشة — ده الرقم اللي العميل بيوافق عليه.
-              Text(
-                AppFormat.money(cubit.totalPrice),
-                maxLines: 1,
-                style: AppTextStyles.titleLg,
+              //
+              // **[AppAmountWidget] مش `Text` بستايل.** بيفصل الرقم عن
+              // العملة: الرقم ٢٤ و«ج.م» أصغر وأخف. الفرق إن العين بتقع
+              // على الرقم مش على الوحدة — والوحدة واحدة في الأبلكيشن كله
+              // فمالهاش لازمة تاخد نفس الوزن.
+              AppAmountWidget(
+                amount: AppFormat.money(cubit.totalPrice, withCurrency: false),
+                currency: AppFormat.currency,
               ),
             ],
           ),
@@ -150,7 +148,10 @@ class CreateBookingSummaryWidget extends StatelessWidget {
       final openingBoundary = cubit.boundaryBefore(visit.first);
       if (openingBoundary != null) {
         widgets.add(
-          _BoundaryRow(boundary: openingBoundary, onToggle: cubit.toggleBoundary),
+          _BoundaryRow(
+            boundary: openingBoundary,
+            onToggle: cubit.toggleBoundary,
+          ),
         );
       }
 
@@ -250,7 +251,7 @@ class _VisitHeader extends StatelessWidget {
                 title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.sectionLabel,
+                style: AppTextStyles.overline,
               ),
             ),
             horizontalSpace(AppSpacing.s8),

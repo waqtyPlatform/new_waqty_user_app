@@ -150,16 +150,19 @@ enum MockScenario {
     MockScenario.twoBranches => 'العميل واخد باله هو حاجز في أنهي فرع؟',
     MockScenario.twoBranchesDifferentPricing =>
       'لما غيّر الفرع، واخد باله إن السعر والأخصائيين اتغيّروا؟',
-    MockScenario.branchClosedToday => 'الفرق بين «مقفول» و«محجوز بالكامل» بيوصل؟',
+    MockScenario.branchClosedToday =>
+      'الفرق بين «مقفول» و«محجوز بالكامل» بيوصل؟',
     // من غير `**` — المبدّل بيعرض النص خام، والنجوم بتطلع على الشاشة.
     MockScenario.cancelWindowClosed => 'العميل فاهم ليه مش قادر يلغي؟',
     MockScenario.manyBookings => 'القايمة الطويلة بتفضل قابلة للاستعمال؟',
     MockScenario.arrivedInBranch => '«إنت لسه داخل المحل — ده بيقولك إيه؟»',
-    MockScenario.waitingInBranch => 'التقدير بالشخص والوقت بيتصدّق أكتر من رقم الدور؟',
+    MockScenario.waitingInBranch =>
+      'التقدير بالشخص والوقت بيتصدّق أكتر من رقم الدور؟',
     MockScenario.waitingNoEstimate =>
       'من غير رقم — الشاشة لسه بتطمّن ولا بقت فاضية؟ (قرار BE-17)',
     MockScenario.inService => 'محتاج يبقى فيه أي حاجة هنا أصلاً؟',
-    MockScenario.slotLostAtConfirm => 'الفشل بيحس إنه غلطته ولا غلطة الأبلكيشن؟',
+    MockScenario.slotLostAtConfirm =>
+      'الفشل بيحس إنه غلطته ولا غلطة الأبلكيشن؟',
     MockScenario.waitlistReviewing =>
       '«فيه ميعاد بس مش مضمون ليك» — بتطمّن ولا بتوتّر؟',
     MockScenario.waitlistOffered => '5 دقايق كفاية؟ وبيحاولوا يقبلوا بنفسهم؟',

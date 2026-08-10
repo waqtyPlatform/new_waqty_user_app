@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:waqty_user_application/config/themes/app_theme.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/mock/mock_bookings.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
 import 'package:waqty_user_application/features/booking/in_branch/logic/in_branch_cubit.dart';
 import 'package:waqty_user_application/features/booking/waitlist/logic/waitlist_cubit.dart';
 import 'package:waqty_user_application/features/home/home/logic/home_cubit.dart';
@@ -81,11 +79,7 @@ void main() {
       // ١٫٠ الطبيعي · ١٫٣ الحد الأقصى اللي `my_app` بيقصّ عنده.
       for (final scale in [1.0, 1.15, AppSpacing.maxTextScale]) {
         testWidgets('من غير استثناءات عند مقياس خط $scale', (tester) async {
-          await pumpHome(
-            tester,
-            brightness: brightness,
-            textScale: scale,
-          );
+          await pumpHome(tester, brightness: brightness, textScale: scale);
 
           expect(tester.takeException(), isNull);
         });

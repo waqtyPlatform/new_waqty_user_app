@@ -1,7 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:waqty_user_application/core/widgets/app_drop_down_field.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/features/auth/register/logic/register_cubit.dart';
 import 'package:waqty_user_application/features/auth/register/logic/register_state.dart';
 
@@ -41,15 +41,17 @@ class RegisterGenderWidget extends StatelessWidget {
         //
         // النسخة القديمة كانت بتقرا `element.name` على `dynamic` — يعني أي
         // نوع مالوش `name` كان بيقع **وقت التشغيل** مش وقت التحليل.
-        return AppDropDownField<GenderItem>(
+        return AppFieldWidget(
           label: context.tr('register.genderText'),
-          hintText: context.tr('register.selectGenderText'),
-          items: genderItems,
-          value: cubit.selectedGender,
-          itemLabel: (item) => item.name,
-          onChanged: (item) {
-            if (item != null) cubit.changeGender(item);
-          },
+          child: AppDropDownField<GenderItem>(
+            hintText: context.tr('register.selectGenderText'),
+            items: genderItems,
+            value: cubit.selectedGender,
+            labelOf: (item) => item.name,
+            onChanged: (item) {
+              if (item != null) cubit.changeGender(item);
+            },
+          ),
         );
       },
     );

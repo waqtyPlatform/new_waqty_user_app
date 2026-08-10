@@ -3,13 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:waqty_user_application/core/services/check_network.dart';
 import 'package:waqty_user_application/core/utils/app_constant.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/core/widgets/resend_code_widget.dart'
+    as shared;
 import 'package:waqty_user_application/features/auth/forget_verify_code/logic/forget_verify_code_cubit.dart';
 import 'package:waqty_user_application/features/auth/forget_verify_code/logic/forget_verify_code_state.dart';
 
-class ResendCodeWidget extends StatelessWidget {
+/// وصلة الـ cubit بالـ[shared.ResendCodeWidget] المشترك.
+///
+/// اللي فضل هنا هو **اللي بيخص الشاشة دي بس**: نوع الـ cubit ومفاتيح
+/// الترجمة. العرض كله انتقل للمشترك — كان متكرر بالحرف مع نسخة التسجيل.
+class ForgetResendCodeWidget extends StatelessWidget {
   final String email;
-  const ResendCodeWidget({super.key, required this.email});
+  const ForgetResendCodeWidget({super.key, required this.email});
 
   @override
   Widget build(BuildContext context) {
@@ -21,40 +26,23 @@ class ResendCodeWidget extends StatelessWidget {
       builder: (context, state) {
         final cubit = ForgetVerifyCodeCubit.get(context);
 
-        // زرار حقيقي وقت ما ينفع الإرسال، ونص وقت العد. كان `GestureDetector`
-        // — مالوش هدف لمس ولا ripple ولا دور لقارئ الشاشة.
-        if (cubit.canResend) {
-          return Center(
-            child: TextButton(
-              onPressed: () {
-                if (MyConnectivity.isOnline()) {
-                  cubit.resendCode(email);
-                } else {
-                  AppConstant.toast(
-                    context.tr('verifyCode.noInternet'),
-                    false,
-                    context,
-                  );
-                }
-              },
-              child: Text(context.tr('verifyCode.resend')),
-            ),
-          );
-        }
-
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              context.tr('verifyCode.resendIn'),
-              style: AppTextStyles.bodyMdMuted,
-            ),
-            Text(cubit.timerText, style: AppTextStyles.label),
-            Text(
-              context.tr('verifyCode.seconds'),
-              style: AppTextStyles.bodyMdMuted,
-            ),
-          ],
+        return shared.ResendCodeWidget(
+          canResend: cubit.canResend,
+          timerText: cubit.timerText,
+          resendLabel: context.tr('verifyCode.resend'),
+          countdownPrefix: context.tr('verifyCode.resendIn'),
+          countdownSuffix: context.tr('verifyCode.seconds'),
+          onResend: () {
+            if (MyConnectivity.isOnline()) {
+              cubit.resendCode(email);
+            } else {
+              AppConstant.toast(
+                context.tr('verifyCode.noInternet'),
+                false,
+                context,
+              );
+            }
+          },
         );
       },
     );

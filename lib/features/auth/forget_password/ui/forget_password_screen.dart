@@ -1,8 +1,8 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:waqty_user_application/core/widgets/auth_header_widget.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
 import 'package:waqty_user_application/features/auth/forget_password/logic/forget_password_cubit.dart';
 import 'package:waqty_user_application/features/auth/forget_password/ui/widgets/forget_password_button_widget.dart';
@@ -29,17 +29,10 @@ class ForgetPasswordScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                verticalSpace(AppSpacing.s16),
-                Text(
-                  context.tr("forgetPassword.title"),
-                  style: AppTextStyles.titleXl,
+                AuthHeaderWidget(
+                  title: context.tr('forgetPassword.title'),
+                  description: context.tr('forgetPassword.description'),
                 ),
-                verticalSpace(AppSpacing.s8),
-                Text(
-                  context.tr("forgetPassword.description"),
-                  style: AppTextStyles.bodyMdMuted,
-                ),
-                verticalSpace(AppSpacing.s32),
                 const ForgetPasswordEmailWidget(),
                 verticalSpace(AppSpacing.s32),
                 const ForgetPasswordButtonWidget(),

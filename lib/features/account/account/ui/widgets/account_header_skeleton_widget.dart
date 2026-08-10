@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/skeleton_box_widget.dart';
 import 'package:waqty_user_application/features/account/account/ui/widgets/account_header_widget.dart';
 
 /// التحميل بارتفاع [AccountHeaderWidget] بالظبط.
@@ -19,7 +18,7 @@ class AccountHeaderSkeletonWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SkeletonGroupWidget(
+    return AppSkeletonGroupWidget(
       child: SizedBox(
         height: AccountHeaderWidget.heightOf(context).h,
         // المستطيلات دي **حبر النص مش صندوق السطر** — عشان كده أقصر من
@@ -29,9 +28,9 @@ class AccountHeaderSkeletonWidget extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SkeletonBoxWidget(width: 176, height: 24, animate: false),
+            AppSkeletonBoxWidget(width: 176, height: 24),
             verticalSpace(AppSpacing.titleToSubtitle),
-            SkeletonBoxWidget(width: 112, height: 10, animate: false),
+            AppSkeletonBoxWidget(width: 112, height: 10),
           ],
         ),
       ),

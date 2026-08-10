@@ -1,5 +1,5 @@
 import 'package:waqty_user_application/core/models/waitlist_message_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_format.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/json_parse.dart';
 
 /// حالة إدخال في قائمة الانتظار.
@@ -428,8 +428,7 @@ class WaitlistUiModel {
     //
     // نفس نبرة `offered` تحتها بالظبط — الفرع هو اللي بيتحرّك، وده اللي
     // بيحصل فعلاً. ترجع أول ما حاجة تقرا `app_device_tokens`.
-    WaitlistStatus.waiting =>
-      'لما ميعاد يفضى في اليوم ده، الفرع هيتصل بيك',
+    WaitlistStatus.waiting => 'لما ميعاد يفضى في اليوم ده، الفرع هيتصل بيك',
     // **مافيش وعد هنا.** الميعاد فضي فعلاً، بس القائمة فيها ناس تانية
     // والفرع هو اللي بيرتّب. الجملة بتقول اللي حصل وبتوقف — أي «دورك
     // قرّب» هنا بتبقى وعد إحنا مش ضامنينه.
@@ -454,8 +453,7 @@ class WaitlistUiModel {
     WaitlistStatus.converted => 'الحجز بقى مؤكد — هتلاقيه في مواعيدك',
     WaitlistStatus.cancelledByCustomer => 'خرجت من القايمة دي',
     // **مش «مرفوض».** الرفض بيتقري كأن العميل عمل حاجة غلط.
-    WaitlistStatus.rejectedByBranch =>
-      'الفرع ما قدرش يستوعب الطلب ده',
+    WaitlistStatus.rejectedByBranch => 'الفرع ما قدرش يستوعب الطلب ده',
     // نهاية محايدة — محدش رفض حد، الأوقات هي اللي ما اتقابلتش.
     WaitlistStatus.noSuitableTime =>
       'جرّبنا كذا ميعاد ومفيش واحد ناسب. تقدر تحجز يوم تاني',

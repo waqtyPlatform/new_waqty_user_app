@@ -105,7 +105,8 @@ void main() {
     test('بيجمّع سعر ما قبل الخصم من العناصر', () {
       final json = _bookingJson();
       final visits = json['visits'] as List<Map<String, dynamic>>;
-      (visits.first['items'] as List<Map<String, dynamic>>).first['original_price'] =
+      (visits.first['items'] as List<Map<String, dynamic>>)
+              .first['original_price'] =
           '200.00';
 
       final booking = BookingUiModel.fromJson(json);
@@ -482,11 +483,15 @@ Map<String, dynamic> _bookingJson() => <String, dynamic>{
   'visits': <Map<String, dynamic>>[
     <String, dynamic>{
       'uuid': 'vst-1',
-      'items': <Map<String, dynamic>>[_itemJson(uuid: 'itm-1', price: '150.00')],
+      'items': <Map<String, dynamic>>[
+        _itemJson(uuid: 'itm-1', price: '150.00'),
+      ],
     },
     <String, dynamic>{
       'uuid': 'vst-2',
-      'items': <Map<String, dynamic>>[_itemJson(uuid: 'itm-2', price: '300.00')],
+      'items': <Map<String, dynamic>>[
+        _itemJson(uuid: 'itm-2', price: '300.00'),
+      ],
     },
   ],
 };

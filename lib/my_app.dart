@@ -6,11 +6,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'config/routes/app_routes.dart';
-import 'config/themes/app_theme.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'config/themes/theme_cubit.dart';
-import 'core/utils/app_semantic_colors.dart';
-import 'core/utils/app_spacing.dart';
-import 'core/utils/app_text_styles.dart';
 
 import 'core/mock/mock_scenario_switcher_widget.dart';
 import 'core/services/biometric_service.dart';

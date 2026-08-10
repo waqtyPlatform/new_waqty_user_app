@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/core/models/employee_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_format.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/entity_avatar_widget.dart';
 
 /// الأخصائيين.
 ///
@@ -47,7 +44,11 @@ class ServiceProviderDetailsSpecialistsWidget extends StatelessWidget {
               children: [
                 // دايرة — شبكة الأخصائيين في الـ DNA أفاتارات دائرية ٥٦–٦٤.
                 // الـ ٧٢ عندنا أوسع شوية عشان الحرف البديل هو اللوجو.
-                EntityAvatarWidget(name: employee.name, size: 72),
+                EntityAvatarWidget(
+                  name: employee.name,
+                  size: 72,
+                  shape: AvatarShape.person,
+                ),
                 verticalSpace(AppSpacing.s8),
                 Text(
                   employee.name,

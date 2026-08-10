@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:waqty_user_application/config/themes/app_theme.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/mock/mock_providers.dart';
 import 'package:waqty_user_application/core/mock/mock_services.dart';
 import 'package:waqty_user_application/core/models/employee_ui_model.dart';
 import 'package:waqty_user_application/core/models/service_ui_model.dart';
 import 'package:waqty_user_application/core/models/slot_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_format.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
 import 'package:waqty_user_application/features/booking/create_booking/logic/booking_draft_item.dart';
 import 'package:waqty_user_application/features/booking/create_booking/logic/create_booking_cubit.dart';
 import 'package:waqty_user_application/features/booking/create_booking/ui/widgets/create_booking_summary_widget.dart';
@@ -25,9 +22,9 @@ void main() {
   tearDown(() => AppSemanticColors.apply(Brightness.light));
 
   final provider = MockProviders.all.first;
-  final services = MockServices.ofProvider(provider.uuid)
-      .where((s) => !s.isCategory)
-      .toList();
+  final services = MockServices.ofProvider(
+    provider.uuid,
+  ).where((s) => !s.isCategory).toList();
 
   /// عنصر سلة بميعاد محدد.
   ///
@@ -156,16 +153,26 @@ void main() {
 
       final block = tester.getRect(find.byType(CreateBookingSummaryWidget));
       final label = tester.getRect(find.text('الإجمالي'));
-      final price = tester.getRect(find.text(AppFormat.money(cubit.totalPrice)));
+      // الإجمالي بقى [AppAmountWidget] — الرقم والعملة نصّين منفصلين
+      // بمقاسين مختلفين. الحدود بتتاخد من الـwidget كله مش من نص فيهم.
+      final price = tester.getRect(find.byType(AppAmountWidget));
 
       // عربي: اللابل على اليمين والسعر على الشمال.
       expect(label.right, closeTo(block.right, 1));
       expect(price.left, closeTo(block.left, 1));
     });
 
-    /// عند ١٫٣ الاتنين مش بيكفوا سطر واحد — المفروض السعر ينزل تحت،
-    /// **مش** يتقص ولا يفيض.
-    testWidgets('عند مقياس خط كبير السعر بينزل سطر لوحده', (tester) async {
+    /// عند ١٫٣ اللابل والسعر لازم **الاتنين يبانوا كاملين** — مش يتقص
+    /// حد فيهم ولا يفيض. الـ`Wrap` هو اللي بيضمن ده: لو ما كفوش سطر
+    /// واحد بينزّل التاني تحته بدل ما الصف يفيض عرضًا.
+    ///
+    /// ⚠ **الاختبار مابيدّعيش إنهم بينزلوا سطرين.** كان بيدّعي كده، وكان
+    /// صح لما هامش الصفحة كان ٢٤ وحشوة الكارت ١٦. الكيت نزّلهم لـ١٦ و١٢،
+    /// يعني الصف بقى أعرض بـ٢٠ نقطة والاتنين بيكفوا سطر واحد عند ١٫٣.
+    ///
+    /// اللي كان بيتحمى مش اللفّة نفسها — هو إن **محدش يتقص**. فالاختبار
+    /// بيقيس ده مباشرة: الاتنين جوه الكتلة، ومفيش استثناء تخطيط.
+    testWidgets('عند مقياس خط كبير محدش بيتقص ولا بيفيض', (tester) async {
       final cubit = singleService();
       await pump(
         tester,
@@ -174,10 +181,28 @@ void main() {
         textScale: AppSpacing.maxTextScale,
       );
 
+      final block = tester.getRect(find.byType(CreateBookingSummaryWidget));
       final label = tester.getRect(find.text('الإجمالي'));
-      final price = tester.getRect(find.text(AppFormat.money(cubit.totalPrice)));
+      // الإجمالي بقى [AppAmountWidget] — الرقم والعملة نصّين منفصلين
+      // بمقاسين مختلفين. الحدود بتتاخد من الـwidget كله مش من نص فيهم.
+      final price = tester.getRect(find.byType(AppAmountWidget));
 
-      expect(price.top, greaterThanOrEqualTo(label.bottom));
+      // الاتنين جوه الكتلة أفقيًا — مافيش حاجة خارجة من الحافة.
+      expect(label.left, greaterThanOrEqualTo(block.left - 0.5));
+      expect(label.right, lessThanOrEqualTo(block.right + 0.5));
+      expect(price.left, greaterThanOrEqualTo(block.left - 0.5));
+      expect(price.right, lessThanOrEqualTo(block.right + 0.5));
+
+      // ومابيتراكبوش على بعض — يا سطر واحد جنب بعض، يا سطرين.
+      final sameLine = price.top < label.bottom && label.top < price.bottom;
+      if (sameLine) {
+        expect(
+          price.right <= label.left + 0.5 || label.right <= price.left + 0.5,
+          isTrue,
+          reason: 'على نفس السطر لازم يبقوا مفصولين مش فوق بعض',
+        );
+      }
+
       expect(tester.takeException(), isNull);
     });
   });
@@ -207,25 +232,20 @@ void main() {
     /// نفس الكتلة (وتالتة في الفوتر المثبّت برّه الـ widget ده).
     testWidgets('خدمة واحدة: السعر مايتكررش', (tester) async {
       final cubit = singleService();
-      await pump(
-        tester,
-        cubit,
-        brightness: Brightness.light,
-        textScale: 1.0,
-      );
+      await pump(tester, cubit, brightness: Brightness.light, textScale: 1.0);
 
-      expect(find.text(AppFormat.money(cubit.totalPrice)), findsOneWidget);
+      // الرقم من غير عملة — [AppAmountWidget] بيرسمهم منفصلين.
+      expect(
+        find.text(AppFormat.money(cubit.totalPrice, withCurrency: false)),
+        findsOneWidget,
+      );
+      expect(find.byType(AppAmountWidget), findsOneWidget);
     });
 
     /// أكتر من خدمة: أسعار السطور **بتفضل**، لأنها مش نفس الإجمالي.
     testWidgets('أكتر من خدمة: سعر كل خدمة بيبان', (tester) async {
       final cubit = multiService();
-      await pump(
-        tester,
-        cubit,
-        brightness: Brightness.light,
-        textScale: 1.0,
-      );
+      await pump(tester, cubit, brightness: Brightness.light, textScale: 1.0);
 
       // عدّاد الخدمات جنب الإجمالي بيظهر في الحالة دي بس.
       expect(find.textContaining('خدمات ·'), findsOneWidget);

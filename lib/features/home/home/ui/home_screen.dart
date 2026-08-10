@@ -3,13 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/config/routes/routes.dart';
 import 'package:waqty_user_application/core/models/booking_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_gradients.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/extentions.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/app_reveal_widget.dart';
-import 'package:waqty_user_application/core/widgets/app_section_header_widget.dart';
-import 'package:waqty_user_application/core/widgets/error_state_widget.dart';
 import 'package:waqty_user_application/features/home/home/logic/home_cubit.dart';
 import 'package:waqty_user_application/features/home/home/logic/home_state.dart';
 import 'package:waqty_user_application/features/home/home/ui/widgets/home_app_bar_widget.dart';
@@ -39,7 +35,7 @@ class HomeScreen extends StatelessWidget {
           return Center(
             child: Padding(
               padding: EdgeInsetsDirectional.symmetric(horizontal: 16.w),
-              child: ErrorStateWidget(
+              child: AppErrorStateWidget(
                 message: state.message,
                 onRetry: cubit.loadHome,
               ),
@@ -182,8 +178,7 @@ class HomeScreen extends StatelessWidget {
                 AppSectionHeaderWidget(
                   title: 'قريب منك',
                   actionLabel: 'عرض الكل',
-                  onAction: () =>
-                      context.pushNamed(Routes.providersListScreen),
+                  onAction: () => context.pushNamed(Routes.providersListScreen),
                 ),
               ),
               // مش ملفوف في `_gutter`: بقت صفوف full-bleed، والهامش ١٦

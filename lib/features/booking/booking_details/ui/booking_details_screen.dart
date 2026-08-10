@@ -5,14 +5,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/config/routes/routes.dart';
 import 'package:waqty_user_application/core/models/booking_item_ui_model.dart';
 import 'package:waqty_user_application/core/models/booking_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/extentions.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/app_button_widget.dart';
-import 'package:waqty_user_application/core/widgets/error_state_widget.dart';
-import 'package:waqty_user_application/core/widgets/loading_widget.dart';
 import 'package:waqty_user_application/features/booking/booking_details/logic/booking_details_cubit.dart';
 import 'package:waqty_user_application/features/booking/booking_details/logic/booking_details_state.dart';
 import 'package:waqty_user_application/features/booking/booking_details/ui/widgets/booking_details_actions_widget.dart';
@@ -22,7 +17,6 @@ import 'package:waqty_user_application/features/booking/booking_details/ui/widge
 import 'package:waqty_user_application/features/booking/create_booking/ui/create_booking_sheet.dart';
 import 'package:waqty_user_application/features/booking/in_branch/ui/widgets/in_branch_block_widget.dart';
 import 'package:waqty_user_application/core/widgets/booking_status_chip_widget.dart';
-import 'package:waqty_user_application/core/widgets/directional_chevron_widget.dart';
 
 class BookingDetailsScreen extends StatelessWidget {
   const BookingDetailsScreen({super.key});
@@ -43,15 +37,13 @@ class BookingDetailsScreen extends StatelessWidget {
           }
           if (state is RateSuccessState) {
             Navigator.of(context).pop();
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                backgroundColor: AppSemanticColors.accent,
-                content: Text(
-                  'شكرًا، وصلنا تقييمك',
-                  style: AppTextStyles.labelOnAccent,
-                ),
-              ),
-            );
+            // **`AppSnack` مش `SnackBar` مكتوب بالإيد.**
+            //
+            // اللي كان هنا `textOnAccent` (أبيض) على تعبئة `accent` —
+            // **3.96:1**، راسب لنص. جدول README الكيت §٥ بيحط الحالة دي
+            // بالاسم. `AppSnack` بيقعد على `surfaceInverse` بـ
+            // `textOnInverse`، وبيلغي أي snackbar شغّال قبل ما يعرض.
+            AppSnack.show(context, message: 'شكرًا، وصلنا تقييمك');
           }
         },
         builder: (context, state) {
@@ -60,7 +52,7 @@ class BookingDetailsScreen extends StatelessWidget {
           if (state is BookingDetailsErrorState) {
             return Padding(
               padding: EdgeInsetsDirectional.symmetric(horizontal: 16.w),
-              child: ErrorStateWidget(
+              child: AppErrorStateWidget(
                 message: state.message,
                 onRetry: cubit.loadBooking,
               ),
@@ -70,7 +62,7 @@ class BookingDetailsScreen extends StatelessWidget {
           final booking = cubit.booking;
           if (booking == null) {
             return Center(
-              child: LoadingWidget(color: AppSemanticColors.accent),
+              child: AppLoadingWidget(color: AppSemanticColors.accent),
             );
           }
 
@@ -168,62 +160,36 @@ class BookingDetailsScreen extends StatelessWidget {
   }
 
   /// تأكيد الإلغاء — الإجراء ده مالوش رجعة، فبنسأل.
+  ///
+  /// **الكيبورد بقى شغل الكيت.** الورقة دي فيها حقل نص، وكانت بتحسب
+  /// `viewInsets` بإيدها. `AppSheetWidget` بقى بيعملها لكل ورقة — شوف
+  /// `app_sheet_widget.dart`.
   void _confirmCancel(BuildContext context, BookingDetailsCubit cubit) {
-    showModalBottomSheet<void>(
-      context: context,
-      useSafeArea: true,
-      isScrollControlled: true,
-      builder: (sheetContext) => Padding(
-        padding: EdgeInsetsDirectional.only(
-          start: AppSpacing.s16.w,
-          end: AppSpacing.s16.w,
-          top: AppSpacing.s8.h,
-          // الكيبورد بيفتح على الحقل ده، فمحتاجين viewInsets كمان.
-          bottom:
-              MediaQuery.of(sheetContext).viewInsets.bottom + AppSpacing.s16.h,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('تلغي الحجز؟', style: AppTextStyles.sectionHeader),
-            verticalSpace(AppSpacing.s4),
-            Text(
-              'هتلغي حجزك في ${cubit.booking?.providerName ?? ''}',
-              style: AppTextStyles.caption,
-            ),
-            verticalSpace(AppSpacing.s16),
-            // الحشوة والحدود والخلفية كلهم من `inputDecorationTheme`.
-            TextField(
-              controller: cubit.cancelReasonController,
-              maxLines: 2,
-              decoration: const InputDecoration(
-                hintText: 'سبب الإلغاء (اختياري)',
-              ),
-            ),
-            verticalSpace(AppSpacing.s16),
-            AppButtonWidget(
-              label: 'تأكيد الإلغاء',
-              variant: AppButtonVariant.danger,
-              onPressed: () {
-                Navigator.of(sheetContext).pop();
-                cubit.cancelBooking();
-              },
-            ),
-            verticalSpace(AppSpacing.s8),
-            TextButton(
-              onPressed: () => Navigator.of(sheetContext).pop(),
-              child: Text(
-                'رجوع',
-                style: AppTextStyles.bodyMdStrong.copyWith(
-                  color: AppSemanticColors.textSecondary,
-                ),
-              ),
-            ),
-          ],
-        ),
+    AppSheetWidget.show<bool>(
+      context,
+      title: 'تلغي الحجز؟',
+      message: 'هتلغي حجزك في ${cubit.booking?.providerName ?? ''}',
+      // الحشوة والحدود والخلفية كلهم من `inputDecorationTheme`.
+      content: TextField(
+        controller: cubit.cancelReasonController,
+        maxLines: 2,
+        decoration: const InputDecoration(hintText: 'سبب الإلغاء (اختياري)'),
       ),
-    );
+      actions: (sheetContext) => [
+        AppButtonWidget(
+          label: 'تأكيد الإلغاء',
+          variant: AppButtonVariant.danger,
+          onPressed: () => Navigator.of(sheetContext).pop(true),
+        ),
+        AppButtonWidget(
+          label: 'رجوع',
+          variant: AppButtonVariant.ghost,
+          onPressed: () => Navigator.of(sheetContext).pop(false),
+        ),
+      ],
+    ).then((confirmed) {
+      if (confirmed ?? false) cubit.cancelBooking();
+    });
   }
 
   /// **بعد الإلغاء — نتيجة وخطوة جاية، مش سكوت.**
@@ -239,63 +205,42 @@ class BookingDetailsScreen extends StatelessWidget {
   ///
   /// **٣. الرجوع من غير كلام** بيخلي العميل مش متأكد إن الإلغاء اتنفذ
   /// أصلاً.
-  void _afterCancel(BuildContext context, {required BookingDetailsCubit cubit}) {
+  void _afterCancel(
+    BuildContext context, {
+    required BookingDetailsCubit cubit,
+  }) {
     final booking = cubit.booking;
 
-    showModalBottomSheet<void>(
-      context: context,
-      useSafeArea: true,
+    AppSheetWidget.show<bool>(
+      context,
       isDismissible: false,
-      builder: (sheetContext) => Padding(
-        padding: EdgeInsetsDirectional.all(AppSpacing.s16.r),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.check_circle_outline_rounded,
-                  color: AppSemanticColors.positive,
-                  size: 22.r,
-                ),
-                horizontalSpace(AppSpacing.s8),
-                Text('اتلغى الحجز', style: AppTextStyles.sectionHeader),
-              ],
-            ),
-            verticalSpace(AppSpacing.s4),
-            // TODO(api): سياسة الإلغاء من إعدادات الفرع — دلوقتي ثابتة.
-            Text(
-              'الإلغاء مجاني ومفيش أي رسوم عليك',
-              style: AppTextStyles.caption,
-            ),
-            verticalSpace(AppSpacing.s24),
-            AppButtonWidget(
-              label: 'تحب تحجز ميعاد تاني؟',
-              onPressed: () {
-                Navigator.of(sheetContext).pop();
-                if (booking != null) _rebook(context, booking);
-              },
-            ),
-            verticalSpace(AppSpacing.listRowGap),
-            Center(
-              child: TextButton(
-                onPressed: () {
-                  Navigator.of(sheetContext).pop();
-                  context.pop();
-                },
-                child: Text(
-                  'مش دلوقتي',
-                  style: AppTextStyles.bodyMdStrong.copyWith(
-                    color: AppSemanticColors.textSecondary,
-                  ),
-                ),
-              ),
-            ),
-          ],
+      icon: Icons.check_circle_outline_rounded,
+      iconTone: AppSemanticColors.positive,
+      title: 'اتلغى الحجز',
+      // TODO(api): سياسة الإلغاء من إعدادات الفرع — دلوقتي ثابتة.
+      message: 'الإلغاء مجاني ومفيش أي رسوم عليك',
+      actions: (sheetContext) => [
+        AppButtonWidget(
+          label: 'تحب تحجز ميعاد تاني؟',
+          onPressed: () => Navigator.of(sheetContext).pop(true),
         ),
-      ),
-    );
+        AppButtonWidget(
+          label: 'مش دلوقتي',
+          variant: AppButtonVariant.ghost,
+          onPressed: () => Navigator.of(sheetContext).pop(false),
+        ),
+      ],
+    ).then((wantsRebook) {
+      if (!context.mounted) return;
+      // `isDismissible: false` يعني مافيش خروج من غير اختيار — والـ`null`
+      // هنا احتياط لو حد شال المنع بكرة.
+      if (wantsRebook == null) return;
+      if (wantsRebook) {
+        if (booking != null) _rebook(context, booking);
+      } else {
+        context.pop();
+      }
+    });
   }
 
   /// **خدمة واحدة بس بتتقيّم في المرة.**
@@ -313,46 +258,36 @@ class BookingDetailsScreen extends StatelessWidget {
       return;
     }
 
-    showModalBottomSheet<void>(
-      context: context,
-      useSafeArea: true,
-      builder: (sheetContext) => Padding(
-        padding: EdgeInsetsDirectional.all(AppSpacing.s16.r),
-        child: Column(
+    // الورقة بترجّع الخدمة المختارة، والشاشة هي اللي بتفتح التقييم —
+    // فورقة التقييم مابتتفتحش وورقة الاختيار لسه في الشجرة.
+    //
+    // الصفوف بقت [AppMenuRowWidget]: عنوان + «مع فلان» + سهم اتجاهي.
+    // نفس اللي `ListTile` كان بيعمله، بس بحشوة من سلّم المسافات وسهم
+    // بيتقلب صح لوحده (`chevron_left` المكتوبة بالإيد كانت بتشاور **يمين**
+    // في العربي، يعني «ارجع» في صف معناه «كمّل»).
+    AppSheetWidget.show<BookingItemUiModel>(
+      context,
+      title: 'تقيّم أنهي خدمة؟',
+      message: 'كل خدمة ليها تقييمها لوحدها',
+      content: Builder(
+        builder: (sheetContext) => Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('تقيّم أنهي خدمة؟', style: AppTextStyles.sectionHeader),
-            verticalSpace(AppSpacing.s4),
-            Text(
-              'كل خدمة ليها تقييمها لوحدها',
-              style: AppTextStyles.caption,
-            ),
-            verticalSpace(AppSpacing.s16),
             for (final item in items)
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(item.serviceName, style: AppTextStyles.cardTitle),
-                subtitle: Text(
-                  'مع ${item.employeeName}',
-                  style: AppTextStyles.caption,
-                ),
-                // `chevron_left` مكتوبة بإيد كانت بتشاور **يمين** في
-                // العربي (فلاتر بيقلبها لوحده) — يعني «ارجع» في صف
-                // معناه «كمّل للتقييم».
-                trailing: DirectionalChevronWidget(
-                  color: AppSemanticColors.textSecondary,
-                ),
-                onTap: () {
-                  Navigator.of(sheetContext).pop();
-                  cubit.startRating(item);
-                  _openRateSheet(context, cubit);
-                },
+              AppMenuRowWidget(
+                title: item.serviceName,
+                subtitle: 'مع ${item.employeeName}',
+                onTap: () => Navigator.of(sheetContext).pop(item),
               ),
           ],
         ),
       ),
-    );
+      actions: (_) => const [],
+    ).then((item) {
+      if (item == null || !context.mounted) return;
+      cubit.startRating(item);
+      _openRateSheet(context, cubit);
+    });
   }
 
   void _openRateSheet(BuildContext context, BookingDetailsCubit cubit) {

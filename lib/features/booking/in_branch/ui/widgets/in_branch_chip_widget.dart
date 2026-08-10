@@ -2,11 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/core/models/booking_ui_model.dart';
 import 'package:waqty_user_application/core/models/in_branch_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_motion.dart';
-import 'package:waqty_user_application/core/utils/app_radius.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 
 /// مؤشر مصغّر — بيقعد **جنب** `BookingStatusChipWidget` في صف الحجز
 /// جوه اللستة.

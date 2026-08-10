@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:waqty_user_application/core/utils/app_radius.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/app_row_widget.dart';
 import 'package:waqty_user_application/core/widgets/provider_row_widget.dart';
-import 'package:waqty_user_application/core/widgets/skeleton_box_widget.dart';
 
 /// التحميل بشكل [ProviderRowWidget] بالظبط.
 ///
@@ -17,7 +14,7 @@ import 'package:waqty_user_application/core/widgets/skeleton_box_widget.dart';
 /// دلوقتي الاتنين بيمرّوا على نفس الـ widget بنفس `heightOf` — يعني عدم
 /// التطابق بقى **مستحيل بنيويًا**، مش «متظبط دلوقتي».
 ///
-/// موجة الـ shimmer واحدة للصف كله ([SkeletonGroupWidget] بره) بدل موجة لكل
+/// موجة الـ shimmer واحدة للصف كله ([AppSkeletonGroupWidget] بره) بدل موجة لكل
 /// مستطيل — من غيرها بيبقى وميض عشوائي مش حركة ماشية.
 class ProviderRowSkeletonWidget extends StatelessWidget {
   final bool showHairline;
@@ -26,15 +23,14 @@ class ProviderRowSkeletonWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SkeletonGroupWidget(
+    return AppSkeletonGroupWidget(
       child: AppRowWidget(
         height: ProviderRowWidget.heightOf(context),
         showHairline: showHairline,
-        leading: SkeletonBoxWidget(
+        leading: AppSkeletonBoxWidget(
           width: ProviderRowWidget.avatarSize,
           height: ProviderRowWidget.avatarSize,
           radius: AppRadius.xs,
-          animate: false,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -43,20 +39,19 @@ class ProviderRowSkeletonWidget extends StatelessWidget {
             // الأعراض بتقلّ وبتزيد زي النص الحقيقي — الاسم أطول من
             // التصنيف، والبيانات أطول من الاتنين. أربع مستطيلات متساوية
             // بتقرا جدول مش نص.
-            const SkeletonBoxWidget(width: 140, height: 14, animate: false),
+            const AppSkeletonBoxWidget(width: 140, height: 14),
             verticalSpace(AppSpacing.s8),
-            const SkeletonBoxWidget(width: 100, height: 10, animate: false),
+            const AppSkeletonBoxWidget(width: 100, height: 10),
             verticalSpace(AppSpacing.s8),
-            const SkeletonBoxWidget(width: 168, height: 10, animate: false),
+            const AppSkeletonBoxWidget(width: 168, height: 10),
             verticalSpace(AppSpacing.s8),
             // السطر الرابع بقى **شارة** في الصف الحقيقي، فالعرض بتاعه هنا
             // شارة كمان — مستطيل رفيع مكانها بيخلي الشكل يتبدّل لما الداتا
             // توصل.
-            const SkeletonBoxWidget(
+            const AppSkeletonBoxWidget(
               width: 150,
               height: 22,
               radius: AppRadius.pill,
-              animate: false,
             ),
           ],
         ),

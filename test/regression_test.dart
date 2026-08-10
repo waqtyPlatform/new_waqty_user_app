@@ -193,7 +193,10 @@ void main() {
       final cubit = ServiceProviderDetailsCubit(providerUuid: 'prv-1');
       await cubit.loadDetails();
 
-      expect(cubit.employees.map((e) => e.uuid), MockEmployees.rosterOf().map((e) => e.uuid));
+      expect(
+        cubit.employees.map((e) => e.uuid),
+        MockEmployees.rosterOf().map((e) => e.uuid),
+      );
       expect(cubit.employees.any((e) => e.isAnyAvailable), isFalse);
 
       await cubit.changeBranch(cubit.branches[1]);
@@ -389,15 +392,17 @@ void main() {
       // كل حاجة ويفترقوا في إن زيارة خلصت والتانية لأ — وده فرق **بيبان
       // على الشاشة**، بلوك «إنت في الفرع» بيظهر ولا لأ.
       String describe(List<BookingUiModel> list) => list
-          .map((b) =>
-              '${b.status.name}:${b.branchUuid}:${b.canCancel}'
-              ':${b.visits.map((v) => '${v.uuid}=${v.status.name}').join('+')}'
-              ':${b.items.map((i) => '${i.serviceUuid}@${i.startAt}=${i.price}/${i.ratingStatus.name}').join(',')}')
+          .map(
+            (b) =>
+                '${b.status.name}:${b.branchUuid}:${b.canCancel}'
+                ':${b.visits.map((v) => '${v.uuid}=${v.status.name}').join('+')}'
+                ':${b.items.map((i) => '${i.serviceUuid}@${i.startAt}=${i.price}/${i.ratingStatus.name}').join(',')}',
+          )
           .join(' , ');
 
-      final waitlist = MockWaitlist.forUser(DateTime.now())
-          .map((e) => '${e.status.name}:${e.serviceName}')
-          .join(' , ');
+      final waitlist = MockWaitlist.forUser(
+        DateTime.now(),
+      ).map((e) => '${e.status.name}:${e.serviceName}').join(' , ');
 
       // **بلوك «إنت في الفرع» جزء من اللي التستر بيشوفه.**
       //
@@ -434,7 +439,9 @@ void main() {
 
       for (final scenario in MockScenario.values) {
         if (systemStates.contains(scenario)) continue;
-        byFingerprint.putIfAbsent(fingerprintOf(scenario), () => []).add(scenario);
+        byFingerprint
+            .putIfAbsent(fingerprintOf(scenario), () => [])
+            .add(scenario);
       }
 
       final clashes = byFingerprint.entries.where((e) => e.value.length > 1);
@@ -442,7 +449,8 @@ void main() {
       expect(
         clashes,
         isEmpty,
-        reason: 'سيناريوهات بتعرض نفس الحجوزات بالحرف: '
+        reason:
+            'سيناريوهات بتعرض نفس الحجوزات بالحرف: '
             '${clashes.map((e) => e.value.map((s) => s.title).join(' = ')).join(' · ')}',
       );
     });

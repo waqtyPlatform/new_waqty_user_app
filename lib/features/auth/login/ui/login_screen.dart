@@ -1,10 +1,9 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:waqty_user_application/core/widgets/auth_header_widget.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/config/routes/routes.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
-import 'package:waqty_user_application/core/utils/assets_manager.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/extentions.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
 import 'package:waqty_user_application/features/auth/login/logic/login_cubit.dart';
@@ -40,19 +39,11 @@ class LoginScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                verticalSpace(AppSpacing.s16),
-                Image.asset(ImageAsset.logoImage, height: 50),
-                verticalSpace(AppSpacing.s16),
-                Text(
-                  context.tr('login.title'),
-                  style: AppTextStyles.titleXl,
+                AuthHeaderWidget(
+                  showLogo: true,
+                  title: context.tr('login.title'),
+                  description: context.tr('login.description'),
                 ),
-                verticalSpace(AppSpacing.s8),
-                Text(
-                  context.tr('login.description'),
-                  style: AppTextStyles.bodyMdMuted,
-                ),
-                verticalSpace(AppSpacing.s32),
 
                 const LoginPhoneNumberWidget(),
                 verticalSpace(AppSpacing.s16),

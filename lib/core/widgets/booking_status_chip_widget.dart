@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:waqty_user_application/core/models/booking_ui_model.dart';
-import 'package:waqty_user_application/core/widgets/app_pill_widget.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 
 /// شارة حالة الحجز.
 ///

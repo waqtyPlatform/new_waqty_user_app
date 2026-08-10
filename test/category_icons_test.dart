@@ -40,7 +40,11 @@ void main() {
 
       // نفس لغة الرسم بتاعة أيقونات التبويبات — لو حد ضاف ملف مليان
       // أو بسمك تاني، الصف بيبان كأن أيقوناته من مكتبتين.
-      expect(source, contains('viewBox="0 0 24 24"'), reason: '$path شبكته غلط');
+      expect(
+        source,
+        contains('viewBox="0 0 24 24"'),
+        reason: '$path شبكته غلط',
+      );
       expect(source, contains('fill="none"'), reason: '$path مليان مش خطوط');
       expect(source, contains('stroke-width="2"'), reason: '$path سمكه غلط');
       expect(

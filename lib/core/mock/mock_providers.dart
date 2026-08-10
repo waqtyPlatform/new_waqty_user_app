@@ -141,10 +141,7 @@ class MockProviders {
   /// ⚠ **ماتشتقّهوش من نص الـ uuid.** `uuid.endsWith('-2')` شكلها صح
   /// وغلط: `brn-prv-2` هو الفرع **الأساسي** بتاع المحل التاني، وهتتصنّف
   /// فرع تاني وتاخد سعره.
-  static int branchIndexOf({
-    required String providerUuid,
-    String? branchUuid,
-  }) {
+  static int branchIndexOf({required String providerUuid, String? branchUuid}) {
     if (branchUuid == null || branchUuid.isEmpty) return 0;
     final index = branchesOf(
       providerUuid,

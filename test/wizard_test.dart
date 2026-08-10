@@ -57,14 +57,8 @@ void main() {
     test('خدمة طويلة أيامها المتاحة أقل أو تساوي القصيرة', () {
       final month = DateTime(2026, 9);
 
-      final short = MockSlots.availableDates(
-        month: month,
-        durationMinutes: 20,
-      );
-      final long = MockSlots.availableDates(
-        month: month,
-        durationMinutes: 180,
-      );
+      final short = MockSlots.availableDates(month: month, durationMinutes: 20);
+      final long = MockSlots.availableDates(month: month, durationMinutes: 180);
 
       expect(long.length, lessThanOrEqualTo(short.length));
     });
@@ -404,10 +398,7 @@ void main() {
         0,
       );
       expect(
-        MockProviders.branchIndexOf(
-          providerUuid: 'prv-1',
-          branchUuid: 'brn-2',
-        ),
+        MockProviders.branchIndexOf(providerUuid: 'prv-1', branchUuid: 'brn-2'),
         1,
       );
       // uuid مش تابع للمحل بيرجع للأساسي بدل ما يرمي.

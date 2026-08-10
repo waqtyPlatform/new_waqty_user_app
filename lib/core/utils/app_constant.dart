@@ -4,7 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart' as intl;
 import 'package:toastification/toastification.dart';
 
-import 'app_semantic_colors.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 
 bool isLoggedInUser = false;
 bool isOnBoarding = true;
@@ -16,9 +16,7 @@ class AppConstant {
       title: Text(message),
       icon: Icon(
         isTrue ? Icons.check_circle_outline_rounded : Icons.close,
-        color: isTrue
-            ? AppSemanticColors.positive
-            : AppSemanticColors.danger,
+        color: isTrue ? AppSemanticColors.positive : AppSemanticColors.danger,
       ),
       autoCloseDuration: const Duration(seconds: 5),
     );

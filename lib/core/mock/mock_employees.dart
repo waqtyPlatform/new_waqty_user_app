@@ -82,9 +82,9 @@ class MockEmployees {
     String serviceUuid, {
     int branchIndex = 0,
   }) {
-    final staff = _staffAt(branchIndex)
-        .where((e) => _doesService(e.uuid, serviceUuid))
-        .toList();
+    final staff = _staffAt(
+      branchIndex,
+    ).where((e) => _doesService(e.uuid, serviceUuid)).toList();
 
     if (staff.isEmpty) return const <EmployeeUiModel>[];
 

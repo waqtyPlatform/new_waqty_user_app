@@ -1,13 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/core/models/waitlist_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_format.dart';
-import 'package:waqty_user_application/core/utils/app_radius.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/app_button_widget.dart';
 
 /// «الميعاد ده مش مناسب» — والسبب.
 ///
@@ -26,10 +21,12 @@ class WaitlistChangeRequestSheet extends StatefulWidget {
 
   /// بترجّع السبب اللي العميل كتبه، أو `null` لو قفل الـ sheet.
   static Future<String?> show(BuildContext context, WaitlistUiModel entry) {
+    // الخلفية والاستدارة ومقبض السحب كلهم من `bottomSheetTheme` —
+    // النسخة القديمة كانت بتخلي الحاجب شفاف وبترسم `Container` باستدارة
+    // `sheetTop` بإيدها، يعني نسخة تانية من نفس القرار.
     return showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (_) => WaitlistChangeRequestSheet(entry: entry),
     );
   }
@@ -72,123 +69,56 @@ class _WaitlistChangeRequestSheetState
   Widget build(BuildContext context) {
     final entry = widget.entry;
 
-    return Padding(
-      // الكيبورد بيغطي الحقل من غير ده.
-      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppSemanticColors.surfaceRaised,
-          borderRadius: AppRadius.sheetTop,
-        ),
-        padding: EdgeInsetsDirectional.all(AppSpacing.s16.r),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('الميعاد ده مش مناسب؟', style: AppTextStyles.titleLg),
-            verticalSpace(AppSpacing.titleToSubtitle),
-            // بنفكّره بالميعاد اللي بيرفضه — الـ sheet بتغطي الكارت.
-            if (entry.offeredStartAt != null)
-              Text(
-                'المعروض: ${AppFormat.relativeDate(entry.offeredStartAt!)}'
-                ' · ${AppFormat.time(entry.offeredStartAt!)}',
-                style: AppTextStyles.caption,
-              ),
-            verticalSpace(AppSpacing.s12),
-            Text(
-              'قول للفرع إيه المشكلة عشان العرض اللي بعده يبقى أقرب.',
-              style: AppTextStyles.caption,
+    return AppSheetWidget(
+      title: 'الميعاد ده مش مناسب؟',
+      // بنفكّره بالميعاد اللي بيرفضه — الـ sheet بتغطي الكارت.
+      message: entry.offeredStartAt == null
+          ? 'قول للفرع إيه المشكلة عشان العرض اللي بعده يبقى أقرب.'
+          : 'المعروض: ${AppFormat.relativeDate(entry.offeredStartAt!)}'
+                ' · ${AppFormat.time(entry.offeredStartAt!)}\n'
+                'قول للفرع إيه المشكلة عشان العرض اللي بعده يبقى أقرب.',
+      content: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Wrap(
+            spacing: AppSpacing.s8.w,
+            runSpacing: AppSpacing.s8.h,
+            children: <Widget>[
+              for (final reason in _quickReasons)
+                AppChipWidget(
+                  label: reason,
+                  isSelected: _selected == reason,
+                  onTap: () => setState(() {
+                    _selected = _selected == reason ? null : reason;
+                    _controller.clear();
+                  }),
+                ),
+            ],
+          ),
+          verticalSpace(AppSpacing.s12),
+          TextField(
+            controller: _controller,
+            maxLines: 2,
+            maxLength: 300,
+            onChanged: (_) => setState(() => _selected = null),
+            decoration: const InputDecoration(
+              hintText: 'أو اكتب السبب بنفسك',
+              counterText: '',
             ),
-            verticalSpace(AppSpacing.s12),
-
-            Wrap(
-              spacing: AppSpacing.s8.w,
-              runSpacing: AppSpacing.s8.h,
-              children: <Widget>[
-                for (final reason in _quickReasons)
-                  _ReasonChip(
-                    label: reason,
-                    isSelected: _selected == reason,
-                    onTap: () => setState(() {
-                      _selected = _selected == reason ? null : reason;
-                      _controller.clear();
-                    }),
-                  ),
-              ],
-            ),
-
-            verticalSpace(AppSpacing.s12),
-            TextField(
-              controller: _controller,
-              maxLines: 2,
-              maxLength: 300,
-              onChanged: (_) => setState(() => _selected = null),
-              decoration: InputDecoration(
-                hintText: 'أو اكتب السبب بنفسك',
-                hintStyle: AppTextStyles.caption,
-                counterText: '',
-                border: OutlineInputBorder(borderRadius: AppRadius.rS),
-              ),
-            ),
-
-            verticalSpace(AppSpacing.s16),
-            AppButtonWidget(
-              label: 'ابعت للفرع',
-              // مقفول لحد ما يبقى فيه سبب — السيرفر هيرفض الطلب الفاضي
-              // بـ٤٢٢، وزرار بيدوس ويرجّع خطأ أوحش من زرار مقفول.
-              onPressed: _hasReason
-                  ? () => Navigator.of(context).pop(_reason)
-                  : null,
-            ),
-            verticalSpace(AppSpacing.s8),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
-}
-
-class _ReasonChip extends StatelessWidget {
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _ReasonChip({
-    required this.label,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: AppRadius.rPill,
-      child: Container(
-        // **`.r` مش `.h`** — هدف اللمس لازم يفضل ٤٤ في كل الاتجاهات.
-        constraints: BoxConstraints(minHeight: AppSpacing.touchTarget.r),
-        alignment: Alignment.center,
-        padding: EdgeInsetsDirectional.symmetric(
-          horizontal: AppSpacing.s12.w,
-        ),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppSemanticColors.accentSoft
-              : AppSemanticColors.surfaceSunken,
-          borderRadius: AppRadius.rPill,
-          border: isSelected
-              ? Border.all(color: AppSemanticColors.accent)
+      actions: [
+        AppButtonWidget(
+          label: 'ابعت للفرع',
+          // مقفول لحد ما يبقى فيه سبب — السيرفر هيرفض الطلب الفاضي
+          // بـ٤٢٢، وزرار بيدوس ويرجّع خطأ أوحش من زرار مقفول.
+          onPressed: _hasReason
+              ? () => Navigator.of(context).pop(_reason)
               : null,
         ),
-        child: Text(
-          label,
-          style: AppTextStyles.caption.copyWith(
-            color: isSelected
-                ? AppSemanticColors.accent
-                : AppSemanticColors.textOnSunken,
-          ),
-        ),
-      ),
+      ],
     );
   }
 }

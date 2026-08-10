@@ -2,13 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/core/models/waitlist_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/directional_chevron_widget.dart';
-import 'package:waqty_user_application/core/widgets/empty_state_widget.dart';
-import 'package:waqty_user_application/core/widgets/loading_widget.dart';
 import 'package:waqty_user_application/features/booking/waitlist/logic/waitlist_cubit.dart';
 import 'package:waqty_user_application/features/booking/waitlist/logic/waitlist_state.dart';
 import 'package:waqty_user_application/features/booking/waitlist/ui/widgets/waitlist_card_widget.dart';
@@ -57,63 +52,76 @@ class WaitlistScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // **[AppScreenHeaderWidget] جوه الـbody مش `AppBar`.**
+    //
+    // الـ`AppBar` هنا كان بيعيد كتابة أربع حاجات موجودة في `appBarTheme`
+    // أصلاً (`backgroundColor` · `surfaceTintColor` · `elevation` ·
+    // `centerTitle`) — يعني الشاشة دي كانت بتقول للثيم «مش واثقة فيك».
+    //
+    // هيدر الكيت بيعرّف الارتفاع بـ`heightOf` (بيكبر مع مقياس الخط بدل
+    // ما يفيض)، وزرار الرجوع بقى دايرة بهدف لمس كامل بدل `IconButton`.
     return Scaffold(
       backgroundColor: AppSemanticColors.page,
-      appBar: AppBar(
-        backgroundColor: AppSemanticColors.page,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: false,
-        leading: IconButton(
-          onPressed: () => Navigator.of(context).pop(),
-          // `back` مش معناها «شمال» — الـ widget بيسمّي الاتجاه بمعناه
-          // في اتجاه القراءة وفلاتر بيعكس الأيقونة لوحده في العربي.
-          icon: const DirectionalChevronWidget(
-            direction: ChevronDirection.back,
-          ),
-        ),
-        title: Text('قايمة الانتظار', style: AppTextStyles.titleLg),
-      ),
-      body: BlocBuilder<WaitlistCubit, WaitlistState>(
-        builder: (context, state) {
-          if (state is WaitlistLoadingState || state is WaitlistInitialState) {
-            return LoadingWidget(color: AppSemanticColors.accent);
-          }
-
-          if (state is WaitlistEmptyState) {
-            return const _EmptyWaitlist();
-          }
-
-          final ready = state as WaitlistReadyState;
-          final now = DateTime.now();
-          final entries = _sorted(ready.entries, now);
-
-          return ListView.separated(
-            padding: EdgeInsetsDirectional.fromSTEB(
-              AppSpacing.s16.w,
-              AppSpacing.s16.h,
-              AppSpacing.s16.w,
-              AppSpacing.s24.h,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: EdgeInsetsDirectional.symmetric(
+                horizontal: AppSpacing.pageGutter.w,
+              ),
+              child: AppScreenHeaderWidget(
+                title: 'قايمة الانتظار',
+                onBack: () => Navigator.of(context).pop(),
+              ),
             ),
-            itemCount: entries.length + 1,
-            separatorBuilder: (_, __) => verticalSpace(AppSpacing.s12),
-            itemBuilder: (context, index) {
-              if (index == 0) return const _WaitlistIntro();
-
-              final entry = entries[index - 1];
-              return WaitlistCardWidget(
-                entry: entry,
-                now: now,
-                // الصلاحيات من السيرفر — الكارت هو اللي بيقرر يرسم إيه،
-                // والشاشة بتوصّل الأفعال بس.
-                onRemove: () => WaitlistCubit.get(context).leaveQueue(entry.uuid),
-                onAccept: () => WaitlistCubit.get(context).acceptOffer(entry.uuid),
-                onRequestChange: () => _requestChange(context, entry),
-              );
-            },
-          );
-        },
+            Expanded(child: _body(context)),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _body(BuildContext context) {
+    return BlocBuilder<WaitlistCubit, WaitlistState>(
+      builder: (context, state) {
+        if (state is WaitlistLoadingState || state is WaitlistInitialState) {
+          return AppLoadingWidget(color: AppSemanticColors.accent);
+        }
+
+        if (state is WaitlistEmptyState) {
+          return const _EmptyWaitlist();
+        }
+
+        final ready = state as WaitlistReadyState;
+        final now = DateTime.now();
+        final entries = _sorted(ready.entries, now);
+
+        return ListView.separated(
+          padding: EdgeInsetsDirectional.fromSTEB(
+            AppSpacing.s16.w,
+            AppSpacing.s16.h,
+            AppSpacing.s16.w,
+            AppSpacing.s24.h,
+          ),
+          itemCount: entries.length + 1,
+          separatorBuilder: (_, __) => verticalSpace(AppSpacing.s12),
+          itemBuilder: (context, index) {
+            if (index == 0) return const _WaitlistIntro();
+
+            final entry = entries[index - 1];
+            return WaitlistCardWidget(
+              entry: entry,
+              now: now,
+              // الصلاحيات من السيرفر — الكارت هو اللي بيقرر يرسم إيه،
+              // والشاشة بتوصّل الأفعال بس.
+              onRemove: () => WaitlistCubit.get(context).leaveQueue(entry.uuid),
+              onAccept: () =>
+                  WaitlistCubit.get(context).acceptOffer(entry.uuid),
+              onRequestChange: () => _requestChange(context, entry),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -180,13 +188,14 @@ class _EmptyWaitlist extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const EmptyStateWidget(
+    return const AppEmptyStateWidget(
       icon: Icons.hourglass_empty_rounded,
       title: 'مش في أي قايمة انتظار',
       // **بيقول إزاي يدخل واحدة.** حالة فاضية بتوصف الفراغ بس بتسيب
       // العميل يخمّن الميزة دي بتتفتح منين — وهي بتتفتح من جوه شاشة
       // محل لما اليوم اللي عايزه مايبقاش فيه مواعيد.
-      message: 'لو اليوم اللي عايزه مافيهوش مواعيد، تقدر تدخل قايمة '
+      message:
+          'لو اليوم اللي عايزه مافيهوش مواعيد، تقدر تدخل قايمة '
           'الانتظار من صفحة المحل.',
     );
   }

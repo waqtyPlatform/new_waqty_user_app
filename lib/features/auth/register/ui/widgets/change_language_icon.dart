@@ -1,20 +1,21 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:waqty_user_application/core/utils/app_motion.dart';
-import 'package:waqty_user_application/core/utils/app_radius.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 
-/// مبدّل اللغة — قرص بيتزحلق بين «ع» و«EN».
+/// مبدّل اللغة في شاشة التسجيل.
 ///
-/// كان بيبني نفس النص مرتين في `Row` والاتنين بنفس اللون في الحالتين
-/// (`x ? green : green`)، يعني الشرط مكانش بيعمل حاجة والحرف اللي تحت القرص
-/// كان بيختفي فيه.
+/// ## كان قرص بيتزحلق، بقى [AppSegmentedWidget]
 ///
-/// دلوقتي حرف واحد لكل جنب وكل واحد لونه بيتحسب من مكان القرص فعلاً، والمدة
-/// من `AppMotion` — القديمة كانت `Duration(microseconds: 600)` (ميكرو مش
-/// ميلي)، يعني **٠٫٦ من الألف من الثانية**: الحركة كانت مش موجودة عمليًا.
+/// القديم كان `Container` أخضر جواه `Stack` و`AnimatedAlign` بقرص أبيض —
+/// ٤٠ سطر بيعملوا اللي الكيت بيعمله. واتشال منه كمان تلات أرقام خام
+/// (`64.w` · `32.h` · `28` والهامش `3.w`).
+///
+/// **والأهم إنه كان صعب يتقري**: خلفية خضرا مصمتة بحرف أبيض عليها كانت
+/// أعلى صوت في شاشة التسجيل كلها — أعلى من زرار «سجّل». الـsegmented
+/// لوح غاطس هادي، والمختار هو اللي بيرتفع.
+///
+/// **بيبان في التسجيل بس** — الحساب فيه صف «اللغة» بورقة اختيار.
 class ChangeLanguageIconWidget extends StatelessWidget {
   const ChangeLanguageIconWidget({super.key});
 
@@ -25,60 +26,18 @@ class ChangeLanguageIconWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final isEnglish = context.locale.languageCode == 'en';
 
-    return Semantics(
-      button: true,
-      label: isEnglish ? 'التبديل للعربية' : 'Switch to English',
-      child: InkWell(
-        onTap: () => context.setLocale(isEnglish ? _ar : _en),
-        borderRadius: BorderRadius.circular(AppRadius.pill),
-        child: Container(
-          width: 64.w,
-          height: 32.h,
-          decoration: BoxDecoration(
-            color: AppSemanticColors.accent,
-            borderRadius: BorderRadius.circular(AppRadius.pill),
-          ),
-          child: Stack(
-            children: [
-              AnimatedAlign(
-                duration: AppMotion.base,
-                curve: AppMotion.standard,
-                alignment: isEnglish
-                    ? AlignmentDirectional.centerStart
-                    : AlignmentDirectional.centerEnd,
-                child: Container(
-                  width: 28.w,
-                  height: 28.h,
-                  margin: EdgeInsetsDirectional.symmetric(horizontal: 3.w),
-                  decoration: BoxDecoration(
-                    color: AppSemanticColors.textOnAccent,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
-              Row(
-                children: [
-                  Expanded(child: _label('EN', isOnDisc: isEnglish)),
-                  Expanded(child: _label('ع', isOnDisc: !isEnglish)),
-                ],
-              ),
-            ],
-          ),
-        ),
+    // الـsegmented تباعه `Expanded`، فمحتاج عرض محدود — من غير كده بياخد
+    // الصف كله والوجو بيتزنق.
+    return SizedBox(
+      width: 104.w,
+      child: AppSegmentedWidget<Locale>(
+        value: isEnglish ? _en : _ar,
+        segments: const [
+          AppSegment(value: _ar, label: 'ع'),
+          AppSegment(value: _en, label: 'EN'),
+        ],
+        onChanged: context.setLocale,
       ),
     );
   }
-
-  /// اللي فوق القرص بياخد لون اللمسة، واللي على الخلفية الخضرا بياخد
-  /// [AppSemanticColors.textOnAccent].
-  Widget _label(String text, {required bool isOnDisc}) => Center(
-    child: Text(
-      text,
-      style: AppTextStyles.overline.copyWith(
-        color: isOnDisc
-            ? AppSemanticColors.accent
-            : AppSemanticColors.textOnAccent,
-      ),
-    ),
-  );
 }

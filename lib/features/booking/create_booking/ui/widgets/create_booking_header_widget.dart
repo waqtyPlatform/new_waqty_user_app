@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/core/models/branch_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_format.dart';
-import 'package:waqty_user_application/core/utils/app_radius.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
 import 'package:waqty_user_application/features/booking/create_booking/logic/create_booking_cubit.dart';
 
@@ -75,66 +71,28 @@ class CreateBookingHeaderWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // **[AppScreenHeaderWidget] — نفس الشكل بالظبط.**
+    //
+    // كان `Row` فيه دايرة رجوع + لابل في النص + `SizedBox(40.w)` بيوازن
+    // الناحية التانية عشان اللابل يقع في النص فعلاً. ده تعريف هيدر
+    // الكيت بالحرف، ومعاه: الارتفاع بيكبر مع مقياس الخط (`heightOf`)،
+    // ومقاس الأيقونة الخام (`24.r`) والمساحة الخام (`40.w`) اتشالوا.
+    //
+    // **زرار الرجوع كان مفيش خالص** قبل كده. `previousStep()` كانت
+    // مكتوبة في الـ cubit من الأول و**صفر callers** — wizard بتلات
+    // خطوات من غير رجوع بيخلي العميل يخرج من الـ sheet كله عشان يعدّل
+    // حاجة، وخروجه بيرمي السلة.
+    //
+    // ⚠ **مفيش `AppStepperWidget`.** الكيت شايل واحد، والويزارد ده كان
+    // فيه `CreateBookingStepperWidget` بتلات نقط **واتشال بقرار**: تلات
+    // نقط بتدّعي تلات وحدات شغل متساوية، وحجز بتلات خدمات **١٢ قرار**
+    // حداشر منهم جوه النقطة التانية. مؤشر بيقرا أقل من الحقيقة أوحش من
+    // إنه مايبقاش موجود. اللابل النصي تحت بيعدّ **الشغل** مش المراحل.
     return Padding(
       padding: EdgeInsetsDirectional.symmetric(
         horizontal: AppSpacing.pageGutter.w,
       ),
-      child: Row(
-        children: [
-          // **زرار الرجوع — كان مفيش خالص.**
-          //
-          // `previousStep()` كانت مكتوبة في الـ cubit من الأول و**صفر
-          // callers**. wizard بتلات خطوات من غير رجوع بيخلي العميل يخرج
-          // من الـ sheet كله عشان يعدّل حاجة — وخروجه بيرمي السلة.
-          SizedBox(
-            width: AppSpacing.touchTarget.w,
-            child: onBack == null
-                ? const SizedBox.shrink()
-                : IconButton(
-                    onPressed: onBack,
-                    tooltip: 'رجوع',
-                    padding: EdgeInsets.zero,
-                    constraints: BoxConstraints(
-                      minWidth: AppSpacing.touchTarget.w,
-                      minHeight: AppSpacing.touchTarget.h,
-                    ),
-                    // `arrow_back` مش `arrow_forward`: فلاتر بيقلب
-                    // الاتنين لوحده في الـ RTL، فـ`forward` كانت بتشاور
-                    // **شمال** في العربي — إشارة «كمّل» على زرار رجوع.
-                    icon: Icon(
-                      Icons.arrow_back_rounded,
-                      size: 24.r,
-                      color: AppSemanticColors.textPrimary,
-                    ),
-                  ),
-          ),
-
-          Expanded(
-            child: Center(
-              child: Text(
-                _progressLabel,
-                // **`sectionHeader` (١٨) مش `label` (١٤).**
-                //
-                // السطر ده بقى **العنوان الوحيد** للـ sheet بعد ما شيلنا
-                // العنوان المكرر من مختار الخدمات — بس فضل بحجمه القديم
-                // لما كان مجرد مؤشر خطوة جنب عنوان أكبر منه. النتيجة إن
-                // الشاشة بقت من غير عنوان يقود.
-                //
-                // والحجم ده هو اللي الأبلكيشن مخصصه أصلاً لعناوين الـ
-                // AppBar والـ sheets — يعني الـ sheet بقى متسق مع كل
-                // شاشة تانية بدل ما يبقى استثناء.
-                style: AppTextStyles.sectionHeader,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ),
-
-          // مساحة مكافئة لزرار الرجوع عشان اللابل يقع في نص الـ sheet
-          // فعلاً — من غيرها بيتزح لناحية واحدة والرأس يبان مايل.
-          SizedBox(width: 40.w),
-        ],
-      ),
+      child: AppScreenHeaderWidget(title: _progressLabel, onBack: onBack),
     );
   }
 
@@ -148,9 +106,10 @@ class CreateBookingHeaderWidget extends StatelessWidget {
   /// فعلاً. في الخطوتين التانيتين بنقول اسم الخطوة وخلاص.
   String get _progressLabel => switch (currentStep) {
     BookingStep.service => 'اختار الخدمات',
-    BookingStep.dateTime => totalCount <= 1
-        ? 'اختار الميعاد'
-        : 'خدمة ${AppFormat.digits(_currentItem)} من ${AppFormat.digits(totalCount)}',
+    BookingStep.dateTime =>
+      totalCount <= 1
+          ? 'اختار الميعاد'
+          : 'خدمة ${AppFormat.digits(_currentItem)} من ${AppFormat.digits(totalCount)}',
     BookingStep.confirm => 'مراجعة الحجز',
   };
 

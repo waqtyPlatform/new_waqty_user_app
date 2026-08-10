@@ -1,9 +1,8 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:waqty_user_application/core/widgets/auth_header_widget.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
-import 'package:waqty_user_application/core/utils/assets_manager.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
 import 'package:waqty_user_application/features/auth/register/logic/register_cubit.dart';
 import 'package:waqty_user_application/features/auth/register/ui/widgets/change_language_icon.dart';
@@ -39,26 +38,12 @@ class RegisterScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                verticalSpace(AppSpacing.s16),
-                Row(
-                  children: [
-                    Image.asset(ImageAsset.logoImage, height: 50),
-                    const Spacer(),
-                    const ChangeLanguageIconWidget(),
-                  ],
+                AuthHeaderWidget(
+                  showLogo: true,
+                  trailing: const ChangeLanguageIconWidget(),
+                  title: context.tr('register.title'),
+                  description: context.tr('register.description'),
                 ),
-
-                verticalSpace(AppSpacing.s16),
-                Text(
-                  context.tr('register.title'),
-                  style: AppTextStyles.titleXl,
-                ),
-                verticalSpace(AppSpacing.s8),
-                Text(
-                  context.tr('register.description'),
-                  style: AppTextStyles.bodyMdMuted,
-                ),
-                verticalSpace(AppSpacing.s32),
 
                 const RegisterNameWidget(),
                 verticalSpace(AppSpacing.s16),

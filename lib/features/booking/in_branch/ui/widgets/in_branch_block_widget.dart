@@ -1,13 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:waqty_user_application/core/models/booking_ui_model.dart';
 import 'package:waqty_user_application/core/models/in_branch_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_motion.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/app_hairline_widget.dart';
-import 'package:waqty_user_application/core/widgets/app_surface_widget.dart';
 
 /// بلوك «إنت في الفرع» — بيقعد في **صفحة تفاصيل الحجز**.
 ///
@@ -51,7 +46,7 @@ class InBranchBlockWidget extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // اللابل من ألفاظ السيرفر — نفس الكلمة اللي على الداشبورد.
-          Text(data.label, style: AppTextStyles.sectionLabel),
+          Text(data.label, style: AppTextStyles.overline),
           verticalSpace(AppSpacing.s4),
 
           // العنوان بيتبدّل بتلاشي لما الحالة تتقدّم. الـ key على **نص**

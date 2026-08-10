@@ -1,122 +1,213 @@
-import 'dart:math' as math;
-
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 
-/// نسبة التباين بين لونين — نفس معادلة WCAG 2.1.
-double _contrast(Color a, Color b) {
-  final la = _luminance(a);
-  final lb = _luminance(b);
-  return (math.max(la, lb) + 0.05) / (math.min(la, lb) + 0.05);
-}
+import 'wcag.dart';
 
-double _luminance(Color c) {
-  double channel(double v) =>
-      v <= 0.03928 ? v / 12.92 : math.pow((v + 0.055) / 1.055, 2.4).toDouble();
-
-  return 0.2126 * channel(c.r) +
-      0.7152 * channel(c.g) +
-      0.0722 * channel(c.b);
-}
-
-/// **الأسطح الغامقة لازم تشيل نصها.**
+/// **التباين في الوضع الفاتح.**
 ///
-/// الباج اللي الاختبارات دي بتمنع رجوعه: الشريط بيقلب من الحبر للأخضر
-/// و**الألوان اللي فوقه تفضل زي ما هي**. `textOnInkMuted` معمول للحبر،
-/// وعلى الأخضر كان بيدي **1.35:1** — يعني «متوقع تخلص 6:45 م» كانت
-/// مرسومة ومش مقروءة.
+/// الملف ده `test` عادي مش `testWidgets` عن قصد: بيختبر **التوكن** مش
+/// الـ`TextStyle`. `AppTextStyles` محتاج `ScreenUtil` تكون اتهيّأت عشان
+/// `.sp`، والعقد اللي بينكسر فعلًا هو قيمة التوكن مش الستايل اللي بيلفّها.
 ///
-/// و`accent` نفسه مكانش ينفع خلفية أصلاً: حتى **الأبيض الصافي** عليه
-/// 3.96:1، أقل من الحد. فاللون اتغمق مش النص بس.
+/// الوضع الغامق في `dark_mode_test.dart`.
 void main() {
-  // الحد الأدنى لنص صغير في WCAG AA.
-  const small = 4.5;
+  setUp(() => AppSemanticColors.apply(Brightness.light));
 
-  // نص كبير (≥18pt أو ≥14pt عريض) — العنوان بتاع الشريط ٤٠sp.
-  const large = 3.0;
-
-  group('طقم الحبر', () {
-    test('النص الأساسي فوق الحد', () {
+  group('طقم الحبر — النص على الأسطح الفاتحة', () {
+    test('النص الأساسي', () {
       expect(
-        _contrast(AppSemanticColors.textOnInk, AppSemanticColors.surfaceInk),
-        greaterThan(small),
+        contrast(AppSemanticColors.textPrimary, AppSemanticColors.page),
+        greaterThan(kAaSmall),
+      );
+      expect(
+        contrast(
+          AppSemanticColors.textPrimary,
+          AppSemanticColors.surfaceRaised,
+        ),
+        greaterThan(kAaSmall),
       );
     });
 
-    test('النص الثانوي فوق الحد', () {
+    test('النص الثانوي بيعدّي على التلات أسطح', () {
+      for (final surface in <String, Color>{
+        'page': AppSemanticColors.page,
+        'surfaceRaised': AppSemanticColors.surfaceRaised,
+        'surfaceSunken': AppSemanticColors.surfaceSunken,
+      }.entries) {
+        expect(
+          contrast(AppSemanticColors.textSecondary, surface.value),
+          greaterThan(kAaSmall),
+          reason: 'النص الثانوي وقع على ${surface.key}',
+        );
+      }
+    });
+
+    test('النص على الحبر وعلى المقلوب', () {
       expect(
-        _contrast(
+        contrast(AppSemanticColors.textOnInk, AppSemanticColors.surfaceInk),
+        greaterThan(kAaSmall),
+      );
+      expect(
+        contrast(
           AppSemanticColors.textOnInkMuted,
           AppSemanticColors.surfaceInk,
         ),
-        greaterThan(small),
+        greaterThan(kAaSmall),
+      );
+      expect(
+        contrast(
+          AppSemanticColors.textOnInverse,
+          AppSemanticColors.surfaceInverse,
+        ),
+        greaterThan(kAaSmall),
       );
     });
   });
 
-  group('طقم الأخضر الغامق', () {
-    test('النص الأساسي فوق الحد', () {
+  group('السطح الأخضر الغامق', () {
+    test('النص الأساسي والثانوي عليه بيعدّوا', () {
       expect(
-        _contrast(
-          AppSemanticColors.textOnAccent,
+        contrast(
+          AppSemanticColors.textOnAccentDeep,
           AppSemanticColors.surfaceAccentDeep,
         ),
-        greaterThan(small),
+        greaterThan(kAaSmall),
+        reason: 'أبيض على #00693C',
       );
-    });
-
-    test('النص الثانوي فوق الحد', () {
       expect(
-        _contrast(
+        contrast(
           AppSemanticColors.textOnAccentMuted,
           AppSemanticColors.surfaceAccentDeep,
         ),
-        greaterThan(small),
+        greaterThan(kAaSmall),
       );
     });
   });
 
-  group('الطقم الغلط بيسقط — ده اللي كان بيحصل', () {
-    test('رمادي الحبر على الأخضر مابيعديش حتى للنص الكبير', () {
+  group('الطقم الغلط بيرسب — ده اللي بيحصل في employee-app دلوقتي', () {
+    // النفيات دي مش زيادة. كل واحدة فيهم **بتثبّت سبب وجود توكن**؛
+    // من غيرها حد يقدر يشيل التوكن ويعدّي كل الاختبارات الإيجابية.
+
+    test('أبيض على اللمسة الخضرا راسب — عشان كده accentDeep موجود', () {
+      // زرار employee-app الأساسي: أبيض على #009354، ١٦٥ استخدام.
       expect(
-        _contrast(
-          AppSemanticColors.textOnInkMuted,
-          AppSemanticColors.surfaceAccentDeep,
+        contrast(const Color(0xffFFFFFF), AppSemanticColors.accent),
+        lessThan(kAaSmall),
+        reason: 'لو ده بقى بيعدّي، accentDeep مالوش لازمة',
+      );
+      // بس بيعدّي عتبة الرسومات — الأيقونة الخضرا مش مشكلة، النص هو المشكلة.
+      expect(
+        contrast(const Color(0xffFFFFFF), AppSemanticColors.accent),
+        greaterThan(kAaLarge),
+      );
+    });
+
+    test('الأحمر على خلفيته الوردية راسب — عشان كده dangerOnSoft موجود', () {
+      expect(
+        contrast(AppSemanticColors.danger, AppSemanticColors.dangerSoft),
+        lessThan(kAaSmall),
+      );
+      expect(
+        contrast(AppSemanticColors.dangerOnSoft, AppSemanticColors.dangerSoft),
+        greaterThan(kAaSmall),
+      );
+    });
+
+    test('الأخضر كنص راسب — عشان كده accentText موجود', () {
+      // الرابط و«شوف الكل» والزرار الثانوي.
+      expect(
+        contrast(AppSemanticColors.accent, AppSemanticColors.page),
+        lessThan(kAaSmall),
+        reason: 'لو ده بقى بيعدّي، accentText مالوش لازمة',
+      );
+      expect(
+        contrast(AppSemanticColors.accentText, AppSemanticColors.page),
+        greaterThan(kAaSmall),
+      );
+      expect(
+        contrast(AppSemanticColors.accentText, AppSemanticColors.surfaceRaised),
+        greaterThan(kAaSmall),
+      );
+    });
+
+    test('textTertiary مش نص — راسب على الصفحة بقصد', () {
+      expect(
+        contrast(AppSemanticColors.textTertiary, AppSemanticColors.page),
+        lessThan(kAaSmall),
+        reason: 'لو بقى بيعدّي، الاسم بقى بيكدب — ده لون معطّل',
+      );
+    });
+
+    test('ألوان employee-app اللي اتشالت كانت راسبة فعلًا', () {
+      const white = Color(0xffFFFFFF);
+      // greyColorA3 — كان النص الثانوي في ~٣٠ ستايل.
+      expect(contrast(const Color(0xffA3A3A3), white), lessThan(kAaSmall));
+      // greyColor4002 — التاني.
+      expect(contrast(const Color(0xff818898), white), lessThan(kAaSmall));
+      // warningColor1001 — كان بيتكتب كنص.
+      expect(contrast(const Color(0xffEAB308), white), lessThan(kAaLarge));
+      // واللي حلّهم بيعدّي.
+      expect(
+        contrast(AppSemanticColors.textSecondary, white),
+        greaterThan(kAaSmall),
+      );
+      expect(contrast(AppSemanticColors.warning, white), greaterThan(kAaSmall));
+    });
+  });
+
+  group('الحالات على خلفياتها الخفيفة', () {
+    test('كل زوج حالة/soft بيعدّي', () {
+      final pairs = <String, (Color, Color)>{
+        'dangerOnSoft': (
+          AppSemanticColors.dangerOnSoft,
+          AppSemanticColors.dangerSoft,
         ),
-        lessThan(large),
-      );
-    });
+        'warning': (AppSemanticColors.warning, AppSemanticColors.warningSoft),
+        'positive': (
+          AppSemanticColors.positive,
+          AppSemanticColors.positiveSoft,
+        ),
+        'info': (AppSemanticColors.info, AppSemanticColors.infoSoft),
+      };
 
-    test('لهجة الزراير مابتنفعش خلفية شريط', () {
-      // `accent` معمول عشان يقعد **على** صفحة فاتحة. لو رجع خلفية،
-      // الأبيض عليه بيسقط تحت الحد — فالاختبار ده بيثبّت السبب.
-      expect(
-        _contrast(AppSemanticColors.textOnAccent, AppSemanticColors.accent),
-        lessThan(small),
-      );
+      for (final entry in pairs.entries) {
+        expect(
+          contrast(entry.value.$1, entry.value.$2),
+          greaterThan(kAaSmall),
+          reason: '${entry.key} وقع على خلفيته',
+        );
+      }
     });
   });
 
-  group('أحمر الخصم', () {
-    test('مقروء على الكارت الأبيض', () {
-      // الخصم بقى أحمر بقرار المالك. لو الأحمر مادّاش الحد بيبقى
-      // «تحذير مش مقروء» — أوحش من الرمادي اللي كان قبله.
-      //
-      // بنختبر التوكن مش الـ `TextStyle`: `AppTextStyles` محتاج
-      // `ScreenUtil` متهيّأ (بيحسب الـ sp من مقاس الشاشة)، والعقد اللي
-      // بيتكسر لو حد غيّر اللون هو التوكن.
+  group('الحد باين', () {
+    // الحد بيترسم على الكارت مش على الصفحة — الكارت بينفصل عن الصفحة
+    // بالظل. فالقياس على الكارت.
+    test('border و borderStrong باينين على الكارت', () {
       expect(
-        _contrast(AppSemanticColors.danger, AppSemanticColors.surfaceRaised),
-        greaterThan(small),
+        contrast(AppSemanticColors.border, AppSemanticColors.surfaceRaised),
+        greaterThan(kBorderVisible),
+      );
+      expect(
+        contrast(
+          AppSemanticColors.borderStrong,
+          AppSemanticColors.surfaceRaised,
+        ),
+        greaterThan(1.5),
       );
     });
 
-    test('متميّز عن نص السعر العادي', () {
-      // لو الاتنين قربوا من بعض، الشطب يبقى هو الإشارة الوحيدة —
-      // والشطب لوحده بيضيع في صف فيه أرقام كتير.
-      expect(AppSemanticColors.danger, isNot(AppSemanticColors.textPrimary));
-      expect(AppSemanticColors.danger, isNot(AppSemanticColors.textSecondary));
+    test('borderStrong أقوى من border فعلًا', () {
+      expect(
+        contrast(
+          AppSemanticColors.borderStrong,
+          AppSemanticColors.surfaceRaised,
+        ),
+        greaterThan(
+          contrast(AppSemanticColors.border, AppSemanticColors.surfaceRaised),
+        ),
+      );
     });
   });
 }

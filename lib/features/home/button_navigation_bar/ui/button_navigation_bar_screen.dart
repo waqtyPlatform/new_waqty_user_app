@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:waqty_user_application/config/routes/routes.dart';
 import 'package:waqty_user_application/core/models/booking_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/extentions.dart';
 import 'package:waqty_user_application/features/account/account/logic/account_cubit.dart';
 import 'package:waqty_user_application/features/account/account/ui/account_screen.dart';
@@ -14,7 +14,6 @@ import 'package:waqty_user_application/features/booking/waitlist/logic/waitlist_
 import 'package:waqty_user_application/features/booking/my_bookings/ui/my_bookings_screen.dart';
 import 'package:waqty_user_application/features/home/button_navigation_bar/logic/button_navigation_bar_cubit.dart';
 import 'package:waqty_user_application/features/home/button_navigation_bar/logic/button_navigation_bar_state.dart';
-import 'package:waqty_user_application/features/home/button_navigation_bar/ui/widgets/app_bottom_nav_widget.dart';
 import 'package:waqty_user_application/features/home/home/logic/home_cubit.dart';
 import 'package:waqty_user_application/features/home/home/ui/home_screen.dart';
 import 'package:waqty_user_application/features/providers/providers_list/logic/providers_list_cubit.dart';
@@ -101,9 +100,20 @@ class ButtonNavigationBarScreen extends StatelessWidget {
           // فوق الـ SafeArea عن قصد — الـ inset التحتاني شغل شريط التبويبات
           // اللي تحته، والشريط ده مش ملزوق في حافة الجهاز.
           _inBranchBanner(context, live),
+          // التحويل من `NavTab` لـ`AppNavItem` بيتعمل هنا مش في الـ cubit —
+          // الـ cubit مايعرفش الديزاين سيستم، والشريط مايعرفش راوتات
+          // التطبيق. الاتنين بيتقابلوا في الشاشة بس.
           AppBottomNavWidget(
+            items: [
+              for (final tab in ButtonNavigationBarCubit.tabs)
+                AppNavItem(
+                  label: tab.label,
+                  icon: tab.icon,
+                  activeIcon: tab.activeIcon,
+                ),
+            ],
             currentIndex: cubit.currentIndex,
-            onTabTap: cubit.changeIndex,
+            onTap: cubit.changeIndex,
           ),
         ],
       ),

@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:waqty_user_application/config/themes/app_theme.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/mock/mock_bookings.dart';
 import 'package:waqty_user_application/core/mock/mock_services.dart';
 import 'package:waqty_user_application/core/models/booking_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
 import 'package:waqty_user_application/features/booking/booking_details/logic/booking_details_cubit.dart';
 import 'package:waqty_user_application/features/booking/booking_details/ui/booking_details_screen.dart';
 import 'package:waqty_user_application/features/booking/booking_details/ui/widgets/booking_details_info_widget.dart';
@@ -46,10 +44,7 @@ void main() {
             child: Directionality(
               textDirection: TextDirection.rtl,
               child: Scaffold(
-                body: ListView(
-                  padding: AppSpacing.page,
-                  children: [child],
-                ),
+                body: ListView(padding: AppSpacing.page, children: [child]),
               ),
             ),
           ),

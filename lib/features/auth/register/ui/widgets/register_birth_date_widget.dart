@@ -2,8 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
-import 'package:waqty_user_application/core/widgets/app_text_field.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/features/auth/register/logic/register_cubit.dart';
 import 'package:waqty_user_application/features/auth/register/logic/register_state.dart';
 
@@ -15,19 +14,21 @@ class RegisterBirthDateWidget extends StatelessWidget {
     return BlocBuilder<RegisterCubit, RegisterState>(
       buildWhen: (previous, current) => current is OnChangeBirthDateState,
       builder: (context, state) {
-        return AppTextFormField(
+        return AppFieldWidget(
           label: context.tr('register.birthDateText'),
-          hintText: context.tr('register.enterBirthDateText'),
-          controller: RegisterCubit.get(context).registerBirthDateController,
-          // `readOnly` مش `keyboardType: none` — التانية بتمنع الكيبورد بس
-          // وبتسيب العميل يلزق نص في حقل المفروض المنتقي هو اللي يملاه.
-          readOnly: true,
-          suffixIcon: Icon(
-            Icons.calendar_today_rounded,
-            color: AppSemanticColors.textTertiary,
-            size: 20.r,
+          child: AppTextFormField(
+            hintText: context.tr('register.enterBirthDateText'),
+            controller: RegisterCubit.get(context).registerBirthDateController,
+            // `readOnly` مش `keyboardType: none` — التانية بتمنع الكيبورد بس
+            // وبتسيب العميل يلزق نص في حقل المفروض المنتقي هو اللي يملاه.
+            readOnly: true,
+            suffixIcon: Icon(
+              Icons.calendar_today_rounded,
+              color: AppSemanticColors.textTertiary,
+              size: 20.r,
+            ),
+            onTap: () => _selectDate(context),
           ),
-          onTap: () => _selectDate(context),
         );
       },
     );

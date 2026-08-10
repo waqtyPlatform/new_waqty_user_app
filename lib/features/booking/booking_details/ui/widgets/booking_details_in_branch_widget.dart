@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:waqty_user_application/core/models/booking_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_motion.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/features/booking/in_branch/logic/in_branch_cubit.dart';
 import 'package:waqty_user_application/features/booking/in_branch/logic/in_branch_state.dart';
 import 'package:waqty_user_application/features/booking/in_branch/ui/widgets/in_branch_block_widget.dart';

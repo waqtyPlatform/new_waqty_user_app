@@ -169,7 +169,10 @@ void main() {
       final booking = bookingFor(MockScenario.waitingInBranch);
       final data = MockInBranch.forBooking(booking, DateTime.now())!;
 
-      expect(data.estimateHigh!.inMinutes, greaterThan(data.estimateLow!.inMinutes));
+      expect(
+        data.estimateHigh!.inMinutes,
+        greaterThan(data.estimateLow!.inMinutes),
+      );
     });
   });
 

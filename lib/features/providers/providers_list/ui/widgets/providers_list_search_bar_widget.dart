@@ -1,16 +1,20 @@
-import 'package:waqty_user_application/core/utils/app_radius.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 
 /// شريط البحث الحقيقي.
 ///
 /// الـ controller جاي من الـ Cubit مش متعمل هنا — القديم كان بيتعمل جوه
 /// `build()` فأي rebuild كان بيمسح اللي العميل كتبه.
 ///
-/// الحقل غاطس فوق صفحة دافية، يعني كل اللي جواه ماشي على قاعدة
-/// [AppSemanticColors.textOnSunken] — مفيش حاجة أفتح من كده تقعد على الغاطس.
+/// ## بقى [AppSearchFieldWidget]
+///
+/// اتشال ٤٥ سطر `InputDecoration` مكتوب بالإيد: تلات `OutlineInputBorder`،
+/// وحشوة رأسية خام (`14.h`)، وسُمك حد خام (`1.5.r`)، ومقاسين أيقونة
+/// (`22.r` و`20.r`).
+///
+/// **الحقل بقى مرفوع مش غاطس.** ده اللي `inputDecorationTheme` بيقوله لكل
+/// حقول الأبلكيشن، والبحث كان الاستثناء الوحيد — يعني كان أول حقل العميل
+/// يشوفه في تبويب «استكشاف» شكله مختلف عن كل حقل تاني.
 class ProvidersListSearchBarWidget extends StatelessWidget {
   final TextEditingController controller;
   final bool autofocus;
@@ -27,50 +31,12 @@ class ProvidersListSearchBarWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
+    return AppSearchFieldWidget(
+      hintText: 'دوّر على صالون أو منطقة',
       controller: controller,
       autofocus: autofocus,
-      textInputAction: TextInputAction.search,
       onChanged: (_) => onChanged(),
-      style: AppTextStyles.bodyMd,
-      decoration: InputDecoration(
-        hintText: 'دوّر على صالون أو منطقة',
-        // اللون متكتوب صريح مش مستني `bodyMdMuted` — لو اتظبط يوم لأفتح،
-        // الهنت هنا **مايتأثرش**.
-        hintStyle: AppTextStyles.bodyMdMuted.copyWith(
-          color: AppSemanticColors.textOnSunken,
-        ),
-        filled: true,
-        fillColor: AppSemanticColors.surfaceSunken,
-        prefixIcon: Icon(
-          Icons.search_rounded,
-          size: 22.r,
-          color: AppSemanticColors.textOnSunken,
-        ),
-        suffixIcon: controller.text.isEmpty
-            ? null
-            : IconButton(
-                onPressed: onClear,
-                icon: Icon(
-                  Icons.close_rounded,
-                  size: 20.r,
-                  color: AppSemanticColors.textOnSunken,
-                ),
-              ),
-        contentPadding: EdgeInsetsDirectional.symmetric(vertical: 14.h),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.s.r),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.s.r),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.s.r),
-          borderSide: BorderSide(color: AppSemanticColors.accent, width: 1.5.r),
-        ),
-      ),
+      onClear: onClear,
     );
   }
 }

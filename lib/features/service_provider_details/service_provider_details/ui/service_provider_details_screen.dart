@@ -3,22 +3,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/config/routes/routes.dart';
 import 'package:waqty_user_application/core/mock/mock_services.dart';
+import 'package:waqty_user_application/core/models/branch_ui_model.dart';
 import 'package:waqty_user_application/core/models/service_ui_model.dart';
 import 'package:waqty_user_application/core/utils/app_constant.dart';
-import 'package:waqty_user_application/core/utils/app_format.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/app_section_header_widget.dart';
-import 'package:waqty_user_application/core/widgets/error_state_widget.dart';
-import 'package:waqty_user_application/core/widgets/loading_widget.dart';
 import 'package:waqty_user_application/features/booking/create_booking/ui/create_booking_sheet.dart';
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/logic/service_provider_details_cubit.dart';
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/logic/service_provider_details_state.dart';
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/widgets/service_provider_details_actions_widget.dart';
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/widgets/service_provider_details_booking_bar_widget.dart';
-import 'package:waqty_user_application/core/widgets/skeleton_box_widget.dart';
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/widgets/service_provider_details_branch_row_widget.dart';
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/widgets/service_provider_details_header_widget.dart';
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/widgets/service_provider_details_meta_widget.dart';
@@ -41,7 +35,10 @@ class ServiceProviderDetailsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ServiceProviderDetailsCubit, ServiceProviderDetailsState>(
+    return BlocBuilder<
+      ServiceProviderDetailsCubit,
+      ServiceProviderDetailsState
+    >(
       builder: (context, state) {
         final cubit = ServiceProviderDetailsCubit.get(context);
 
@@ -50,7 +47,7 @@ class ServiceProviderDetailsScreen extends StatelessWidget {
             body: Center(
               child: Padding(
                 padding: EdgeInsetsDirectional.symmetric(horizontal: 16.w),
-                child: ErrorStateWidget(
+                child: AppErrorStateWidget(
                   message: state.message,
                   onRetry: cubit.loadDetails,
                 ),
@@ -63,7 +60,7 @@ class ServiceProviderDetailsScreen extends StatelessWidget {
         if (provider == null) {
           return Scaffold(
             body: Center(
-              child: LoadingWidget(color: AppSemanticColors.accent),
+              child: AppLoadingWidget(color: AppSemanticColors.accent),
             ),
           );
         }
@@ -77,7 +74,8 @@ class ServiceProviderDetailsScreen extends StatelessWidget {
           // مكتوبة بالإيد لازم تتظبط كل ما الشريط يتغيّر.
           // `isReloadingBranch` في الشرط عشان الشريط مايختفيش ويرجع في
           // اللحظة اللي الخدمات فيها بتتحمّل — الوميض بيقرا عطل.
-          bottomNavigationBar: cubit.services.isEmpty && !cubit.isReloadingBranch
+          bottomNavigationBar:
+              cubit.services.isEmpty && !cubit.isReloadingBranch
               ? null
               : ServiceProviderDetailsBookingBarWidget(
                   services: cubit.services,
@@ -118,11 +116,7 @@ class ServiceProviderDetailsScreen extends StatelessWidget {
                         onChangeBranch: () => _showBranchSheet(context, cubit),
                       ),
                       verticalSpace(AppSpacing.listRowGap),
-                      ServiceProviderDetailsHoursWidget(
-                        branch: branch,
-                        isExpanded: cubit.isWorkingHoursExpanded,
-                        onToggle: cubit.toggleWorkingHours,
-                      ),
+                      ServiceProviderDetailsHoursWidget(branch: branch),
                       verticalSpace(AppSpacing.listRowGap),
                       ServiceProviderDetailsActionsWidget(
                         onCall: branch.phone.isEmpty
@@ -154,7 +148,7 @@ class ServiceProviderDetailsScreen extends StatelessWidget {
               // أرقام مش بتاعة المكان اللي هو مختاره دلوقتي.
               if (cubit.isReloadingBranch)
                 SliverToBoxAdapter(
-                  child: SkeletonGroupWidget(
+                  child: AppSkeletonGroupWidget(
                     child: Column(
                       children: List<Widget>.generate(
                         3,
@@ -163,10 +157,9 @@ class ServiceProviderDetailsScreen extends StatelessWidget {
                             horizontal: AppSpacing.pageGutter.w,
                             vertical: AppSpacing.s12.h,
                           ),
-                          child: const SkeletonBoxWidget(
+                          child: const AppSkeletonBoxWidget(
                             width: double.infinity,
                             height: 40,
-                            animate: false,
                           ),
                         ),
                       ),
@@ -245,47 +238,31 @@ class ServiceProviderDetailsScreen extends StatelessWidget {
     );
     if (children.isEmpty) return;
 
-    final picked = await showModalBottomSheet<ServiceUiModel>(
-      context: context,
-      useSafeArea: true,
-      isScrollControlled: true,
-      builder: (sheetContext) => Padding(
-        padding: EdgeInsetsDirectional.all(AppSpacing.s16.r),
-        child: Column(
+    // الصفوف بقت [AppMenuRowWidget]: الاسم، تحته المدة، والسعر على الطرف
+    // التاني. نفس اللي `ListTile` كان بيعمله بس بحشوة من سلّم المسافات.
+    final picked = await AppSheetWidget.show<ServiceUiModel>(
+      context,
+      title: category.name,
+      message: 'الأسعار والمدد بيختلفوا حسب النوع',
+      content: Builder(
+        builder: (sheetContext) => Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(category.name, style: AppTextStyles.sectionHeader),
-            verticalSpace(AppSpacing.s4),
-            Text(
-              'الأسعار والمدد بيختلفوا حسب النوع',
-              style: AppTextStyles.caption,
-            ),
-            verticalSpace(AppSpacing.s16),
-            Flexible(
-              child: ListView(
-                shrinkWrap: true,
-                children: [
-                  for (final child in children)
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(child.name, style: AppTextStyles.cardTitle),
-                      subtitle: Text(
-                        AppFormat.duration(child.durationMinutes),
-                        style: AppTextStyles.caption,
-                      ),
-                      trailing: Text(
-                        AppFormat.money(child.price),
-                        style: AppTextStyles.bodyMdStrong,
-                      ),
-                      onTap: () => Navigator.of(sheetContext).pop(child),
-                    ),
-                ],
+            for (final child in children)
+              AppMenuRowWidget(
+                title: child.name,
+                subtitle: AppFormat.duration(child.durationMinutes),
+                showChevron: false,
+                trailing: Text(
+                  AppFormat.money(child.price),
+                  style: AppTextStyles.bodyMdStrong,
+                ),
+                onTap: () => Navigator.of(sheetContext).pop(child),
               ),
-            ),
           ],
         ),
       ),
+      actions: (_) => const [],
     );
 
     if (picked != null && context.mounted) {
@@ -317,43 +294,36 @@ class ServiceProviderDetailsScreen extends StatelessWidget {
     BuildContext context,
     ServiceProviderDetailsCubit cubit,
   ) {
-    showModalBottomSheet<void>(
-      context: context,
-      useSafeArea: true,
-      builder: (_) => Padding(
-        padding: EdgeInsetsDirectional.only(
-          start: AppSpacing.s16.w,
-          end: AppSpacing.s16.w,
-          top: AppSpacing.s8.h,
-          bottom: AppSpacing.s16.h,
-        ),
-        child: Column(
+    // **اختيار واحد من عدة، فـ[AppChoiceRowWidget] بنمط الراديو.**
+    //
+    // كان `ListTile` بأيقونة صح على المختار — والصح بيقول «ده اتعمل»، مش
+    // «ده المختار من بين دول». الراديو بيقول الاتنين: فيه اختيارات تانية،
+    // وده الشغّال دلوقتي.
+    //
+    // والورقة بترجّع الفرع، والشاشة هي اللي بتبدّله — نفس مبدأ الكيت.
+    AppSheetWidget.show<BranchUiModel>(
+      context,
+      title: 'اختار الفرع',
+      content: Builder(
+        builder: (sheetContext) => Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('اختار الفرع', style: AppTextStyles.sectionHeader),
-            verticalSpace(AppSpacing.s12),
-            ...cubit.branches.map(
-              (branch) => ListTile(
-                title: Text(branch.name),
-                subtitle: Text(
-                  '${branch.address} · ${AppFormat.distance(branch.distanceKm)}',
-                ),
-                trailing: branch.uuid == cubit.selectedBranch?.uuid
-                    ? Icon(
-                        Icons.check_circle_rounded,
-                        color: AppSemanticColors.accent,
-                      )
-                    : null,
-                onTap: () {
-                  cubit.changeBranch(branch);
-                  Navigator.of(context).pop();
-                },
+            for (final branch in cubit.branches)
+              AppChoiceRowWidget(
+                title: branch.name,
+                subtitle:
+                    '${branch.address} · '
+                    '${AppFormat.distance(branch.distanceKm)}',
+                selected: branch.uuid == cubit.selectedBranch?.uuid,
+                style: AppChoiceStyle.radio,
+                onTap: () => Navigator.of(sheetContext).pop(branch),
               ),
-            ),
           ],
         ),
       ),
-    );
+      actions: (_) => const [],
+    ).then((branch) {
+      if (branch != null) cubit.changeBranch(branch);
+    });
   }
 }

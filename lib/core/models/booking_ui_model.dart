@@ -1,6 +1,6 @@
 import 'package:waqty_user_application/core/models/booking_item_ui_model.dart';
 import 'package:waqty_user_application/core/models/booking_visit_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_format.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/json_parse.dart';
 
 /// حالات الحجز اللي العميل بيشوفها.
@@ -312,12 +312,13 @@ class BookingUiModel {
   List<BookingVisitUiModel> get visits {
     final grouped = <String, List<BookingItemUiModel>>{};
     for (final item in items) {
-      grouped.putIfAbsent(item.visitUuid, () => <BookingItemUiModel>[]).add(item);
+      grouped
+          .putIfAbsent(item.visitUuid, () => <BookingItemUiModel>[])
+          .add(item);
     }
 
     final visits = grouped.entries.map((entry) {
-      final items = entry.value
-        ..sort((a, b) => a.startAt.compareTo(b.startAt));
+      final items = entry.value..sort((a, b) => a.startAt.compareTo(b.startAt));
       return BookingVisitUiModel(
         uuid: entry.key,
         // الغايب = زي الحجز. في حجز بزيارة واحدة ده صح دايمًا.

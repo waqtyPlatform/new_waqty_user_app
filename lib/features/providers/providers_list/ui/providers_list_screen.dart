@@ -2,12 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/config/routes/routes.dart';
-import 'package:waqty_user_application/core/utils/app_motion.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/extentions.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/empty_state_widget.dart';
-import 'package:waqty_user_application/core/widgets/error_state_widget.dart';
 import 'package:waqty_user_application/core/widgets/provider_row_skeleton_widget.dart';
 import 'package:waqty_user_application/core/widgets/provider_row_widget.dart';
 import 'package:waqty_user_application/features/providers/providers_list/logic/providers_list_cubit.dart';
@@ -101,9 +98,8 @@ class ProvidersListScreen extends StatelessWidget {
         key: const ValueKey('loading'),
         padding: padding,
         itemCount: skeletonCount,
-        itemBuilder: (_, index) => ProviderRowSkeletonWidget(
-          showHairline: index != skeletonCount - 1,
-        ),
+        itemBuilder: (_, index) =>
+            ProviderRowSkeletonWidget(showHairline: index != skeletonCount - 1),
       );
     }
 
@@ -113,14 +109,17 @@ class ProvidersListScreen extends StatelessWidget {
         padding: EdgeInsetsDirectional.symmetric(
           horizontal: AppSpacing.pageGutter.w,
         ),
-        child: ErrorStateWidget(message: state.message, onRetry: cubit.search),
+        child: AppErrorStateWidget(
+          message: state.message,
+          onRetry: cubit.search,
+        ),
       );
     }
 
-    // الفاضي **مش** محتاج الـ `pageGutter` هنا — `EmptyStateWidget` بيوسّط
+    // الفاضي **مش** محتاج الـ `pageGutter` هنا — `AppEmptyStateWidget` بيوسّط
     // نفسه وشايل ٣٢ أفقي جواه، فأي هامش زيادة هيبقى ٤٨ ويكسر السطر بدري.
     if (state is ProvidersListEmptyState) {
-      return EmptyStateWidget(
+      return AppEmptyStateWidget(
         key: const ValueKey('empty'),
         icon: Icons.search_off_rounded,
         title: 'مفيش نتايج',

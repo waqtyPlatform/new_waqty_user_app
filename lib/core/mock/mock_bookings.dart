@@ -60,9 +60,7 @@ class MockBookings {
     // فيها الأبلكيشن. الإزاحة النسبية بتدّي نفس الحالة في أي وقت.
     final startAt = minutesFromNow != null
         ? DateTime.now().add(Duration(minutes: minutesFromNow))
-        : _today.add(
-            Duration(days: inDays, hours: atHour, minutes: atMinute),
-          );
+        : _today.add(Duration(days: inDays, hours: atHour, minutes: atMinute));
     return BookingItemUiModel(
       uuid: _ulid(seed),
       visitUuid: visitUuid,
@@ -87,49 +85,52 @@ class MockBookings {
   ///
   /// من غير ده الحجز اللي العميل لغاه بيفضل ظاهر تحت القادمة والقايمة
   /// بتكدب عليه. الـ `where` بتشيله والـ `past` تحت بتستقبله.
-  static List<BookingUiModel> get upcoming => _applyCancellations(_upcomingSource)
-      .where((b) => b.status.isUpcoming)
-      .toList();
+  static List<BookingUiModel> get upcoming => _applyCancellations(
+    _upcomingSource,
+  ).where((b) => b.status.isUpcoming).toList();
 
-  static List<BookingUiModel> get _upcomingSource => switch (MockConfig.scenario) {
-    MockScenario.arrivedInBranch => <BookingUiModel>[
-      _inBranch(BookingStatus.arrived),
-    ],
-    MockScenario.waitingInBranch => <BookingUiModel>[
-      _inBranch(BookingStatus.waiting),
-    ],
-    // **نفس الحجز بالظبط** — الفرق كله في `MockInBranch` اللي بيرجّع
-    // تقدير فاضي. لازم يفضلوا متطابقين عشان جلسة الاختبار تقارن الشاشتين
-    // ومفيش متغيّر تاني بيتحرّك معاهم.
-    MockScenario.waitingNoEstimate => <BookingUiModel>[
-      _inBranch(BookingStatus.waiting),
-    ],
-    MockScenario.inService => <BookingUiModel>[
-      _inBranch(BookingStatus.inProgress),
-    ],
-    MockScenario.happyPath => <BookingUiModel>[_singleService],
-    MockScenario.multiServiceOneVisit => <BookingUiModel>[_threeServices],
-    MockScenario.discountedCustomer => <BookingUiModel>[_discounted],
-    MockScenario.multiVisitTwoDays => <BookingUiModel>[_twoVisitsTwoDays],
-    MockScenario.multiVisitSameDay => <BookingUiModel>[_twoVisitsSameDay],
-    MockScenario.manyBookings => _many,
-    MockScenario.twoBranches => _sameProviderTwoBranches,
-    MockScenario.twoBranchesDifferentPricing => _secondBranchPricing,
-    MockScenario.cancelWindowClosed => <BookingUiModel>[_cancelWindowClosed],
-    MockScenario.branchClosedToday => <BookingUiModel>[_afterClosedDay],
-    // **فاضي بالقصد.** التلاتة دول بيعيشوا في فلو الحجز وفي كارت قائمة
-    // الانتظار، مش في ليستة المواعيد. لو حطينا حجوزات فوقهم، التستر
-    // بيدوس على السيناريو ويشوف نفس الخمس حجوزات — فيفتكر إن المبدّل
-    // مش شغال، وهو أصلاً كان بيفتكر كده.
-    MockScenario.slotLostAtConfirm ||
-    MockScenario.waitlistReviewing ||
-    MockScenario.waitlistOffered ||
-    MockScenario.waitlistHistory ||
-    MockScenario.waitlistExpired => const <BookingUiModel>[],
-    // النهايات وحالات النظام — الليستة الكاملة، عشان التبويب القادمة
-    // مايبقاش فاضي وإحنا بنجرّب حاجة في تبويب تاني.
-    _ => _allUpcoming,
-  };
+  static List<BookingUiModel> get _upcomingSource =>
+      switch (MockConfig.scenario) {
+        MockScenario.arrivedInBranch => <BookingUiModel>[
+          _inBranch(BookingStatus.arrived),
+        ],
+        MockScenario.waitingInBranch => <BookingUiModel>[
+          _inBranch(BookingStatus.waiting),
+        ],
+        // **نفس الحجز بالظبط** — الفرق كله في `MockInBranch` اللي بيرجّع
+        // تقدير فاضي. لازم يفضلوا متطابقين عشان جلسة الاختبار تقارن الشاشتين
+        // ومفيش متغيّر تاني بيتحرّك معاهم.
+        MockScenario.waitingNoEstimate => <BookingUiModel>[
+          _inBranch(BookingStatus.waiting),
+        ],
+        MockScenario.inService => <BookingUiModel>[
+          _inBranch(BookingStatus.inProgress),
+        ],
+        MockScenario.happyPath => <BookingUiModel>[_singleService],
+        MockScenario.multiServiceOneVisit => <BookingUiModel>[_threeServices],
+        MockScenario.discountedCustomer => <BookingUiModel>[_discounted],
+        MockScenario.multiVisitTwoDays => <BookingUiModel>[_twoVisitsTwoDays],
+        MockScenario.multiVisitSameDay => <BookingUiModel>[_twoVisitsSameDay],
+        MockScenario.manyBookings => _many,
+        MockScenario.twoBranches => _sameProviderTwoBranches,
+        MockScenario.twoBranchesDifferentPricing => _secondBranchPricing,
+        MockScenario.cancelWindowClosed => <BookingUiModel>[
+          _cancelWindowClosed,
+        ],
+        MockScenario.branchClosedToday => <BookingUiModel>[_afterClosedDay],
+        // **فاضي بالقصد.** التلاتة دول بيعيشوا في فلو الحجز وفي كارت قائمة
+        // الانتظار، مش في ليستة المواعيد. لو حطينا حجوزات فوقهم، التستر
+        // بيدوس على السيناريو ويشوف نفس الخمس حجوزات — فيفتكر إن المبدّل
+        // مش شغال، وهو أصلاً كان بيفتكر كده.
+        MockScenario.slotLostAtConfirm ||
+        MockScenario.waitlistReviewing ||
+        MockScenario.waitlistOffered ||
+        MockScenario.waitlistHistory ||
+        MockScenario.waitlistExpired => const <BookingUiModel>[],
+        // النهايات وحالات النظام — الليستة الكاملة، عشان التبويب القادمة
+        // مايبقاش فاضي وإحنا بنجرّب حاجة في تبويب تاني.
+        _ => _allUpcoming,
+      };
 
   /// **«السابقة» = مكتملة بس.**
   ///
@@ -268,35 +269,35 @@ class MockBookings {
   ];
 
   static BookingUiModel get _singleService => BookingUiModel(
-      uuid: _ulid('M9Q4'),
-      providerUuid: 'prv-1',
-      providerName: 'صالون كابتن',
-      branchUuid: 'brn-1',
-      branchName: 'فرع المعادي',
-      branchAddress: '12 شارع 9، المعادي، القاهرة',
-      imagePath: '',
-      status: BookingStatus.confirmed,
-      // **كان `false` بتعليق «النهاردة — الإلغاء مش مسموح».**
-      //
-      // الفيكستشر كانت مشفّرة نفس سوء الفهم بتاع النص: القاعدة في
-      // `Booking::getCanCancelAttribute()` إن الميعاد **يعدّي**، مش إنه في
-      // نفس اليوم. حجز النهاردة ٦م وإنت بتبصّ ٢ظ `can_cancel: true`.
-      //
-      // ولو سبناها غلط، أول واحد يقرا الداتا هيعيد استنتاج النص الغلط.
-      canCancel: true,
-      items: <BookingItemUiModel>[
-        _item(
-          seed: 'M9Q4A1',
-          serviceUuid: 'srv-1',
-          serviceName: 'قص شعر',
-          employeeName: 'أحمد محمود',
-          inDays: 0,
-          atHour: 18,
-          durationMinutes: 45,
-          price: 250,
-        ),
-      ],
-    );
+    uuid: _ulid('M9Q4'),
+    providerUuid: 'prv-1',
+    providerName: 'صالون كابتن',
+    branchUuid: 'brn-1',
+    branchName: 'فرع المعادي',
+    branchAddress: '12 شارع 9، المعادي، القاهرة',
+    imagePath: '',
+    status: BookingStatus.confirmed,
+    // **كان `false` بتعليق «النهاردة — الإلغاء مش مسموح».**
+    //
+    // الفيكستشر كانت مشفّرة نفس سوء الفهم بتاع النص: القاعدة في
+    // `Booking::getCanCancelAttribute()` إن الميعاد **يعدّي**، مش إنه في
+    // نفس اليوم. حجز النهاردة ٦م وإنت بتبصّ ٢ظ `can_cancel: true`.
+    //
+    // ولو سبناها غلط، أول واحد يقرا الداتا هيعيد استنتاج النص الغلط.
+    canCancel: true,
+    items: <BookingItemUiModel>[
+      _item(
+        seed: 'M9Q4A1',
+        serviceUuid: 'srv-1',
+        serviceName: 'قص شعر',
+        employeeName: 'أحمد محمود',
+        inDays: 0,
+        atHour: 18,
+        durationMinutes: 45,
+        price: 250,
+      ),
+    ],
+  );
 
   /// تلات خدمات · يوم واحد · أخصائيين · وعليه خصم مجموعة.
   ///
@@ -304,98 +305,98 @@ class MockBookings {
   /// مش سعر أول خدمة. والخصم عليه عشان معالجة «كان ٢٥٠ · بقى ٢٠٠»
   /// تتجرب على حجز حقيقي مش على رقم واحد.
   static BookingUiModel get _threeServices => BookingUiModel(
-      uuid: _ulid('MB2X'),
-      providerUuid: 'prv-3',
-      providerName: 'باربر شوب الحرية',
-      branchUuid: 'brn-prv-3',
-      branchName: 'الفرع الرئيسي',
-      branchAddress: 'شارع الجمهورية، مصر الجديدة، القاهرة',
-      imagePath: '',
-      status: BookingStatus.confirmed,
-      canCancel: true,
-      items: <BookingItemUiModel>[
-        _item(
-          seed: 'MB2XA1',
-          serviceUuid: 'srv-1',
-          serviceName: 'قص شعر',
-          employeeName: 'مصطفى خالد',
-          inDays: 6,
-          atHour: 19,
-          durationMinutes: 45,
-          price: 200,
-          originalPrice: 250,
-        ),
-        _item(
-          seed: 'MB2XA2',
-          serviceUuid: 'srv-2',
-          serviceName: 'حلاقة ذقن',
-          employeeName: 'مصطفى خالد',
-          inDays: 6,
-          atHour: 19,
-          atMinute: 45,
-          durationMinutes: 30,
-          price: 96,
-          originalPrice: 120,
-        ),
-        _item(
-          seed: 'MB2XA3',
-          serviceUuid: 'srv-8',
-          serviceName: 'غسيل وتصفيف',
-          employeeName: 'يوسف عادل',
-          inDays: 6,
-          atHour: 20,
-          atMinute: 15,
-          durationMinutes: 20,
-          price: 64,
-          originalPrice: 80,
-        ),
-      ],
-    );
+    uuid: _ulid('MB2X'),
+    providerUuid: 'prv-3',
+    providerName: 'باربر شوب الحرية',
+    branchUuid: 'brn-prv-3',
+    branchName: 'الفرع الرئيسي',
+    branchAddress: 'شارع الجمهورية، مصر الجديدة، القاهرة',
+    imagePath: '',
+    status: BookingStatus.confirmed,
+    canCancel: true,
+    items: <BookingItemUiModel>[
+      _item(
+        seed: 'MB2XA1',
+        serviceUuid: 'srv-1',
+        serviceName: 'قص شعر',
+        employeeName: 'مصطفى خالد',
+        inDays: 6,
+        atHour: 19,
+        durationMinutes: 45,
+        price: 200,
+        originalPrice: 250,
+      ),
+      _item(
+        seed: 'MB2XA2',
+        serviceUuid: 'srv-2',
+        serviceName: 'حلاقة ذقن',
+        employeeName: 'مصطفى خالد',
+        inDays: 6,
+        atHour: 19,
+        atMinute: 45,
+        durationMinutes: 30,
+        price: 96,
+        originalPrice: 120,
+      ),
+      _item(
+        seed: 'MB2XA3',
+        serviceUuid: 'srv-8',
+        serviceName: 'غسيل وتصفيف',
+        employeeName: 'يوسف عادل',
+        inDays: 6,
+        atHour: 20,
+        atMinute: 15,
+        durationMinutes: 20,
+        price: 64,
+        originalPrice: 80,
+      ),
+    ],
+  );
 
   /// زيارتين · يومين مختلفين — الحالة اللي التصميم القديم مكانش بيقدر
   /// يعرضها خالص.
   static BookingUiModel get _twoVisitsTwoDays => BookingUiModel(
-      uuid: _ulid('MC7R'),
-      providerUuid: 'prv-2',
-      providerName: 'كوافير نور',
-      branchUuid: 'brn-prv-2',
-      branchName: 'الفرع الرئيسي',
-      branchAddress: 'شارع الجمهورية، مدينة نصر، القاهرة',
-      imagePath: '',
-      status: BookingStatus.confirmed,
-      canCancel: true,
-      notes: 'لو ينفع أخصائية ست يبقى أحسن',
-      // الزيارتين لسه قدام — الخريطة هنا **صريحة عن قصد** رغم إنها نفس
-      // حالة الحجز. الـ fixture ده هو اللي بيثبت إن زيارة متأخرة عن
-      // التانية بأسبوع مابتاخدش حالة الفرع بدري.
-      visitStatuses: const <String, BookingStatus>{
-        'v1': BookingStatus.confirmed,
-        'v2': BookingStatus.confirmed,
-      },
-      items: <BookingItemUiModel>[
-        _item(
-          seed: 'MC7RA1',
-          serviceUuid: 'srv-9',
-          serviceName: 'صبغة',
-          employeeName: 'سارة عادل',
-          inDays: 3,
-          atHour: 11,
-          durationMinutes: 90,
-          price: 600,
-        ),
-        _item(
-          seed: 'MC7RA2',
-          visitUuid: 'v2',
-          serviceUuid: 'srv-7',
-          serviceName: 'بروتين',
-          employeeName: 'سارة عادل',
-          inDays: 10,
-          atHour: 13,
-          durationMinutes: 120,
-          price: 900,
-        ),
-      ],
-    );
+    uuid: _ulid('MC7R'),
+    providerUuid: 'prv-2',
+    providerName: 'كوافير نور',
+    branchUuid: 'brn-prv-2',
+    branchName: 'الفرع الرئيسي',
+    branchAddress: 'شارع الجمهورية، مدينة نصر، القاهرة',
+    imagePath: '',
+    status: BookingStatus.confirmed,
+    canCancel: true,
+    notes: 'لو ينفع أخصائية ست يبقى أحسن',
+    // الزيارتين لسه قدام — الخريطة هنا **صريحة عن قصد** رغم إنها نفس
+    // حالة الحجز. الـ fixture ده هو اللي بيثبت إن زيارة متأخرة عن
+    // التانية بأسبوع مابتاخدش حالة الفرع بدري.
+    visitStatuses: const <String, BookingStatus>{
+      'v1': BookingStatus.confirmed,
+      'v2': BookingStatus.confirmed,
+    },
+    items: <BookingItemUiModel>[
+      _item(
+        seed: 'MC7RA1',
+        serviceUuid: 'srv-9',
+        serviceName: 'صبغة',
+        employeeName: 'سارة عادل',
+        inDays: 3,
+        atHour: 11,
+        durationMinutes: 90,
+        price: 600,
+      ),
+      _item(
+        seed: 'MC7RA2',
+        visitUuid: 'v2',
+        serviceUuid: 'srv-7',
+        serviceName: 'بروتين',
+        employeeName: 'سارة عادل',
+        inDays: 10,
+        atHour: 13,
+        durationMinutes: 120,
+        price: 900,
+      ),
+    ],
+  );
 
   /// رحلتين في **نفس اليوم** — والزيارة الأولى شغّالة دلوقتي.
   ///
@@ -412,77 +413,77 @@ class MockBookings {
   /// و`confirmed`. الحجز الأب `in_progress` زي ما السيرفر هيلمّه. الكود
   /// القديم بيوري «إنت في الفرع» على الاتنين طول اليوم.
   static BookingUiModel get _twoVisitsSameDay => BookingUiModel(
-      uuid: _ulid('MDJ5'),
-      providerUuid: 'prv-5',
-      providerName: 'استوديو جمال',
-      branchUuid: 'brn-prv-5',
-      branchName: 'الفرع الرئيسي',
-      branchAddress: 'شارع الجمهورية، المهندسين، القاهرة',
-      imagePath: '',
-      status: BookingStatus.inProgress,
-      // **`true` رغم إن الحجز `in_progress`** — ودي مش سهوة.
-      // `Booking::getCanCancelAttribute()` بيبص على **نهاية أي عنصر**:
-      // طول ما فيه عنصر لسه ما خلصش، الإلغاء مفتوح. زيارة ٢ بعد ٦ ساعات،
-      // فالسيرفر هيقول `can_cancel: true` وإحنا بنعكس السيرفر مش بنحسب.
-      canCancel: true,
-      visitStatuses: const <String, BookingStatus>{
-        'v1': BookingStatus.inProgress,
-        'v2': BookingStatus.confirmed,
-      },
-      items: <BookingItemUiModel>[
-        _item(
-          seed: 'MDJ5A1',
-          serviceUuid: 'srv-9',
-          serviceName: 'صبغة',
-          employeeName: 'نهى سمير',
-          inDays: 0,
-          atHour: 0,
-          minutesFromNow: -20,
-          durationMinutes: 90,
-          price: 600,
-        ),
-        _item(
-          seed: 'MDJ5A2',
-          visitUuid: 'v2',
-          serviceUuid: 'srv-5',
-          serviceName: 'حمام كريم',
-          employeeName: 'نهى سمير',
-          // ٦ ساعات بعد الزيارة الأولى — الفجوة اللي الباج بيعيش فيها.
-          inDays: 0,
-          atHour: 0,
-          minutesFromNow: 360,
-          durationMinutes: 30,
-          price: 180,
-        ),
-      ],
-    );
+    uuid: _ulid('MDJ5'),
+    providerUuid: 'prv-5',
+    providerName: 'استوديو جمال',
+    branchUuid: 'brn-prv-5',
+    branchName: 'الفرع الرئيسي',
+    branchAddress: 'شارع الجمهورية، المهندسين، القاهرة',
+    imagePath: '',
+    status: BookingStatus.inProgress,
+    // **`true` رغم إن الحجز `in_progress`** — ودي مش سهوة.
+    // `Booking::getCanCancelAttribute()` بيبص على **نهاية أي عنصر**:
+    // طول ما فيه عنصر لسه ما خلصش، الإلغاء مفتوح. زيارة ٢ بعد ٦ ساعات،
+    // فالسيرفر هيقول `can_cancel: true` وإحنا بنعكس السيرفر مش بنحسب.
+    canCancel: true,
+    visitStatuses: const <String, BookingStatus>{
+      'v1': BookingStatus.inProgress,
+      'v2': BookingStatus.confirmed,
+    },
+    items: <BookingItemUiModel>[
+      _item(
+        seed: 'MDJ5A1',
+        serviceUuid: 'srv-9',
+        serviceName: 'صبغة',
+        employeeName: 'نهى سمير',
+        inDays: 0,
+        atHour: 0,
+        minutesFromNow: -20,
+        durationMinutes: 90,
+        price: 600,
+      ),
+      _item(
+        seed: 'MDJ5A2',
+        visitUuid: 'v2',
+        serviceUuid: 'srv-5',
+        serviceName: 'حمام كريم',
+        employeeName: 'نهى سمير',
+        // ٦ ساعات بعد الزيارة الأولى — الفجوة اللي الباج بيعيش فيها.
+        inDays: 0,
+        atHour: 0,
+        minutesFromNow: 360,
+        durationMinutes: 30,
+        price: 180,
+      ),
+    ],
+  );
 
   /// كان `pending` — وهي حالة **مالهاش وجود** في السيرفر (`STATUS_PENDING`
   /// = `'confirmed'` و`@deprecated`، وفيه migration نقل كل الصفوف).
   /// الحجز بيتعمل مؤكد على طول.
   static BookingUiModel get _blowDry => BookingUiModel(
-      uuid: _ulid('MEW9'),
-      providerUuid: 'prv-2',
-      providerName: 'كوافير نور',
-      branchUuid: 'brn-prv-2',
-      branchName: 'الفرع الرئيسي',
-      branchAddress: 'شارع الجمهورية، مدينة نصر، القاهرة',
-      imagePath: '',
-      status: BookingStatus.confirmed,
-      canCancel: true,
-      items: <BookingItemUiModel>[
-        _item(
-          seed: 'MEW9A1',
-          serviceUuid: 'srv-6',
-          serviceName: 'سشوار',
-          employeeName: 'سارة عادل',
-          inDays: 4,
-          atHour: 11,
-          durationMinutes: 45,
-          price: 300,
-        ),
-      ],
-    );
+    uuid: _ulid('MEW9'),
+    providerUuid: 'prv-2',
+    providerName: 'كوافير نور',
+    branchUuid: 'brn-prv-2',
+    branchName: 'الفرع الرئيسي',
+    branchAddress: 'شارع الجمهورية، مدينة نصر، القاهرة',
+    imagePath: '',
+    status: BookingStatus.confirmed,
+    canCancel: true,
+    items: <BookingItemUiModel>[
+      _item(
+        seed: 'MEW9A1',
+        serviceUuid: 'srv-6',
+        serviceName: 'سشوار',
+        employeeName: 'سارة عادل',
+        inDays: 4,
+        atHour: 11,
+        durationMinutes: 45,
+        price: 300,
+      ),
+    ],
+  );
 
   /// **نفس المحل · فرعين مختلفين** — سؤال السيناريو بالحرف.
   ///
@@ -735,122 +736,122 @@ class MockBookings {
 
   /// تلات خدمات · ولا واحدة اتقيّمت — بيكشف إن التقييم لكل خدمة.
   static BookingUiModel get _completedUnrated => BookingUiModel(
-      uuid: _ulid('H3P8'),
-      providerUuid: 'prv-1',
-      providerName: 'صالون كابتن',
-      branchUuid: 'brn-1',
-      branchName: 'فرع المعادي',
-      branchAddress: '12 شارع 9، المعادي، القاهرة',
-      imagePath: '',
-      status: BookingStatus.completed,
-      paymentStatus: PaymentStatus.paid,
-      items: <BookingItemUiModel>[
-        _item(
-          seed: 'H3P8A1',
-          serviceUuid: 'srv-1',
-          serviceName: 'قص شعر',
-          employeeName: 'محمد سيد',
-          inDays: -12,
-          atHour: 17,
-          durationMinutes: 60,
-          price: 250,
-        ),
-        _item(
-          seed: 'H3P8A2',
-          serviceUuid: 'srv-2',
-          serviceName: 'حلاقة ذقن',
-          employeeName: 'محمد سيد',
-          inDays: -12,
-          atHour: 18,
-          durationMinutes: 30,
-          price: 120,
-        ),
-        _item(
-          seed: 'H3P8A3',
-          serviceUuid: 'srv-8',
-          serviceName: 'غسيل وتصفيف',
-          employeeName: 'أحمد محمود',
-          inDays: -12,
-          atHour: 18,
-          atMinute: 30,
-          durationMinutes: 20,
-          price: 80,
-        ),
-      ],
-    );
+    uuid: _ulid('H3P8'),
+    providerUuid: 'prv-1',
+    providerName: 'صالون كابتن',
+    branchUuid: 'brn-1',
+    branchName: 'فرع المعادي',
+    branchAddress: '12 شارع 9، المعادي، القاهرة',
+    imagePath: '',
+    status: BookingStatus.completed,
+    paymentStatus: PaymentStatus.paid,
+    items: <BookingItemUiModel>[
+      _item(
+        seed: 'H3P8A1',
+        serviceUuid: 'srv-1',
+        serviceName: 'قص شعر',
+        employeeName: 'محمد سيد',
+        inDays: -12,
+        atHour: 17,
+        durationMinutes: 60,
+        price: 250,
+      ),
+      _item(
+        seed: 'H3P8A2',
+        serviceUuid: 'srv-2',
+        serviceName: 'حلاقة ذقن',
+        employeeName: 'محمد سيد',
+        inDays: -12,
+        atHour: 18,
+        durationMinutes: 30,
+        price: 120,
+      ),
+      _item(
+        seed: 'H3P8A3',
+        serviceUuid: 'srv-8',
+        serviceName: 'غسيل وتصفيف',
+        employeeName: 'أحمد محمود',
+        inDays: -12,
+        atHour: 18,
+        atMinute: 30,
+        durationMinutes: 20,
+        price: 80,
+      ),
+    ],
+  );
 
   /// تقييم جزئي — واحدة منشورة وواحدة **تحت المراجعة**.
   ///
   /// السيرفر بيعمل التقييم `active: false` فبيفضل مخفي لحد المراجعة،
   /// والعميل اللي بيقيّم وبيشوف لا شيء بيفتكر إنه ما اتسجّلش.
   static BookingUiModel get _partiallyRated => BookingUiModel(
-      uuid: _ulid('F7S2'),
-      providerUuid: 'prv-4',
-      providerName: 'مركز ريلاكس',
-      branchUuid: 'brn-prv-4',
-      branchName: 'الفرع الرئيسي',
-      branchAddress: 'شارع الجمهورية، الدقي، القاهرة',
-      imagePath: '',
-      status: BookingStatus.completed,
-      paymentStatus: PaymentStatus.paid,
-      items: <BookingItemUiModel>[
-        _item(
-          seed: 'F7S2A1',
-          serviceUuid: 'srv-11',
-          serviceName: 'مساج استرخاء',
-          employeeName: 'كريم فؤاد',
-          inDays: -25,
-          atHour: 14,
-          durationMinutes: 90,
-          price: 500,
-          rating: 5,
-          ratingStatus: RatingStatus.published,
-          // عشان طريق عرض التعليق يبقى عليه داتا من غير ما حد يقعد يكتب
-          // في التقييم كل جلسة تجربة.
-          ratingComment: 'كريم محترم والمكان هادي، هرجع تاني أكيد',
-        ),
-        _item(
-          seed: 'F7S2A2',
-          serviceUuid: 'srv-10',
-          serviceName: 'تنظيف بشرة عميق',
-          employeeName: 'كريم فؤاد',
-          inDays: -25,
-          atHour: 15,
-          atMinute: 30,
-          durationMinutes: 60,
-          price: 450,
-          rating: 4,
-          ratingStatus: RatingStatus.pending,
-        ),
-      ],
-    );
+    uuid: _ulid('F7S2'),
+    providerUuid: 'prv-4',
+    providerName: 'مركز ريلاكس',
+    branchUuid: 'brn-prv-4',
+    branchName: 'الفرع الرئيسي',
+    branchAddress: 'شارع الجمهورية، الدقي، القاهرة',
+    imagePath: '',
+    status: BookingStatus.completed,
+    paymentStatus: PaymentStatus.paid,
+    items: <BookingItemUiModel>[
+      _item(
+        seed: 'F7S2A1',
+        serviceUuid: 'srv-11',
+        serviceName: 'مساج استرخاء',
+        employeeName: 'كريم فؤاد',
+        inDays: -25,
+        atHour: 14,
+        durationMinutes: 90,
+        price: 500,
+        rating: 5,
+        ratingStatus: RatingStatus.published,
+        // عشان طريق عرض التعليق يبقى عليه داتا من غير ما حد يقعد يكتب
+        // في التقييم كل جلسة تجربة.
+        ratingComment: 'كريم محترم والمكان هادي، هرجع تاني أكيد',
+      ),
+      _item(
+        seed: 'F7S2A2',
+        serviceUuid: 'srv-10',
+        serviceName: 'تنظيف بشرة عميق',
+        employeeName: 'كريم فؤاد',
+        inDays: -25,
+        atHour: 15,
+        atMinute: 30,
+        durationMinutes: 60,
+        price: 450,
+        rating: 4,
+        ratingStatus: RatingStatus.pending,
+      ),
+    ],
+  );
 
   /// كان `cancelledByProvider` — والسيرفر بيسجّل `cancelled` واحدة
   /// ومفيش عمود `cancelled_by`. السبب **بيتكشف** فعلاً في
   /// `UserBookingResource`، فالنص شغال والإسناد هو اللي مش موجود.
   static BookingUiModel get _cancelled => BookingUiModel(
-      uuid: _ulid('CZ6M'),
-      providerUuid: 'prv-5',
-      providerName: 'استوديو جمال',
-      branchUuid: 'brn-prv-5',
-      branchName: 'الفرع الرئيسي',
-      branchAddress: 'شارع الجمهورية، المهندسين، القاهرة',
-      imagePath: '',
-      status: BookingStatus.cancelled,
-      cancellationReason: 'الأخصائية كانت مجازة',
-      items: <BookingItemUiModel>[
-        _item(
-          seed: 'CZ6MA1',
-          serviceUuid: 'srv-10',
-          serviceName: 'تنظيف بشرة عميق',
-          employeeName: 'نهى سمير',
-          inDays: -40,
-          atHour: 12,
-          durationMinutes: 60,
-          price: 450,
-        ),
-      ],
-    );
+    uuid: _ulid('CZ6M'),
+    providerUuid: 'prv-5',
+    providerName: 'استوديو جمال',
+    branchUuid: 'brn-prv-5',
+    branchName: 'الفرع الرئيسي',
+    branchAddress: 'شارع الجمهورية، المهندسين، القاهرة',
+    imagePath: '',
+    status: BookingStatus.cancelled,
+    cancellationReason: 'الأخصائية كانت مجازة',
+    items: <BookingItemUiModel>[
+      _item(
+        seed: 'CZ6MA1',
+        serviceUuid: 'srv-10',
+        serviceName: 'تنظيف بشرة عميق',
+        employeeName: 'نهى سمير',
+        inDays: -40,
+        atHour: 12,
+        durationMinutes: 60,
+        price: 450,
+      ),
+    ],
+  );
 
   /// الحالة اللي محدش صممها.
   ///

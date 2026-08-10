@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:waqty_user_application/config/themes/app_theme.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/mock/mock_bookings.dart';
 import 'package:waqty_user_application/core/models/booking_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/widgets/app_surface_widget.dart';
-import 'package:waqty_user_application/features/account/account/ui/widgets/account_menu_item_widget.dart';
 import 'package:waqty_user_application/features/booking/my_bookings/ui/widgets/my_booking_row_skeleton_widget.dart';
 import 'package:waqty_user_application/features/booking/my_bookings/ui/widgets/my_booking_row_widget.dart';
 
@@ -108,10 +104,7 @@ void main() {
     testWidgets('صف التقييم أطول من الصف العادي', (tester) async {
       final plain = await pumpRow(
         tester,
-        MyBookingRowWidget(
-          booking: MockBookings.upcoming.first,
-          onTap: () {},
-        ),
+        MyBookingRowWidget(booking: MockBookings.upcoming.first, onTap: () {}),
         brightness: Brightness.light,
         textScale: 1.0,
       );
@@ -129,10 +122,7 @@ void main() {
     testWidgets('الـ skeleton بنفس ارتفاع الصف العادي', (tester) async {
       final real = await pumpRow(
         tester,
-        MyBookingRowWidget(
-          booking: MockBookings.upcoming.first,
-          onTap: () {},
-        ),
+        MyBookingRowWidget(booking: MockBookings.upcoming.first, onTap: () {}),
         brightness: Brightness.light,
         textScale: 1.0,
       );
@@ -149,8 +139,12 @@ void main() {
   });
 
   group('صف قايمة الحساب', () {
-    /// **٥٢ مش ٥٦** — بس لسه فوق الحد الأدنى للمس (٤٤). لو حد نزّلها تحت
-    /// ٤٤ بكرة، الاختبار ده هو اللي هيمسكه.
+    /// الصف بقى [AppMenuRowWidget] بتاع الكيت — كارت لكل صف بدل مجموعة
+    /// بفواصل. الاختبار ده بيفضل يحرس نفس الحاجة: **الارتفاع مايقعش تحت
+    /// الحد الأدنى للمس (٤٤)**، مهما اتغيّر شكل الصف.
+    ///
+    /// وبيتحقق كمان إن الـ skeleton بيقرا **نفس** الـ `heightOf` — من غير
+    /// كده قايمة الحساب بتنطّ أول ما الداتا توصل.
     testWidgets('ارتفاعه فوق الحد الأدنى للمس', (tester) async {
       late double height;
 
@@ -168,13 +162,18 @@ void main() {
               textDirection: TextDirection.rtl,
               child: Builder(
                 builder: (innerContext) {
-                  height = AccountMenuItemWidget.heightOf(innerContext);
+                  height = AppMenuRowWidget.heightOf(innerContext);
                   return Scaffold(
-                    body: AccountMenuItemWidget(
-                      icon: Icons.language_rounded,
-                      label: 'اللغة',
-                      trailingText: 'العربية',
-                      onTap: () {},
+                    body: Column(
+                      children: [
+                        AppMenuRowWidget(
+                          icon: Icons.language_rounded,
+                          title: 'اللغة',
+                          subtitle: 'العربية',
+                          onTap: () {},
+                        ),
+                        const AppMenuRowSkeletonWidget(),
+                      ],
                     ),
                   );
                 },
@@ -186,6 +185,13 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(height, greaterThanOrEqualTo(AppSpacing.touchTarget));
+
+      // الصف الحقيقي والـ skeleton بنفس الارتفاع بالظبط — العقد اللي
+      // بيمنع اللستة تنطّ.
+      final real = tester.getSize(find.byType(AppMenuRowWidget)).height;
+      final fake = tester.getSize(find.byType(AppMenuRowSkeletonWidget)).height;
+      expect(fake, closeTo(real, 0.5));
+
       expect(tester.takeException(), isNull);
     });
   });

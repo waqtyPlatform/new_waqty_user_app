@@ -4,9 +4,7 @@ import 'package:country_code_picker/country_code_picker.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
-import 'package:waqty_user_application/core/widgets/app_text_field.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/features/auth/login/logic/login_cubit.dart';
 
 /// حقل التليفون.
@@ -22,19 +20,21 @@ class LoginPhoneNumberWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final cubit = LoginCubit.get(context);
 
-    return AppTextFormField(
+    return AppFieldWidget(
       label: context.tr("login.phoneText"),
-      hintText: context.tr('login.enterPhoneText'),
-      controller: cubit.loginPhoneController,
-      keyboardType: TextInputType.phone,
-      textInputAction: TextInputAction.next,
-      autofillHints: const [AutofillHints.telephoneNumber],
-      prefixIcon: _CountryPrefix(
-        onChanged: (code) => cubit.loginCountryCodeController.text = code,
+      child: AppTextFormField(
+        hintText: context.tr('login.enterPhoneText'),
+        controller: cubit.loginPhoneController,
+        keyboardType: TextInputType.phone,
+        textInputAction: TextInputAction.next,
+        autofillHints: const [AutofillHints.telephoneNumber],
+        prefixIcon: _CountryPrefix(
+          onChanged: (code) => cubit.loginCountryCodeController.text = code,
+        ),
+        validator: (value) => (value == null || value.trim().isEmpty)
+            ? context.tr('login.enterPhoneText2')
+            : null,
       ),
-      validator: (value) => (value == null || value.trim().isEmpty)
-          ? context.tr('login.enterPhoneText2')
-          : null,
     );
   }
 }

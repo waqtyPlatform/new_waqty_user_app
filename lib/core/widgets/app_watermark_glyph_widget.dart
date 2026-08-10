@@ -1,6 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:waqty_user_application/core/utils/app_entity_tint.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 
 /// حرف المحل **باهت وخارج من الحافة** — طبقة خلفية لأي سطح غامق.
 ///
@@ -46,8 +45,14 @@ class AppWatermarkGlyphWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // **الشرط على المدخل مش المخرج.**
+    //
+    // `AppEntityTint.initialOf` بتاع الكيت بيرجّع `String` مش `String?` —
+    // الاسم الفاضي بيدي `'؟'` كبديل **مرئي**. وده صح لأفاتار ٤٤ بس غلط
+    // هنا: علامة استفهام بعرض ٢٦٠ بكسل ورا الشريط مش تصميم، دي رسالة خطأ.
+    if (name.trim().isEmpty) return const SizedBox.shrink();
+
     final initial = AppEntityTint.initialOf(name);
-    if (initial == null) return const SizedBox.shrink();
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -76,7 +81,7 @@ class AppWatermarkGlyphWidget extends StatelessWidget {
                 applyHeightToFirstAscent: false,
                 applyHeightToLastDescent: false,
               ),
-              style: AppTextStyles.entityGlyph(
+              style: AppTextStyles.numeric(
                 glyph,
               ).copyWith(color: color.withValues(alpha: alpha)),
             ),

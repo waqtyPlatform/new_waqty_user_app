@@ -6,8 +6,6 @@ class InitialState extends RegisterState {}
 
 class OnChangeSelectedFieldState extends RegisterState {}
 
-class IsPasswordVisibleState extends RegisterState {}
-
 class OnRegisterLoadingState extends RegisterState {}
 
 class OnRegisterSuccessState extends RegisterState {

@@ -145,9 +145,13 @@ class MockWaitlist {
     // بنشيل اللي حجزه المؤقت خلص — نفس اللي `listForUser` بيعمله في
     // السيرفر (بيعمل expiry كسول على كل قراءة).
     return _entries
-        .map((e) => e.status == WaitlistStatus.awaitingResponse && !e.isHoldActive(now)
-            ? _asExpired(e)
-            : e)
+        .map(
+          (e) =>
+              e.status == WaitlistStatus.awaitingResponse &&
+                  !e.isHoldActive(now)
+              ? _asExpired(e)
+              : e,
+        )
         .toList();
   }
 
@@ -223,7 +227,12 @@ class MockWaitlist {
     final entry = _byUuid(uuid);
     if (entry == null || !entry.canAccept) return;
 
-    _override(entry, status: WaitlistStatus.converted, clearHold: true, event: 'offer_accepted');
+    _override(
+      entry,
+      status: WaitlistStatus.converted,
+      clearHold: true,
+      event: 'offer_accepted',
+    );
   }
 
   /// TODO(api): POST /api/user/waitlist/{uuid}/request-change
@@ -257,7 +266,12 @@ class MockWaitlist {
     final entry = _byUuid(uuid);
     if (entry == null || !entry.canCancel) return;
 
-    _override(entry, status: WaitlistStatus.cancelledByCustomer, clearHold: true, event: 'cancelled');
+    _override(
+      entry,
+      status: WaitlistStatus.cancelledByCustomer,
+      clearHold: true,
+      event: 'cancelled',
+    );
     _entries.removeWhere((e) => e.uuid == uuid);
   }
 
@@ -274,9 +288,9 @@ class MockWaitlist {
   static WaitlistUiModel? _byUuid(String uuid) =>
       _overrides[uuid] ??
       _entries.cast<WaitlistUiModel?>().firstWhere(
-            (e) => e?.uuid == uuid,
-            orElse: () => null,
-          ) ??
+        (e) => e?.uuid == uuid,
+        orElse: () => null,
+      ) ??
       _scenarioEntry(uuid);
 
   /// بيبني نسخة جديدة من الإدخال ويحطها في [_overrides].

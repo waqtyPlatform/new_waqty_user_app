@@ -119,10 +119,11 @@ void main() {
 
       final items = (visits.first as Map)['items'] as List;
       expect(items, hasLength(3));
-      expect(
-        items.map((i) => (i as Map)['service_uuid']).toList(),
-        <String>['srv-1', 'srv-2', 'srv-5'],
-      );
+      expect(items.map((i) => (i as Map)['service_uuid']).toList(), <String>[
+        'srv-1',
+        'srv-2',
+        'srv-5',
+      ]);
     });
 
     test('خدمتين في يومين = زيارتين مرتبتين بالتاريخ', () {
@@ -328,10 +329,10 @@ void main() {
 
       final visits = cubit.visits;
       expect(visits, hasLength(2));
-      expect(
-        visits[0].map((i) => i.service.uuid).toList(),
-        <String>['srv-1', 'srv-2'],
-      );
+      expect(visits[0].map((i) => i.service.uuid).toList(), <String>[
+        'srv-1',
+        'srv-2',
+      ]);
       expect(visits[1].single.service.uuid, 'srv-5');
     });
   });
