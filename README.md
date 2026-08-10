@@ -21,7 +21,7 @@ flutter run --dart-define=DEMO_MODE=true       # بيتخطى الدخول وي�
 | | |
 |---|---|
 | **`kDesignKitVersion`** | `1.0.1` |
-| **`kDesignKitSourceCommit`** | `unversioned` — الـ`design-kit` لسه ما اتكوميتش في الريبو الأب |
+| **`kDesignKitSourceCommit`** | `2339c8ad41f2a5555e6e7460893297521602c0b1` |
 
 سطر واحد بيجيب كل حاجة:
 

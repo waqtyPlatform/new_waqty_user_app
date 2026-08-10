@@ -17,7 +17,7 @@ const String kDesignKitVersion = '1.0.1';
 /// الكوميت اللي النسخة دي اتاخدت منه في `Waqty-Platform/design-kit`.
 ///
 /// بيتحدّث مع كل إصدار. `unversioned` معناها إن الكيت لسه ما اتكوميتش.
-const String kDesignKitSourceCommit = 'unversioned';
+const String kDesignKitSourceCommit = '2339c8ad41f2a5555e6e7460893297521602c0b1';
 
 /// وصف قصير بيتحط في شاشة «عن التطبيق» لو حد حبّ.
 const String kDesignKitLabel = 'Waqty Design Kit $kDesignKitVersion';
