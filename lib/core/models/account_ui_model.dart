@@ -7,12 +7,26 @@ class AccountUiModel {
   final String phone;
   final String imagePath;
 
+  /// إمتى العميلة أكّدت رقم تليفونها — **مصدر الحقيقة الوحيد لحالة التأكيد**.
+  ///
+  /// بيجي من `users.phone_verified_at` جوه `/me`. الشيب في شاشة الحساب
+  /// والحالات الفاضية في «باقاتي» و«حجوزاتي» كلهم بيتفرّعوا عليه، و**مافيش
+  /// نسخة محلية** من الحالة دي: لو التأكيد اتعمل من جهاز تاني أو اتلغى من
+  /// الأدمن، التطبيق لازم يعرف من السيرفر مش من ذاكرته.
+  ///
+  /// `null` = مش مأكّد.
+  final DateTime? phoneVerifiedAt;
+
   const AccountUiModel({
     required this.name,
     required this.email,
     required this.phone,
     this.imagePath = '',
+    this.phoneVerifiedAt,
   });
+
+  /// الرقم مأكّد؟ — الاختصار اللي الـwidgets بتسأله.
+  bool get isPhoneVerified => phoneVerifiedAt != null;
 
   /// `GET /api/user/auth/me` — **بيرجّع موديل `User` خام مش مورد**:
   ///
@@ -32,6 +46,7 @@ class AccountUiModel {
     email: JsonParse.stringValue(json['email']),
     phone: JsonParse.stringValue(json['phone']),
     imagePath: JsonParse.stringValue(json['image_path']),
+    phoneVerifiedAt: JsonParse.dateOrNull(json['phone_verified_at']),
   );
 
   /// أول حرف من الاسم — بيتعرض في الدايرة لو مفيش صورة.

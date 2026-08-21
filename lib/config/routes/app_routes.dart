@@ -31,6 +31,9 @@ import 'package:waqty_user_application/features/booking/booking_details/data/rep
 import 'package:waqty_user_application/features/booking/reassignment/data/repo/reassignment_repo.dart';
 import 'package:waqty_user_application/features/booking/reassignment/logic/reassignment_cubit.dart';
 import 'package:waqty_user_application/features/booking/reassignment/ui/reassignment_screen.dart';
+import 'package:waqty_user_application/features/account/phone_verification/data/repo/phone_verification_repo.dart';
+import 'package:waqty_user_application/features/account/phone_verification/logic/phone_verification_cubit.dart';
+import 'package:waqty_user_application/features/account/phone_verification/ui/phone_verification_screen.dart';
 import 'package:waqty_user_application/features/account/payments/data/repo/payments_repo.dart';
 import 'package:waqty_user_application/features/account/payments/logic/payments_cubit.dart';
 import 'package:waqty_user_application/features/account/payments/ui/payments_screen.dart';
@@ -122,6 +125,15 @@ class RouteGenerator {
           builder: (_) => BlocProvider(
             create: (context) => PaymentsCubit(getIt<PaymentsRepo>())..load(),
             child: const PaymentsScreen(),
+          ),
+        );
+
+      case Routes.phoneVerificationScreen:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (context) =>
+                PhoneVerificationCubit(getIt<PhoneVerificationRepo>()),
+            child: const PhoneVerificationScreen(),
           ),
         );
 

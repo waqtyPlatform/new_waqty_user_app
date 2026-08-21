@@ -2,6 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/config/routes/routes.dart';
+import 'package:waqty_user_application/core/models/phone_claim_result_ui_model.dart';
+import 'package:waqty_user_application/features/account/account/logic/account_cubit.dart';
+// `show` مش استيراد كامل: `account_state` و`my_bookings_state` الاتنين
+// فيهم `InitialState`، والتصادم بيوقف الترجمة.
+import 'package:waqty_user_application/features/account/account/logic/account_state.dart'
+    show AccountState;
+import 'package:waqty_user_application/features/account/phone_verification/ui/widgets/phone_claim_result_sheet.dart';
 import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/extentions.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
@@ -270,8 +277,45 @@ class MyBookingsScreen extends StatelessWidget {
     );
   }
 
+  /// **فاضيتين بسببين مختلفين — ونصين مختلفين.**
+  ///
+  /// العميلة اللي حجزت من الفرع ورقمها مش مأكّد **عندها حجوزات فعلاً**،
+  /// التطبيق بس مش شايفها: `Booking.user_id` مابيتحطش غير لما
+  /// `provider_customers` يترّبط بحساب المنصة، واللي بيحصل في `verify-phone`.
+  ///
+  /// فـ«مفيش حجوزات جاية» في الحالة دي **معلومة غلط**، و«دوّر على مكان
+  /// قريب» بتبعتها تحجز حاجة هي حاجزاها. الفرع ده بيحوّل الطريق المسدود
+  /// لفعل.
   Widget _emptyState(BuildContext context, MyBookingsCubit cubit) {
+              // ⚠ **`BlocBuilder` على `AccountCubit` مش قراية مباشرة.**
+              //
+              // النص هنا بيتفرّع على `phone_verified_at`، والحساب
+              // والاستحقاقات بيتحمّلوا **متوازيين**. لو الحساب خلص بعد
+              // الاستحقاقات، القراية المباشرة كانت بتشوف `null` وترسم
+              // «لسه مافيش باقات» — و**مافيش حاجة بترجع تبنيها تاني**،
+              // فالعميلة اللي رقمها مش مأكّد كانت بتقعد على النص الغلط.
+    return BlocBuilder<AccountCubit, AccountState>(
+      builder: (context, _) => _emptyStateBody(context, cubit),
+    );
+  }
+
+  Widget _emptyStateBody(BuildContext context, MyBookingsCubit cubit) {
     final isUpcoming = cubit.selectedTab == 0;
+    final account = AccountCubit.get(context).account;
+
+    // `null` = الحساب لسه بيتحمّل. مابنفترضش إنه مأكّد ولا مش مأكّد —
+    // بنعرض النص المحايد لحد ما نعرف.
+    final needsVerification = account != null && !account.isPhoneVerified;
+
+    if (needsVerification) {
+      return AppEmptyStateWidget(
+        icon: Icons.phone_iphone_rounded,
+        title: 'مش لاقي حجوزاتك؟',
+        message: 'لو حجزت من الفرع، أكّد رقم تليفونك عشان تظهر هنا.',
+        actionLabel: 'أكّد رقمي',
+        onAction: () => _verifyPhone(context, cubit),
+      );
+    }
 
     return AppEmptyStateWidget(
       icon: Icons.event_note_outlined,
@@ -284,6 +328,27 @@ class MyBookingsScreen extends StatelessWidget {
           ? () => context.pushNamed(Routes.providersListScreen)
           : null,
     );
+  }
+
+  /// بيفتح التأكيد، وبعد النجاح **بيعيد تحميل الحساب والحجوزات**.
+  ///
+  /// الترتيب مهم: الحساب الأول عشان الشيب والحالة الفاضية يعرفوا إن الرقم
+  /// بقى مأكّد، وبعدين الحجوزات عشان اللي اترّبط يظهر.
+  Future<void> _verifyPhone(BuildContext context, MyBookingsCubit cubit) async {
+    final accountCubit = AccountCubit.get(context);
+    final result = await Navigator.of(
+      context,
+    ).pushNamed(Routes.phoneVerificationScreen);
+
+    if (!context.mounted) return;
+    if (result is! PhoneClaimResultUiModel) return;
+
+    await accountCubit.getProfile();
+    if (!context.mounted) return;
+    await cubit.loadBookings();
+
+    if (!context.mounted) return;
+    await PhoneClaimResultSheet.show(context, result: result);
   }
 
   /// إشعارات الإلغاء و«ما حضرش» — فوق «السابقة»، وكل واحد بيتقفل.

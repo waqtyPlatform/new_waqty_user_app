@@ -5,8 +5,10 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/config/routes/routes.dart';
 import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/extentions.dart';
+import 'package:waqty_user_application/core/models/phone_claim_result_ui_model.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
 import 'package:waqty_user_application/features/account/account/logic/account_cubit.dart';
+import 'package:waqty_user_application/features/account/phone_verification/ui/widgets/phone_claim_result_sheet.dart';
 import 'package:waqty_user_application/features/account/account/logic/account_state.dart';
 import 'package:waqty_user_application/features/account/account/ui/widgets/account_header_skeleton_widget.dart';
 import 'package:waqty_user_application/features/account/account/ui/widgets/account_header_widget.dart';
@@ -78,6 +80,27 @@ class AccountScreen extends StatelessWidget {
               icon: Icons.person_outline_rounded,
               title: 'بياناتي',
               onTap: () {},
+            ),
+            // **«رقم تليفوني» — الصف اللي بيوصّل العميلة بفلوسها.**
+            //
+            // `PackageEntitlementService::listForUser()` بيطابق على
+            // `provider_customers.platform_user_id`. لو الريسبشن عمل
+            // العميلة من رقم من غير ربط، الباقة اللي دفعت فيها كاش
+            // **مش موجودة** بالنسبة للتطبيق. والشيب هنا بيقرا
+            // `phone_verified_at` من السيرفر — مافيش نسخة محلية للحالة دي.
+            AppMenuRowWidget(
+              icon: Icons.phone_iphone_rounded,
+              title: 'رقم تليفوني',
+              subtitle: account?.phone,
+              trailing: account == null
+                  ? null
+                  : AppPillWidget(
+                      label: account.isPhoneVerified ? 'مأكّد' : 'مش مأكّد',
+                      tone: account.isPhoneVerified
+                          ? AppPillTone.positive
+                          : AppPillTone.warning,
+                    ),
+              onTap: () => _verifyPhone(context),
             ),
             AppMenuRowWidget(
               icon: Icons.receipt_long_rounded,
@@ -164,6 +187,26 @@ class AccountScreen extends StatelessWidget {
   /// الفعل من جواها. الترتيب هنا مش تفصيلة — `setLocale` بترمي الشجرة،
   /// فلو اتنادت والورقة لسه مفتوحة كان الـ `Navigator` اللي هي قاعدة فيه
   /// بيتحذف من تحتها.
+  /// بيفتح شاشة التأكيد وبيعيد تحميل الحساب لما تنجح.
+  ///
+  /// **إعادة التحميل مش تفصيلة.** التأكيد بيغيّر `phone_verified_at` على
+  /// السيرفر وبيربط سجلات — فلو الشاشة رجعت من غير ما تعيد تحميل، الشيب
+  /// هيفضل «مش مأكّد» بعد تأكيد ناجح، والعميلة هتعيد الكلّة.
+  Future<void> _verifyPhone(BuildContext context) async {
+    final cubit = AccountCubit.get(context);
+    final result = await Navigator.of(
+      context,
+    ).pushNamed(Routes.phoneVerificationScreen);
+
+    if (!context.mounted) return;
+    if (result is! PhoneClaimResultUiModel) return;
+
+    await cubit.getProfile();
+
+    if (!context.mounted) return;
+    await PhoneClaimResultSheet.show(context, result: result);
+  }
+
   void _showLanguageSheet(BuildContext context) {
     const locales = [
       // الاسم باللغة نفسها — مش «Arabic» و«English».

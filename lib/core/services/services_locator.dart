@@ -49,6 +49,9 @@ import 'package:waqty_user_application/features/booking/waitlist/data/services/w
 import 'package:waqty_user_application/features/account/account/data/repo/account_repo.dart';
 import 'package:waqty_user_application/features/account/account/data/services/account_mock_service.dart';
 import 'package:waqty_user_application/features/account/account/data/services/account_remote_service.dart';
+import 'package:waqty_user_application/features/account/phone_verification/data/repo/phone_verification_repo.dart';
+import 'package:waqty_user_application/features/account/phone_verification/data/services/phone_verification_mock_service.dart';
+import 'package:waqty_user_application/features/account/phone_verification/data/services/phone_verification_remote_service.dart';
 import 'package:waqty_user_application/features/account/payments/data/repo/payments_repo.dart';
 import 'package:waqty_user_application/features/account/payments/data/services/payments_mock_service.dart';
 import 'package:waqty_user_application/features/account/payments/data/services/payments_remote_service.dart';
@@ -148,6 +151,14 @@ class ServicesLocator {
       () => AccountRepo(
         AccountRemoteService(getIt<ApiClient>()),
         const AccountMockService(),
+      ),
+    );
+
+    /// PhoneVerification
+    getIt.registerLazySingleton<PhoneVerificationRepo>(
+      () => PhoneVerificationRepo(
+        PhoneVerificationRemoteService(getIt<ApiClient>()),
+        const PhoneVerificationMockService(),
       ),
     );
 

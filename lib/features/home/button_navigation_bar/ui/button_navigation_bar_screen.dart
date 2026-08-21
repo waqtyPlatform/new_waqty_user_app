@@ -62,6 +62,22 @@ class ButtonNavigationBarScreen extends StatelessWidget {
               create: (_) =>
                   ReassignmentCubit(getIt<ReassignmentRepo>())..start(),
             ),
+
+            // ⚠ **الحساب اتنقل فوق التبويبات — بقى حالة مشتركة.**
+            //
+            // كان جوه تبويب «حسابي» لوحده. بس `phone_verified_at` بقى
+            // بيفرّق **الحالة الفاضية** في «حجوزاتي»: العميلة اللي رقمها
+            // مش مأكّد لازم تشوف «أكّد رقمك عشان يظهروا» مش «مفيش حجوزات»
+            // — والتانية كدب عليها، هي فعلاً عندها حجوزات بس التطبيق مش
+            // شايفها.
+            //
+            // نسختين من `AccountCubit` = تبويبين ممكن يختلفوا على حالة
+            // التأكيد في نفس اللحظة، وده بالظبط اللي القاعدة موجودة عشانه.
+            BlocProvider<AccountCubit>(
+              create: (_) =>
+                  AccountCubit(getIt<AccountRepo>(), getIt<SessionStore>())
+                    ..getProfile(),
+            ),
           ],
           child: _shell(context, cubit, live),
         );
@@ -106,10 +122,8 @@ class ButtonNavigationBarScreen extends StatelessWidget {
               create: (_) => MyBookingsCubit(getIt<MyBookingsRepo>())..loadBookings(),
               child: const MyBookingsScreen(),
             ),
-            BlocProvider(
-              create: (_) => AccountCubit(getIt<AccountRepo>(), getIt<SessionStore>())..getProfile(),
-              child: const AccountScreen(),
-            ),
+            // الـcubit بقى فوق في الـshell — التبويب بيقرا نفس النسخة.
+            const AccountScreen(),
           ],
         ),
       ),

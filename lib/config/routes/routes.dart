@@ -19,4 +19,10 @@ class Routes {
 
   static const bookingDetailsScreen = "/BookingDetailsScreen";
   static const registerVerifyCodeScreen = "/RegisterVerifyCodeScreen";
+
+  /// تأكيد رقم التليفون — وربط سجلات الفرع بالحساب.
+  ///
+  /// بترجّع `PhoneClaimResultUiModel` لما تنجح، فاللي بينده لازم يعمل
+  /// `await` على `pushNamed` ويعيد تحميل الباقات والحجوزات بيها.
+  static const phoneVerificationScreen = "/PhoneVerificationScreen";
 }
