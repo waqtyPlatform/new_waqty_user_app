@@ -1,4 +1,5 @@
 import 'package:waqty_user_application/core/models/booking_item_ui_model.dart';
+import 'package:waqty_user_application/core/models/policy_ui_model.dart';
 import 'package:waqty_user_application/core/models/booking_visit_ui_model.dart';
 import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/json_parse.dart';
@@ -163,6 +164,12 @@ class BookingUiModel {
   /// زياراته هناك). إحنا بنقرا مش بنحسب.
   final Map<String, BookingStatus> visitStatuses;
 
+  /// سياسات الفرع اللي الحجز ده فيه.
+  ///
+  /// **بتيجي مع الحجز مش بنداء تاني** — العميلة واقفة على شاشة الحجز
+  /// والسياسة جزء من الحجز مش معلومة جانبية. TODO(api): BE-B1.
+  final PolicyUiModel policies;
+
   const BookingUiModel({
     required this.uuid,
     required this.providerUuid,
@@ -179,6 +186,7 @@ class BookingUiModel {
     this.cancellationReason = '',
     this.canCancel = false,
     this.visitStatuses = const <String, BookingStatus>{},
+    this.policies = PolicyUiModel.none,
   }) : assert(items.length > 0, 'الحجز لازم يكون فيه خدمة واحدة على الأقل');
 
   /// من رد `GET /api/user/bookings/{uuid}`.
@@ -256,6 +264,11 @@ class BookingUiModel {
       cancellationReason: JsonParse.stringValue(json['cancellation_reason']),
       canCancel: JsonParse.boolValue(json['can_cancel']),
       visitStatuses: visitStatuses,
+      policies: PolicyUiModel.fromJson(
+        branch['policies'] is Map<String, dynamic>
+            ? branch['policies'] as Map<String, dynamic>
+            : null,
+      ),
     );
   }
 
@@ -277,6 +290,35 @@ class BookingUiModel {
   /// بداية أول خدمة.
   DateTime get startAt =>
       items.map((i) => i.startAt).reduce((a, b) => a.isBefore(b) ? a : b);
+
+  /// نسخة بنفس الحجز و[policies] مختلفة.
+  ///
+  /// **موجودة عشان الـmock بس.** السيرفر بيبعت السياسات جوه payload الفرع
+  /// مع الحجز، فالمسار الحقيقي بيقراها في [BookingUiModel.fromJson] ومابيعدّيش
+  /// من هنا. الـmock عنده ١٩ fixture مكتوبين بالإيد، وحقن السياسة في كل
+  /// واحد فيهم كان هيخلّي أي تغيير في السياسات تعديل في ١٩ مكان — فبنحقنها
+  /// في نقطة واحدة (`MockBookings.byUuid`) بدل كده.
+  ///
+  /// مش `copyWith` عام: ماينفعش يبقى فيه طريق تاني لتعديل حجز جاي من
+  /// السيرفر — الحجز بيتقرا مابيتحسبش.
+  BookingUiModel withPolicies(PolicyUiModel next) => BookingUiModel(
+    uuid: uuid,
+    providerUuid: providerUuid,
+    providerName: providerName,
+    branchUuid: branchUuid,
+    branchName: branchName,
+    imagePath: imagePath,
+    items: items,
+    status: status,
+    branchAddress: branchAddress,
+    paymentStatus: paymentStatus,
+    currency: currency,
+    notes: notes,
+    cancellationReason: cancellationReason,
+    canCancel: canCancel,
+    visitStatuses: visitStatuses,
+    policies: next,
+  );
 
   /// نهاية آخر خدمة.
   DateTime get endAt =>

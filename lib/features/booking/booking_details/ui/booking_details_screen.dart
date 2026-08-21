@@ -17,6 +17,8 @@ import 'package:waqty_user_application/features/booking/booking_details/ui/widge
 import 'package:waqty_user_application/features/booking/create_booking/ui/create_booking_sheet.dart';
 import 'package:waqty_user_application/features/booking/in_branch/ui/widgets/in_branch_block_widget.dart';
 import 'package:waqty_user_application/core/widgets/booking_status_chip_widget.dart';
+import 'package:waqty_user_application/core/widgets/policy_accordion_widget.dart';
+import 'package:waqty_user_application/core/widgets/policy_note_widget.dart';
 
 class BookingDetailsScreen extends StatelessWidget {
   const BookingDetailsScreen({super.key});
@@ -90,6 +92,16 @@ class BookingDetailsScreen extends StatelessWidget {
               ),
               verticalSpace(AppSpacing.s16),
 
+              // **تعليمات قبل الزيارة — فوق كل حاجة، وقبل الميعاد بـ٢٤ ساعة
+              // بس.** دي الحاجة الوحيدة في الصفحة اللي العميلة **محتاجة
+              // تعمل حاجة بناءً عليها**، ولو نزلت تحت التفاصيل بتتقري بعد
+              // ما تبقى ما بقاش ينفع تتنفّذ. الـwidget بيطوي نفسه بره
+              // النافذة ولما النص فاضي.
+              PreVisitBannerWidget(
+                policies: booking.policies,
+                startAt: booking.startAt,
+              ),
+
               // الدور فوق التفاصيل — ده الرقم الوحيد في الصفحة اللي
               // بيتغيّر وإنت واقف تبصله. رقم الحجز والفرع والسعر ثابتين
               // ومحدش بيفتح الصفحة عشانهم وهو في الطريق للمحل.
@@ -112,6 +124,31 @@ class BookingDetailsScreen extends StatelessWidget {
               ],
 
               BookingDetailsInfoWidget(booking: booking),
+
+              // **سياسة الفلوس بتظهر في الحالة اللي بتلزم فيها بس.**
+              //
+              // الاسترجاع بيهم حجز اتلغى، وعدم الحضور بيهم حجز الفرع
+              // علّمه `no_show` — وعرضهم على حجز جاي ضوضاء بتخوّف من
+              // غير سبب. الـ`column` بيلمّ الموجود بس فمافيش فاصل
+              // بيتحط لسطر مش هيترسم.
+              // TODO(api): BE-B1.
+              if (booking.status.isCancelled ||
+                  booking.status == BookingStatus.noShow) ...[
+                verticalSpace(AppSpacing.s16),
+                PolicyNoteWidget.column(<PolicyNoteWidget>[
+                  if (booking.status.isCancelled)
+                    PolicyNoteWidget(
+                      label: 'الاسترجاع',
+                      text: booking.policies.refundPolicy,
+                    ),
+                  if (booking.status == BookingStatus.noShow)
+                    PolicyNoteWidget(
+                      label: 'لو ما حضرتش',
+                      text: booking.policies.noShowPolicy,
+                    ),
+                ]),
+              ],
+
               verticalSpace(AppSpacing.s24),
               BookingDetailsActionsWidget(
                 booking: booking,
@@ -205,11 +242,20 @@ class BookingDetailsScreen extends StatelessWidget {
   ///
   /// **٣. الرجوع من غير كلام** بيخلي العميل مش متأكد إن الإلغاء اتنفذ
   /// أصلاً.
+  ///
+  /// ⚠ **الرسالة كانت بتوعد وعد مش بتاعنا.** «الإلغاء مجاني ومفيش أي رسوم
+  /// عليك» كانت **ثابتة ومطلقة**، والمزوّد بيكتب `refund_policy` بنفسه في
+  /// إعدادات الفرع — وفيه مزوّدين فعلاً بيخصموا. يعني التطبيق كان بيدّي
+  /// ضمان مالي بالنيابة عن حد تاني ما اتسألش.
+  ///
+  /// دلوقتي: سياسة المزوّد لو موجودة، وإلا **الحقيقة اللي إحنا متأكدين
+  /// منها بس** — إن الإلغاء اتنفّذ. الفلوس بتتقال من الفرع، مش من هنا.
   void _afterCancel(
     BuildContext context, {
     required BookingDetailsCubit cubit,
   }) {
     final booking = cubit.booking;
+    final refundPolicy = booking?.policies.refundPolicy ?? '';
 
     AppSheetWidget.show<bool>(
       context,
@@ -217,8 +263,11 @@ class BookingDetailsScreen extends StatelessWidget {
       icon: Icons.check_circle_outline_rounded,
       iconTone: AppSemanticColors.positive,
       title: 'اتلغى الحجز',
-      // TODO(api): سياسة الإلغاء من إعدادات الفرع — دلوقتي ثابتة.
-      message: 'الإلغاء مجاني ومفيش أي رسوم عليك',
+      // TODO(api): BE-B1 — `refund_policy` من إعدادات الفرع. لحد ما تنزل،
+      // بنقول اللي حصل بس ومابنوعدش بحاجة عن الفلوس.
+      message: refundPolicy.isNotEmpty
+          ? refundPolicy
+          : 'الميعاد اتشال من مواعيدك. أي كلام عن الفلوس بيتحدد من الفرع.',
       actions: (sheetContext) => [
         AppButtonWidget(
           label: 'تحب تحجز ميعاد تاني؟',

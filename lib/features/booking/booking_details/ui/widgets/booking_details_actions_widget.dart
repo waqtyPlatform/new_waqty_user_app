@@ -84,9 +84,16 @@ class BookingDetailsActionsWidget extends StatelessWidget {
                   // النهاردة ٦م وإنت بتبصّ ٢ظ `can_cancel: true` — فالنص
                   // القديم كان بيمنع العميل من حاجة مسموحة له، ويبعته
                   // يكلّم الفرع في مشكلة مش موجودة.
+                  //
+                  // ولو المزوّد كاتب `cancellation_policy` بنفسه، **كلامه
+                  // هو اللي يتعرض** — هو صاحب القاعدة، وإحنا بنقولها
+                  // بالنيابة عنه بس لما هو ما يكتبهاش.
+                  // TODO(api): BE-B1 — `policies` على payload الفرع.
                   Expanded(
                     child: Text(
-                      'الميعاد ده بدأ خلاص — كلّم الفرع لو محتاج تعدّل أو تلغي',
+                      booking.policies.cancellationPolicy.isNotEmpty
+                          ? booking.policies.cancellationPolicy
+                          : 'الميعاد ده بدأ خلاص — كلّم الفرع لو محتاج تعدّل أو تلغي',
                       style: AppTextStyles.caption,
                     ),
                   ),

@@ -6,6 +6,7 @@ import 'package:waqty_user_application/core/mock/mock_services.dart';
 import 'package:waqty_user_application/core/models/branch_ui_model.dart';
 import 'package:waqty_user_application/core/models/service_ui_model.dart';
 import 'package:waqty_user_application/core/utils/app_constant.dart';
+import 'package:waqty_user_application/core/widgets/policy_accordion_widget.dart';
 import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
 import 'package:waqty_user_application/features/booking/create_booking/ui/create_booking_sheet.dart';
@@ -130,6 +131,18 @@ class ServiceProviderDetailsScreen extends StatelessWidget {
                         // فبتتعرض باهتة مش شغالة وميتة.
                         onShare: null,
                       ),
+
+                      // **«قبل ما تحجز» — مقفول، وتحت الفرع مش فوقه.**
+                      //
+                      // السياسة بتتراجع لما تلزم، فمكانها بعد الحاجات
+                      // اللي العميلة داخلة عشانها (الفرع · المواعيد ·
+                      // الاتصال) وقبل الخدمات. والـwidget بيختفي بالكامل
+                      // لو المزوّد ما كتبش ولا سياسة — وده حال **كل**
+                      // الفروع النهاردة لحد ما BE-B1 تنزل.
+                      if (branch.policies.hasPreBooking) ...[
+                        verticalSpace(AppSpacing.listRowGap),
+                        PolicyAccordionWidget(policies: branch.policies),
+                      ],
                     ],
 
                     // العنوان شايل الفاصل ٤٠ بنفسه. قبل كده الفاصل قبل

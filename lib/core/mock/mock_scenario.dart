@@ -104,6 +104,13 @@ enum MockScenario {
   /// خصم مجموعة عملاء — «كان ٢٥٠ · بقى ٢٠٠».
   discountedCustomer,
 
+  // ── السياسات ────────────────────────────────────────────────────────
+  /// الخمس حقول مليانة ونصهم طويل.
+  policiesFull,
+
+  /// كلهم فاضيين — لازم مايظهرش أي صندوق فاضي.
+  policiesNone,
+
   // ── حالات النظام ────────────────────────────────────────────────────
   networkError,
   emptyState,
@@ -134,6 +141,8 @@ enum MockScenario {
     MockScenario.cancelledBooking => 'ملغي',
     MockScenario.noShow => 'لم يحضر',
     MockScenario.discountedCustomer => 'عميل عليه خصم',
+    MockScenario.policiesFull => 'سياسات كاملة · نص طويل',
+    MockScenario.policiesNone => 'مفيش أي سياسة',
     MockScenario.networkError => 'خطأ شبكة',
     MockScenario.emptyState => 'القوايم فاضية',
     MockScenario.slowNetwork => 'شبكة بطيئة',
@@ -174,6 +183,9 @@ enum MockScenario {
     MockScenario.cancelledBooking => 'معرفة السبب بتغيّر رد الفعل؟',
     MockScenario.noShow => 'متوقعين يعملوا إيه من الشاشة دي؟',
     MockScenario.discountedCustomer => 'الخصم بيتلاحظ من غير لابل؟',
+    MockScenario.policiesFull => 'النص الطويل بيتقري ولا بيتلف؟',
+    MockScenario.policiesNone =>
+      'الشاشة من غير سياسات شكلها كامل ولا فيها فراغ مكسور؟',
     MockScenario.networkError => 'الخطأ متميّز عن الفاضي؟',
     MockScenario.emptyState => 'الفاضي متميّز عن الخطأ؟',
     MockScenario.slowNetwork => 'الـ skeletons بتطمّن ولا بتوتّر؟',

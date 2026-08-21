@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
+import 'package:waqty_user_application/core/widgets/policy_note_widget.dart';
 import 'package:waqty_user_application/features/booking/create_booking/logic/booking_draft_item.dart';
 import 'package:waqty_user_application/features/booking/create_booking/logic/create_booking_cubit.dart';
 
@@ -106,6 +107,22 @@ class CreateBookingSummaryWidget extends StatelessWidget {
         ),
         verticalSpace(AppSpacing.s4),
         Text('الدفع في الفرع', style: AppTextStyles.caption),
+
+        // **شرط الإلغاء بتاع المزوّد — تحت الإجمالي مباشرة.**
+        //
+        // ده شرط في الاتفاق اللي العميلة على وشك توافق عليه، فمكانه جنب
+        // الرقم اللي بتوافق عليه مش في شاشة تانية. والسطر بيختفي بالكامل
+        // لو المزوّد ما كتبش سياسة — **مابنكتبش واحدة من عندنا**، ودي
+        // بالظبط الغلطة اللي كانت في شيت ما بعد الإلغاء.
+        // TODO(api): BE-B1.
+        if ((cubit.selectedBranch?.policies.cancellationPolicy ?? '')
+            .isNotEmpty) ...[
+          verticalSpace(AppSpacing.s8),
+          PolicyNoteWidget(
+            label: 'الإلغاء',
+            text: cubit.selectedBranch!.policies.cancellationPolicy,
+          ),
+        ],
 
         // أهم سطر في الشاشة كلها.
         //

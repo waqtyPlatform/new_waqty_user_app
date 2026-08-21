@@ -1,4 +1,5 @@
 import 'package:waqty_user_application/core/mock/mock_config.dart';
+import 'package:waqty_user_application/core/mock/mock_policies.dart';
 import 'package:waqty_user_application/core/mock/mock_scenario.dart';
 import 'package:waqty_user_application/core/models/booking_item_ui_model.dart';
 import 'package:waqty_user_application/core/models/booking_ui_model.dart';
@@ -928,9 +929,16 @@ class MockBookings {
   ///
   /// والليستة الكاملة بتفضل fallback عشان حجز ظاهر في شاشة وسيناريو
   /// اتغيّر بعدها مايوقعش على لا شيء.
+  /// **نقطة الحقن الوحيدة للسياسات في الـmock.**
+  ///
+  /// شاشة التفاصيل هي السطح الوحيد اللي بيقرا `booking.policies`، وكلها
+  /// بتعدّي من هنا — فالسياسة بتتحط مرة واحدة بدل ما تتكرر في ١٩ fixture.
+  static BookingUiModel _stamped(BookingUiModel booking) =>
+      booking.withPolicies(MockPolicies.current);
+
   static BookingUiModel byUuid(String uuid) {
     for (final booking in <BookingUiModel>[...upcoming, ...past, ...notices]) {
-      if (booking.uuid == uuid) return booking;
+      if (booking.uuid == uuid) return _stamped(booking);
     }
 
     // **الإلغاءات بتتطبّق على الاحتياطي كمان.**
@@ -943,7 +951,9 @@ class MockBookings {
       ..._allUpcoming,
       ..._allPast,
     ]);
-    return all.firstWhere((b) => b.uuid == uuid, orElse: () => all.first);
+    return _stamped(
+      all.firstWhere((b) => b.uuid == uuid, orElse: () => all.first),
+    );
   }
 
   /// بيرجّع الـ mock لحالته الأولى — **للاختبارات بس**.

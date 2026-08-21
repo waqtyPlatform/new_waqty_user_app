@@ -1,3 +1,4 @@
+import 'package:waqty_user_application/core/models/policy_ui_model.dart';
 import 'package:waqty_user_application/core/utils/json_parse.dart';
 
 /// موديل عرض للفرع.
@@ -21,6 +22,12 @@ class BranchUiModel {
   /// ٧ أيام بالترتيب من الاثنين. اليوم المقفول بيبقى فيه «مغلق».
   final List<BranchWorkingDay> workingHours;
 
+  /// سياسات الفرع — الإلغاء والاسترجاع وعدم الحضور وتعليمات الزيارة.
+  ///
+  /// TODO(api): BE-B1 — لسه مش في `PublicProviderBranchResource`، فبتفضل
+  /// [PolicyUiModel.none] والسطوح بتطوي نفسها.
+  final PolicyUiModel policies;
+
   const BranchUiModel({
     required this.uuid,
     required this.name,
@@ -33,6 +40,7 @@ class BranchUiModel {
     this.openStatusLabel = '',
     this.isOpenNow = false,
     this.workingHours = const <BranchWorkingDay>[],
+    this.policies = PolicyUiModel.none,
   });
 
   /// `GET /api/public/provider-branches` — الشكل الحقيقي:
@@ -60,6 +68,11 @@ class BranchUiModel {
     latitude: JsonParse.doubleValue(json['latitude']),
     longitude: JsonParse.doubleValue(json['longitude']),
     distanceKm: distanceKm,
+    policies: PolicyUiModel.fromJson(
+      json['policies'] is Map<String, dynamic>
+          ? json['policies'] as Map<String, dynamic>
+          : null,
+    ),
   );
 }
 

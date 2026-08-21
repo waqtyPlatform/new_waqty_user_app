@@ -1,4 +1,5 @@
 import 'package:waqty_user_application/core/mock/mock_config.dart';
+import 'package:waqty_user_application/core/mock/mock_policies.dart';
 import 'package:waqty_user_application/core/models/branch_ui_model.dart';
 import 'package:waqty_user_application/core/models/provider_ui_model.dart';
 
@@ -159,7 +160,7 @@ class MockProviders {
   /// من الـ enums. دلوقتي أي محل التستر يفتحه بيوصله لاختيار الفرع.
   static List<BranchUiModel> branchesOf(String providerUuid) {
     if (providerUuid == 'prv-1') {
-      return const <BranchUiModel>[
+      return <BranchUiModel>[
         BranchUiModel(
           uuid: 'brn-1',
           name: 'فرع المعادي',
@@ -172,6 +173,7 @@ class MockProviders {
           openStatusLabel: 'مفتوح · يقفل 9:00 م',
           isOpenNow: true,
           workingHours: _standardHours,
+          policies: MockPolicies.current,
         ),
         BranchUiModel(
           uuid: 'brn-2',
@@ -185,6 +187,7 @@ class MockProviders {
           openStatusLabel: 'مفتوح · يقفل 10:00 م',
           isOpenNow: true,
           workingHours: _standardHours,
+          policies: MockPolicies.current,
         ),
       ];
     }
@@ -204,6 +207,7 @@ class MockProviders {
         openStatusLabel: 'مفتوح · يقفل 9:00 م',
         isOpenNow: true,
         workingHours: _standardHours,
+        policies: MockPolicies.current,
       ),
 
       // الفرع التاني بيتولّد **من المحل نفسه** — الاسم والمنطقة والـ uuid
@@ -222,6 +226,7 @@ class MockProviders {
           openStatusLabel: 'مفتوح · يقفل 9:00 م',
           isOpenNow: true,
           workingHours: _standardHours,
+          policies: MockPolicies.current,
         ),
     ];
   }
