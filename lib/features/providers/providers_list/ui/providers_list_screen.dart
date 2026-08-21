@@ -131,22 +131,47 @@ class ProvidersListScreen extends StatelessWidget {
       );
     }
 
-    return ListView.builder(
-      key: const ValueKey('data'),
-      padding: padding,
-      itemCount: cubit.providers.length,
-      itemBuilder: (context, index) {
-        final provider = cubit.providers[index];
-        // آخر صف من غير خط — الخط تحت الأخير بيرسم حد لقايمة مالهاش حد.
-        return ProviderRowWidget(
-          provider: provider,
-          showHairline: index != cubit.providers.length - 1,
-          onTap: () => context.pushNamed(
-            Routes.serviceProviderDetailsScreen,
-            arguments: {'providerUuid': provider.uuid},
-          ),
-        );
+    // صف زيادة لمؤشر التحميل لما يبقى فيه صفحات تانية.
+    final itemCount = cubit.providers.length + (cubit.hasMore ? 1 : 0);
+
+    return NotificationListener<ScrollNotification>(
+      // ٢٠٠ بكسل قبل الآخر — أقرب من الـ٤٠٠ بتاعة الحجوزات لأن صف
+      // المقدّم أطول، فـ٤٠٠ هنا كانت هتجيب الصفحة والعميل لسه فوق.
+      onNotification: (notification) {
+        final metrics = notification.metrics;
+        if (metrics.axis != Axis.vertical) return false;
+        if (metrics.pixels >= metrics.maxScrollExtent - 200) {
+          cubit.loadMore();
+        }
+        return false;
       },
+      child: ListView.builder(
+        key: const ValueKey('data'),
+        padding: padding,
+        itemCount: itemCount,
+        itemBuilder: (context, index) {
+          if (index >= cubit.providers.length) {
+            return Padding(
+              padding: EdgeInsetsDirectional.symmetric(
+                vertical: AppSpacing.s16.h,
+              ),
+              child: const AppLoadingWidget(),
+            );
+          }
+
+          final provider = cubit.providers[index];
+          // آخر صف من غير خط — الخط تحت الأخير بيرسم حد لقايمة مالهاش حد.
+          // (ولما يبقى تحته مؤشر تحميل، الخط بيفضل لأن القايمة ماخلصتش.)
+          return ProviderRowWidget(
+            provider: provider,
+            showHairline: index != cubit.providers.length - 1 || cubit.hasMore,
+            onTap: () => context.pushNamed(
+              Routes.serviceProviderDetailsScreen,
+              arguments: {'providerUuid': provider.uuid},
+            ),
+          );
+        },
+      ),
     );
   }
 }

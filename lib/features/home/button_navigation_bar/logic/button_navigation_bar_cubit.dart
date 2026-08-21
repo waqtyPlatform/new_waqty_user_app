@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:waqty_user_application/core/mock/mock_bookings.dart';
 import 'package:waqty_user_application/core/models/booking_ui_model.dart';
 import 'package:waqty_user_application/features/home/button_navigation_bar/logic/button_navigation_bar_state.dart';
+import 'package:waqty_user_application/features/home/home/data/repo/home_repo.dart';
 
 /// تبويب واحد في الشريط.
 ///
@@ -32,9 +32,10 @@ class NavTab {
 /// و«استكشاف» بقى **بيعرض لستة المحلات** مش نسخة تانية من الرئيسية — ده كان
 /// سبب إن الشريط القديم بيبان مكرّر.
 class ButtonNavigationBarCubit extends Cubit<ButtonNavigationBarState> {
-  ButtonNavigationBarCubit({int initialIndex = 0})
+  final HomeRepo _repo;
+
+  ButtonNavigationBarCubit(this._repo, {int initialIndex = 0})
     : currentIndex = initialIndex,
-      liveBooking = _resolveLiveBooking(),
       super(InitialState());
 
   int currentIndex;
@@ -50,12 +51,21 @@ class ButtonNavigationBarCubit extends Cubit<ButtonNavigationBarState> {
   /// `InBranchCubit` والقشرة عملت واحد تاني، بيبقى فيه نبضتين مستقلتين
   /// وحقيقتين ممكن يختلفوا في نفس اللحظة — الشريط يقول «دورك دلوقتي»
   /// والبؤرة في الهوم لسه بتقول «اتنين قدامك».
-  final BookingUiModel? liveBooking;
+  ///
+  /// ⚠ **بيتحمّل في [start] مش في الكونستركتور.** كان بيتقرا من الموك
+  /// بشكل متزامن، وده مايتحوّلش لنداء شبكة. القشرة بتتبني الأول بشريط
+  /// من غير حالة فرع، وبيظهر لما الحجز يوصل.
+  BookingUiModel? liveBooking;
 
-  static BookingUiModel? _resolveLiveBooking() {
-    // TODO(api): GET /api/user/bookings?upcoming=true&per_page=1
-    final bookings = MockBookings.upcoming;
-    return bookings.isEmpty ? null : bookings.first;
+  /// بيجيب أقرب حجز جاي — مصدر حالة «جوّه الفرع».
+  Future<void> start() async {
+    final result = await _repo.upcomingBooking();
+    if (isClosed) return;
+
+    // فشل الجلب معناه مفيش شريط فرع — مش شاشة خطأ. الشريط ده إضافة
+    // على القشرة، مش شرط لتشغيلها.
+    liveBooking = result.getOrElse(() => null);
+    emit(OnBottomNavBarChangedState());
   }
 
   void changeIndex(int i) {

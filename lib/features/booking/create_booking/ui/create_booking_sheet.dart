@@ -12,6 +12,8 @@ import 'package:waqty_user_application/features/booking/create_booking/ui/widget
 import 'package:waqty_user_application/features/booking/create_booking/ui/widgets/create_booking_service_picker_widget.dart';
 import 'package:waqty_user_application/features/booking/create_booking/ui/widgets/create_booking_header_widget.dart';
 import 'package:waqty_user_application/features/booking/create_booking/ui/widgets/create_booking_summary_widget.dart';
+import 'package:waqty_user_application/features/booking/create_booking/data/repo/create_booking_repo.dart';
+import 'package:waqty_user_application/core/services/services_locator.dart';
 
 /// الحجز — sheet فوق صفحة المحل، مش wizard بخمس شاشات.
 ///
@@ -60,12 +62,13 @@ class CreateBookingSheet extends StatelessWidget {
       enableDrag: false,
       builder: (_) => BlocProvider(
         create: (_) => CreateBookingCubit(
+          getIt<CreateBookingRepo>(),
           providerUuid: providerUuid,
           providerName: providerName,
           initialServiceUuid: serviceUuid,
           initialBranch: branch,
           initialBranchUuid: branchUuid,
-        )..enterDateTimeStep(),
+        )..bootstrap(),
         child: const CreateBookingSheet(),
       ),
     );

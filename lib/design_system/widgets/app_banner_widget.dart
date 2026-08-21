@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../tokens/app_icons.dart';
 import '../tokens/app_radius.dart';
 import '../tokens/app_semantic_colors.dart';
 import '../tokens/app_spacing.dart';
 import '../tokens/app_text_styles.dart';
 import 'app_pill_widget.dart';
+import 'app_icon_widget.dart';
 
 /// شريط تنبيه جوه الصفحة.
 ///
@@ -102,7 +104,7 @@ class AppBannerWidget extends StatelessWidget {
               child: SizedBox(
                 width: AppSpacing.touchTarget.r,
                 height: AppSpacing.touchTarget.r,
-                child: Icon(Icons.close_rounded, size: 18.r, color: _ink),
+                child: AppIconWidget(AppIcons.close, size: 18, color: _ink),
               ),
             ),
         ],

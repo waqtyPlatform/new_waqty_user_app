@@ -1,39 +1,55 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:waqty_user_application/core/mock/mock_account.dart';
-import 'package:waqty_user_application/core/mock/mock_source.dart';
+import 'package:waqty_user_application/core/api/session_store.dart';
 import 'package:waqty_user_application/core/models/account_ui_model.dart';
-import 'package:waqty_user_application/core/services/cache_helper.dart';
-import 'package:waqty_user_application/core/utils/constant_keys.dart';
+import 'package:waqty_user_application/features/account/account/data/repo/account_repo.dart';
 import 'package:waqty_user_application/features/account/account/logic/account_state.dart';
 
 class AccountCubit extends Cubit<AccountState> {
-  AccountCubit() : super(InitialState());
+  final AccountRepo _repo;
+  final SessionStore _session;
+
+  AccountCubit(this._repo, this._session) : super(InitialState());
 
   AccountUiModel? account;
 
   Future<void> getProfile() async {
     emit(AccountLoadingState());
 
-    // TODO(api): GET /api/user/auth/me
-    final result = await MockSource.fetch(MockAccount.me);
+    final result = await _repo.profile();
+    if (isClosed) return;
 
-    result.fold((failure) => emit(AccountErrorState(message: failure)), (data) {
-      account = data;
-      emit(AccountSuccessState());
-    });
+    result.fold(
+      (failure) => emit(AccountErrorState(message: failure.message)),
+      (data) {
+        account = data;
+        emit(AccountSuccessState());
+      },
+    );
   }
 
   /// تسجيل الخروج — **مكانش موجود في الأبلكيشن خالص**.
   ///
-  /// يعني اللي بيسجّل دخول مرة، مفيش طريقة يخرج بيها. لو حد فتح
-  /// حسابه على موبايل صاحبه أو على جهاز في المحل، مش هيعرف يقفله.
+  /// يعني اللي بيسجّل دخول مرة، مفيش طريقة يخرج بيها. لو حد فتح حسابه على
+  /// موبايل صاحبه أو على جهاز في المحل، مش هيعرف يقفله.
   Future<void> logout() async {
     emit(LogoutLoadingState());
 
-    // TODO(api): POST /api/user/auth/logout
-    await Future.delayed(const Duration(milliseconds: 500));
+    // ⚠ **النداء الأول والمسح بعده — والمسح بيحصل مهما كان الرد.**
+    //
+    // لو السيرفر مردّش (نت مقطوع مثلاً) والعميل داس خروج، المفروض يخرج
+    // برضه. الجلسة اللي بتفضل شغّالة لأن نداء فشل أوحش من توكن مابطّلش
+    // على السيرفر.
+    await _repo.logout();
 
-    await CacheHelper.removeSecureData(ConstantKeys.saveTokenToShared);
+    // ⚠ **`SessionStore.clear()` مش `CacheHelper` لوحده.**
+    //
+    // التوكن عايش في مكانين: المخزن الآمن، ونسخة ساخنة في الذاكرة بيقرا
+    // منها الـinterceptor. مسح المخزن بس بيسيب النسخة الساخنة شغّالة —
+    // يعني العميل «خرج» والطلبات لسه بتتبعت باسمه لحد ما الأبلكيشن يتقفل.
+    // دي كانت ثغرة حقيقية.
+    await _session.clear();
+
+    if (isClosed) return;
     emit(LogoutSuccessState());
   }
 

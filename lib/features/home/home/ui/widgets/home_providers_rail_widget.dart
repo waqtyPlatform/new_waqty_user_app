@@ -130,8 +130,21 @@ class _CompactProviderCard extends StatelessWidget {
                   style: AppTextStyles.caption,
                 ),
                 verticalSpace(AppSpacing.subtitleToMeta),
+                // ⚠ **الأجزاء الفاضية بتتشال، والـ`Text` بيفضل.**
+                //
+                // `PublicProviderResource` مابيبعتش `price_from` — فالسطر كان
+                // بيطلع «٠ م · من ٠ ج.م»، ودي معلومة **غلط** مش معلومة ناقصة.
+                //
+                // والـ`Text` مابيتشالش لأن ارتفاع الكارت **محسوب**
+                // (`_textPart` فوق) — شيله بيخلّي المحتوى أقصر من المحجوز
+                // والسكيليتون يفترق عن الكارت الحقيقي.
                 Text(
-                  '${AppFormat.distance(provider.distanceKm)} · من ${AppFormat.money(provider.priceFrom)}',
+                  <String>[
+                    if (provider.distanceKm > 0)
+                      AppFormat.distance(provider.distanceKm),
+                    if (provider.priceFrom > 0)
+                      'من ${AppFormat.money(provider.priceFrom)}',
+                  ].join(' · '),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTextStyles.captionInk,

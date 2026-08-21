@@ -12,6 +12,8 @@ import 'package:waqty_user_application/core/models/service_ui_model.dart';
 import 'package:waqty_user_application/features/booking/create_booking/logic/booking_draft_item.dart';
 import 'package:waqty_user_application/features/booking/my_bookings/logic/my_bookings_cubit.dart';
 import 'package:waqty_user_application/features/booking/my_bookings/logic/my_bookings_state.dart';
+import 'package:waqty_user_application/features/booking/my_bookings/data/repo/my_bookings_repo.dart';
+import 'package:waqty_user_application/features/booking/my_bookings/data/services/my_bookings_mock_service.dart';
 
 void main() {
   tearDown(() => MockConfig.scenario = MockScenario.happyPath);
@@ -121,7 +123,10 @@ void main() {
       MockConfig.scenario = MockScenario.manyBookings;
       MockConfig.delay = Duration.zero;
 
-      final cubit = MyBookingsCubit();
+      final cubit = MyBookingsCubit(MyBookingsRepo(
+        const MyBookingsMockService(),
+        const MyBookingsMockService(),
+      ));
       await cubit.loadBookings();
 
       expect(MockBookings.upcoming.length, 40);
@@ -135,7 +140,10 @@ void main() {
       MockConfig.scenario = MockScenario.manyBookings;
       MockConfig.delay = Duration.zero;
 
-      final cubit = MyBookingsCubit();
+      final cubit = MyBookingsCubit(MyBookingsRepo(
+        const MyBookingsMockService(),
+        const MyBookingsMockService(),
+      ));
       await cubit.loadBookings();
       final firstPage = List.of(cubit.bookings);
 
@@ -155,7 +163,10 @@ void main() {
       MockConfig.scenario = MockScenario.manyBookings;
       MockConfig.delay = Duration.zero;
 
-      final cubit = MyBookingsCubit();
+      final cubit = MyBookingsCubit(MyBookingsRepo(
+        const MyBookingsMockService(),
+        const MyBookingsMockService(),
+      ));
       await cubit.loadBookings();
       await cubit.loadMore();
       await cubit.loadMore();
@@ -174,7 +185,10 @@ void main() {
       MockConfig.scenario = MockScenario.happyPath;
       MockConfig.delay = Duration.zero;
 
-      final cubit = MyBookingsCubit();
+      final cubit = MyBookingsCubit(MyBookingsRepo(
+        const MyBookingsMockService(),
+        const MyBookingsMockService(),
+      ));
       await cubit.loadBookings();
 
       expect(cubit.hasMore, isFalse);
@@ -185,7 +199,10 @@ void main() {
       MockConfig.scenario = MockScenario.manyBookings;
       MockConfig.delay = Duration.zero;
 
-      final cubit = MyBookingsCubit();
+      final cubit = MyBookingsCubit(MyBookingsRepo(
+        const MyBookingsMockService(),
+        const MyBookingsMockService(),
+      ));
       await cubit.loadBookings();
 
       final seen = <MyBookingsState>[];
@@ -209,7 +226,10 @@ void main() {
       MockConfig.scenario = MockScenario.manyBookings;
       MockConfig.delay = const Duration(milliseconds: 30);
 
-      final cubit = MyBookingsCubit();
+      final cubit = MyBookingsCubit(MyBookingsRepo(
+        const MyBookingsMockService(),
+        const MyBookingsMockService(),
+      ));
       await cubit.loadBookings();
       final upcomingUuids = cubit.bookings.map((b) => b.uuid).toSet();
 

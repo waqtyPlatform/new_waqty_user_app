@@ -1,11 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:waqty_user_application/core/services/cache_helper.dart';
-import 'package:waqty_user_application/core/utils/constant_keys.dart';
+import 'package:waqty_user_application/core/utils/app_phone.dart';
 import 'package:waqty_user_application/features/auth/login/data/models/login_request_model.dart';
 import 'package:waqty_user_application/features/auth/login/data/models/login_response_model.dart';
 import 'package:waqty_user_application/features/auth/login/data/repo/login_repo.dart';
 import 'package:waqty_user_application/features/auth/login/logic/login_state.dart';
+import 'package:waqty_user_application/core/api/session_store.dart';
+import 'package:waqty_user_application/core/services/services_locator.dart';
 
 class LoginCubit extends Cubit<LoginState> {
   final LoginRepo _loginRepo;
@@ -34,11 +35,9 @@ class LoginCubit extends Cubit<LoginState> {
     final result = await _loginRepo
         .login(
           LoginRequestModel(
-            login:
-                (loginCountryCodeController.text.isEmpty
-                    ? '+20'
-                    : loginCountryCodeController.text) +
-                loginPhoneController.text.trim(),
+            // البوابة بترجّع الصيغة المحلية اللي الباك-إند بيقبلها.
+            // لزق كود الدولة بالإيد كان بيطلّع `+2001113000000`.
+            login: AppPhone.toApiFormat(loginPhoneController.text),
             password: loginPasswordController.text,
           ),
         )
@@ -60,11 +59,19 @@ class LoginCubit extends Cubit<LoginState> {
     );
   }
 
+  /// ⚠ **عبر `SessionStore` مش `CacheHelper` مباشرة.**
+  ///
+  /// التوكن عايش في مكانين: المخزن الآمن، ونسخة ساخنة في الذاكرة
+  /// `AppInterceptor` بيقرا منها (لأن قراية Keystore في كل طلب تقيلة).
+  ///
+  /// الكتابة في المخزن لوحده بتسيب النسخة الساخنة فاضية — فالطلبات
+  /// بتخرج من غير هيدر مصادقة، وأول نداء محمي يرجّع ٤٠١، والأبلكيشن
+  /// يرمي العميل على شاشة الدخول **بعد ما دخل بثانية**. ده حصل فعلاً
+  /// واتمسك على المحاكي.
+  ///
+  /// `SessionStore.save` بيكتب في الاتنين وبيصفّر علامة الانتهاء.
   Future<void> cashUserData(LoginResponseModel response) async {
-    await CacheHelper.setSecuredString(
-      ConstantKeys.saveTokenToShared,
-      response.data!.token,
-    );
+    await getIt<SessionStore>().save(response.data!.token);
   }
 
   static LoginCubit get(context) => BlocProvider.of(context);

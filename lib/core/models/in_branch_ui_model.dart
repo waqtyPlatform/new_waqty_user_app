@@ -1,3 +1,4 @@
+import 'package:waqty_user_application/core/utils/json_parse.dart';
 import 'package:waqty_user_application/core/models/booking_ui_model.dart';
 import 'package:waqty_user_application/design_system/design_system.dart';
 
@@ -51,6 +52,37 @@ class InBranchUiModel {
     this.estimateHigh,
     this.expectedFinishAt,
   });
+
+  /// بتتبني من `GET /api/user/bookings/{uuid}` — **جزئي بقصد**.
+  ///
+  /// ⚠ **[status] و[employeeName] بس هما اللي من السيرفر.**
+  /// التقدير ([estimateLow] · [estimateHigh] · [expectedFinishAt]) **مالوش
+  /// أي إشارة في الـAPI** — مفيش ترتيب في الطابور ولا وقت متوقّع في أي
+  /// endpoint. بيفضل من `MockInBranch`.
+  ///
+  /// **ماتخترعش تقدير من مدة الخدمة.** «باقي ١٥ دقيقة» محسوبة من الجدول
+  /// المتوقّع مش من الواقع بتبقى كذبة أوحش من «مفيش تقدير» — والصالون
+  /// اللي متأخر ساعة هيدفع تمنها في تقييم العميل. سيناريو
+  /// `waitingNoEstimate` موجود عشان يجاوب: هل التقدير يستاهل شغل باك-إند؟
+  factory InBranchUiModel.fromJson(
+    Map<String, dynamic> json, {
+    Duration? estimateLow,
+    Duration? estimateHigh,
+    DateTime? expectedFinishAt,
+  }) {
+    final employee = JsonParse.mapValue(json['employee']);
+
+    return InBranchUiModel(
+      status: BookingStatusLabel.fromApi(
+        JsonParse.stringValue(json['status'], fallback: 'confirmed'),
+      ),
+      employeeName: JsonParse.localizedValue(employee['name']),
+      updatedAt: JsonParse.dateValue(json['updated_at']),
+      estimateLow: estimateLow,
+      estimateHigh: estimateHigh,
+      expectedFinishAt: expectedFinishAt,
+    );
+  }
 
   /// اللابل الصغير فوق العنوان — **من ألفاظ السيرفر**.
   ///

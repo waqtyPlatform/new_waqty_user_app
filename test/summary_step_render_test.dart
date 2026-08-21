@@ -10,6 +10,8 @@ import 'package:waqty_user_application/core/models/slot_ui_model.dart';
 import 'package:waqty_user_application/features/booking/create_booking/logic/booking_draft_item.dart';
 import 'package:waqty_user_application/features/booking/create_booking/logic/create_booking_cubit.dart';
 import 'package:waqty_user_application/features/booking/create_booking/ui/widgets/create_booking_summary_widget.dart';
+import 'package:waqty_user_application/features/booking/create_booking/data/services/create_booking_mock_service.dart';
+import 'package:waqty_user_application/features/booking/create_booking/data/repo/create_booking_repo.dart';
 
 /// **خطوة الملخص** — الشاشة اللي العميل بيوافق منها.
 ///
@@ -55,6 +57,10 @@ void main() {
   }
 
   CreateBookingCubit singleService() => CreateBookingCubit.seeded(
+    CreateBookingRepo(
+      const CreateBookingMockService(),
+      const CreateBookingMockService(),
+    ),
     providerUuid: provider.uuid,
     providerName: provider.name,
     draft: [scheduled(services.first, index: 0)],
@@ -63,6 +69,10 @@ void main() {
   /// تلات خدمات على يومين — بيغطي عنوان الزيارة، وفاصل نفس اليوم،
   /// وعدّاد الخدمات جنب الإجمالي.
   CreateBookingCubit multiService() => CreateBookingCubit.seeded(
+    CreateBookingRepo(
+      const CreateBookingMockService(),
+      const CreateBookingMockService(),
+    ),
     providerUuid: provider.uuid,
     providerName: provider.name,
     draft: [

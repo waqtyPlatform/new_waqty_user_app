@@ -5,6 +5,8 @@ import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/features/booking/in_branch/logic/in_branch_cubit.dart';
 import 'package:waqty_user_application/features/booking/in_branch/logic/in_branch_state.dart';
 import 'package:waqty_user_application/features/booking/in_branch/ui/widgets/in_branch_block_widget.dart';
+import 'package:waqty_user_application/features/booking/in_branch/data/repo/in_branch_repo.dart';
+import 'package:waqty_user_application/core/services/services_locator.dart';
 
 /// بلوك «إنت في الفرع» جوه صفحة تفاصيل الحجز — وبيعمل الـ [InBranchCubit]
 /// بتاعه.
@@ -31,7 +33,7 @@ class BookingDetailsInBranchWidget extends StatelessWidget {
     }
 
     return BlocProvider<InBranchCubit>(
-      create: (_) => InBranchCubit(booking: booking)..start(),
+      create: (_) => InBranchCubit(getIt<InBranchRepo>(), booking: booking)..start(),
       child: BlocBuilder<InBranchCubit, InBranchState>(
         builder: (context, state) => AnimatedSize(
           duration: AppMotion.slow,

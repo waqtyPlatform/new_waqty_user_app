@@ -137,9 +137,22 @@ class ProviderRowWidget extends StatelessWidget {
     );
   }
 
+  /// ⚠ **الأجزاء الفاضية بتتشال مش بتتعرض صفر.**
+  ///
+  /// `PublicProviderResource` بيرجّع `uuid`/`name`/`category`/`logo_url`/
+  /// `main_branch` وبس — **مفيش `price_from` ولا `services_count`**.
+  /// المسافة بتتحسب في الموبايل من إحداثيات الفرع، فهي الوحيدة المضمونة.
+  ///
+  /// «من ٠ ج.م» و«٠ خدمة» أوحش من مايتعرضش حاجة — بيقولوا للعميل معلومة
+  /// **غلط** مش معلومة ناقصة. لما الباك-إند يبعت الرقمين، السطر بيرجع
+  /// كامل من غير أي تعديل هنا.
+  ///
+  /// الارتفاع مابيتأثرش: السطر ده سطر واحد في كل الحالات لأن الأجزاء
+  /// بتتلزق في نص واحد.
   String get _metrics => <String>[
-    AppFormat.distance(provider.distanceKm),
-    'من ${AppFormat.money(provider.priceFrom)}',
-    '${AppFormat.digits(provider.servicesCount)} خدمة',
+    if (provider.distanceKm > 0) AppFormat.distance(provider.distanceKm),
+    if (provider.priceFrom > 0) 'من ${AppFormat.money(provider.priceFrom)}',
+    if (provider.servicesCount > 0)
+      '${AppFormat.digits(provider.servicesCount)} خدمة',
   ].join(' · ');
 }

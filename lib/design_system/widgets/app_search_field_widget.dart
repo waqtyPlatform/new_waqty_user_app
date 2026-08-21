@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../tokens/app_icons.dart';
 import '../tokens/app_semantic_colors.dart';
 import '../tokens/app_spacing.dart';
 import 'app_text_field.dart';
+import 'app_icon_widget.dart';
 
 /// حقل بحث.
 ///
@@ -57,9 +59,9 @@ class AppSearchFieldWidget extends StatelessWidget {
           start: AppSpacing.s12.w,
           end: AppSpacing.s8.w,
         ),
-        child: Icon(
-          Icons.search_rounded,
-          size: 20.r,
+        child: AppIconWidget(
+          AppIcons.search,
+          size: 20,
           color: AppSemanticColors.textSecondary,
         ),
       ),
@@ -70,9 +72,9 @@ class AppSearchFieldWidget extends StatelessWidget {
               child: SizedBox(
                 width: AppSpacing.touchTarget.r,
                 height: AppSpacing.touchTarget.r,
-                child: Icon(
-                  Icons.close_rounded,
-                  size: 18.r,
+                child: AppIconWidget(
+                  AppIcons.close,
+                  size: 18,
                   color: AppSemanticColors.textSecondary,
                 ),
               ),

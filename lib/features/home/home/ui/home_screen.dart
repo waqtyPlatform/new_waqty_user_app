@@ -17,6 +17,7 @@ import 'package:waqty_user_application/features/booking/in_branch/ui/widgets/in_
 import 'package:waqty_user_application/features/home/home/ui/widgets/home_rebook_widget.dart';
 import 'package:waqty_user_application/features/home/home/ui/widgets/home_search_widget.dart';
 import 'package:waqty_user_application/features/home/home/ui/widgets/home_waitlist_offer_widget.dart';
+import 'package:waqty_user_application/features/booking/reassignment/ui/widgets/reassignment_alert_banner_widget.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -109,6 +110,16 @@ class HomeScreen extends StatelessWidget {
               // القسم بيطوّي نفسه لصفر لما مفيش عرض شغّال، فالترتيب ده
               // مالوش تكلفة في الحالة الغالبة.
               const AppRevealWidget(index: 2, child: HomeWaitlistOfferWidget()),
+
+              // ⚠ **فوق البؤرة بقصد.** تغيير في حجز قايم أهم من عرض الميعاد
+              // الجاي نفسه — المهلة ١٥ دقيقة ومفيش push يقول للعميل.
+              // البانر بيطوّي نفسه لصفر لما مفيش طلب، ودي الحالة الغالبة.
+              Padding(
+                padding: EdgeInsetsDirectional.symmetric(
+                  horizontal: AppSpacing.pageGutter.w,
+                ),
+                child: const ReassignmentAlertBannerWidget(),
+              ),
 
               // **البؤرة.** مايتبنيش خالص لو مفيش حجز — مش كارت فاضي.
               //

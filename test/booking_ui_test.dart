@@ -7,6 +7,15 @@ import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/features/booking/booking_details/ui/widgets/booking_rate_sheet_widget.dart';
 import 'package:waqty_user_application/features/booking/my_bookings/ui/widgets/my_bookings_notice_widget.dart';
 
+/// بيدوّر على أيقونة SVG من الكيت بمسارها.
+///
+/// ⚠ `find.byIcon` مابينفعش هنا: الأيقونة بقت `AppIconWidget` بترسم SVG،
+/// مافيش `Icon` ولا `IconData`. والمسار **أدق** من الأيقونة — بيثبت إن
+/// الرسم الصح اتحط مش أي رسم.
+Finder svgIcon(String asset) => find.byWidgetPredicate(
+  (w) => w is AppIconWidget && w.asset == asset,
+);
+
 /// **مكوّنات الحجوزات بعد التبنّي.**
 ///
 /// التلات حاجات اللي اتغيّر شكلها في PR-3 ومحدش كان بيغطّيها:
@@ -133,7 +142,7 @@ void main() {
       await tester.pump();
       expect(rebooked, 1);
 
-      await tester.tap(find.byIcon(Icons.close_rounded));
+      await tester.tap(svgIcon(AppIcons.close));
       await tester.pump();
       expect(dismissed, 1);
     });

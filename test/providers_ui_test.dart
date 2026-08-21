@@ -8,6 +8,15 @@ import 'package:waqty_user_application/features/providers/providers_list/ui/widg
 import 'package:waqty_user_application/features/providers/providers_list/ui/widgets/providers_list_search_bar_widget.dart';
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/widgets/service_provider_details_hours_widget.dart';
 
+/// بيدوّر على أيقونة SVG من الكيت بمسارها.
+///
+/// ⚠ `find.byIcon` مابينفعش هنا: الأيقونة بقت `AppIconWidget` بترسم SVG،
+/// مافيش `Icon` ولا `IconData`. والمسار **أدق** من الأيقونة — بيثبت إن
+/// الرسم الصح اتحط مش أي رسم.
+Finder svgIcon(String asset) => find.byWidgetPredicate(
+  (w) => w is AppIconWidget && w.asset == asset,
+);
+
 /// **مكوّنات اكتشاف المقدّمين بعد التبنّي.**
 ///
 ///  • شريط البحث — كان `InputDecoration` من ٤٥ سطر، بقى
@@ -66,9 +75,9 @@ void main() {
       );
 
       expect(find.text('دوّر على صالون أو منطقة'), findsOneWidget);
-      expect(find.byIcon(Icons.search_rounded), findsOneWidget);
+      expect(svgIcon(AppIcons.search), findsOneWidget);
       // زرار المسح بيظهر لما يبقى فيه نص بس.
-      expect(find.byIcon(Icons.close_rounded), findsNothing);
+      expect(svgIcon(AppIcons.close), findsNothing);
     });
 
     testWidgets('زرار المسح بيبان مع النص وبينده onClear', (tester) async {
@@ -85,9 +94,9 @@ void main() {
         ),
       );
 
-      expect(find.byIcon(Icons.close_rounded), findsOneWidget);
+      expect(svgIcon(AppIcons.close), findsOneWidget);
 
-      await tester.tap(find.byIcon(Icons.close_rounded));
+      await tester.tap(svgIcon(AppIcons.close));
       await tester.pump();
       expect(cleared, 1);
     });

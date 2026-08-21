@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../tokens/app_motion.dart';
+import '../tokens/app_icons.dart';
 import '../tokens/app_radius.dart';
 import '../tokens/app_semantic_colors.dart';
 import '../tokens/app_spacing.dart';
 import '../tokens/app_text_styles.dart';
+import 'app_icon_widget.dart';
 
 /// شكل علامة الاختيار.
 enum AppChoiceStyle {
@@ -145,9 +147,9 @@ class _Mark extends StatelessWidget {
       ),
       child: on
           ? (style == AppChoiceStyle.checkbox
-                ? Icon(
-                    Icons.check_rounded,
-                    size: 14.r,
+                ? AppIconWidget(
+                    AppIcons.check,
+                    size: 14,
                     color: AppSemanticColors.textOnAccentDeep,
                   )
                 : Container(

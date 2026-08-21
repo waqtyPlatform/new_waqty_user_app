@@ -8,9 +8,13 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/services/cache_helper.dart';
+import 'core/api/session_store.dart';
 import 'core/services/services_locator.dart';
 import 'core/utils/app_constant.dart';
 import 'observer.dart';
+import 'dart:async';
+import 'core/services/firebase_notification_service.dart';
+import 'features/splash/data/repo/app_gate_repo.dart';
 
 // @pragma('vm:entry-point')
 // Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -29,9 +33,17 @@ Future<void> main() async {
   await EasyLocalization.ensureInitialized();
   await ServicesLocator.init();
   await CacheHelper.init();
+  // لازم **بعد** `CacheHelper.init()` — التوكن بيتقرا من المخزن الآمن،
+  // والمخزن مابيتعيّنش قبلها.
+  await getIt<SessionStore>().hydrate();
+
+  // ⚠ **مابيتعملوش `await`.** إقلاع الأبلكيشن مايستناش Firebase —
+  // ده نداء شبكة وطلب صلاحية، والإشعارات إضافة مش شرط تشغيل.
+  //
+  // ولو Firebase مش متظبط (`firebase_options.dart` فاضي) النداء بيرجع
+  // فورًا من غير ما يعمل حاجة — الأبلكيشن بيشتغل عادي.
+  unawaited(FirebaseNotificationService.init(getIt<AppGateRepo>()));
   await MyConnectivity.initialise();
-  // await LocalNotificationService.initializedNotification();
-  // PusherService.initPusher();
 
   Bloc.observer = Observer();
 
@@ -42,16 +54,6 @@ Future<void> main() async {
   } catch (e) {
     isLoggedInUser = false;
   }
-  // try {
-  // await Firebase.initializeApp(
-  //   options: DefaultFirebaseOptions.currentPlatform,
-  // );
-  // FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-
-  // await FirebaseNotificationService.init();
-  // } catch (e) {
-  //   print('Firebase initialization error: $e');
-  // }
   runApp(
     EasyLocalization(
       supportedLocales: const [Locale('ar', 'EG'), Locale('en', 'US')],

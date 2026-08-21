@@ -62,6 +62,24 @@ dependencies:
   geocoding: ^3.0.0
   local_auth: ^3.0.1
 
+  # بوابة الأبلكيشن (`GET /api/v1/app/gate`) بتقارن نسخة الأبلكيشن
+  # بأقل نسخة مدعومة. قراية النسخة من ثابت في الكود بتفترق عن
+  # `pubspec` بعد أول إصدار، وساعتها التحديث الإجباري يقفل على
+  # ناس محدّثة أو يسيب ناس قديمة تعدي.
+  package_info_plus: ^8.1.2
+
+  # إشعارات الـpush.
+  #
+  # ⚠ **محتاجة إعداد Firebase عشان تشتغل** — شوف
+  # `lib/firebase_options.dart`. من غيره الأبلكيشن بيقلع وبيشتغل
+  # عادي والإشعارات بس بتقعد مطفية.
+  firebase_core: ^3.8.0
+  firebase_messaging: ^15.1.5
+
+  # أندرويد **مابيعرضش** إشعار والأبلكيشن مفتوح في المقدمة —
+  # لازم الأبلكيشن يرسمه بنفسه.
+  flutter_local_notifications: ^18.0.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

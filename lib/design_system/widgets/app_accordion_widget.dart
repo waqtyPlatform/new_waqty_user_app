@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../tokens/app_motion.dart';
+import '../tokens/app_icons.dart';
 import '../tokens/app_semantic_colors.dart';
 import '../tokens/app_spacing.dart';
 import '../tokens/app_text_styles.dart';
 import 'app_hairline_widget.dart';
 import 'app_surface_widget.dart';
+import 'app_icon_widget.dart';
 
 /// عنصر بيتفتح وبيتقفل.
 ///
@@ -85,9 +87,9 @@ class _AppAccordionWidgetState extends State<AppAccordionWidget> {
                       turns: _open ? 0.5 : 0,
                       duration: AppMotion.fast,
                       curve: AppMotion.standard,
-                      child: Icon(
-                        Icons.keyboard_arrow_down_rounded,
-                        size: 22.r,
+                      child: AppIconWidget(
+                        AppIcons.chevronDown,
+                        size: 22,
                         color: AppSemanticColors.textSecondary,
                       ),
                     ),

@@ -15,22 +15,32 @@ import 'package:flutter_svg/flutter_svg.dart';
 /// (`assets/icons/*.svg`) خطوط بسمك ٢ برؤوس مدوّرة على شبكة ٢٤، وأيقونات
 /// ماتيريال المليانة كانت بتكسر ده في نص الرئيسية.
 ///
-/// ## اللغة
+/// ## ⚠ ليه الربط بقى بالكلمة مش بالجملة كاملة
 ///
-/// كل الملفات في `assets/icons/categories/` ماشية على نفس القواعد:
+/// كان `switch` على الاسم **كامل**، والأسماء اللي فيه بتاعة الفكسشرز. أول
+/// ما الأبلكيشن اتربط بالسيرفر **كل التصنيفات وقعت على الافتراضي** — وشاشة
+/// فيها ست تصنيفات بنفس النجمة بتقرا شاشة مكسورة.
 ///
-/// - شبكة `24×24` · `fill="none"`
-/// - `stroke-width="2"` · `stroke-linecap` و `stroke-linejoin` = `round`
-/// - مسار واحد لكل ملف — مفيش مجموعات ولا أقنعة
+/// | السيرفر بيقول | الخريطة كانت فيها | |
+/// |---|---|---|
+/// | `حلاق رجالي` | `حلاقة رجالي` | حرف واحد |
+/// | `كوافير نسائي` | `كوافير حريمي` | كلمة |
+/// | `عيادة طبية` | — | مفيش |
+/// | `مستشفى` | — | مفيش |
 ///
-/// اللون بيتحط من برّه بـ[ColorFilter]، فالملف نفسه لونه مالوش لازمة —
-/// وعشان كده الأيقونة بتقلب مع الوضع الغامق زي أي توكن تاني.
+/// المطابقة بالكلمة بتلمّ الأربعة: «حلاق» بتطابق «حلاق رجالي» و«حلاقة
+/// رجالي». الصياغة بتتغيّر أسهل من الجذر.
 ///
-/// ## لما التصنيفات تيجي من السيرفر
+/// ## ⚠ الترتيب في [_rules] مقصود
 ///
-/// `CategoryUiModel` هياخد `iconUrl` وقتها، و[assetFor] بتبقى الخطة
-/// البديلة للأسماء اللي السيرفر مابعتش ليها صورة. لحد ساعتها الربط بالاسم
-/// هو المتاح — والاسم بيتغيّر أصعب من الـ uuid في الداتا الوهمية.
+/// «مجمع عيادات» فيها «عيادات». لو قاعدة عامة زي «مجمع» اتضافت فوقيهم،
+/// المجمع الطبي هياخد أيقونة غلط. **الأخص قبل الأعم.**
+///
+/// ## لما السيرفر يبعت صورة
+///
+/// `PublicCategoryResource` بيبعت `image_url` وهو `null` في **كل**
+/// التصنيفات دلوقتي. أول ما يتملّى، `CategoryUiModel.imagePath` بيتملى
+/// معاه والشاشة تقدر تعرض الصورة — والرسوم دي بتبقى الخطة البديلة.
 class CategoryIconWidget extends StatelessWidget {
   final String categoryName;
   final double size;
@@ -43,16 +53,54 @@ class CategoryIconWidget extends StatelessWidget {
     required this.color,
   });
 
-  /// مسار الرسم المناسب للاسم — و[generic] لأي اسم مش معروف.
-  static String assetFor(String name) => switch (name.trim()) {
-    'حلاقة رجالي' => 'assets/icons/categories/barber.svg',
-    'كوافير حريمي' => 'assets/icons/categories/hair.svg',
-    'عناية بالبشرة' => 'assets/icons/categories/skin.svg',
-    'مساج واسترخاء' => 'assets/icons/categories/massage.svg',
-    'أظافر' => 'assets/icons/categories/nails.svg',
-    'عيادات جلدية' => 'assets/icons/categories/clinic.svg',
-    _ => 'assets/icons/categories/generic.svg',
-  };
+  /// كلمة في الاسم ← الرسم بتاعها. **الأخص قبل الأعم.**
+  static const List<(String, String)> _rules = [
+    // ── طبي ────────────────────────────────────────────────────────────
+    ('مستشفيات', 'hospital.svg'),
+    ('مستشفى', 'hospital.svg'),
+    ('عيادات', 'clinic.svg'),
+    ('عيادة', 'clinic.svg'),
+    ('طبي', 'clinic.svg'),
+
+    // ── تجميل ──────────────────────────────────────────────────────────
+    ('حلاق', 'barber.svg'),
+    ('باربر', 'barber.svg'),
+    ('كوافير', 'hair.svg'),
+    ('شعر', 'hair.svg'),
+    ('بشرة', 'skin.svg'),
+    ('جلدية', 'skin.svg'),
+    ('مساج', 'massage.svg'),
+    ('استرخاء', 'massage.svg'),
+    ('أظافر', 'nails.svg'),
+  ];
+
+  static const String _basePath = 'assets/icons/categories/';
+
+  /// الرسم الافتراضي لأي اسم مش معروف.
+  static const String genericAsset = '${_basePath}generic.svg';
+
+  /// مسار الرسم المناسب للاسم — و[genericAsset] لأي اسم مش معروف.
+  static String assetFor(String name) {
+    final normalized = _normalize(name);
+    if (normalized.isEmpty) return genericAsset;
+
+    for (final (keyword, asset) in _rules) {
+      if (normalized.contains(_normalize(keyword))) return '$_basePath$asset';
+    }
+
+    return genericAsset;
+  }
+
+  /// ⚠ **الهمزات والتاء المربوطة والألف المقصورة بتتوحّد.**
+  ///
+  /// السيرفر بيكتب «عيادة» والقاعدة «عيادات»، و«أظافر» و«اظافر»،
+  /// و«مستشفى» و«مستشفي». من غير التوحيد ده كل صيغة محتاجة سطر في
+  /// [_rules] — والسطر اللي هينسى هو اللي هيوقع على الافتراضي في صمت.
+  static String _normalize(String value) => value
+      .trim()
+      .replaceAll(RegExp('[أإآ]'), 'ا')
+      .replaceAll('ة', 'ه')
+      .replaceAll('ى', 'ي');
 
   @override
   Widget build(BuildContext context) {

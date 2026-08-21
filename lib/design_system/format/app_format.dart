@@ -164,6 +164,21 @@ class AppFormat {
         'T${two(value.hour)}:${two(value.minute)}:${two(value.second)}$zone';
   }
 
+  /// `2026-08-10` — **تاريخ بس، من غير وقت ولا إزاحة**.
+  ///
+  /// الباك-إند بيطلب `date_format:Y-m-d` في أماكن كتير: فلتر
+  /// المواعيد (`available-slots?date=`)، و`preferred_date` في قايمة
+  /// الانتظار، و`from_date`/`to_date` في فلاتر الحجوزات.
+  ///
+  /// ⚠ **مش [serverDateTime] مقصوص.** دي بتحط الإزاحة، وقصّها بالإيد
+  /// بيكسر أول ما الصيغة تتغيّر. ومش `toIso8601String().split('T')` كمان:
+  /// دي بتحوّل لـUTC في بعض الحالات، فميعاد ١٢ بالليل بيبقى
+  /// يوم قبل كده.
+  static String serverDate(DateTime value) {
+    String two(int v) => v.toString().padLeft(2, '0');
+    return '${value.year}-${two(value.month)}-${two(value.day)}';
+  }
+
   static DateTime _dateOnly(DateTime value) =>
       DateTime(value.year, value.month, value.day);
 }

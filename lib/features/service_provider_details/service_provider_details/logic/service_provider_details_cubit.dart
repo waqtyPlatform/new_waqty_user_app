@@ -1,17 +1,16 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:waqty_user_application/core/mock/mock_employees.dart';
-import 'package:waqty_user_application/core/mock/mock_providers.dart';
-import 'package:waqty_user_application/core/mock/mock_services.dart';
-import 'package:waqty_user_application/core/mock/mock_source.dart';
 import 'package:waqty_user_application/core/models/branch_ui_model.dart';
 import 'package:waqty_user_application/core/models/employee_ui_model.dart';
 import 'package:waqty_user_application/core/models/provider_ui_model.dart';
 import 'package:waqty_user_application/core/models/service_ui_model.dart';
+import 'package:waqty_user_application/features/service_provider_details/service_provider_details/data/repo/service_provider_details_repo.dart';
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/logic/service_provider_details_state.dart';
 
 class ServiceProviderDetailsCubit extends Cubit<ServiceProviderDetailsState> {
-  ServiceProviderDetailsCubit({required this.providerUuid})
+  ServiceProviderDetailsCubit(this._repo, {required this.providerUuid})
     : super(InitialState());
+
+  final ServiceProviderDetailsRepo _repo;
 
   /// الـ uuid كان مش بيتبعت للشاشة خالص — الراوت كان بيبني الشاشة من غير
   /// أي arguments، فكل الكروت كانت بتفتح نفس المكان.
@@ -37,22 +36,28 @@ class ServiceProviderDetailsCubit extends Cubit<ServiceProviderDetailsState> {
   Future<void> loadDetails() async {
     emit(DetailsLoadingState());
 
-    // TODO(api): GET /api/public/providers/{uuid}
-    final result = await MockSource.fetch(MockProviders.byUuid(providerUuid));
+    // `fold` واحدة بترجّع `null` عند الفشل — مفيش قيمة احتياطية
+    // معقولة لمقدّم مش موجود، فماينفعش `getOrElse`.
+    final loaded = (await _repo.provider(providerUuid)).fold<ProviderUiModel?>(
+      (failure) {
+        emit(DetailsErrorState(message: failure.message));
+        return null;
+      },
+      (value) => value,
+    );
 
-    final failure = result.fold<String?>((l) => l, (_) => null);
-    if (failure != null) {
-      emit(DetailsErrorState(message: failure));
-      return;
-    }
+    if (loaded == null || isClosed) return;
+    provider = loaded;
 
-    provider = result.getOrElse(() => MockProviders.all.first);
-
-    // TODO(api): GET /api/public/provider-branches?provider_uuid=
-    branches = MockProviders.branchesOf(providerUuid);
+    // فشل الفروع مابيوقّفش الصفحة — الهيدر والخدمات لسه ليهم قيمة
+    // من غير مبدّل الفروع.
+    branches = (await _repo.branches(providerUuid)).getOrElse(
+      () => const <BranchUiModel>[],
+    );
     selectedBranch = branches.isEmpty ? null : branches.first;
 
     await _loadBranchScoped();
+    if (isClosed) return;
 
     emit(DetailsSuccessState());
   }
@@ -64,26 +69,22 @@ class ServiceProviderDetailsCubit extends Cubit<ServiceProviderDetailsState> {
   /// كان غلط، وده أسوأ من الاتنين: مفيش حاجة تكسر لما الفلتر الحقيقي
   /// يتضاف، فمحدش بياخد باله.
   Future<void> _loadBranchScoped() async {
-    final branchIndex = MockProviders.branchIndexOf(
+    final branchUuid = selectedBranch?.uuid;
+
+    // الاتنين بيبدأوا مع بعض — مافيش اعتماد بينهم.
+    final servicesCall = _repo.services(
       providerUuid: providerUuid,
-      branchUuid: selectedBranch?.uuid,
+      branchUuid: branchUuid,
+    );
+    final employeesCall = _repo.employees(
+      providerUuid: providerUuid,
+      branchUuid: branchUuid,
     );
 
-    // TODO(api): GET /api/public/services?provider_uuid=&branch_uuid=
-    final servicesResult = await MockSource.fetch(
-      MockServices.ofBranch(
-        providerUuid: providerUuid,
-        branchUuid: selectedBranch?.uuid,
-      ),
+    services = (await servicesCall).getOrElse(() => const <ServiceUiModel>[]);
+    employees = (await employeesCall).getOrElse(
+      () => const <EmployeeUiModel>[],
     );
-
-    // TODO(api): GET /api/public/employees?provider_uuid=&branch_uuid=
-    final employeesResult = await MockSource.fetch(
-      MockEmployees.rosterOf(branchIndex: branchIndex),
-    );
-
-    services = servicesResult.getOrElse(() => const <ServiceUiModel>[]);
-    employees = employeesResult.getOrElse(() => const <EmployeeUiModel>[]);
   }
 
   /// **بيعيد التحميل فعلاً دلوقتي.**
@@ -102,7 +103,10 @@ class ServiceProviderDetailsCubit extends Cubit<ServiceProviderDetailsState> {
     isReloadingBranch = true;
     emit(OnBranchChangedState());
 
+    // ⚠ **الحراسة في المنادي مش جوّه `_loadBranchScoped`** — الدالة دي
+    // مابتعملش `emit`، بتملّي حقول وبس. الـ`emit` هنا وفي `loadDetails`.
     await _loadBranchScoped();
+    if (isClosed) return;
 
     isReloadingBranch = false;
     emit(OnBranchChangedState());

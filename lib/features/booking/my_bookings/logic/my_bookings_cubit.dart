@@ -1,11 +1,12 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:waqty_user_application/core/mock/mock_bookings.dart';
-import 'package:waqty_user_application/core/mock/mock_source.dart';
 import 'package:waqty_user_application/core/models/booking_ui_model.dart';
+import 'package:waqty_user_application/features/booking/my_bookings/data/repo/my_bookings_repo.dart';
 import 'package:waqty_user_application/features/booking/my_bookings/logic/my_bookings_state.dart';
 
 class MyBookingsCubit extends Cubit<MyBookingsState> {
-  MyBookingsCubit() : super(InitialState());
+  final MyBookingsRepo _repo;
+
+  MyBookingsCubit(this._repo) : super(InitialState());
 
   /// حجم الصفحة — **نفس الافتراضي بتاع السيرفر**.
   ///
@@ -44,16 +45,15 @@ class MyBookingsCubit extends Cubit<MyBookingsState> {
 
     final requestedTab = selectedTab;
 
-    // TODO(api): GET /api/user/bookings?upcoming={selectedTab == 0}&page=1&per_page=15
-    final result = await MockSource.fetchPage(
-      MockBookings.forTab(upcoming: requestedTab == 0),
+    final result = await _repo.bookings(
+      upcoming: requestedTab == 0,
       page: 1,
       perPage: perPage,
     );
 
-    if (selectedTab != requestedTab) return;
+    if (isClosed || selectedTab != requestedTab) return;
 
-    result.fold((failure) => emit(MyBookingsErrorState(message: failure)), (
+    result.fold((failure) => emit(MyBookingsErrorState(message: failure.message)), (
       page,
     ) {
       bookings = page.data;
@@ -82,14 +82,13 @@ class MyBookingsCubit extends Cubit<MyBookingsState> {
     // الـ HTTP هيحتاجه يوم الربط.
     final requestedTab = selectedTab;
 
-    // TODO(api): GET /api/user/bookings?upcoming={selectedTab == 0}&page={_page + 1}&per_page=15
-    final result = await MockSource.fetchPage(
-      MockBookings.forTab(upcoming: requestedTab == 0),
+    final result = await _repo.bookings(
+      upcoming: requestedTab == 0,
       page: _page + 1,
       perPage: perPage,
     );
 
-    if (selectedTab != requestedTab) return;
+    if (isClosed || selectedTab != requestedTab) return;
 
     result.fold(
       (failure) {
@@ -119,15 +118,40 @@ class MyBookingsCubit extends Cubit<MyBookingsState> {
   /// — والقايمة بتكدب عليه.
   Future<void> refreshAfterChange() => loadBookings();
 
+  /// الـ uuids اللي العميل قفل إشعارها في الجلسة دي.
+  ///
+  /// ⚠ **محلي بالكامل، بيروح مع قفل الأبلكيشن.** مفيش أي حقل «اتقرا» على
+  /// الحجز في الباك-إند ولا endpoint يسجّله. الإخفاء الدايم محتاج شغل
+  /// سيرفر — سيبناه بدل ما نخترع تخزين محلي بيفترق عن الحقيقة.
+  final Set<String> _dismissedNotices = <String>{};
+
   /// إشعارات النهايات المش مكتملة — فوق تبويب «السابقة».
   ///
   /// مكانها هناك مش في «القادمة»: العميل بيدوّر على حجز خلص، فبيلاقي
   /// اللي حصل معاه فوق اللي اتم بنجاح.
-  List<BookingUiModel> get notices =>
-      selectedTab == 1 ? MockBookings.notices : const <BookingUiModel>[];
+  ///
+  /// ⚠ **بتتشتق من الحجوزات المحمّلة مش من endpoint.** مفيش
+  /// `GET /api/user/notifications` أصلاً. فالإشعار هنا = حجز ماضي حالته
+  /// ملغي أو ما حضرش — وده اللي الكارت بيقوله بالظبط.
+  ///
+  /// ونتيجتها إنها بتشوف الصفحة المحمّلة بس: عميل عنده إلغاء من ٦ شهور
+  /// مش هيشوفه غير لما يوصّل لصفحته. مقبول — الإشعار عن «حاجة حصلت
+  /// قريّب» مش أرشيف.
+  List<BookingUiModel> get notices {
+    if (selectedTab != 1) return const <BookingUiModel>[];
+
+    return bookings
+        .where(
+          (b) =>
+              b.status == BookingStatus.cancelled ||
+              b.status == BookingStatus.noShow,
+        )
+        .where((b) => !_dismissedNotices.contains(b.uuid))
+        .toList();
+  }
 
   void dismissNotice(String uuid) {
-    MockBookings.dismissNotice(uuid);
+    _dismissedNotices.add(uuid);
     emit(OnTabChangedState());
   }
 

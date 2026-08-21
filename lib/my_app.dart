@@ -6,6 +6,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'config/routes/app_routes.dart';
+import 'config/routes/routes.dart';
+import 'core/api/session_store.dart';
+import 'core/services/services_locator.dart';
+import 'core/utils/extentions.dart';
 import 'package:waqty_user_application/design_system/design_system.dart';
 import 'config/themes/theme_cubit.dart';
 
@@ -38,7 +42,31 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
 
     _listenToNetwork();
+    _listenToSessionExpiry();
     if (!kBypassAppLock) _authenticate();
+  }
+
+  /// التوكن اترفض (٤٠١) ← رمية على الدخول.
+  ///
+  /// [ApiClient] بينده `SessionStore.expire()` من جوّه طبقة الـAPI،
+  /// فمفيش cubit محتاج يعرف حاجة عن الـ٤٠١. والـ`ValueNotifier` بينط
+  /// **مرة واحدة** حتى لو عشر نداءات متوازية فشلوا مع بعض، فمفيش
+  /// عشر رميات فوق بعض.
+  void _listenToSessionExpiry() {
+    getIt<SessionStore>().expired.addListener(_onSessionExpired);
+  }
+
+  void _onSessionExpired() {
+    if (!getIt<SessionStore>().expired.value) return;
+
+    final context = navigatorKey.currentContext;
+    if (context == null) return;
+
+    AppSnack.show(context, message: 'الجلسة انتهت، سجّل دخول تاني');
+    context.pushNamedAndRemoveUntil(
+      Routes.loginScreen,
+      predicate: (route) => false,
+    );
   }
 
   /// authenticate using biometric
@@ -80,6 +108,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    getIt<SessionStore>().expired.removeListener(_onSessionExpired);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }

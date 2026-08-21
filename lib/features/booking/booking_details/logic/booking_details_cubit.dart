@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:waqty_user_application/core/mock/mock_bookings.dart';
-import 'package:waqty_user_application/core/mock/mock_source.dart';
 import 'package:waqty_user_application/core/models/booking_item_ui_model.dart';
 import 'package:waqty_user_application/core/models/booking_ui_model.dart';
+import 'package:waqty_user_application/features/booking/booking_details/data/repo/booking_details_repo.dart';
 import 'package:waqty_user_application/features/booking/booking_details/logic/booking_details_state.dart';
 
 class BookingDetailsCubit extends Cubit<BookingDetailsState> {
-  BookingDetailsCubit({required this.bookingUuid}) : super(InitialState());
+  final BookingDetailsRepo _repo;
+
+  BookingDetailsCubit(this._repo, {required this.bookingUuid})
+    : super(InitialState());
 
   final String bookingUuid;
 
@@ -29,15 +31,16 @@ class BookingDetailsCubit extends Cubit<BookingDetailsState> {
   Future<void> loadBooking() async {
     emit(BookingDetailsLoadingState());
 
-    // TODO(api): GET /api/user/bookings/{uuid}
-    final result = await MockSource.fetch(MockBookings.byUuid(bookingUuid));
+    final result = await _repo.booking(bookingUuid);
+    if (isClosed) return;
 
-    result.fold((failure) => emit(BookingDetailsErrorState(message: failure)), (
-      data,
-    ) {
-      booking = data;
-      emit(BookingDetailsSuccessState());
-    });
+    result.fold(
+      (failure) => emit(BookingDetailsErrorState(message: failure.message)),
+      (data) {
+        booking = data;
+        emit(BookingDetailsSuccessState());
+      },
+    );
   }
 
   /// بيفتح التقييم على خدمة بعينها.
@@ -59,14 +62,26 @@ class BookingDetailsCubit extends Cubit<BookingDetailsState> {
     // في `UserBookingResource`، فهو مش حتى حقل ميت من ناحيتهم.
     final reason = cancelReasonController.text.trim();
 
-    // TODO(api): PATCH /api/user/bookings/{uuid}/cancel
-    //   body: {cancellation_reason: reason}
-    await Future.delayed(const Duration(milliseconds: 700));
+    final result = await _repo.cancel(
+      bookingUuid: bookingUuid,
+      reason: reason,
+    );
+    if (isClosed) return;
 
-    MockBookings.markCancelled(bookingUuid, reason: reason);
-    cancelReasonController.clear();
-
-    emit(CancelSuccessState());
+    result.fold(
+      (failure) {
+        // ⚠ فشل الإلغاء **لازم يبان**. أوضح حالة: السيرفر
+        // بيرفض لما الميعاد يكون فات (`can_cancel` بقت false جوّه
+        // الـ٥ دقايق اللي العميل فتح فيهم الورقة). لو سكتنا، العميل
+        // يفتكر الحجز اتلغى ومايروحش — والصالون يسجّله ما حضرش.
+        emit(BookingDetailsErrorState(message: failure.message));
+      },
+      (updated) {
+        booking = updated;
+        cancelReasonController.clear();
+        emit(CancelSuccessState());
+      },
+    );
   }
 
   void changeRating(int value) {
@@ -90,21 +105,29 @@ class BookingDetailsCubit extends Cubit<BookingDetailsState> {
     // **طلب للباك إند**. بس ده مايبررش إننا نسأل ونرمي.
     final comment = rateCommentController.text.trim();
 
-    // TODO(api): POST /api/user/bookings/{uuid}/rate
-    //   الـ body بياخد `booking_item_id` — التقييم للخدمة مش للحجز.
-    //   و`comment` لسه مش في العقد — طلب مفتوح للباك إند.
-    await Future.delayed(const Duration(milliseconds: 700));
+    final result = await _repo.rate(
+      bookingUuid: bookingUuid,
+      bookingItemUuid: item.uuid,
+      rating: myRating,
+      comment: comment,
+    );
+    if (isClosed) return;
 
-    // **`pending` مش `published`.** السيرفر بيعمل التقييم
-    // `status: 'pending', active: false` وبيفضل مخفي لحد المراجعة.
-    // لو وريناه منشور على طول، العميل يروح يدوّر عليه ومايلاقيهوش.
-    item.rating = myRating;
-    item.ratingStatus = RatingStatus.pending;
-    item.ratingComment = comment;
+    result.fold(
+      (failure) => emit(BookingDetailsErrorState(message: failure.message)),
+      (_) {
+        // **`pending` مش `published`.** السيرفر بيعمل التقييم
+        // `status: 'pending', active: false` وبيفضل مخفي لحد المراجعة.
+        // لو وريناه منشور على طول، العميل يروح يدوّر عليه ومايلاقيهوش.
+        item.rating = myRating;
+        item.ratingStatus = RatingStatus.pending;
+        item.ratingComment = comment;
 
-    rateCommentController.clear();
-    ratingItem = null;
-    emit(RateSuccessState());
+        rateCommentController.clear();
+        ratingItem = null;
+        emit(RateSuccessState());
+      },
+    );
   }
 
   @override

@@ -5,6 +5,15 @@ import 'package:waqty_user_application/core/widgets/auth_header_widget.dart';
 import 'package:waqty_user_application/core/widgets/resend_code_widget.dart';
 import 'package:waqty_user_application/design_system/design_system.dart';
 
+/// بيدوّر على أيقونة SVG من الكيت بمسارها.
+///
+/// ⚠ `find.byIcon` مابينفعش هنا: الأيقونة بقت `AppIconWidget` بترسم SVG،
+/// مافيش `Icon` ولا `IconData`. والمسار **أدق** من الأيقونة — بيثبت إن
+/// الرسم الصح اتحط مش أي رسم.
+Finder svgIcon(String asset) => find.byWidgetPredicate(
+  (w) => w is AppIconWidget && w.asset == asset,
+);
+
 /// **ويدجتس المصادقة المشتركة.**
 ///
 /// شاشات المصادقة الستة مالهاش اختبار رسم في السويت — بتجرّ
@@ -190,7 +199,7 @@ void main() {
         isTrue,
       );
 
-      await tester.tap(find.byIcon(Icons.visibility_off_outlined));
+      await tester.tap(svgIcon(AppIcons.visibilityOff));
       await tester.pumpAndSettle();
 
       expect(

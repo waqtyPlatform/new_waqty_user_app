@@ -71,10 +71,18 @@ class AccountScreen extends StatelessWidget {
             // تحت) — فمافيش `verticalSpace` مكتوب بالإيد بينهم خالص.
             const AppSectionHeaderWidget(title: 'حسابك'),
 
+            // ⚠ **«بياناتي» لسه ميت.** مفيش `PUT /api/user/profile` في
+            // الباك-إند أصلاً (المقدّم والموظف عندهم واحد، والعميل لأ).
+            // شاشة تعديل مالهاش endpoint تحفظ فيه أوحش من صف ساكت.
             AppMenuRowWidget(
               icon: Icons.person_outline_rounded,
               title: 'بياناتي',
               onTap: () {},
+            ),
+            AppMenuRowWidget(
+              icon: Icons.receipt_long_rounded,
+              title: 'مدفوعاتي',
+              onTap: () => context.pushNamed(Routes.paymentsScreen),
             ),
             // **«حجوزاتي» اتشالت — كانت مكررة وميتة.**
             //

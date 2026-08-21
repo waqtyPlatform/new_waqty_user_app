@@ -116,4 +116,37 @@ class JsonParse {
     if (value is! List) return const <Map<String, dynamic>>[];
     return value.whereType<Map<String, dynamic>>().toList();
   }
+
+  /// ⚠ **الاسم بيوصل بشكلين مختلفين حسب الـendpoint.**
+  ///
+  /// متحقّق منه بنداء حقيقي:
+  ///
+  /// | الـendpoint | `name` |
+  /// |---|---|
+  /// | `GET /api/public/services` | `"كشف باطنة"` — نص |
+  /// | `GET /api/user/bookings` | `{"ar": "غيار جرح", "en": "Wound Dressing"}` |
+  ///
+  /// الفرق إن الموارد العامة بتعدّي على `detect.language` وبترجّع اللغة
+  /// المطلوبة، والـsnapshot المتخزّن في الحجز بيحتفظ بالترجمتين. الشاشة
+  /// عايزة نص واحد في الحالتين.
+  ///
+  /// [locale] بتحدد الأولوية، والاحتياطي أول قيمة موجودة — أحسن من فراغ.
+  static String localizedValue(
+    dynamic value, {
+    String locale = 'ar',
+    String fallback = '',
+  }) {
+    if (value is String) return value;
+
+    if (value is Map) {
+      final preferred = value[locale];
+      if (preferred is String && preferred.isNotEmpty) return preferred;
+
+      for (final entry in value.values) {
+        if (entry is String && entry.isNotEmpty) return entry;
+      }
+    }
+
+    return fallback;
+  }
 }

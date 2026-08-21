@@ -18,6 +18,16 @@ import 'package:waqty_user_application/features/home/home/logic/home_cubit.dart'
 import 'package:waqty_user_application/features/home/home/ui/home_screen.dart';
 import 'package:waqty_user_application/features/providers/providers_list/logic/providers_list_cubit.dart';
 import 'package:waqty_user_application/features/providers/providers_list/ui/providers_list_screen.dart';
+import 'package:waqty_user_application/features/home/home/data/repo/home_repo.dart';
+import 'package:waqty_user_application/core/services/services_locator.dart';
+import 'package:waqty_user_application/features/providers/providers_list/data/repo/providers_list_repo.dart';
+import 'package:waqty_user_application/features/booking/my_bookings/data/repo/my_bookings_repo.dart';
+import 'package:waqty_user_application/features/booking/reassignment/data/repo/reassignment_repo.dart';
+import 'package:waqty_user_application/features/booking/reassignment/logic/reassignment_cubit.dart';
+import 'package:waqty_user_application/features/booking/waitlist/data/repo/waitlist_repo.dart';
+import 'package:waqty_user_application/features/account/account/data/repo/account_repo.dart';
+import 'package:waqty_user_application/core/api/session_store.dart';
+import 'package:waqty_user_application/features/booking/in_branch/data/repo/in_branch_repo.dart';
 
 class ButtonNavigationBarScreen extends StatelessWidget {
   const ButtonNavigationBarScreen({super.key});
@@ -40,8 +50,19 @@ class ButtonNavigationBarScreen extends StatelessWidget {
         //
         // وهي **برة** الشرط بتاع `live` عن قصد: كده مكانها في الشجرة ثابت
         // مهما اتغيّر الحجز الشغّال، فالمؤقت مابيتعملش من الأول.
-        final shell = BlocProvider<WaitlistCubit>(
-          create: (_) => WaitlistCubit()..start(),
+        // ⚠ **إعادة التوزيع فوق التبويبات زي قايمة الانتظار** — لنفس
+        // السبب: مؤقت مهلة واحد مش اتنين. وكمان عشان البانر يقدر يبان
+        // في أي تبويب — مفيش push فالفتحة نفسها هي الإشعار.
+        final shell = MultiBlocProvider(
+          providers: [
+            BlocProvider<WaitlistCubit>(
+              create: (_) => WaitlistCubit(getIt<WaitlistRepo>())..start(),
+            ),
+            BlocProvider<ReassignmentCubit>(
+              create: (_) =>
+                  ReassignmentCubit(getIt<ReassignmentRepo>())..start(),
+            ),
+          ],
           child: _shell(context, cubit, live),
         );
 
@@ -51,7 +72,7 @@ class ButtonNavigationBarScreen extends StatelessWidget {
         if (live == null) return shell;
 
         return BlocProvider(
-          create: (_) => InBranchCubit(booking: live)..start(),
+          create: (_) => InBranchCubit(getIt<InBranchRepo>(), booking: live)..start(),
           child: shell,
         );
       },
@@ -74,19 +95,19 @@ class ButtonNavigationBarScreen extends StatelessWidget {
           index: cubit.currentIndex,
           children: [
             BlocProvider(
-              create: (_) => HomeCubit()..loadHome(),
+              create: (_) => HomeCubit(getIt<HomeRepo>())..loadHome(),
               child: const HomeScreen(),
             ),
             BlocProvider(
-              create: (_) => ProvidersListCubit()..loadInitial(),
+              create: (_) => ProvidersListCubit(getIt<ProvidersListRepo>())..loadInitial(),
               child: const ProvidersListScreen(),
             ),
             BlocProvider(
-              create: (_) => MyBookingsCubit()..loadBookings(),
+              create: (_) => MyBookingsCubit(getIt<MyBookingsRepo>())..loadBookings(),
               child: const MyBookingsScreen(),
             ),
             BlocProvider(
-              create: (_) => AccountCubit()..getProfile(),
+              create: (_) => AccountCubit(getIt<AccountRepo>(), getIt<SessionStore>())..getProfile(),
               child: const AccountScreen(),
             ),
           ],

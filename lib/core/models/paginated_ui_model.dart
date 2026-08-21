@@ -43,17 +43,35 @@ class PaginatedUiModel<T> {
 
   bool get isEmpty => data.isEmpty;
 
-  /// ⚠ الترتيب مقصود: `pagination` الأول لأنه اللي `UserBookingController`
-  /// بيبعته، وبعده `meta` (شكل `ResourceCollection`)، وبعده الجذر نفسه
-  /// (لما الكونترولر بيرجّع `->paginate()` خام). التلاتة بيحصلوا في نفس
-  /// الـ API حسب الكونترولر، فالقراية الدفاعية بتقعد في مكان واحد هنا بدل
-  /// ما كل cubit يخمّن.
+  /// ⚠ **`meta.pagination` الأول — ده الشكل الحقيقي، متحقّق منه بنداء فعلي.**
+  ///
+  /// `GET /api/user/bookings?per_page=2` بيرجّع:
+  ///
+  /// ```json
+  /// {"success":true,"data":[…],
+  ///  "meta":{"pagination":{"current_page":1,"per_page":2,"total":48,"last_page":24}}}
+  /// ```
+  ///
+  /// `ApiResponse::success($data, null, 200, ['pagination' => …])` بيحط الميتا
+  /// تحت `meta`، والكونترولر بيحط جواها `pagination` — يعني **مستويين**.
+  ///
+  /// الترتيب اللي كان هنا (`json['pagination'] ?? json['meta'] ?? json`) كان
+  /// بيمسك `{'pagination': {…}}` ويدوّر جواه على `current_page` مباشرة، فيلاقيها
+  /// `null` وياخد الافتراضي `1` — و`hasMore` تبقى **`false` دايمًا**. ٤٨ حجز على
+  /// ٢٤ صفحة، والقايمة بتقف عند الأولى **من غير أي خطأ يبان**.
+  ///
+  /// الباقي في السلسلة دفاعي وبيفضل: `pagination` في الجذر، وبعده `meta` مسطّح
+  /// (شكل `ResourceCollection`)، وبعده الجذر نفسه (`->paginate()` خام).
   factory PaginatedUiModel.fromJson(
     Map<String, dynamic> json,
     T Function(Map<String, dynamic>) itemFromJson,
   ) {
-    final meta = json['pagination'] ?? json['meta'] ?? json;
-    final page = JsonParse.mapValue(meta);
+    final meta = JsonParse.mapValue(json['meta']);
+    final page = JsonParse.mapValue(
+      meta['pagination'] ??
+          json['pagination'] ??
+          (meta.isNotEmpty ? meta : json),
+    );
 
     final items = JsonParse.mapListValue(
       json['data'],

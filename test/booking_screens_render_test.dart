@@ -10,6 +10,8 @@ import 'package:waqty_user_application/features/booking/booking_details/logic/bo
 import 'package:waqty_user_application/features/booking/booking_details/ui/booking_details_screen.dart';
 import 'package:waqty_user_application/features/booking/booking_details/ui/widgets/booking_details_info_widget.dart';
 import 'package:waqty_user_application/features/booking/create_booking/ui/widgets/create_booking_service_picker_widget.dart';
+import 'package:waqty_user_application/features/booking/booking_details/data/repo/booking_details_repo.dart';
+import 'package:waqty_user_application/features/booking/booking_details/data/services/booking_details_mock_service.dart';
 
 /// شاشات الحجز — **تفاصيل الحجز و`sheet` الحجز**.
 ///
@@ -159,7 +161,10 @@ void main() {
                   textDirection: TextDirection.rtl,
                   child: BlocProvider(
                     create: (_) =>
-                        BookingDetailsCubit(bookingUuid: single.uuid)
+                        BookingDetailsCubit(BookingDetailsRepo(
+        const BookingDetailsMockService(),
+        const BookingDetailsMockService(),
+      ), bookingUuid: single.uuid)
                           ..loadBooking(),
                     child: const BookingDetailsScreen(),
                   ),

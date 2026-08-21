@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../tokens/app_icons.dart';
 import '../tokens/app_radius.dart';
 import '../tokens/app_semantic_colors.dart';
 import 'app_skeleton_widget.dart';
+import 'app_icon_widget.dart';
 
 /// صورة من الشبكة بحالات تحميل وخطأ.
 ///
@@ -77,9 +79,9 @@ class AppNetworkImageWidget extends StatelessWidget {
         alignment: Alignment.center,
         children: [
           box,
-          Icon(
-            Icons.image_outlined,
-            size: 24.r,
+          AppIconWidget(
+            AppIcons.image,
+            size: 24,
             color: AppSemanticColors.textTertiary,
           ),
         ],

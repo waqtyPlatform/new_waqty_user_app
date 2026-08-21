@@ -4,6 +4,8 @@ import 'package:waqty_user_application/core/models/employee_ui_model.dart';
 import 'package:waqty_user_application/core/models/slot_ui_model.dart';
 import 'package:waqty_user_application/features/booking/create_booking/logic/create_booking_cubit.dart';
 import 'package:waqty_user_application/features/booking/create_booking/logic/create_booking_state.dart';
+import 'package:waqty_user_application/features/booking/create_booking/data/repo/create_booking_repo.dart';
+import 'package:waqty_user_application/features/booking/create_booking/data/services/create_booking_mock_service.dart';
 
 /// الـ payload لازم يطابق `StoreBookingRequest` في السيرفر بالحرف:
 ///
@@ -25,8 +27,21 @@ void main() {
     r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$',
   );
 
-  CreateBookingCubit buildCubit() =>
-      CreateBookingCubit(providerUuid: 'prv-1', providerName: 'صالون كابتن');
+  /// ⚠ **لازم `await`** — الفروع والخدمات بقوا بيتحمّلوا في
+  /// `bootstrap()` مش في الكونستركتور. التحميل المتزامن مكنش بيتحوّل
+  /// لنداء شبكة.
+  Future<CreateBookingCubit> buildCubit() async {
+    final cubit = CreateBookingCubit(
+    CreateBookingRepo(
+      const CreateBookingMockService(),
+      const CreateBookingMockService(),
+    ),
+      providerUuid: 'prv-1',
+      providerName: 'صالون كابتن',
+    );
+    await cubit.bootstrap();
+    return cubit;
+  }
 
   /// بيحط ميعاد في عنصر من غير ما يعدّي على التحميل غير المتزامن.
   void schedule(
@@ -55,8 +70,8 @@ void main() {
   }
 
   group('buildPayload', () {
-    test('خدمة واحدة تطلع زيارة واحدة بعنصر واحد', () {
-      final cubit = buildCubit();
+    test('خدمة واحدة تطلع زيارة واحدة بعنصر واحد', () async {
+      final cubit = await buildCubit();
       cubit.toggleService(MockServices.byUuid('srv-1'));
       schedule(cubit, 'srv-1', inDays: 2, atHour: 18);
 
@@ -68,8 +83,8 @@ void main() {
       expect(payload['branch_uuid'], isNotNull);
     });
 
-    test('«أي أخصائي متاح» بيشيل employee_uuid خالص مش بيبعته فاضي', () {
-      final cubit = buildCubit();
+    test('«أي أخصائي متاح» بيشيل employee_uuid خالص مش بيبعته فاضي', () async {
+      final cubit = await buildCubit();
       cubit.toggleService(MockServices.byUuid('srv-1'));
       schedule(cubit, 'srv-1', inDays: 2, atHour: 18);
 
@@ -80,8 +95,8 @@ void main() {
       expect(item.containsKey('employee_uuid'), isFalse);
     });
 
-    test('أخصائي محدد بيتبعت بالـ uuid بتاعه', () {
-      final cubit = buildCubit();
+    test('أخصائي محدد بيتبعت بالـ uuid بتاعه', () async {
+      final cubit = await buildCubit();
       cubit.toggleService(MockServices.byUuid('srv-1'));
       schedule(
         cubit,
@@ -103,8 +118,8 @@ void main() {
       expect(item['employee_uuid'], 'emp-9');
     });
 
-    test('تلات خدمات في يوم واحد = زيارة واحدة بتلات عناصر مرتبة بالوقت', () {
-      final cubit = buildCubit();
+    test('تلات خدمات في يوم واحد = زيارة واحدة بتلات عناصر مرتبة بالوقت', () async {
+      final cubit = await buildCubit();
       cubit.toggleService(MockServices.byUuid('srv-1'));
       cubit.toggleService(MockServices.byUuid('srv-2'));
       cubit.toggleService(MockServices.byUuid('srv-5'));
@@ -126,8 +141,8 @@ void main() {
       ]);
     });
 
-    test('خدمتين في يومين = زيارتين مرتبتين بالتاريخ', () {
-      final cubit = buildCubit();
+    test('خدمتين في يومين = زيارتين مرتبتين بالتاريخ', () async {
+      final cubit = await buildCubit();
       cubit.toggleService(MockServices.byUuid('srv-1'));
       cubit.toggleService(MockServices.byUuid('srv-2'));
 
@@ -147,8 +162,8 @@ void main() {
       );
     });
 
-    test('start_at بصيغة Y-m-d\\TH:i:sP بالثواني والإزاحة', () {
-      final cubit = buildCubit();
+    test('start_at بصيغة Y-m-d\\TH:i:sP بالثواني والإزاحة', () async {
+      final cubit = await buildCubit();
       cubit.toggleService(MockServices.byUuid('srv-1'));
       schedule(cubit, 'srv-1', inDays: 2, atHour: 18);
 
@@ -158,8 +173,8 @@ void main() {
       expect(item['start_at'] as String, matches(startAtFormat));
     });
 
-    test('scheduled_start_at مش بتتبعت — السيرفر بيحسبها', () {
-      final cubit = buildCubit();
+    test('scheduled_start_at مش بتتبعت — السيرفر بيحسبها', () async {
+      final cubit = await buildCubit();
       cubit.toggleService(MockServices.byUuid('srv-1'));
       schedule(cubit, 'srv-1', inDays: 2, atHour: 18);
 
@@ -167,8 +182,8 @@ void main() {
       expect((visits.first as Map).containsKey('scheduled_start_at'), isFalse);
     });
 
-    test('الخدمات من غير ميعاد مابتدخلش الـ payload', () {
-      final cubit = buildCubit();
+    test('الخدمات من غير ميعاد مابتدخلش الـ payload', () async {
+      final cubit = await buildCubit();
       cubit.toggleService(MockServices.byUuid('srv-1'));
       cubit.toggleService(MockServices.byUuid('srv-2'));
       schedule(cubit, 'srv-1', inDays: 2, atHour: 18);
@@ -183,8 +198,8 @@ void main() {
   // بياخد التجميع زي ما بيتبعت من غير ما يراجعه — و`checkInVisit` بيسجّل
   // وصول واحد للزيارة كلها، فدمج غلط بيخلي العميل «واصل» عشر ساعات.
   group('تجميع الزيارات', () {
-    test('فارق صغير في نفس اليوم = رحلة واحدة', () {
-      final cubit = buildCubit();
+    test('فارق صغير في نفس اليوم = رحلة واحدة', () async {
+      final cubit = await buildCubit();
       cubit.toggleService(MockServices.byUuid('srv-1')); // ٤٥ دقيقة
       cubit.toggleService(MockServices.byUuid('srv-2'));
 
@@ -195,8 +210,8 @@ void main() {
       expect((cubit.buildPayload()['visits'] as List), hasLength(1));
     });
 
-    test('فارق أكتر من ساعتين في نفس اليوم = رحلتين', () {
-      final cubit = buildCubit();
+    test('فارق أكتر من ساعتين في نفس اليوم = رحلتين', () async {
+      final cubit = await buildCubit();
       cubit.toggleService(MockServices.byUuid('srv-1'));
       cubit.toggleService(MockServices.byUuid('srv-2'));
 
@@ -211,8 +226,8 @@ void main() {
       expect((visits[1] as Map)['items'], hasLength(1));
     });
 
-    test('ساعتين بالظبط لسه رحلة واحدة — الحد صارم', () {
-      final cubit = buildCubit();
+    test('ساعتين بالظبط لسه رحلة واحدة — الحد صارم', () async {
+      final cubit = await buildCubit();
       cubit.toggleService(MockServices.byUuid('srv-1'));
       cubit.toggleService(MockServices.byUuid('srv-2'));
 
@@ -222,8 +237,8 @@ void main() {
       expect(cubit.visits, hasLength(1));
     });
 
-    test('العميل يقدر يدمج رحلتين اتفصلوا تلقائيًا', () {
-      final cubit = buildCubit();
+    test('العميل يقدر يدمج رحلتين اتفصلوا تلقائيًا', () async {
+      final cubit = await buildCubit();
       cubit.toggleService(MockServices.byUuid('srv-1'));
       cubit.toggleService(MockServices.byUuid('srv-2'));
 
@@ -238,8 +253,8 @@ void main() {
       expect((cubit.buildPayload()['visits'] as List), hasLength(1));
     });
 
-    test('العميل يقدر يفصل رحلة واحدة لاتنين', () {
-      final cubit = buildCubit();
+    test('العميل يقدر يفصل رحلة واحدة لاتنين', () async {
+      final cubit = await buildCubit();
       cubit.toggleService(MockServices.byUuid('srv-1'));
       cubit.toggleService(MockServices.byUuid('srv-2'));
 
@@ -253,8 +268,8 @@ void main() {
       expect(cubit.visits, hasLength(2));
     });
 
-    test('يومين مختلفين رحلتين دايمًا — والدمج مالوش تأثير', () {
-      final cubit = buildCubit();
+    test('يومين مختلفين رحلتين دايمًا — والدمج مالوش تأثير', () async {
+      final cubit = await buildCubit();
       cubit.toggleService(MockServices.byUuid('srv-1'));
       cubit.toggleService(MockServices.byUuid('srv-2'));
 
@@ -271,8 +286,8 @@ void main() {
       expect(cubit.boundaryBefore(second), isNull);
     });
 
-    test('تغيير الميعاد بيلغي التعديل اليدوي', () {
-      final cubit = buildCubit();
+    test('تغيير الميعاد بيلغي التعديل اليدوي', () async {
+      final cubit = await buildCubit();
       cubit.toggleService(MockServices.byUuid('srv-1'));
       cubit.toggleService(MockServices.byUuid('srv-2'));
 
@@ -298,8 +313,8 @@ void main() {
       expect(cubit.visits, hasLength(1));
     });
 
-    test('الفارق الصغير مالوش زرار — والكبير ليه', () {
-      final cubit = buildCubit();
+    test('الفارق الصغير مالوش زرار — والكبير ليه', () async {
+      final cubit = await buildCubit();
       cubit.toggleService(MockServices.byUuid('srv-1'));
       cubit.toggleService(MockServices.byUuid('srv-2'));
 
@@ -317,8 +332,8 @@ void main() {
       expect(boundary.gap, const Duration(hours: 1, minutes: 15));
     });
 
-    test('العناصر جوه الرحلة مرتبة زمنيًا والرحلات مرتبة كمان', () {
-      final cubit = buildCubit();
+    test('العناصر جوه الرحلة مرتبة زمنيًا والرحلات مرتبة كمان', () async {
+      final cubit = await buildCubit();
       cubit.toggleService(MockServices.byUuid('srv-1'));
       cubit.toggleService(MockServices.byUuid('srv-2'));
       cubit.toggleService(MockServices.byUuid('srv-5'));
@@ -338,8 +353,8 @@ void main() {
   });
 
   group('السلة', () {
-    test('toggle بيضيف ويشيل', () {
-      final cubit = buildCubit();
+    test('toggle بيضيف ويشيل', () async {
+      final cubit = await buildCubit();
       final service = MockServices.byUuid('srv-1');
 
       cubit.toggleService(service);
@@ -350,8 +365,8 @@ void main() {
       expect(cubit.items, isEmpty);
     });
 
-    test('الإجمالي مجموع الخدمات مش سعر أول واحدة', () {
-      final cubit = buildCubit();
+    test('الإجمالي مجموع الخدمات مش سعر أول واحدة', () async {
+      final cubit = await buildCubit();
       cubit.toggleService(MockServices.byUuid('srv-1')); // ٢٥٠
       cubit.toggleService(MockServices.byUuid('srv-2')); // ١٢٠
 
@@ -359,8 +374,8 @@ void main() {
       expect(cubit.totalDuration, 65);
     });
 
-    test('اختيار ميعاد بيقفل الكارت ويفتح اللي بعده', () {
-      final cubit = buildCubit();
+    test('اختيار ميعاد بيقفل الكارت ويفتح اللي بعده', () async {
+      final cubit = await buildCubit();
       cubit.toggleService(MockServices.byUuid('srv-1'));
       cubit.toggleService(MockServices.byUuid('srv-2'));
 
@@ -389,8 +404,8 @@ void main() {
     //
     // بعد Phase 4 التحميل الافتراضي بقى **اقتراحات** مش تواريخ — التقويم
     // مابيتحمّلش غير لما العميل يفتح «كل المواعيد».
-    test('فتح كارت بيسيب حالة التحميل تعيش مش يدهسها', () {
-      final cubit = buildCubit();
+    test('فتح كارت بيسيب حالة التحميل تعيش مش يدهسها', () async {
+      final cubit = await buildCubit();
       cubit.toggleService(MockServices.byUuid('srv-1'));
 
       cubit.enterDateTimeStep();
@@ -399,8 +414,8 @@ void main() {
       expect((cubit.state as LoadingSlotsState).itemKey, cubit.items.first.key);
     });
 
-    test('حالة التحميل بتخص الكارت المفتوح بس', () {
-      final cubit = buildCubit();
+    test('حالة التحميل بتخص الكارت المفتوح بس', () async {
+      final cubit = await buildCubit();
       cubit.toggleService(MockServices.byUuid('srv-1'));
       cubit.toggleService(MockServices.byUuid('srv-2'));
 
@@ -410,8 +425,8 @@ void main() {
       expect((cubit.state as LoadingSlotsState).itemKey, cubit.items[1].key);
     });
 
-    test('canGoNext في خطوة المواعيد بيستنى كل الخدمات تتحدد', () {
-      final cubit = buildCubit();
+    test('canGoNext في خطوة المواعيد بيستنى كل الخدمات تتحدد', () async {
+      final cubit = await buildCubit();
       cubit.toggleService(MockServices.byUuid('srv-1'));
       cubit.toggleService(MockServices.byUuid('srv-2'));
       cubit.goToStep(BookingStep.dateTime);

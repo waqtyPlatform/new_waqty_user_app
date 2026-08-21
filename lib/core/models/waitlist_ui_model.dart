@@ -236,6 +236,13 @@ class WaitlistUiModel {
   /// رسالة الفرع مع العرض. `null` = ماكتبش حاجة.
   final String? offerMessage;
 
+  /// ⚠ **`request-change` بيرفض من غيره.**
+  ///
+  /// `UserWaitlistController::requestChange` بيتحقق من `offer_uuid`
+  /// **مطلوب**. من غير الحقل ده الشاشة تبعت الطلب ويرجع ٤٢٢، والعميل
+  /// يشوف خطأ على فعل هو عمله صح.
+  final String? activeOfferUuid;
+
   // ── صلاحيات السيرفر ──────────────────────────────────────────────────
   //
   // **بتتقرا مابتتحسبش.** نفس قاعدة `BookingUiModel.canCancel`: الشرط
@@ -287,6 +294,7 @@ class WaitlistUiModel {
     this.offeredEndAt,
     this.offeredEmployeeName,
     this.offerMessage,
+    this.activeOfferUuid,
     this.canAccept = false,
     this.canRequestChange = false,
     this.canCancel = false,
@@ -353,6 +361,9 @@ class WaitlistUiModel {
       // مرقّمة، و`current_offer` هو الصف النشط منها. الحقول المسطّحة
       // (`offered_start_at`…) نسخة على الإدخال الأب، وممكن تبقى بايتة من
       // محاولة قديمة لو الصف اتقفل من غير ما تتمسح.
+      activeOfferUuid: JsonParse.stringValue(offer['uuid']).isEmpty
+          ? null
+          : JsonParse.stringValue(offer['uuid']),
       offeredStartAt:
           JsonParse.dateOrNull(offer['start_at']) ??
           JsonParse.dateOrNull(json['offered_start_at']),

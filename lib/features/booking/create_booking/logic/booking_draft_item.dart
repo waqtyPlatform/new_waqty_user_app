@@ -26,6 +26,13 @@ class BookingDraftItem {
   EmployeeUiModel employee;
   List<EmployeeUiModel> employees;
 
+  /// سألنا عن الشهر اللي بعده خلاص؟
+  ///
+  /// ⚠ **حارس ضد اللف.** لما الشهر الحالي يرجع فاضي بننط للي بعده مرة
+  /// واحدة. من غير الحارس ده، سنة فاضية = ١٢ نداء متتالية من ضغطة واحدة
+  /// — و`available-dates` عليها `throttle:60,1`.
+  bool didHopMonth = false;
+
   DateTime currentMonth;
   List<DateTime> availableDates;
   DateTime? selectedDate;

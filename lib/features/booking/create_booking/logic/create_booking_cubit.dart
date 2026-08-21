@@ -1,13 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:waqty_user_application/core/mock/mock_config.dart';
-import 'package:waqty_user_application/core/mock/mock_employees.dart';
-import 'package:waqty_user_application/core/mock/mock_scenario.dart';
-import 'package:waqty_user_application/core/mock/mock_providers.dart';
-import 'package:waqty_user_application/core/mock/mock_services.dart';
-import 'package:waqty_user_application/core/mock/mock_slots.dart';
-import 'package:waqty_user_application/core/mock/mock_waitlist.dart';
-import 'package:waqty_user_application/core/mock/mock_source.dart';
+import 'package:waqty_user_application/core/exceptions/failure.dart';
+import 'package:waqty_user_application/features/booking/create_booking/data/models/slot_taken_failure.dart';
+import 'package:waqty_user_application/features/booking/create_booking/data/repo/create_booking_repo.dart';
 import 'package:waqty_user_application/core/models/branch_ui_model.dart';
 import 'package:waqty_user_application/core/models/employee_ui_model.dart';
 import 'package:waqty_user_application/core/models/service_ui_model.dart';
@@ -36,14 +31,31 @@ enum BookingStep { service, dateTime, confirm }
 /// «زيارة» وهو بيحجز. هو بيضيف خدمات ويحدّد ميعاد لكل واحدة، وبيشوف
 /// كلمة «الزيارة» في التأكيد بس كعنوان يوم.
 class CreateBookingCubit extends Cubit<CreateBookingState> {
-  CreateBookingCubit({
+  CreateBookingCubit(
+    this._repo, {
     required this.providerUuid,
     required this.providerName,
     String? initialServiceUuid,
     BranchUiModel? initialBranch,
     String? initialBranchUuid,
-  }) : super(InitialState()) {
-    branches = MockProviders.branchesOf(providerUuid);
+  }) : _initialServiceUuid = initialServiceUuid,
+       _wantedBranchUuid = initialBranch?.uuid ?? initialBranchUuid,
+       super(InitialState());
+
+  final CreateBookingRepo _repo;
+
+  /// محفوظين من الكونستركتور لحد ما [bootstrap] تجيب الداتا.
+  final String? _initialServiceUuid;
+  final String? _wantedBranchUuid;
+
+  /// **بتحمّل الفروع والخدمات.**
+  ///
+  /// كان التحميل جوّه الكونستركتور من الموك بشكل متزامن — وده
+  /// مايتحوّلش لنداء شبكة. الكونستركتور بقى بيخزّن المطلوب وبس.
+  Future<void> bootstrap() async {
+    branches = (await _repo.branches(providerUuid)).getOrElse(
+      () => const <BranchUiModel>[],
+    );
 
     // **الفرع اللي العميل اختاره في شاشة المحل، مش أول واحد في القايمة.**
     //
@@ -55,7 +67,7 @@ class CreateBookingCubit extends Cubit<CreateBookingState> {
     // بنطابق بالـ uuid مش بالكائن نفسه عشان مصادر الفروع تفضل تقدر تختلف
     // — شاشة المحل بتبعت الكائن، و«احجز تاني» عنده الـ uuid بس (جاي من
     // `BookingUiModel.branchUuid`).
-    final wantedBranch = initialBranch?.uuid ?? initialBranchUuid;
+    final wantedBranch = _wantedBranchUuid;
     selectedBranch = branches.isEmpty
         ? null
         : branches.firstWhere(
@@ -68,22 +80,33 @@ class CreateBookingCubit extends Cubit<CreateBookingState> {
     // كانت `ofProvider` (سعر الفرع الرئيسي دايمًا)، فالعميل الواقف على
     // الفرع التاني كان يشوف ٢٩٠ في الصفحة ويدوس فيلاقي ٢٥٠ في الـ sheet.
     // تناقض في ضغطة واحدة، وهو بالظبط اللي بُعد الفرع اتعمل عشانه.
-    services = MockServices.ofBranch(
+    services = (await _repo.services(
       providerUuid: providerUuid,
       branchUuid: selectedBranch?.uuid,
-    );
+    )).getOrElse(() => const <ServiceUiModel>[]);
 
-    if (initialServiceUuid != null && initialServiceUuid.isNotEmpty) {
-      // من القايمة المسعّرة الأول. الـ fallback لـ`byUuid` للخدمة اللي
-      // مش متاحة في الفرع ده — «احجز تاني» بيقدر يجيب خدمة اتحجزت قبل
-      // كده في فرع تاني.
-      final service = services.firstWhere(
-        (s) => s.uuid == initialServiceUuid,
-        orElse: () => MockServices.byUuid(initialServiceUuid),
-      );
-      _addItem(service);
-      currentStep = BookingStep.dateTime;
+    final wantedService = _initialServiceUuid;
+    if (wantedService != null && wantedService.isNotEmpty) {
+      // ⚠ **لو الخدمة مش في الفرع ده، مابنزوّرهاش.**
+      //
+      // الكود القديم كان بيقع على `MockServices.byUuid` فبيجيب الخدمة
+      // من أي فرع تاني بسعره هو. ده يوم الربط بيبقى سعر غلط رايح
+      // للعميل. دلوقتي السلة بتفضل فاضية والعميل يختار من الموجود.
+      final matches = services.where((s) => s.uuid == wantedService);
+      if (matches.isNotEmpty) {
+        _addItem(matches.first);
+        currentStep = BookingStep.dateTime;
+      }
     }
+
+    // **فتح كارت الميعاد بعد التحميل مش قبله.**
+    //
+    // `enterDateTimeStep` كانت بتتنادى في `..` بتاعة الـsheet، يعني قبل
+    // ما الخدمات توصل. مع الموك المتزامن ده كان شغال بالصدفة؛ مع نداء
+    // شبكة السلة بتبقى فاضية ومفيش حاجة تتفتح.
+    if (currentStep == BookingStep.dateTime) enterDateTimeStep();
+
+    emit(OnSelectionChangedState());
   }
 
   /// **سلة جاهزة — من غير أي تحميل.**
@@ -106,16 +129,21 @@ class CreateBookingCubit extends Cubit<CreateBookingState> {
   /// فاللي الاختبار بيقيسه هو الكود الحقيقي مش نسخة منه.
   ///
   /// مفيد كمان في المعاينة وفي الـ mock scenarios لو احتجناها بعدين.
-  CreateBookingCubit.seeded({
+  CreateBookingCubit.seeded(
+    this._repo, {
     required this.providerUuid,
     required this.providerName,
     required List<BookingDraftItem> draft,
     BranchUiModel? branch,
+    List<BranchUiModel> seededBranches = const <BranchUiModel>[],
+    List<ServiceUiModel> seededServices = const <ServiceUiModel>[],
     BookingStep step = BookingStep.confirm,
-  }) : super(InitialState()) {
-    branches = MockProviders.branchesOf(providerUuid);
+  }) : _initialServiceUuid = null,
+       _wantedBranchUuid = null,
+       super(InitialState()) {
+    branches = seededBranches;
     selectedBranch = branch ?? (branches.isEmpty ? null : branches.first);
-    services = MockServices.ofProvider(providerUuid);
+    services = seededServices;
 
     items.addAll(draft);
     currentStep = step;
@@ -145,7 +173,12 @@ class CreateBookingCubit extends Cubit<CreateBookingState> {
   ///
   /// **مشترك بين كل عناصر السلة** — خدمتين بنفس المدة ونفس الأخصائي
   /// بيستفيدوا من نفس الطلب بدل ما كل واحدة تروح للسيرفر لوحدها.
-  final Map<String, List<DateTime>> _datesCache = <String, List<DateTime>>{};
+  /// كام يوم بنجيب منهم اقتراحات.
+  ///
+  /// ⚠ **الرقم ده ميزانية نداءات مش تفضيل عرض.** كل يوم = نداء على
+  /// `available-slots` (`throttle:60,1`). تلات خدمات × ٥ أيام = ١٥ نداء
+  /// من فتحة واحدة للويزارد، وده لسه في حدود الميزانية.
+  static const int _proposalDays = 5;
 
   int _keyCounter = 0;
 
@@ -206,10 +239,16 @@ class CreateBookingCubit extends Cubit<CreateBookingState> {
     for (final item in items) {
       item.isExpanded = item.key == key;
     }
-    emit(OnSelectionChangedState());
-
     final item = itemByKey(key);
-    if (item != null) _ensureLoaded(item);
+    if (item == null) {
+      emit(OnSelectionChangedState());
+      return;
+    }
+
+    // مفيش `OnSelectionChangedState` هنا: `_ensureLoaded` بتعمل `emit`
+    // للودينج فورًا، وحالتين ورا بعض كانوا هيخلّوا الكارت يرسم
+    // مرتين في إطار واحد.
+    _ensureLoaded(item);
   }
 
   void collapseAll() {
@@ -257,7 +296,9 @@ class CreateBookingCubit extends Cubit<CreateBookingState> {
     for (final item in items) {
       _clearScheduling(item);
     }
-    _datesCache.clear();
+    // الفرع اتغيّر = المواعيد كلها بتاعة مكان تاني. الكاش في الـrepo
+    // فالتفضية بتحصل هناك مش هنا.
+    _repo.invalidateSlots();
     emit(OnSelectionChangedState());
 
     // **الكارت المفتوح لازم يعيد تحميل نفسه.**
@@ -432,9 +473,21 @@ class CreateBookingCubit extends Cubit<CreateBookingState> {
   }
 
   Future<void> _ensureLoaded(BookingDraftItem item) async {
+    // ⚠ **حالة التحميل قبل أول نداء مش بعده.**
+    //
+    // مع الموك المتزامن كان جلب الأخصائيين فوري، فأول `emit` كان من
+    // `loadProposalsFor` والسكليتون يبان على طول. مع الشبكة، نداء
+    // الأخصائيين لوحده دورة كاملة — والكارت كان هيفضل **فاضي من غير أي
+    // مؤشر** طول المدة دي، فالعميل مش عارف هو مستني ولا مفيش مواعيد.
+    emit(LoadingSlotsState(itemKey: item.key));
+
     if (item.employees.isEmpty) {
-      // TODO(api): GET /api/public/bookings/available-employees
-      item.employees = MockEmployees.forService(item.service.uuid);
+      item.employees =
+          (await _repo.availableEmployees(
+            branchUuid: selectedBranch?.uuid ?? '',
+            serviceUuid: item.service.uuid,
+          )).getOrElse(() => const <EmployeeUiModel>[]);
+      if (isClosed) return;
     }
     // مفيش حد بيعمل الخدمة دي هنا — الكارت بيعرض طريق مسدود، ومفيش
     // لزمة نحمّل مواعيد لحاجة مش هتتحجز.
@@ -484,25 +537,65 @@ class CreateBookingCubit extends Cubit<CreateBookingState> {
 
     emit(LoadingSlotsState(itemKey: key));
 
-    // TODO(api): GET /api/public/bookings/available-slots على كذا يوم.
-    //   الـ endpoint الحالي بياخد **يوم واحد**، فالاقتراحات عبر أسبوعين
-    //   معناها N نداءات. الطلب للباك إند: باراميتر مدى تواريخ، أو
-    //   endpoint اقتراحات يرجّع أحسن K مواعيد.
-    final result = await MockSource.fetchList(
-      MockSlots.proposals(
-        durationMinutes: item.service.durationMinutes,
-        basePrice: item.baselinePrice,
-        anyAvailable: item.employee.isAnyAvailable,
-        periods: item.periods,
+    // ⚠ **الاقتراحات مالهاش endpoint** — `available-slots` بياخد **يوم واحد**.
+    // فبنبنيها من أول أيام متاحة في الشهر.
+    //
+    // وبنقفلها عند [_proposalDays] يوم: الـrepo بيكشّ كل يوم، بس أول مرة
+    // دي N نداءات فعلية و`throttle:60,1` موجود. أسبوعين × تلات خدمات =
+    // ٤٢ نداء من فتحة واحدة للويزارد.
+    //
+    // **الطلب للباك-إند:** باراميتر مدى تواريخ، أو endpoint اقتراحات
+    // يرجّع أحسن K مواعيد مرة واحدة.
+    final branchUuid = selectedBranch?.uuid ?? '';
+    final employeeUuid = item.employee.isAnyAvailable
+        ? null
+        : item.employee.uuid;
+
+    if (item.availableDates.isEmpty) {
+      item.availableDates =
+          (await _repo.availableDates(
+            branchUuid: branchUuid,
+            serviceUuid: item.service.uuid,
+            month: item.currentMonth,
+            employeeUuid: employeeUuid,
+          )).getOrElse(() => <DateTime>[]);
+    }
+
+    // ⚠ **بالتوازي مش ورا بعض.** خمس نداءات متتالية = خمس دورات شبكة
+    // واحدة ورا التانية، يعني العميل قاعد قدام سكليتون مدة مجموعهم.
+    // بالتوازي المدة = أبطأ نداء فيهم. ونفس عدد الطلبات من ناحية
+    // `throttle:60,1` — الفرق في التوزيع مش في العدد.
+    final days = item.availableDates.take(_proposalDays).toList();
+
+    final results = await Future.wait(
+      days.map(
+        (day) => _repo.availableSlots(
+          branchUuid: branchUuid,
+          serviceUuid: item.service.uuid,
+          date: day,
+          employeeUuid: employeeUuid,
+        ),
       ),
     );
 
-    result.fold((failure) => emit(CreateBookingErrorState(message: failure)), (
-      data,
-    ) {
-      item.proposals = data;
-      emit(OnSelectionChangedState());
-    });
+    if (isClosed) return;
+
+    // ٤٢٩ في أي واحد معناه الميزانية خلصت — الباقي مفيش فايدة منه.
+    final throttled = results
+        .map((r) => r.fold<Failure?>((f) => f, (_) => null))
+        .whereType<ThrottleFailure>();
+    if (throttled.isNotEmpty) {
+      emit(CreateBookingErrorState(message: throttled.first.message));
+      return;
+    }
+
+    item.proposals = [
+      // `Future.wait` بتحافظ على ترتيب الدخل، فالاقتراحات بتفضل بالترتيب
+      // الزمني. وأحسن ميعادين من كل يوم — اقتراحات مش جدول كامل.
+      for (final result in results)
+        ...result.getOrElse(() => const <SlotUiModel>[]).take(2),
+    ];
+    emit(OnSelectionChangedState());
   }
 
   Future<void> loadDatesFor(String key) async {
@@ -511,40 +604,40 @@ class CreateBookingCubit extends Cubit<CreateBookingState> {
 
     emit(LoadingDatesState(itemKey: key));
 
-    final cacheKey = _cacheKey(item, item.currentMonth);
-    if (_datesCache.containsKey(cacheKey)) {
-      item.availableDates = _datesCache[cacheKey]!;
-    } else {
-      // TODO(api): GET /api/public/bookings/available-dates?month=
-      final result = await MockSource.fetchList(
-        MockSlots.availableDates(
-          month: item.currentMonth,
-          // **مدة الخدمة الحقيقية.** من غيرها التقويم بيتحسب بـ٤٥ دقيقة
-          // لكل الخدمات، فيوم فيه فرجة ساعة بيبان متاح لخدمة ساعتين.
-          durationMinutes: item.service.durationMinutes,
-        ),
-      );
+    // الكاش بقى في الـrepo (حماية من `throttle:60,1`) — كاش تاني هنا كان
+    // هيقدر يفترق عنه في صمت.
+    final datesResult = await _repo.availableDates(
+      branchUuid: selectedBranch?.uuid ?? '',
+      serviceUuid: item.service.uuid,
+      month: item.currentMonth,
+      employeeUuid: item.employee.isAnyAvailable ? null : item.employee.uuid,
+    );
 
-      final failure = result.fold<String?>((l) => l, (_) => null);
-      if (failure != null) {
-        emit(CreateBookingErrorState(message: failure));
-        return;
-      }
+    if (isClosed) return;
 
-      item.availableDates = result.getOrElse(() => <DateTime>[]);
-      _datesCache[cacheKey] = item.availableDates;
+    final datesFailure = datesResult.fold<Failure?>((f) => f, (_) => null);
+    if (datesFailure != null) {
+      emit(CreateBookingErrorState(message: datesFailure.message));
+      return;
     }
+
+    item.availableDates = datesResult.getOrElse(() => <DateTime>[]);
 
     // الشهر ده فاضي؟ منسيبش العميل يكتشف الفراغ بنفسه — ننط لأقرب
     // شهر فيه مواعيد.
     if (item.availableDates.isEmpty) {
-      final firstAvailable = MockSlots.firstAvailableDate(
-        durationMinutes: item.service.durationMinutes,
-      );
-      if (firstAvailable != null &&
-          (firstAvailable.month != item.currentMonth.month ||
-              firstAvailable.year != item.currentMonth.year)) {
-        item.currentMonth = DateTime(firstAvailable.year, firstAvailable.month);
+      // ⚠ **مفيش endpoint بيقول أول يوم متاح فين.**
+      //
+      // الموك كان عنده `firstAvailableDate` لأنه شايف الداتا كلها. مع
+      // السيرفر بنسأل عن الشهر اللي بعده **مرة واحدة وبس** — لو هو كمان
+      // فاضي، العميل يقلّب بإيده. اللف على ١٢ شهر يعني ١٢ نداء من ضغطة
+      // واحدة، و`throttle:60,1` موجود.
+      if (!item.didHopMonth) {
+        item.didHopMonth = true;
+        item.currentMonth = DateTime(
+          item.currentMonth.year,
+          item.currentMonth.month + 1,
+        );
         await loadDatesFor(key);
         return;
       }
@@ -564,32 +657,25 @@ class CreateBookingCubit extends Cubit<CreateBookingState> {
 
     emit(LoadingSlotsState(itemKey: key));
 
-    // TODO(api): GET /api/public/bookings/available-slots?date=
-    final result = await MockSource.fetchList(
-      MockSlots.slotsFor(
-        date: item.selectedDate!,
-        durationMinutes: item.service.durationMinutes,
-        basePrice: item.baselinePrice,
-        // «أي أخصائي متاح» = السعر بيتغير حسب مين الفاضي في الميعاد ده.
-        anyAvailable: item.employee.isAnyAvailable,
-      ),
+    final result = await _repo.availableSlots(
+      branchUuid: selectedBranch?.uuid ?? '',
+      serviceUuid: item.service.uuid,
+      date: item.selectedDate!,
+      // «أي أخصائي متاح» بيتبعت **فاضي** — السيرفر بيرجّع مواعيد كل الفريق
+      // والسعر بيتغير حسب مين الفاضي.
+      employeeUuid: item.employee.isAnyAvailable ? null : item.employee.uuid,
     );
 
-    result.fold((failure) => emit(CreateBookingErrorState(message: failure)), (
-      data,
-    ) {
+    if (isClosed) return;
+
+    result.fold(
+      (failure) => emit(CreateBookingErrorState(message: failure.message)),
+      (data) {
       item.slots = data;
       emit(OnSelectionChangedState());
     });
   }
 
-  String _cacheKey(BookingDraftItem item, DateTime month) {
-    final employeeKey = item.employee.isAnyAvailable
-        ? 'any'
-        : item.employee.uuid;
-    return '${selectedBranch?.uuid}|${item.service.uuid}|$employeeKey'
-        '|${month.year}-${month.month}';
-  }
 
   // ── الإجماليات ───────────────────────────────────────────────────────
 
@@ -745,7 +831,7 @@ class CreateBookingCubit extends Cubit<CreateBookingState> {
   /// مبني وشغال (`routes/api.php:642-645`) بحجز مؤقت ٥ دقايق، والأبلكيشن
   /// مكانش فيه ولا سطر عنه — فاليوم المليان كان بيقول «جرّب يوم تاني»
   /// وخلاص، مع إن الطلب نفسه يستاهل يتسجّل.
-  void joinWaitlist(String key) {
+  Future<void> joinWaitlist(String key) async {
     final item = itemByKey(key);
     if (item == null) return;
 
@@ -753,85 +839,95 @@ class CreateBookingCubit extends Cubit<CreateBookingState> {
     final preferredAt =
         item.takenSlot?.startAt ?? item.selectedDate ?? DateTime.now();
 
-    // TODO(api): POST /api/user/waitlist — النداء اللي تحت **هو** جسم الطلب
-    //   حقل بحقل، فيوم الربط بيتغيّر سطر النداء بس.
-    MockWaitlist.add(
-      providerUuid: providerUuid,
+    final result = await _repo.joinWaitlist(
       branchUuid: selectedBranch?.uuid ?? '',
       serviceUuid: item.service.uuid,
       preferredAt: preferredAt,
       // نفس قاعدة الحجز: «أي أخصائي متاح» بيتبعت **فاضي**، مش باسم.
       employeeUuid: item.employee.isAnyAvailable ? null : item.employee.uuid,
+      notes: notesController.text.trim(),
     );
 
-    emit(JoinedWaitlistState(serviceName: item.service.name));
-  }
+    if (isClosed) return;
 
-  /// السيناريو بيوقّع **أول محاولة بس**.
-  bool _scenarioSlotLostFired = false;
-
-  /// الميعاد ده اتاخد من حد تاني؟ — **mock**.
-  ///
-  /// القاعدة الافتراضية (دقيقة `:15`) عشوائية شوية: بتعتمد على إن العميل
-  /// يصادف يختار ميعاد بالدقيقة دي. سيناريو `slotLostAtConfirm` بيخلي
-  /// **أول خدمة** تقع — عشان الحالة تبقى قابلة للعرض في تانيتين بدل ما
-  /// نفضل نجرّب مواعيد لحد ما واحد يقع.
-  ///
-  /// **بس مرة واحدة.** من غير [_scenarioSlotLostFired] كان الحجز يقع كل
-  /// مرة: العميل يختار بديل، يدوس تأكيد، ويقع تاني — حلقة مقفولة مالهاش
-  /// مخرج. والسيناريو المفروض يوري **التعافي**، والتعافي معناه إنك تقدر
-  /// تكمّل في الآخر.
-  bool _isSlotTaken(BookingDraftItem item) {
-    if (MockConfig.scenario == MockScenario.slotLostAtConfirm) {
-      if (_scenarioSlotLostFired) return false;
-      return items.isNotEmpty && item.key == items.first.key;
-    }
-    return item.selectedSlot?.startAt.minute == 15;
+    result.fold(
+      // ⚠ فشل الانضمام لازم يبان. أوضح حالة: `CustomerBlockedByProviderException`
+      // بترجع ٤٠٣ لما الصالون يكون حاظر العميل — لو سكتنا، العميل يفضل
+      // مستني دور مش موجود.
+      (failure) => emit(CreateBookingErrorState(message: failure.message)),
+      (_) => emit(JoinedWaitlistState(serviceName: item.service.name)),
+    );
   }
 
   Future<void> confirmBooking() async {
     emit(CreateBookingLoadingState());
 
-    // TODO(api): POST /api/user/bookings — الـ body من `buildPayload()`.
-    await Future.delayed(const Duration(milliseconds: 800));
+    final result = await _repo.createBooking(buildPayload());
+    if (isClosed) return;
 
-    // مؤقتًا للتجربة: أي ميعاد الدقيقة فيه ١٥ بنعتبره اتحجز من حد تاني،
-    // عشان نقدر نجرّب حالة «الميعاد راح» من غير جهازين.
-    //
-    // **بنجمّعهم كلهم قبل ما نرد.** الكود القديم كان بيعمل `return` من جوه
-    // اللوب عند أول خدمة وقعت، فحجز بتلات خدمات واتنين مواعيدهم راحوا كان
-    // بيوري واحدة بس — والعميل يصلّحها، يدوس تأكيد، ويتصدم تاني.
-    final taken = items.where(_isSlotTaken).toList();
+    await result.fold(
+      (failure) async {
+        // **«الميعاد راح» تعافي مش رسالة.**
+        //
+        // بنرجع لخطوة الميعاد، بنفتح كارت الخدمة اللي وقعت، وبنحمّله
+        // بدايل. الـ`SlotTakenFailure` شايل الـuuids عشان نعرف مين بالظبط
+        // — حجز بتلات خدمات واتنين راحوا لازم يتعرضوا مع بعض، وإلا العميل
+        // يصلّح واحدة ويتصدم تاني.
+        if (failure is SlotTakenFailure) {
+          await _recoverFromTakenSlots(failure.serviceUuids);
+          return;
+        }
 
-    if (taken.isNotEmpty) {
-      _scenarioSlotLostFired = true;
+        emit(CreateBookingErrorState(message: failure.message));
+      },
+      (uuid) async {
+        createdBookingUuid = uuid;
+        emit(CreateBookingSuccessState());
+      },
+    );
+  }
 
-      for (final item in taken) {
-        item.takenSlot = item.selectedSlot;
-        item.selectedSlot = null;
-      }
+  Future<void> _recoverFromTakenSlots(List<String> serviceUuids) async {
+    final taken = items
+        .where((item) => serviceUuids.contains(item.service.uuid))
+        .toList();
 
-      currentStep = BookingStep.dateTime;
-
-      // بنفتح أول واحد بس — كارت واحد مفتوح في المرة هي قاعدة الأكورديون،
-      // والباقي بيفضل مشخوط ومستني دوره.
-      final first = taken.first;
-      for (final other in items) {
-        other.isExpanded = other.key == first.key;
-      }
-
-      await loadSlotsFor(first.key);
+    if (taken.isEmpty) {
       emit(
-        SlotTakenState(
-          itemKey: first.key,
-          serviceNames: taken.map((i) => i.service.name).toList(),
+        CreateBookingErrorState(
+          message: 'الميعاد اتحجز من حد تاني، اختار ميعاد تاني',
         ),
       );
       return;
     }
 
-    emit(CreateBookingSuccessState());
+    for (final item in taken) {
+      item.takenSlot = item.selectedSlot;
+      item.selectedSlot = null;
+    }
+
+    currentStep = BookingStep.dateTime;
+
+    // بنفتح أول واحد بس — كارت واحد مفتوح في المرة هي قاعدة الأكورديون،
+    // والباقي بيفضل مشخوط ومستني دوره.
+    final first = taken.first;
+    for (final other in items) {
+      other.isExpanded = other.key == first.key;
+    }
+
+    await loadSlotsFor(first.key);
+    if (isClosed) return;
+
+    emit(
+      SlotTakenState(
+        itemKey: first.key,
+        serviceNames: taken.map((i) => i.service.name).toList(),
+      ),
+    );
   }
+
+  /// uuid الحجز اللي اتعمل — بيتقرا في شاشة النجاح عشان تفتح تفاصيله.
+  String? createdBookingUuid;
 
   /// فيه خدمة النهاردة؟ — **فلتر أهمية للتنبيه، مش قاعدة الإلغاء**.
   ///

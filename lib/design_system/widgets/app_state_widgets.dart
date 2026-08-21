@@ -2,11 +2,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../tokens/app_icons.dart';
 import '../tokens/app_radius.dart';
 import '../tokens/app_semantic_colors.dart';
 import '../tokens/app_spacing.dart';
 import '../tokens/app_text_styles.dart';
 import 'app_button_widget.dart';
+import 'app_icon_widget.dart';
 
 /// مؤشّر تحميل.
 ///
@@ -161,9 +163,9 @@ class AppErrorStateWidget extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(
-              Icons.error_outline_rounded,
-              size: 18.r,
+            AppIconWidget(
+              AppIcons.error,
+              size: 18,
               color: AppSemanticColors.dangerOnSoft,
             ),
             SizedBox(width: AppSpacing.s8.w),
@@ -183,9 +185,9 @@ class AppErrorStateWidget extends StatelessWidget {
                 child: SizedBox(
                   width: AppSpacing.touchTarget.r,
                   height: AppSpacing.touchTarget.r,
-                  child: Icon(
-                    Icons.refresh_rounded,
-                    size: 18.r,
+                  child: AppIconWidget(
+                    AppIcons.refresh,
+                    size: 18,
                     color: AppSemanticColors.dangerOnSoft,
                   ),
                 ),
@@ -227,9 +229,9 @@ class AppOfflineBannerWidget extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.wifi_off_rounded,
-            size: 16.r,
+          AppIconWidget(
+            AppIcons.wifiOff,
+            size: 16,
             color: AppSemanticColors.textOnInverse,
           ),
           SizedBox(width: AppSpacing.s8.w),

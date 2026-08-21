@@ -6,8 +6,17 @@ import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/mock/mock_bookings.dart';
 import 'package:waqty_user_application/features/booking/in_branch/logic/in_branch_cubit.dart';
 import 'package:waqty_user_application/features/booking/waitlist/logic/waitlist_cubit.dart';
+import 'package:waqty_user_application/features/home/home/data/repo/home_repo.dart';
+import 'package:waqty_user_application/features/home/home/data/services/home_mock_service.dart';
 import 'package:waqty_user_application/features/home/home/logic/home_cubit.dart';
 import 'package:waqty_user_application/features/home/home/ui/home_screen.dart';
+import 'package:waqty_user_application/features/booking/reassignment/data/repo/reassignment_repo.dart';
+import 'package:waqty_user_application/features/booking/reassignment/data/services/reassignment_mock_service.dart';
+import 'package:waqty_user_application/features/booking/reassignment/logic/reassignment_cubit.dart';
+import 'package:waqty_user_application/features/booking/waitlist/data/repo/waitlist_repo.dart';
+import 'package:waqty_user_application/features/booking/waitlist/data/services/waitlist_mock_service.dart';
+import 'package:waqty_user_application/features/booking/in_branch/data/repo/in_branch_repo.dart';
+import 'package:waqty_user_application/features/booking/in_branch/data/services/in_branch_mock_service.dart';
 
 /// **اختبار رسم — بديل الـ screenshot.**
 ///
@@ -53,12 +62,41 @@ void main() {
                 // جاهز» لازم يقروا من نفس النسخة.
                 body: MultiBlocProvider(
                   providers: [
-                    BlocProvider(create: (_) => WaitlistCubit()..start()),
+                    BlocProvider(create: (_) => WaitlistCubit(
+      const WaitlistRepo(
+        WaitlistMockService(),
+        WaitlistMockService(),
+      ),
+    )..start()),
+                    // البانر بتاع إعادة التوزيع بيقرا منه — فوق التبويبات
+                    // في الأبلكيشن، وهنا في الاختبار.
+                    BlocProvider(
+                      create: (_) => ReassignmentCubit(
+                        ReassignmentRepo(
+                          const ReassignmentMockService(),
+                          const ReassignmentMockService(),
+                        ),
+                      )..start(),
+                    ),
                     if (live != null)
                       BlocProvider(
-                        create: (_) => InBranchCubit(booking: live)..start(),
+                        create: (_) => InBranchCubit(InBranchRepo(
+                        const InBranchMockService(),
+                        const InBranchMockService(),
+                      ), booking: live)..start(),
                       ),
-                    BlocProvider(create: (_) => HomeCubit()..loadHome()),
+                    // ⚠ **الموك في الخانتين.** الاختبار عن الرسم مش عن مصدر
+                    // الداتا، فتثبيت المصدر هنا بيشيل اعتماد على حالة عالمية
+                    // (`DataSource.mode`) ممكن اختبار تاني يكون غيّرها. المبدّل
+                    // نفسه ليه اختباره في `data_source_test.dart`.
+                    BlocProvider(
+                      create: (_) => HomeCubit(
+                        HomeRepo(
+                          const HomeMockService(),
+                          const HomeMockService(),
+                        ),
+                      )..loadHome(),
+                    ),
                   ],
                   child: const HomeScreen(),
                 ),

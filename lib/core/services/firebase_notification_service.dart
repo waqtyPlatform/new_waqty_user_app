@@ -1,243 +1,138 @@
-// import 'dart:convert';
-// import 'dart:io';
-//
-// import 'package:firebase_messaging/firebase_messaging.dart';
-// import 'package:flutter/material.dart';
-// import 'package:egk_app/config/routes/routes.dart';
-// import 'package:egk_app/core/services/cache_helper.dart';
-// import 'package:egk_app/core/services/local_notification_service.dart';
-// import 'package:egk_app/core/utils/constant_keys.dart';
-//  import 'package:egk_app/my_app.dart';
-//
-// ///init pusher before
-// class FirebaseNotificationService {
-//   static final _firebaseMessage = FirebaseMessaging.instance;
-//
-//   static Future<void> init() async {
-//     try {
-//       await _firebaseMessage.requestPermission(
-//         alert: true,
-//         announcement: false,
-//         badge: true,
-//         carPlay: false,
-//         criticalAlert: false,
-//         provisional: false,
-//         sound: true,
-//       );
-//       await getDeviceToken();
-//
-//       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-//         print(' on message  onMessage getInitialMessage onMessage onMessage');
-//         debugPrint("message message Tap on Tap on Tap on Tap onMessage   ${message.data}");
-//         // MyOrdersAdminCubit.get(context).getOrders();
-//
-//         if (!Platform.isIOS) {
-//           LocalNotificationService.showNotification(
-//             title: message.notification!.title.toString(),
-//             body: message.notification!.body.toString(),
-//             payload: message.data.map(
-//               (key, value) => MapEntry(key.toString(), value.toString()),
-//             ),
-//           );
-//         }
-//       });
-//
-//
-//       _firebaseMessage.getInitialMessage().then((RemoteMessage? message) async {
-//         ///when open app get the
-//         print(
-//           "message message getInitialMessage getInitialMessage${message?.data}",
-//         );
-//         // int userType = await CacheHelper.getInt(
-//         //   ConstantKeys.saveUserTypoToShared,
-//         // )??1;
-//
-//         ///
-//         // if (message != null) {
-//         //   String? userType = await CacheHelper.getSecuredString(
-//         //     ConstantKeys.saveUserTypeToShared,
-//         //   );
-//         //   if (userType != null && navigatorKey.currentContext != null) {
-//         //     if (userType == 'client') {
-//         //       if (message.data['subject_type'] == 'chatroom') {
-//         //         Navigator.pushNamed(
-//         //           navigatorKey.currentContext!,
-//         //           Routes.chatDetailsScreen,
-//         //           arguments: {
-//         //             'id':
-//         //             int.tryParse(message.data['subject_id'].toString()) ??
-//         //                 0,
-//         //             'isRoom': true,
-//         //             'isNotification': true,
-//         //           },
-//         //         );
-//         //       } else if (message.data['subject_type'] == 'chatdirect') {
-//         //         Navigator.pushNamed(
-//         //           navigatorKey.currentContext!,
-//         //           Routes.chatDetailsScreen,
-//         //           arguments: {
-//         //             'id':
-//         //             int.tryParse(message.data['subject_id'].toString()) ??
-//         //                 0,
-//         //             'isRoom': false,
-//         //             'isNotification': true,
-//         //           },
-//         //         );
-//         //       } else if (message.data['subject_type'] == 'Booking') {
-//         //         Navigator.pushNamed(
-//         //           navigatorKey.currentContext!,
-//         //           Routes.userMyBookingScreen,
-//         //         );
-//         //       }
-//         //     }
-//         //     else {
-//         //       if (message.data['subject_type'] == 'chatroom') {
-//         //         // Navigator.pushNamed(
-//         //         //   navigatorKey.currentContext!,
-//         //         //   Routes.sponsorButtonNavigationBarSceen,
-//         //         // );
-//         //         print('--------chatroom--------');
-//         //         Navigator.pushNamed(
-//         //           navigatorKey.currentContext!,
-//         //           Routes.chatDetailsScreen,
-//         //           arguments: {
-//         //             'id':
-//         //             int.tryParse(message.data['subject_id'].toString()) ??
-//         //                 0,
-//         //             'isRoom': true,
-//         //             'isNotification': true,
-//         //           },
-//         //         );
-//         //       }
-//         //       else if (message.data['subject_type'] == 'chatdirect') {
-//         //         // Navigator.pushNamed(
-//         //         //   navigatorKey.currentContext!,
-//         //         //   Routes.sponsorButtonNavigationBarSceen,
-//         //         // );
-//         //         Navigator.pushNamed(
-//         //           navigatorKey.currentContext!,
-//         //           Routes.chatDetailsScreen,
-//         //           arguments: {
-//         //             'id':
-//         //             int.tryParse(message.data['subject_id'].toString()) ??
-//         //                 0,
-//         //             'isRoom': false,
-//         //             'isNotification': true,
-//         //           },
-//         //         );
-//         //       } else if (message.data['subject_type'] == 'Booking') {
-//         //         Navigator.pushNamed(
-//         //           navigatorKey.currentContext!,
-//         //           Routes.sponsorMyBookingScreen,
-//         //           arguments: {'isPending': true},
-//         //         );
-//         //       }
-//         //     }
-//         //   }
-//         // }
-//       });
-//
-//       ///done edit wait for test
-//       ///
-//       FirebaseMessaging.onMessageOpenedApp.listen((message) async {
-//         ///on tap form back ground or foground on ios
-//         ///
-//         debugPrint(
-//           "getInitialMessage Tap on Tap on Tap on Tap onMessageOpenedApp  ${message.data}",
-//         );
-//
-//         // if (message != null) {
-//         //   String? userType = await CacheHelper.getSecuredString(
-//         //     ConstantKeys.saveUserTypeToShared,
-//         //   );
-//         //   if (userType != null && navigatorKey.currentContext != null) {
-//         //     if (userType == 'client') {
-//         //       if (message.data['subject_type'] == 'chatroom') {
-//         //         Navigator.pushNamed(
-//         //           navigatorKey.currentContext!,
-//         //           Routes.chatDetailsScreen,
-//         //           arguments: {
-//         //             'id':
-//         //                 int.tryParse(message.data['subject_id'].toString()) ??
-//         //                 0,
-//         //             'isRoom': true,
-//         //             'isNotification': true,
-//         //           },
-//         //         );
-//         //       } else if (message.data['subject_type'] == 'chatdirect') {
-//         //         Navigator.pushNamed(
-//         //           navigatorKey.currentContext!,
-//         //           Routes.chatDetailsScreen,
-//         //           arguments: {
-//         //             'id':
-//         //                 int.tryParse(message.data['subject_id'].toString()) ??
-//         //                 0,
-//         //             'isRoom': false,
-//         //             'isNotification': true,
-//         //           },
-//         //         );
-//         //       } else if (message.data['subject_type'] == 'Booking') {
-//         //         Navigator.pushNamed(
-//         //           navigatorKey.currentContext!,
-//         //           Routes.userMyBookingScreen,
-//         //         );
-//         //       }
-//         //     }
-//         //     else {
-//         //       if (message.data['subject_type'] == 'chatroom') {
-//         //         // Navigator.pushNamed(
-//         //         //   navigatorKey.currentContext!,
-//         //         //   Routes.sponsorButtonNavigationBarSceen,
-//         //         // );
-//         //         print('--------chatroom--------');
-//         //         Navigator.pushNamed(
-//         //           navigatorKey.currentContext!,
-//         //           Routes.chatDetailsScreen,
-//         //           arguments: {
-//         //             'id':
-//         //                 int.tryParse(message.data['subject_id'].toString()) ??
-//         //                 0,
-//         //             'isRoom': true,
-//         //             'isNotification': true,
-//         //           },
-//         //         );
-//         //       }
-//         //       else if (message.data['subject_type'] == 'chatdirect') {
-//         //         // Navigator.pushNamed(
-//         //         //   navigatorKey.currentContext!,
-//         //         //   Routes.sponsorButtonNavigationBarSceen,
-//         //         // );
-//         //         Navigator.pushNamed(
-//         //           navigatorKey.currentContext!,
-//         //           Routes.chatDetailsScreen,
-//         //           arguments: {
-//         //             'id':
-//         //                 int.tryParse(message.data['subject_id'].toString()) ??
-//         //                 0,
-//         //             'isRoom': false,
-//         //             'isNotification': true,
-//         //           },
-//         //         );
-//         //       } else if (message.data['subject_type'] == 'Booking') {
-//         //         Navigator.pushNamed(
-//         //           navigatorKey.currentContext!,
-//         //           Routes.sponsorMyBookingScreen,
-//         //           arguments: {'isPending': true},
-//         //         );
-//         //       }
-//         //     }
-//         //   }
-//         // }
-//       });
-//     } catch (e) {
-//       print('error$e');
-//     }
-//   }
-//
-//   static Future<String> getDeviceToken() async {
-//     String? token = await _firebaseMessage.getToken();
-//     if (token == null) return "";
-//     print("token $token");
-//     return token;
-//   }
-// }
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
+import 'package:waqty_user_application/core/services/local_notification_service.dart';
+import 'package:waqty_user_application/core/services/push_router.dart';
+import 'package:waqty_user_application/features/splash/data/repo/app_gate_repo.dart';
+import 'package:waqty_user_application/firebase_options.dart';
+
+/// **معالج رسايل الخلفية.**
+///
+/// ⚠ لازم يبقى **دالة عليا** (top-level) و`@pragma('vm:entry-point')` —
+/// أندرويد بيشغّل عزلة داردت جديدة تمامًا للرسالة دي، ومابيقدرش يوصل
+/// لدالة جوّه كلاس.
+///
+/// وبيفضل فاضي بقصد: أندرويد بيرسم الإشعار بنفسه في الخلفية، والتوجيه
+/// بيحصل لما العميل يدوس (`onMessageOpenedApp`). أي شغل هنا بيتنفّذ في
+/// عزلة مالهاش شجرة widgets ولا `navigatorKey`.
+@pragma('vm:entry-point')
+Future<void> handleBackgroundMessage(RemoteMessage message) async {
+  if (kDebugMode) debugPrint('push في الخلفية: ${message.data}');
+}
+
+/// إشعارات الـpush — **نص الأبلكيشن كامل**.
+///
+/// ## الحالة
+///
+/// | الطرف | الحالة |
+/// |---|---|
+/// | تسجيل التوكن | ✅ `POST /api/v1/app/device-token` |
+/// | استقبال الرسايل | ✅ مقدمة · خلفية · مقفول |
+/// | رسم إشعار المقدمة | ✅ `LocalNotificationService` |
+/// | التوجيه للشاشة | ✅ `PushRouter` — مختبَر |
+/// | **إعداد Firebase** | ❌ `firebase_options.dart` لسه فاضي |
+/// | **مرسل الباك-إند** | ❌ مفيش `app/Listeners` ولا مرسل FCM |
+///
+/// الأبلكيشن **بيقلع ويشتغل عادي من غير الاتنين** — [init] بترجع من غير ما
+/// تعمل حاجة لو `DefaultFirebaseOptions.isConfigured` بـ`false`.
+///
+/// ## ليه ده مهم أكتر من إشعار عادي
+///
+/// **فلوين بتوقيت محدود بيعتمدوا عليه:** إعادة توزيع الحجز (مهلة ١٥ دقيقة،
+/// ٣ محاولات) وعرض قايمة الانتظار (٥ دقايق). العميل اللي بيعرف بالمهلة
+/// بالصدفة لما يفتح الأبلكيشن، المهلة عنده مالهاش معنى — والفرع بيستنتج
+/// إن الفيتشر مش شغالة.
+class FirebaseNotificationService {
+  const FirebaseNotificationService._();
+
+  /// اشتغلت خلاص؟ — الأبلكيشن بيقلع مرة واحدة بس دي حماية من النداء المكرر.
+  static bool _ready = false;
+
+  /// **بتشتغل كلها أو مابتعملش حاجة.**
+  ///
+  /// ⚠ **الفشل بيتبلع بالكامل.** الإشعارات إضافة مش شرط تشغيل: مشروع
+  /// Firebase مش متظبط، أو صلاحية مرفوضة، أو جهاز من غير Google Play —
+  /// كلهم أسباب مشروعة، ومفيش واحد فيهم يستاهل إن الأبلكيشن مايقلعش.
+  static Future<void> init(AppGateRepo repo) async {
+    if (_ready) return;
+
+    if (!DefaultFirebaseOptions.isConfigured) {
+      if (kDebugMode) {
+        debugPrint(
+          'FirebaseNotificationService: الإشعارات مطفية — '
+          'شغّل `flutterfire configure` وامل firebase_options.dart.',
+        );
+      }
+      return;
+    }
+
+    try {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+
+      await LocalNotificationService.init();
+
+      final messaging = FirebaseMessaging.instance;
+
+      // ⚠ **أندرويد ١٣+ محتاج صلاحية.** من غيرها التوكن بيتولّد والرسايل
+      // بتوصل بس **مفيش إشعار بيتعرض** — أسوأ حالة: كل حاجة شكلها شغّالة
+      // والعميل مش شايف حاجة.
+      await messaging.requestPermission(alert: true, badge: true, sound: true);
+
+      FirebaseMessaging.onBackgroundMessage(handleBackgroundMessage);
+
+      // الأبلكيشن مفتوح → أندرويد مابيرسمش، فبنرسم إحنا.
+      FirebaseMessaging.onMessage.listen(_onForegroundMessage);
+
+      // الأبلكيشن في الخلفية والعميل داس الإشعار.
+      FirebaseMessaging.onMessageOpenedApp.listen(
+        (message) => PushRouter.open(message.data),
+      );
+
+      // ⚠ **الأبلكيشن كان مقفول خالص والعميل فتحه من الإشعار.**
+      //
+      // الحالة دي مابتعديش على `onMessageOpenedApp` — لازم تتسأل مرة
+      // واحدة عند الإقلاع، وإلا الدوسة بتفتح الرئيسية وخلاص.
+      final initial = await messaging.getInitialMessage();
+      if (initial != null) PushRouter.open(initial.data);
+
+      await _registerToken(repo, messaging);
+
+      // ⚠ **التوكن بيتغيّر.** أندرويد بيدوّره لما الأبلكيشن يتنصّب من
+      // جديد أو الداتا تتمسح. من غير السطر ده، السيرفر بيفضل ماسك توكن
+      // ميت والإشعارات تقف من غير أي علامة.
+      messaging.onTokenRefresh.listen((token) => repo.registerDeviceToken(token));
+
+      _ready = true;
+    } catch (error) {
+      if (kDebugMode) debugPrint('FirebaseNotificationService: فشل — $error');
+    }
+  }
+
+  static Future<void> _registerToken(
+    AppGateRepo repo,
+    FirebaseMessaging messaging,
+  ) async {
+    final token = await messaging.getToken();
+    if (token == null || token.isEmpty) return;
+
+    await repo.registerDeviceToken(token);
+  }
+
+  /// رسالة والأبلكيشن مفتوح — بنرسمها بإيدنا.
+  static void _onForegroundMessage(RemoteMessage message) {
+    final notification = message.notification;
+
+    // ⚠ **رسالة داتا-فقط مابتترسمش.** السيرفر ممكن يبعت حمولة من غير
+    // `notification` عشان الأبلكيشن يتصرّف من غير ما يزعج العميل — نحترم
+    // ده بدل ما نخترع عنوان.
+    if (notification == null) return;
+
+    LocalNotificationService.show(
+      title: notification.title ?? 'واقتي',
+      body: notification.body ?? '',
+      payload: message.data,
+    );
+  }
+}

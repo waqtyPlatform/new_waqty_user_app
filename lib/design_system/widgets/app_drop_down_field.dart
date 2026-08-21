@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../tokens/app_icons.dart';
 import '../tokens/app_radius.dart';
 import '../tokens/app_semantic_colors.dart';
 import '../tokens/app_text_styles.dart';
+import 'app_icon_widget.dart';
 
 /// قايمة منسدلة — **generic**.
 ///
@@ -47,10 +49,10 @@ class AppDropDownField<T> extends StatelessWidget {
       menuMaxHeight: 300.h,
       borderRadius: AppRadius.rS,
       dropdownColor: AppSemanticColors.surfaceRaised,
-      icon: Icon(
-        Icons.keyboard_arrow_down_rounded,
+      icon: AppIconWidget(
+        AppIcons.chevronDown,
+        size: 22,
         color: AppSemanticColors.textSecondary,
-        size: 22.r,
       ),
       style: AppTextStyles.bodyLg,
       hint: Text(

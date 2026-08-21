@@ -1,3 +1,4 @@
+import 'package:waqty_user_application/core/utils/json_parse.dart';
 import 'package:waqty_user_application/core/models/booking_item_ui_model.dart';
 import 'package:waqty_user_application/core/models/booking_ui_model.dart';
 
@@ -33,6 +34,26 @@ class BookingVisitUiModel {
     required this.status,
     required this.items,
   }) : assert(items.length > 0, 'الزيارة لازم يكون فيها خدمة واحدة على الأقل');
+
+  /// عنصر من `visits[]` في `GET /api/user/bookings/{uuid}`:
+  ///
+  /// ```json
+  /// {"uuid":"01K…","status":"confirmed","items":[{…}]}
+  /// ```
+  ///
+  /// ⚠ **`booking_visits.status` عمود حقيقي مستقل عن حالة الحجز الأب** —
+  /// الداشبورد بيحرّكه لوحده (زيارة اتعملت وزيارة لسه). الافتراضي
+  /// `confirmed` عشان الليستة اللي مابتحمّلش `visits` ماتقعش.
+  factory BookingVisitUiModel.fromJson(Map<String, dynamic> json) =>
+      BookingVisitUiModel(
+        uuid: JsonParse.stringValue(json['uuid']),
+        status: BookingStatusLabel.fromApi(
+          JsonParse.stringValue(json['status'], fallback: 'confirmed'),
+        ),
+        items: JsonParse.mapListValue(
+          json['items'],
+        ).map(BookingItemUiModel.fromJson).toList(),
+      );
 
   /// بداية أول خدمة في الزيارة.
   DateTime get startAt =>

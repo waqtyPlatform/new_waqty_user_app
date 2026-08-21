@@ -33,6 +33,7 @@ export 'format/app_format.dart';
 // ── الأسطح والتخطيط ────────────────────────────────────────────────────
 export 'widgets/app_dashed_divider_widget.dart';
 export 'widgets/app_hairline_widget.dart';
+export 'widgets/app_icon_widget.dart';
 export 'widgets/app_layout_widgets.dart';
 export 'widgets/app_row_widget.dart';
 export 'widgets/app_screen_header_widget.dart';

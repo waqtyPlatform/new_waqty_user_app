@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../tokens/app_icons.dart';
 import '../tokens/app_semantic_colors.dart';
 import '../tokens/app_spacing.dart';
 import '../tokens/app_text_styles.dart';
+import 'app_icon_widget.dart';
 
 /// حقل نص.
 ///
@@ -252,11 +254,9 @@ class _AppPasswordFieldWidgetState extends State<AppPasswordFieldWidget> {
           child: SizedBox(
             width: AppSpacing.touchTarget.r,
             height: AppSpacing.touchTarget.r,
-            child: Icon(
-              _hidden
-                  ? Icons.visibility_off_outlined
-                  : Icons.visibility_outlined,
-              size: 20.r,
+            child: AppIconWidget(
+              _hidden ? AppIcons.visibilityOff : AppIcons.visibility,
+              size: 20,
               color: AppSemanticColors.textSecondary,
             ),
           ),

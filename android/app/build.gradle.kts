@@ -11,6 +11,16 @@ android {
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
+        // ⚠ **مطلوب لـ`flutter_local_notifications`.**
+        //
+        // المكتبة بتستخدم `java.time` وهي موجودة من API 26،
+        // والأبلكيشن بيدعم أقل من كده. الـdesugaring بيخلّي Gradle يولّد
+        // بدائل للأجهزة القديمة بدل ما نرفع `minSdk`.
+        //
+        // رفع `minSdk` كان هيقطع أجهزة من السوق عشان إشعارات —
+        // مقايضة غلط في سوق زي مصر.
+        isCoreLibraryDesugaringEnabled = true
+
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
@@ -41,4 +51,10 @@ android {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // بدائل مكتبة جافا الأساسية للأجهزة القديمة — شوف
+    // `isCoreLibraryDesugaringEnabled` فوق.
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }
