@@ -104,7 +104,46 @@ enum MockScenario {
   /// خصم مجموعة عملاء — «كان ٢٥٠ · بقى ٢٠٠».
   discountedCustomer,
 
-  // ── الهوية ─────────────────────────────────────────────────────────
+  // ── الباقات والمتابعات ──────────────────────────────────────────────
+  /// ٤ من ٨ جلسات مستهلكة، وواحدة **محجوزة** لميعاد جاي.
+  ///
+  /// الجلسة المحجوزة هي كل الفكرة: لو الشريط رسم شريحتين بس، العميلة
+  /// بتشوف ٤ متاحين وهي عندها ٣.
+  packageMultiSession,
+
+  /// بركة ١٢٠ دقيقة عبر تلات خدمات مسموحة.
+  packageUsageBased,
+
+  /// تنتهي بعد ٥ أيام — بتختبر شكل التحذير.
+  packageExpiringSoon,
+
+  /// انتهت وفيها جلسات لسه — أصعب حالة.
+  ///
+  /// العميلة دفعت وضاع منها. الشاشة لازم تقول كده من غير ما تدّعي إن فيه
+  /// حاجة تتعمل من التطبيق.
+  packageExpired,
+
+  /// بركة واحدة من تلات شراءات بتواريخ انتهاء مختلفة.
+  packageMultiplePurchases,
+
+  /// متابعة مجانية · نفس الأخصائي إجباري.
+  followUpFree,
+
+  /// متابعة بخصم ٥٠٪ · أي أخصائي.
+  followUpDiscounted,
+
+  /// الأخصائي ساب الشغل والمتابعة مربوطة بيه — بتختبر BE-A5.
+  followUpEmployeeLeft,
+
+  /// فاضي **عشان الرقم مش مأكّد** — مش عشان مفيش باقات.
+  ///
+  /// دي أكتر حالة فاضية متوقعة عند الإطلاق، ونصها لازم يبقى مختلف تمامًا
+  /// عن [entitlementsEmptyGenuine].
+  entitlementsEmptyUnlinked,
+
+  /// فاضي فعلاً — الرقم مأكّد ومفيش باقات.
+  entitlementsEmptyGenuine,
+
   /// الرقم مسجّل على حساب حقيقي تاني — `conflicts > 0`.
   ///
   /// السيرفر بيرمي 422 من `LinkProviderCustomersToPlatformUserAction`
@@ -148,6 +187,16 @@ enum MockScenario {
     MockScenario.cancelledBooking => 'ملغي',
     MockScenario.noShow => 'لم يحضر',
     MockScenario.discountedCustomer => 'عميل عليه خصم',
+    MockScenario.packageMultiSession => 'باقة · 4 من 8 جلسات',
+    MockScenario.packageUsageBased => 'باقة بالوحدات · 120 دقيقة',
+    MockScenario.packageExpiringSoon => 'باقة تنتهي بعد 5 أيام',
+    MockScenario.packageExpired => 'باقة انتهت وفيها جلسات',
+    MockScenario.packageMultiplePurchases => 'بركة من 3 شراءات',
+    MockScenario.followUpFree => 'متابعة مجانية · نفس الأخصائي',
+    MockScenario.followUpDiscounted => 'متابعة بخصم 50%',
+    MockScenario.followUpEmployeeLeft => 'متابعة · الأخصائي مشي',
+    MockScenario.entitlementsEmptyUnlinked => 'فاضي · الرقم مش مأكّد',
+    MockScenario.entitlementsEmptyGenuine => 'فاضي · مفيش باقات فعلاً',
     MockScenario.phoneClaimConflict => 'الرقم على حساب تاني',
     MockScenario.policiesFull => 'سياسات كاملة · نص طويل',
     MockScenario.policiesNone => 'مفيش أي سياسة',
@@ -191,6 +240,23 @@ enum MockScenario {
     MockScenario.cancelledBooking => 'معرفة السبب بتغيّر رد الفعل؟',
     MockScenario.noShow => 'متوقعين يعملوا إيه من الشاشة دي؟',
     MockScenario.discountedCustomer => 'الخصم بيتلاحظ من غير لابل؟',
+    MockScenario.packageMultiSession =>
+      'العميلة فاهمة إن الجلسة المحجوزة مش متاحة؟',
+    MockScenario.packageUsageBased =>
+      'الوحدات بتتفهم من غير ما حد يفسّرها؟ وعارفة تصرفها على إيه؟',
+    MockScenario.packageExpiringSoon => 'التحذير بيحرّك ولا بيتقري زخرفة؟',
+    MockScenario.packageExpired =>
+      'ضياع جلسات مدفوعة — الشاشة بتشرح ولا بتلوم؟',
+    MockScenario.packageMultiplePurchases =>
+      'رقم واحد لبركة من 3 تواريخ انتهاء — بيلخبط ولا بيبسّط؟',
+    MockScenario.followUpFree => 'واضح إنها مجانية ومربوطة بأخصائي معيّن؟',
+    MockScenario.followUpDiscounted => 'الخصم على المتابعة بيتلاحظ؟',
+    MockScenario.followUpEmployeeLeft =>
+      'من غير أخصائي — نرخّيها لأي حد ولا نوجّه للفرع؟ (قرار BE-A5)',
+    MockScenario.entitlementsEmptyUnlinked =>
+      'الفاضي ده بيتقري كدعوة لتأكيد الرقم ولا كنهاية طريق؟',
+    MockScenario.entitlementsEmptyGenuine =>
+      'متميّز عن [entitlementsEmptyUnlinked] ولا الاتنين شكلهم واحد؟',
     MockScenario.phoneClaimConflict =>
       'العميلة فاهمة إن المشكلة في الرقم مش في الشبكة؟',
     MockScenario.policiesFull => 'النص الطويل بيتقري ولا بيتلف؟',

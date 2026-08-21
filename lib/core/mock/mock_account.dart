@@ -8,10 +8,11 @@ class MockAccount {
 
   /// ⚠ **`phoneVerifiedAt` بيتفرّع على السيناريو مش ثابت.**
   ///
-  /// الحالة الفاضية في «حجوزاتي» نصها بيتغيّر حسب التأكيد: «أكّد رقمك
-  /// عشان يظهروا» بدل «مفيش حجوزات». لو الحساب الوهمي كان مأكّد
-  /// دايمًا، الفرع ده **مايتشافش أبدًا** — وهو أكتر حالة متوقعة عند
-  /// الإطلاق.
+  /// الحالتين الفاضيتين في «باقاتي» و«حجوزاتي** نصهم مختلف حسب التأكيد —
+  /// [MockScenario.entitlementsEmptyUnlinked] بتقول «أكّد رقمك عشان
+  /// يظهروا» و[MockScenario.entitlementsEmptyGenuine] بتقول «مفيش باقات».
+  /// لو الحساب الوهمي كان مأكّد دايمًا، الفرع الأول **مايتشافش أبدًا** —
+  /// وهو أكتر حالة متوقعة عند الإطلاق.
   static AccountUiModel get me => AccountUiModel(
     name: 'يوسف الفيل',
     email: 'yossef@example.com',
@@ -21,6 +22,7 @@ class MockAccount {
   );
 
   static DateTime? get _verifiedAt => switch (MockConfig.scenario) {
+    MockScenario.entitlementsEmptyUnlinked => null,
     MockScenario.phoneClaimConflict => null,
     _ => DateTime(2026, 8, 1, 10, 30),
   };

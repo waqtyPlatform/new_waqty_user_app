@@ -9,6 +9,9 @@ import 'package:waqty_user_application/core/models/phone_claim_result_ui_model.d
 import 'package:waqty_user_application/core/utils/spacing.dart';
 import 'package:waqty_user_application/features/account/account/logic/account_cubit.dart';
 import 'package:waqty_user_application/features/account/phone_verification/ui/widgets/phone_claim_result_sheet.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/logic/entitlements_cubit.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/logic/entitlements_state.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/ui/entitlements_screen.dart';
 import 'package:waqty_user_application/features/account/account/logic/account_state.dart';
 import 'package:waqty_user_application/features/account/account/ui/widgets/account_header_skeleton_widget.dart';
 import 'package:waqty_user_application/features/account/account/ui/widgets/account_header_widget.dart';
@@ -102,6 +105,33 @@ class AccountScreen extends StatelessWidget {
                     ),
               onTap: () => _verifyPhone(context),
             ),
+            // **«باقاتي ومتابعاتي» — البيت الدايم للاستحقاقات.**
+            //
+            // فيه مدخلين تانيين (شريط في «حجوزاتي» وسطر في تفاصيل حجز
+            // مكتمل)، بس الاتنين **مشروطين**: بيبانوا لما يبقى فيه حاجة
+            // تتقال. الصف ده بيفضل موجود دايمًا — عشان اللي بيدوّر يلاقي،
+            // ومايبقاش الطريق الوحيد للباقة هو إن التطبيق يفتكر يفكّرها.
+            //
+            // العدّاد بيعدّ **القابل للتصرف بس** — باقة منتهية في العدّاد
+            // وعد كاذب.
+            BlocBuilder<EntitlementsCubit, EntitlementsState>(
+              builder: (context, _) {
+                final entitlements = EntitlementsCubit.get(context);
+                final count = entitlements.actionableCount;
+
+                return AppMenuRowWidget(
+                  icon: Icons.card_giftcard_rounded,
+                  title: 'باقاتي ومتابعاتي',
+                  trailing: count == 0
+                      ? null
+                      : AppPillWidget(
+                          label: AppFormat.digits(count),
+                          tone: AppPillTone.accent,
+                        ),
+                  onTap: () => _openEntitlements(context),
+                );
+              },
+            ),
             AppMenuRowWidget(
               icon: Icons.receipt_long_rounded,
               title: 'مدفوعاتي',
@@ -187,6 +217,11 @@ class AccountScreen extends StatelessWidget {
   /// الفعل من جواها. الترتيب هنا مش تفصيلة — `setLocale` بترمي الشجرة،
   /// فلو اتنادت والورقة لسه مفتوحة كان الـ `Navigator` اللي هي قاعدة فيه
   /// بيتحذف من تحتها.
+  /// بيفتح «باقاتي» — شوف [EntitlementsScreen.open] لسبب وجودها.
+  void _openEntitlements(BuildContext context) {
+    EntitlementsScreen.open(context);
+  }
+
   /// بيفتح شاشة التأكيد وبيعيد تحميل الحساب لما تنجح.
   ///
   /// **إعادة التحميل مش تفصيلة.** التأكيد بيغيّر `phone_verified_at` على
@@ -201,10 +236,19 @@ class AccountScreen extends StatelessWidget {
     if (!context.mounted) return;
     if (result is! PhoneClaimResultUiModel) return;
 
+    final entitlements = EntitlementsCubit.get(context);
     await cubit.getProfile();
+    // الباقات هي اللي العميلة أكّدت رقمها عشانها — فبنعيد تحميلها
+    // **قبل** ما نقول النتيجة، عشان الرقم في الورقة يبقى حقيقي.
+    await entitlements.load();
 
     if (!context.mounted) return;
-    await PhoneClaimResultSheet.show(context, result: result);
+    await PhoneClaimResultSheet.show(
+      context,
+      result: result,
+      packagesFound: entitlements.packages.length,
+      onOpenEntitlements: () => _openEntitlements(context),
+    );
   }
 
   void _showLanguageSheet(BuildContext context) {

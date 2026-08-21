@@ -66,6 +66,19 @@ class ApiPaths {
       '$bookings/$uuid/reviewable-items';
   static String rateBooking(String uuid) => '$bookings/$uuid/rate';
 
+  // ── الاستحقاقات: باقات ومتابعات ───────────────────────────────────────
+  //
+  // ⚠ الردود دي **مافيهاش `provider` ولا `branch`** في أي صف — اتقرا كامل
+  // من `UserEntitlementController` في ٢٠٢٦-٠٨-٢١. TODO(api): BE-A1.
+  static const String entitlementPackages =
+      '$_base/api/user/entitlements/packages';
+  static const String entitlementFollowUps =
+      '$_base/api/user/entitlements/follow-ups';
+  static String bookPackageSession(String uuid) =>
+      '$entitlementPackages/$uuid/sessions';
+  static String bookFollowUp(String uuid) =>
+      '$entitlementFollowUps/$uuid/book';
+
   static const String waitlist = '$_base/api/user/waitlist';
   static String waitlistEntry(String uuid) => '$waitlist/$uuid';
   static String waitlistConversation(String uuid) =>

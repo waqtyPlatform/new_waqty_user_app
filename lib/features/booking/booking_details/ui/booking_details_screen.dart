@@ -17,6 +17,11 @@ import 'package:waqty_user_application/features/booking/booking_details/ui/widge
 import 'package:waqty_user_application/features/booking/create_booking/ui/create_booking_sheet.dart';
 import 'package:waqty_user_application/features/booking/in_branch/ui/widgets/in_branch_block_widget.dart';
 import 'package:waqty_user_application/core/widgets/booking_status_chip_widget.dart';
+import 'package:waqty_user_application/core/services/services_locator.dart';
+import 'package:waqty_user_application/features/entitlements/entitlement_detail/ui/entitlement_detail_screen.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/data/repo/entitlements_repo.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/logic/entitlements_cubit.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/ui/widgets/follow_up_teaser_widget.dart';
 import 'package:waqty_user_application/core/widgets/policy_accordion_widget.dart';
 import 'package:waqty_user_application/core/widgets/policy_note_widget.dart';
 
@@ -123,6 +128,21 @@ class BookingDetailsScreen extends StatelessWidget {
                 verticalSpace(AppSpacing.s16),
               ],
 
+              // **المتابعة اللي الحجز ده ولّدها — تحت التفاصيل مباشرة.**
+              //
+              // مكانها بعد التفاصيل مش فوقها: العميلة فتحت الشاشة عشان
+              // الحجز، والمتابعة **معلومة جديدة** بتتقدّم بعد ما تلاقي
+              // اللي جاية عشانه. فوق كانت هتزاحم الغرض الأساسي.
+              if (cubit.followUp != null) ...[
+                verticalSpace(AppSpacing.s16),
+                FollowUpTeaserWidget(
+                  followUp: cubit.followUp!,
+                  onTap: cubit.followUp!.isBookableFromApp
+                      ? () => _openFollowUp(context, cubit)
+                      : null,
+                ),
+              ],
+
               BookingDetailsInfoWidget(booking: booking),
 
               // **سياسة الفلوس بتظهر في الحالة اللي بتلزم فيها بس.**
@@ -227,6 +247,36 @@ class BookingDetailsScreen extends StatelessWidget {
     ).then((confirmed) {
       if (confirmed ?? false) cubit.cancelBooking();
     });
+  }
+
+  /// بيفتح تفاصيل المتابعة بنسخة **مقصورة على الشاشة دي** من
+  /// [EntitlementsCubit].
+  ///
+  /// ## ليه نسخة مقصورة
+  ///
+  /// شاشة التفاصيل بتعيش على الـnavigator بتاع `MaterialApp`، فوق
+  /// الـproviders بتوع الـshell — يعني النسخة المشتركة مش في نطاقها.
+  /// ودي **نفس معالجة `ReassignmentCubit`** الموجودة أصلاً في
+  /// `app_routes.dart`: نسخة فوق التبويبات للبانر، ونسخة للشاشة
+  /// المدفوعة.
+  ///
+  /// ⚠ **الأثر:** لو حجزت متابعة من هنا، عدّاد «حسابي» والشريط في
+  /// «حجوزاتي» بيفضلوا على قيمتهم القديمة لحد ما «حجوزاتي» تتسحب لتحت
+  /// (الـ`RefreshIndicator` بيعيد تحميل الاستحقاقات كمان). الشاشتين
+  /// **مش بيتعرضوا مع بعض**، فمافيش رقمين متناقضين قدام العين في نفس
+  /// اللحظة — وده الشرط اللي القاعدة موجودة عشانه.
+  void _openFollowUp(BuildContext context, BookingDetailsCubit cubit) {
+    final followUp = cubit.followUp;
+    if (followUp == null) return;
+
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => BlocProvider<EntitlementsCubit>(
+          create: (_) => EntitlementsCubit(getIt<EntitlementsRepo>())..load(),
+          child: EntitlementDetailScreen(followUp: followUp),
+        ),
+      ),
+    );
   }
 
   /// **بعد الإلغاء — نتيجة وخطوة جاية، مش سكوت.**

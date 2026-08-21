@@ -49,6 +49,9 @@ import 'package:waqty_user_application/features/booking/waitlist/data/services/w
 import 'package:waqty_user_application/features/account/account/data/repo/account_repo.dart';
 import 'package:waqty_user_application/features/account/account/data/services/account_mock_service.dart';
 import 'package:waqty_user_application/features/account/account/data/services/account_remote_service.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/data/repo/entitlements_repo.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/data/services/entitlements_mock_service.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/data/services/entitlements_remote_service.dart';
 import 'package:waqty_user_application/features/account/phone_verification/data/repo/phone_verification_repo.dart';
 import 'package:waqty_user_application/features/account/phone_verification/data/services/phone_verification_mock_service.dart';
 import 'package:waqty_user_application/features/account/phone_verification/data/services/phone_verification_remote_service.dart';
@@ -151,6 +154,17 @@ class ServicesLocator {
       () => AccountRepo(
         AccountRemoteService(getIt<ApiClient>()),
         const AccountMockService(),
+      ),
+    );
+
+    /// Entitlements
+    ///
+    /// `registerLazySingleton` زي `WaitlistRepo` — الاستحقاقات بتتغيّر
+    /// نادرًا (شرا من الفرع أو خدمة تخلص)، فمفيش سبب لكاش قصير.
+    getIt.registerLazySingleton<EntitlementsRepo>(
+      () => EntitlementsRepo(
+        EntitlementsRemoteService(getIt<ApiClient>()),
+        const EntitlementsMockService(),
       ),
     );
 

@@ -31,6 +31,7 @@ import 'package:waqty_user_application/features/booking/booking_details/data/rep
 import 'package:waqty_user_application/features/booking/reassignment/data/repo/reassignment_repo.dart';
 import 'package:waqty_user_application/features/booking/reassignment/logic/reassignment_cubit.dart';
 import 'package:waqty_user_application/features/booking/reassignment/ui/reassignment_screen.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/data/repo/entitlements_repo.dart';
 import 'package:waqty_user_application/features/account/phone_verification/data/repo/phone_verification_repo.dart';
 import 'package:waqty_user_application/features/account/phone_verification/logic/phone_verification_cubit.dart';
 import 'package:waqty_user_application/features/account/phone_verification/ui/phone_verification_screen.dart';
@@ -152,6 +153,7 @@ class RouteGenerator {
           builder: (_) => BlocProvider(
             create: (context) => BookingDetailsCubit(
               getIt<BookingDetailsRepo>(),
+              getIt<EntitlementsRepo>(),
               bookingUuid: (bookingArgs['bookingUuid'] as String?) ?? '',
             )..loadBooking(),
             child: const BookingDetailsScreen(),

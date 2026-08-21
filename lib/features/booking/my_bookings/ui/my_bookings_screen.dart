@@ -9,6 +9,11 @@ import 'package:waqty_user_application/features/account/account/logic/account_cu
 import 'package:waqty_user_application/features/account/account/logic/account_state.dart'
     show AccountState;
 import 'package:waqty_user_application/features/account/phone_verification/ui/widgets/phone_claim_result_sheet.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/logic/entitlements_cubit.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/logic/entitlements_state.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/ui/entitlements_screen.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/ui/widgets/entitlements_body_widget.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/ui/widgets/entitlement_strip_widget.dart';
 import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/extentions.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
@@ -63,15 +68,64 @@ class MyBookingsScreen extends StatelessWidget {
               child: AppTabBarWidget<int>(
                 value: cubit.selectedTab,
                 onChanged: cubit.changeTab,
+                // **تبويب تالت مش تبويب خامس في الشريط تحت.**
+                //
+                // الباقة بتتشتري من الفرع وأغلب العملاء مالهمش واحدة عند
+                // الإطلاق. تبويب خامس فاضي لـ٩٠٪ من الناس بيدرّبهم
+                // يتجاهلوه. وهنا العميلة موجودة أصلاً وهي بتفكّر في
+                // مواعيدها — أقرب لحظة للباقة.
                 tabs: const [
                   AppSegment(value: 0, label: 'القادمة'),
                   AppSegment(value: 1, label: 'السابقة'),
+                  AppSegment(
+                    value: MyBookingsCubit.entitlementsTab,
+                    label: 'باقاتي',
+                  ),
                 ],
               ),
             ),
             verticalSpace(AppSpacing.headerToContent),
             Expanded(child: _body(context, cubit, state)),
           ],
+        );
+      },
+    );
+  }
+
+  /// بيعيد تحميل الحجوزات **والاستحقاقات** — الاتنين معروضين هنا.
+  Future<void> _refreshAll(BuildContext context) async {
+    final bookings = MyBookingsCubit.get(context);
+    final entitlements = EntitlementsCubit.get(context);
+    await Future.wait<void>(<Future<void>>[
+      bookings.loadBookings(),
+      entitlements.load(),
+    ]);
+  }
+
+  /// شريط «عندك ٣ جلسات» — **فوق كل حاجة في «القادمة»**.
+  ///
+  /// **مفيش `BlocProvider` هنا** زي قوائم الانتظار بالظبط: الـcubit
+  /// بيتعمل مرة واحدة فوق التبويبات، وده الشريط والعدّاد في «حسابي»
+  /// والقايمة نفسها بيقروا من نفس النسخة.
+  ///
+  /// بيختفي في تبويب «السابقة» — الباقة حاجة **جاية**، وعرضها فوق سجل
+  /// قديم بيقرا زي إعلان.
+  Widget _entitlementStrip(BuildContext context) {
+    if (MyBookingsCubit.get(context).selectedTab != 0) {
+      return const SizedBox.shrink();
+    }
+
+    return BlocBuilder<EntitlementsCubit, EntitlementsState>(
+      builder: (context, _) {
+        final cubit = EntitlementsCubit.get(context);
+        if (cubit.actionableCount == 0) return const SizedBox.shrink();
+
+        return EntitlementStripWidget(
+          package: cubit.highlightPackage,
+          followUpCount: cubit.followUps
+              .where((f) => f.isBookableFromApp)
+              .length,
+          onTap: () => EntitlementsScreen.open(context),
         );
       },
     );
@@ -139,6 +193,15 @@ class MyBookingsScreen extends StatelessWidget {
     MyBookingsCubit cubit,
     MyBookingsState state,
   ) {
+    // **تبويب «باقاتي» محتواه من كيوبت تاني بالكامل.**
+    //
+    // بيرجع بدري قبل أي منطق حجوزات — `state` هنا بتاع `MyBookingsCubit`
+    // ومالوش دعوة بالاستحقاقات، ولو عدّينا كنا هنرسم skeleton حجوزات فوق
+    // قايمة باقات.
+    if (cubit.selectedTab == MyBookingsCubit.entitlementsTab) {
+      return const EntitlementsBodyWidget();
+    }
+
     // **الهامش الأفقي بقى صفر.** [MyBookingRowWidget] صف full-bleed شايل
     // الـ ١٦ بتاعه **جواه**، فلو الـ `ListView` كمان حطّ ١٦ يبقى النص على
     // ٣٢ والخط الشعري عمره ما هيوصل لحافة الشاشة.
@@ -199,6 +262,10 @@ class MyBookingsScreen extends StatelessWidget {
             bottom: AppSpacing.screenBottom.h,
           ),
           children: [
+            // الشريط بيظهر هنا كمان: عميلة معاها باقة ومالهاش حجز جاي
+            // **لازم** تشوفها — دي بالظبط الحالة اللي الفيتشر موجود
+            // عشانها.
+            _entitlementStrip(context),
             // الحالة الفاضية بتترسم **مكان** كارت القائمة لو مفيش
             // إدخالات — مش تحته. لو فيه إشعارات، هي اللي حصل فعلاً
             // فمفيش داعي لأي حالة فاضية أصلاً.
@@ -216,7 +283,14 @@ class MyBookingsScreen extends StatelessWidget {
 
     // لون المؤشر جاي من `colorScheme.primary` في الثيم.
     return RefreshIndicator(
-      onRefresh: cubit.loadBookings,
+      // **السحب بيحدّث الشاشة كلها مش الحجوزات بس.**
+      //
+      // شريط «عندك ٣ جلسات» عايش على الشاشة دي، والعميلة اللي حجزت متابعة
+      // من تفاصيل حجز (بنسخة كيوبت مقصورة على الشاشة دي — شوف
+      // `BookingDetailsScreen._openFollowUp`) بترجع هنا والشريط لسه على
+      // رقمه القديم. السحب هو الطريق الطبيعي اللي بتصلّح بيه، فبيصلّح
+      // الاتنين مع بعض.
+      onRefresh: () => _refreshAll(context),
       // **التحميل بيبدأ قبل ما العميل يوصل الآخر.**
       //
       // `GET /user/bookings` مقسّم لصفحات (١٥ افتراضي)، فعميل عنده ٤٠
@@ -250,6 +324,7 @@ class MyBookingsScreen extends StatelessWidget {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  _entitlementStrip(context),
                   _waitlist(context),
                   _notices(context, cubit),
                   _row(context, cubit, 0),
@@ -343,12 +418,25 @@ class MyBookingsScreen extends StatelessWidget {
     if (!context.mounted) return;
     if (result is! PhoneClaimResultUiModel) return;
 
+    final entitlements = EntitlementsCubit.get(context);
     await accountCubit.getProfile();
     if (!context.mounted) return;
-    await cubit.loadBookings();
+    // الحجوزات **والاستحقاقات**: الاتنين اترّبطوا في نفس الترانزاكشن على
+    // السيرفر، والاتنين معروضين على الشاشة دي.
+    await Future.wait<void>(<Future<void>>[
+      cubit.loadBookings(),
+      entitlements.load(),
+    ]);
 
     if (!context.mounted) return;
-    await PhoneClaimResultSheet.show(context, result: result);
+    await PhoneClaimResultSheet.show(
+      context,
+      result: result,
+      packagesFound: entitlements.packages.length,
+      // العميلة واقفة على «حجوزاتي»، فلو باقات ظهرت الطريق ليها بيتعرض
+      // هنا. (في شاشة «باقاتي» نفسها الزرار ده مالوش لازمة فمابيتبعتش.)
+      onOpenEntitlements: () => EntitlementsScreen.open(context),
+    );
   }
 
   /// إشعارات الإلغاء و«ما حضرش» — فوق «السابقة»، وكل واحد بيتقفل.

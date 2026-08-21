@@ -15,6 +15,8 @@ import 'package:waqty_user_application/features/service_provider_details/service
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/data/repo/service_provider_details_repo.dart';
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/data/services/service_provider_details_mock_service.dart';
 import 'package:waqty_user_application/features/booking/booking_details/data/repo/booking_details_repo.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/data/repo/entitlements_repo.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/data/services/entitlements_mock_service.dart';
 import 'package:waqty_user_application/features/booking/booking_details/data/services/booking_details_mock_service.dart';
 import 'package:waqty_user_application/features/booking/create_booking/data/services/create_booking_mock_service.dart';
 import 'package:waqty_user_application/features/booking/create_booking/data/repo/create_booking_repo.dart';
@@ -142,6 +144,9 @@ void main() {
       final cubit = BookingDetailsCubit(BookingDetailsRepo(
         const BookingDetailsMockService(),
         const BookingDetailsMockService(),
+      ), EntitlementsRepo(
+        const EntitlementsMockService(),
+        const EntitlementsMockService(),
       ), bookingUuid: booking.uuid)
         ..startRating(item)
         ..changeRating(4);
@@ -166,6 +171,9 @@ void main() {
       final cubit = BookingDetailsCubit(BookingDetailsRepo(
         const BookingDetailsMockService(),
         const BookingDetailsMockService(),
+      ), EntitlementsRepo(
+        const EntitlementsMockService(),
+        const EntitlementsMockService(),
       ), bookingUuid: booking.uuid)
         ..startRating(item)
         ..changeRating(5);

@@ -166,7 +166,7 @@ void main() {
     });
 
     test('السيناريو بيتحكّم في حالة التأكيد الوهمية', () {
-      MockConfig.scenario = MockScenario.phoneClaimConflict;
+      MockConfig.scenario = MockScenario.entitlementsEmptyUnlinked;
       expect(MockAccount.me.isPhoneVerified, isFalse);
 
       MockConfig.scenario = MockScenario.happyPath;

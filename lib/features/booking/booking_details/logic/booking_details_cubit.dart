@@ -2,18 +2,41 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:waqty_user_application/core/models/booking_item_ui_model.dart';
 import 'package:waqty_user_application/core/models/booking_ui_model.dart';
+import 'package:waqty_user_application/core/models/follow_up_entitlement_ui_model.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/data/repo/entitlements_repo.dart';
 import 'package:waqty_user_application/features/booking/booking_details/data/repo/booking_details_repo.dart';
 import 'package:waqty_user_application/features/booking/booking_details/logic/booking_details_state.dart';
 
 class BookingDetailsCubit extends Cubit<BookingDetailsState> {
   final BookingDetailsRepo _repo;
+  final EntitlementsRepo _entitlements;
 
-  BookingDetailsCubit(this._repo, {required this.bookingUuid})
-    : super(InitialState());
+  BookingDetailsCubit(
+    this._repo,
+    this._entitlements, {
+    required this.bookingUuid,
+  }) : super(InitialState());
 
   final String bookingUuid;
 
   BookingUiModel? booking;
+
+  /// المتابعة اللي **الحجز ده ولّدها**، لو فيه.
+  ///
+  /// ## ليه بتتجاب من هنا مش من `EntitlementsCubit`
+  ///
+  /// شاشة التفاصيل بتتفتح بـ`pushNamed` على الـnavigator بتاع
+  /// `MaterialApp` — واللي **فوق** الـproviders بتوع الـshell. يعني
+  /// `EntitlementsCubit` اللي فوق التبويبات مش في نطاقها أصلاً.
+  ///
+  /// البدايل كانت أوحش: نسخة تانية من الكيوبت في الشجرة (مصدر حقيقة
+  /// تاني)، أو رفعه فوق `MaterialApp` (بيعيش بعد تسجيل الخروج فبيسرّب
+  /// باقات عميلة لعميلة تانية). فالـcubit ده بيسأل الـrepo سؤال واحد
+  /// **عن الحجز ده بالذات** وبيسيب الحالة المشتركة في مكانها.
+  ///
+  /// TODO(api): BE-A1 — لو الحجز رجّع متابعاته في payload بتاعه، النداء
+  /// الزيادة ده يتشال خالص.
+  FollowUpEntitlementUiModel? followUp;
 
   final TextEditingController cancelReasonController = TextEditingController();
   final TextEditingController rateCommentController = TextEditingController();
@@ -41,6 +64,33 @@ class BookingDetailsCubit extends Cubit<BookingDetailsState> {
         emit(BookingDetailsSuccessState());
       },
     );
+
+    await _loadFollowUp();
+  }
+
+  /// **بيتنادى للحجز المكتمل بس.**
+  ///
+  /// المتابعة بتتولد لما خدمة تخلص (`follow_up_entitlements`)، فحجز جاي
+  /// أو ملغي عمره ما هيبقى ليه واحدة — ونداء شبكة عشان نتأكد من حاجة
+  /// مستحيلة تكلفة على كل فتحة تفاصيل.
+  ///
+  /// والفشل هنا **مابيكسرش الشاشة**: التفاصيل وصلت، والمتابعة إضافة.
+  Future<void> _loadFollowUp() async {
+    final current = booking;
+    if (current == null || current.status != BookingStatus.completed) return;
+
+    final result = await _entitlements.followUps();
+    if (isClosed) return;
+
+    result.fold((_) {}, (rows) {
+      for (final row in rows) {
+        if (row.originalBookingUuid == current.uuid && row.availableCount > 0) {
+          followUp = row;
+          emit(BookingDetailsSuccessState());
+          return;
+        }
+      }
+    });
   }
 
   /// بيفتح التقييم على خدمة بعينها.

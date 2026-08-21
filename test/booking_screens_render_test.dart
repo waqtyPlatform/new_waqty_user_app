@@ -11,6 +11,8 @@ import 'package:waqty_user_application/features/booking/booking_details/ui/booki
 import 'package:waqty_user_application/features/booking/booking_details/ui/widgets/booking_details_info_widget.dart';
 import 'package:waqty_user_application/features/booking/create_booking/ui/widgets/create_booking_service_picker_widget.dart';
 import 'package:waqty_user_application/features/booking/booking_details/data/repo/booking_details_repo.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/data/repo/entitlements_repo.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/data/services/entitlements_mock_service.dart';
 import 'package:waqty_user_application/features/booking/booking_details/data/services/booking_details_mock_service.dart';
 
 /// شاشات الحجز — **تفاصيل الحجز و`sheet` الحجز**.
@@ -164,6 +166,9 @@ void main() {
                         BookingDetailsCubit(BookingDetailsRepo(
         const BookingDetailsMockService(),
         const BookingDetailsMockService(),
+      ), EntitlementsRepo(
+        const EntitlementsMockService(),
+        const EntitlementsMockService(),
       ), bookingUuid: single.uuid)
                           ..loadBooking(),
                     child: const BookingDetailsScreen(),

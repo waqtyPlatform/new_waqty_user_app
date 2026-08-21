@@ -28,7 +28,11 @@ class MockBookings {
   /// عشان كل حجز يبقى ليه رقم مختلف.
   ///
   /// الحروف من Crockford base32 زي الـ ULID الحقيقي (من غير I و L و O و U).
-  static String _ulid(String seed) =>
+  /// ⚠ **عام مش خاص** — `MockEntitlements` بيستخدمه عشان المتابعة
+  /// تتربط بحجز **موجود فعلاً** في الفكسشرز. لو كتبنا الـuuid بالإيد
+  /// هناك، أول تغيير في الصيغة دي بيفصل المتابعة عن حجزها في صمت
+  /// والتنبيه في تفاصيل الحجز مايظهرش أبدًا.
+  static String ulid(String seed) =>
       '01K1$seed'.padRight(26, '0').substring(0, 26);
 
   /// اختصار لبناء عنصر بالساعة والدقيقة والمدة.
@@ -63,7 +67,7 @@ class MockBookings {
         ? DateTime.now().add(Duration(minutes: minutesFromNow))
         : _today.add(Duration(days: inDays, hours: atHour, minutes: atMinute));
     return BookingItemUiModel(
-      uuid: _ulid(seed),
+      uuid: ulid(seed),
       visitUuid: visitUuid,
       serviceUuid: serviceUuid,
       serviceName: serviceName,
@@ -195,7 +199,7 @@ class MockBookings {
   static List<BookingUiModel> get _many => <BookingUiModel>[
     for (var i = 0; i < 40; i++)
       BookingUiModel(
-        uuid: _ulid('P${i.toString().padLeft(3, '0')}'),
+        uuid: ulid('P${i.toString().padLeft(3, '0')}'),
         providerUuid: 'prv-1',
         providerName: 'صالون كابتن',
         branchUuid: 'brn-1',
@@ -233,7 +237,7 @@ class MockBookings {
   /// الداشبورد كل يوم من زرار «وصل»، والأبلكيشن عمره ما رسمهم. وهما
   /// موجودين في `BookingStatus::lifecycleCases()` بالحرف.
   static BookingUiModel _inBranch(BookingStatus status) => BookingUiModel(
-    uuid: _ulid('M9Q4'),
+    uuid: ulid('M9Q4'),
     providerUuid: 'prv-1',
     providerName: 'صالون كابتن',
     branchUuid: 'brn-1',
@@ -270,7 +274,7 @@ class MockBookings {
   ];
 
   static BookingUiModel get _singleService => BookingUiModel(
-    uuid: _ulid('M9Q4'),
+    uuid: ulid('M9Q4'),
     providerUuid: 'prv-1',
     providerName: 'صالون كابتن',
     branchUuid: 'brn-1',
@@ -306,7 +310,7 @@ class MockBookings {
   /// مش سعر أول خدمة. والخصم عليه عشان معالجة «كان ٢٥٠ · بقى ٢٠٠»
   /// تتجرب على حجز حقيقي مش على رقم واحد.
   static BookingUiModel get _threeServices => BookingUiModel(
-    uuid: _ulid('MB2X'),
+    uuid: ulid('MB2X'),
     providerUuid: 'prv-3',
     providerName: 'باربر شوب الحرية',
     branchUuid: 'brn-prv-3',
@@ -357,7 +361,7 @@ class MockBookings {
   /// زيارتين · يومين مختلفين — الحالة اللي التصميم القديم مكانش بيقدر
   /// يعرضها خالص.
   static BookingUiModel get _twoVisitsTwoDays => BookingUiModel(
-    uuid: _ulid('MC7R'),
+    uuid: ulid('MC7R'),
     providerUuid: 'prv-2',
     providerName: 'كوافير نور',
     branchUuid: 'brn-prv-2',
@@ -414,7 +418,7 @@ class MockBookings {
   /// و`confirmed`. الحجز الأب `in_progress` زي ما السيرفر هيلمّه. الكود
   /// القديم بيوري «إنت في الفرع» على الاتنين طول اليوم.
   static BookingUiModel get _twoVisitsSameDay => BookingUiModel(
-    uuid: _ulid('MDJ5'),
+    uuid: ulid('MDJ5'),
     providerUuid: 'prv-5',
     providerName: 'استوديو جمال',
     branchUuid: 'brn-prv-5',
@@ -463,7 +467,7 @@ class MockBookings {
   /// = `'confirmed'` و`@deprecated`، وفيه migration نقل كل الصفوف).
   /// الحجز بيتعمل مؤكد على طول.
   static BookingUiModel get _blowDry => BookingUiModel(
-    uuid: _ulid('MEW9'),
+    uuid: ulid('MEW9'),
     providerUuid: 'prv-2',
     providerName: 'كوافير نور',
     branchUuid: 'brn-prv-2',
@@ -496,7 +500,7 @@ class MockBookings {
   /// مش متخترعين هنا — فالضغط على أي واحد بيوصل لفرع حقيقي.
   static List<BookingUiModel> get _sameProviderTwoBranches => <BookingUiModel>[
     BookingUiModel(
-      uuid: _ulid('T2B1'),
+      uuid: ulid('T2B1'),
       providerUuid: 'prv-1',
       providerName: 'صالون كابتن',
       branchUuid: 'brn-1',
@@ -519,7 +523,7 @@ class MockBookings {
       ],
     ),
     BookingUiModel(
-      uuid: _ulid('T2B2'),
+      uuid: ulid('T2B2'),
       providerUuid: 'prv-1',
       providerName: 'صالون كابتن',
       branchUuid: 'brn-2',
@@ -554,7 +558,7 @@ class MockBookings {
   /// لسه `confirmed` مش `inProgress`: الفرع ما علّمش الوصول، وده اللي
   /// بيحصل فعلاً كتير. الحجز بيفضل تحت «القادمة» فالعميل بيلاقيه ويدوس.
   static BookingUiModel get _cancelWindowClosed => BookingUiModel(
-    uuid: _ulid('CWC1'),
+    uuid: ulid('CWC1'),
     providerUuid: 'prv-1',
     providerName: 'صالون كابتن',
     branchUuid: 'brn-1',
@@ -591,7 +595,7 @@ class MockBookings {
   /// بتستخدمه.
   static List<BookingUiModel> get _secondBranchPricing => <BookingUiModel>[
     BookingUiModel(
-      uuid: _ulid('BPR1'),
+      uuid: ulid('BPR1'),
       providerUuid: 'prv-1',
       providerName: 'صالون كابتن',
       branchUuid: 'brn-1',
@@ -614,7 +618,7 @@ class MockBookings {
       ],
     ),
     BookingUiModel(
-      uuid: _ulid('BPR2'),
+      uuid: ulid('BPR2'),
       providerUuid: 'prv-1',
       providerName: 'صالون كابتن',
       branchUuid: 'brn-2',
@@ -646,7 +650,7 @@ class MockBookings {
   /// الحجز في فرع مدينة نصر عشان يبان إنه اختيار تاني مش الافتراضي،
   /// والملاحظة مكتوبة بصوت العميل نفسه — دي أقرب حاجة لسبب حقيقي.
   static BookingUiModel get _afterClosedDay => BookingUiModel(
-    uuid: _ulid('CL5D'),
+    uuid: ulid('CL5D'),
     providerUuid: 'prv-1',
     providerName: 'صالون كابتن',
     branchUuid: 'brn-2',
@@ -679,7 +683,7 @@ class MockBookings {
   /// الفرق هنا **مقصود يبقى أكبر**: خصم ٢٥٪ على مبالغ كبيرة (١٢٠٠ → ٩٠٠)
   /// عشان لو الشطب مابيتلاحظش هنا، يبقى مش هيتلاحظ في أي مكان.
   static BookingUiModel get _discounted => BookingUiModel(
-    uuid: _ulid('D8C0'),
+    uuid: ulid('D8C0'),
     providerUuid: 'prv-2',
     providerName: 'كوافير نور',
     branchUuid: 'brn-prv-2',
@@ -737,7 +741,7 @@ class MockBookings {
 
   /// تلات خدمات · ولا واحدة اتقيّمت — بيكشف إن التقييم لكل خدمة.
   static BookingUiModel get _completedUnrated => BookingUiModel(
-    uuid: _ulid('H3P8'),
+    uuid: ulid('H3P8'),
     providerUuid: 'prv-1',
     providerName: 'صالون كابتن',
     branchUuid: 'brn-1',
@@ -786,7 +790,7 @@ class MockBookings {
   /// السيرفر بيعمل التقييم `active: false` فبيفضل مخفي لحد المراجعة،
   /// والعميل اللي بيقيّم وبيشوف لا شيء بيفتكر إنه ما اتسجّلش.
   static BookingUiModel get _partiallyRated => BookingUiModel(
-    uuid: _ulid('F7S2'),
+    uuid: ulid('F7S2'),
     providerUuid: 'prv-4',
     providerName: 'مركز ريلاكس',
     branchUuid: 'brn-prv-4',
@@ -831,7 +835,7 @@ class MockBookings {
   /// ومفيش عمود `cancelled_by`. السبب **بيتكشف** فعلاً في
   /// `UserBookingResource`، فالنص شغال والإسناد هو اللي مش موجود.
   static BookingUiModel get _cancelled => BookingUiModel(
-    uuid: _ulid('CZ6M'),
+    uuid: ulid('CZ6M'),
     providerUuid: 'prv-5',
     providerName: 'استوديو جمال',
     branchUuid: 'brn-prv-5',
@@ -860,7 +864,7 @@ class MockBookings {
   /// بيحطها بإيده لما العميل مايجيش. الأبلكيشن عمره ما عرضها، ومحدش
   /// يعرف العميل متوقع يعمل إيه لما يشوفها — وده بالظبط سؤال الجلسة.
   static BookingUiModel get _noShow => BookingUiModel(
-    uuid: _ulid('B4T7'),
+    uuid: ulid('B4T7'),
     providerUuid: 'prv-1',
     providerName: 'صالون كابتن',
     branchUuid: 'brn-2',

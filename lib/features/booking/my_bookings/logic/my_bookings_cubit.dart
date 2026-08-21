@@ -30,9 +30,18 @@ class MyBookingsCubit extends Cubit<MyBookingsState> {
   /// بنمنع نداءين على نفس الصفحة لما العميل يسحب بسرعة.
   bool isLoadingMore = false;
 
+  /// تبويب «باقاتي» — **مالوش نداء حجوزات**.
+  ///
+  /// المحتوى بتاعه بيجي من `EntitlementsCubit` اللي فوق التبويبات، فنداء
+  /// `GET /user/bookings` هنا طلب شبكة مالوش مستهلك — وأسوأ، بيدوس على
+  /// `bookings` بنتيجة `upcoming: false` فالعميلة لما ترجع لـ«القادمة»
+  /// بتلاقي السابقة.
+  static const int entitlementsTab = 2;
+
   void changeTab(int value) {
     selectedTab = value;
     emit(OnTabChangedState());
+    if (value == entitlementsTab) return;
     loadBookings();
   }
 

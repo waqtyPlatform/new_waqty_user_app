@@ -5,6 +5,8 @@ import 'package:waqty_user_application/core/models/booking_ui_model.dart';
 import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/extentions.dart';
 import 'package:waqty_user_application/features/account/account/logic/account_cubit.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/data/repo/entitlements_repo.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/logic/entitlements_cubit.dart';
 import 'package:waqty_user_application/features/account/account/ui/account_screen.dart';
 import 'package:waqty_user_application/features/booking/in_branch/logic/in_branch_cubit.dart';
 import 'package:waqty_user_application/features/booking/in_branch/logic/in_branch_state.dart';
@@ -73,6 +75,16 @@ class ButtonNavigationBarScreen extends StatelessWidget {
             //
             // نسختين من `AccountCubit` = تبويبين ممكن يختلفوا على حالة
             // التأكيد في نفس اللحظة، وده بالظبط اللي القاعدة موجودة عشانه.
+            // ⚠ **الاستحقاقات فوق التبويبات — تلات سطوح بتقرا منها.**
+            //
+            // الشريط في «حجوزاتي»، وصف العدّاد في «حسابي»، وشاشة
+            // «باقاتي» نفسها. نسختين = العدّاد يقول ٣ والقايمة توري ٢
+            // في نفس اللحظة، وحجز متابعة من شاشة مايحدّثش الشريط في
+            // التبويب التاني.
+            BlocProvider<EntitlementsCubit>(
+              create: (_) => EntitlementsCubit(getIt<EntitlementsRepo>())..load(),
+            ),
+
             BlocProvider<AccountCubit>(
               create: (_) =>
                   AccountCubit(getIt<AccountRepo>(), getIt<SessionStore>())
