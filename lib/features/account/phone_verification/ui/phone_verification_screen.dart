@@ -180,7 +180,10 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
         timerText: cubit.timerText,
         onResend: cubit.resend,
         resendLabel: 'ابعت الكود تاني',
-        countdownPrefix: 'تقدر تطلب كود تاني بعد',
+        // ⚠ **المسافة في آخر البادئة مقصودة.** `ResendCodeWidget` بيحط
+        // التلات نصوص في `Row` من غير أي فاصل — الفواصل مسؤولية اللي
+        // بينده. من غيرها بيطلع «بعد01:57» ملزوقين.
+        countdownPrefix: 'تقدر تطلب كود تاني بعد ',
         countdownSuffix: '',
       ),
 

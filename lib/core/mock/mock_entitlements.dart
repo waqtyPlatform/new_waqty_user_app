@@ -302,7 +302,7 @@ class MockEntitlements {
   static FollowUpEntitlementUiModel get followUpEmployeeLeft =>
       FollowUpEntitlementUiModel(
         uuid: 'fu-orphan-1',
-        serviceName: 'متابعة أسنان',
+        serviceName: 'تنظيف أسنان',
         // مش مربوطة بحجز في الفكسشرز بالقصد — الحالة دي بتتجرّب من
         // «باقاتي» مش من تفاصيل حجز.
         originalBookingUuid: MockBookings.ulid('ORPH'),

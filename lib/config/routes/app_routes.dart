@@ -165,6 +165,7 @@ class RouteGenerator {
           builder: (_) => BlocProvider(
             create: (context) => ServiceProviderDetailsCubit(
               getIt<ServiceProviderDetailsRepo>(),
+              getIt<EntitlementsRepo>(),
               providerUuid: (detailsArgs['providerUuid'] as String?) ?? '',
             )..loadDetails(),
             child: const ServiceProviderDetailsScreen(),

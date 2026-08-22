@@ -7,6 +7,14 @@ import 'package:waqty_user_application/core/models/branch_ui_model.dart';
 import 'package:waqty_user_application/core/models/service_ui_model.dart';
 import 'package:waqty_user_application/core/utils/app_constant.dart';
 import 'package:waqty_user_application/core/widgets/policy_accordion_widget.dart';
+import 'package:waqty_user_application/core/api/session_store.dart';
+import 'package:waqty_user_application/core/services/services_locator.dart';
+import 'package:waqty_user_application/features/account/account/data/repo/account_repo.dart';
+import 'package:waqty_user_application/features/account/account/logic/account_cubit.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/data/repo/entitlements_repo.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/logic/entitlements_cubit.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/ui/entitlements_screen.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/ui/widgets/provider_packages_notice_widget.dart';
 import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
 import 'package:waqty_user_application/features/booking/create_booking/ui/create_booking_sheet.dart';
@@ -131,6 +139,23 @@ class ServiceProviderDetailsScreen extends StatelessWidget {
                         // فبتتعرض باهتة مش شغالة وميتة.
                         onShare: null,
                       ),
+
+                      // **تذكرة بالباقات — بعد الاتصال وقبل السياسات.**
+                      //
+                      // مكانها في منطقة «علاقتك بالفرع ده» مش فوق
+                      // الخدمات: العميلة داخلة تبص على الأسعار، وتذكرة
+                      // فوقها بتزاحم سبب دخولها.
+                      //
+                      // ⚠ **مابتقولش «باقاتك هنا»** — التطبيق مش عارف
+                      // الباقة من أنهي فرع (BE-A1). شوف
+                      // `ProviderPackagesNoticeWidget`.
+                      if (cubit.activePackageCount > 0) ...[
+                        verticalSpace(AppSpacing.listRowGap),
+                        ProviderPackagesNoticeWidget(
+                          activeCount: cubit.activePackageCount,
+                          onTap: () => _openEntitlements(context),
+                        ),
+                      ],
 
                       // **«قبل ما تحجز» — مقفول، وتحت الفرع مش فوقه.**
                       //
@@ -301,6 +326,37 @@ class ServiceProviderDetailsScreen extends StatelessWidget {
     if (didBook == true && context.mounted) {
       Navigator.of(context).pushNamed(Routes.bookingSuccessScreen);
     }
+  }
+
+  /// بيفتح «باقاتي» بنسخة **مقصورة على الشاشة المدفوعة**.
+  ///
+  /// صفحة المزوّد بتتفتح بـ`pushNamed` على الـnavigator بتاع
+  /// `MaterialApp`، فوق الـproviders بتوع الـshell — يعني لا
+  /// `EntitlementsCubit` ولا `AccountCubit` في نطاقها. نفس معالجة
+  /// `ReassignmentCubit` الموجودة أصلاً في `app_routes.dart`.
+  ///
+  /// ⚠ **الاتنين لازم يتبعتوا مع بعض.** `EntitlementsBodyWidget` بينده
+  /// `AccountCubit` في الحالة الفاضية، ونسيانه كان بيكسر الشاشة
+  /// بـ`ProviderNotFoundException` — الباج ده حصل قبل كده.
+  void _openEntitlements(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => MultiBlocProvider(
+          providers: <BlocProvider<dynamic>>[
+            BlocProvider<EntitlementsCubit>(
+              create: (_) =>
+                  EntitlementsCubit(getIt<EntitlementsRepo>())..load(),
+            ),
+            BlocProvider<AccountCubit>(
+              create: (_) =>
+                  AccountCubit(getIt<AccountRepo>(), getIt<SessionStore>())
+                    ..getProfile(),
+            ),
+          ],
+          child: const EntitlementsScreen(),
+        ),
+      ),
+    );
   }
 
   void _showBranchSheet(

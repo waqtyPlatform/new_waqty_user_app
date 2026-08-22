@@ -197,6 +197,9 @@ void main() {
       final cubit = ServiceProviderDetailsCubit(ServiceProviderDetailsRepo(
         const ServiceProviderDetailsMockService(),
         const ServiceProviderDetailsMockService(),
+      ), EntitlementsRepo(
+        const EntitlementsMockService(),
+        const EntitlementsMockService(),
       ), providerUuid: 'prv-1');
       await cubit.loadDetails();
 
@@ -223,6 +226,9 @@ void main() {
       final cubit = ServiceProviderDetailsCubit(ServiceProviderDetailsRepo(
         const ServiceProviderDetailsMockService(),
         const ServiceProviderDetailsMockService(),
+      ), EntitlementsRepo(
+        const EntitlementsMockService(),
+        const EntitlementsMockService(),
       ), providerUuid: 'prv-1');
       await cubit.loadDetails();
 
@@ -245,6 +251,9 @@ void main() {
       final cubit = ServiceProviderDetailsCubit(ServiceProviderDetailsRepo(
         const ServiceProviderDetailsMockService(),
         const ServiceProviderDetailsMockService(),
+      ), EntitlementsRepo(
+        const EntitlementsMockService(),
+        const EntitlementsMockService(),
       ), providerUuid: 'prv-1');
       await cubit.loadDetails();
 

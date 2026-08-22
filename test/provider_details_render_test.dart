@@ -7,6 +7,8 @@ import 'package:waqty_user_application/core/mock/mock_providers.dart';
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/logic/service_provider_details_cubit.dart';
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/service_provider_details_screen.dart';
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/data/repo/service_provider_details_repo.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/data/repo/entitlements_repo.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/data/services/entitlements_mock_service.dart';
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/data/services/service_provider_details_mock_service.dart';
 
 /// **صفحة المحل — الصفحة اللي وقعت.**
@@ -51,6 +53,9 @@ void main() {
                     ServiceProviderDetailsCubit(ServiceProviderDetailsRepo(
         const ServiceProviderDetailsMockService(),
         const ServiceProviderDetailsMockService(),
+      ), EntitlementsRepo(
+        const EntitlementsMockService(),
+        const EntitlementsMockService(),
       ), providerUuid: provider.uuid)
                       ..loadDetails(),
                 child: const ServiceProviderDetailsScreen(),

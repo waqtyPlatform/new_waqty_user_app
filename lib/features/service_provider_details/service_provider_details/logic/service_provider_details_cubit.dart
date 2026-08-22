@@ -1,16 +1,32 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:waqty_user_application/core/models/branch_ui_model.dart';
 import 'package:waqty_user_application/core/models/employee_ui_model.dart';
 import 'package:waqty_user_application/core/models/provider_ui_model.dart';
 import 'package:waqty_user_application/core/models/service_ui_model.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/data/repo/entitlements_repo.dart';
+import 'package:waqty_user_application/core/models/package_entitlement_ui_model.dart';
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/data/repo/service_provider_details_repo.dart';
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/logic/service_provider_details_state.dart';
 
 class ServiceProviderDetailsCubit extends Cubit<ServiceProviderDetailsState> {
-  ServiceProviderDetailsCubit(this._repo, {required this.providerUuid})
-    : super(InitialState());
+  ServiceProviderDetailsCubit(
+    this._repo,
+    this._entitlements, {
+    required this.providerUuid,
+  }) : super(InitialState());
 
   final ServiceProviderDetailsRepo _repo;
+  final EntitlementsRepo _entitlements;
+
+  /// عدد الباقات **الشغّالة** اللي العميلة مالكاها — في أي فرع.
+  ///
+  /// ⚠ **مش «باقاتها هنا»**، وده مش تبسيط في التسمية. الرد مافيهوش
+  /// `provider` (BE-A1) والمطابقة بالخدمة مش صالحة (`Service` مشترك بين
+  /// مزوّدين)، فالرقم ده كل اللي نقدر نقوله. الـwidget اللي بيعرضه
+  /// مكتوب على أساس كده — شوف `ProviderPackagesNoticeWidget`.
+  int activePackageCount = 0;
 
   /// الـ uuid كان مش بيتبعت للشاشة خالص — الراوت كان بيبني الشاشة من غير
   /// أي arguments، فكل الكروت كانت بتفتح نفس المكان.
@@ -32,6 +48,27 @@ class ServiceProviderDetailsCubit extends Cubit<ServiceProviderDetailsState> {
   /// والـ `bool` بيخلي قسم الخدمات يوري skeleton من غير أي احتمال إن
   /// الهيدر يتفضّى.
   bool isReloadingBranch = false;
+
+  /// ⚠ **نداء زيادة على كل فتحة لصفحة مزوّد.**
+  ///
+  /// السبب إن `EntitlementsCubit` عايش فوق التبويبات، والصفحة دي بتتفتح
+  /// بـ`pushNamed` على الـnavigator بتاع `MaterialApp` — يعني برّه نطاقه.
+  /// والبديل (نسخة تانية من الكيوبت) بيعمل نداءين بدل واحد ومصدر حقيقة
+  /// تاني.
+  ///
+  /// TODO(api): BE-A1 — لما الرد يقول المزوّد، ده يتحوّل لفلترة على
+  /// باقات الفرع ده بالتحديد بدل عدّاد عام.
+  Future<void> _loadPackageCount() async {
+    final result = await _entitlements.packages();
+    if (isClosed) return;
+
+    result.fold((_) {}, (rows) {
+      activePackageCount = rows
+          .where((p) => p.status == PackageStatus.active)
+          .length;
+      if (activePackageCount > 0) emit(DetailsSuccessState());
+    });
+  }
 
   Future<void> loadDetails() async {
     emit(DetailsLoadingState());
@@ -55,6 +92,12 @@ class ServiceProviderDetailsCubit extends Cubit<ServiceProviderDetailsState> {
       () => const <BranchUiModel>[],
     );
     selectedBranch = branches.isEmpty ? null : branches.first;
+
+    // التذكرة بالباقات — **نداء ثانوي، وفشله مابيبانش**.
+    //
+    // الصفحة غرضها المزوّد وخدماته؛ الباقات إضافة. فبنسيب الفشل يعدّي
+    // بدل ما نكسر صفحة شغّالة عشان تذكرة.
+    unawaited(_loadPackageCount());
 
     await _loadBranchScoped();
     if (isClosed) return;

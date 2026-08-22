@@ -256,7 +256,7 @@ enum MockScenario {
     MockScenario.entitlementsEmptyUnlinked =>
       'الفاضي ده بيتقري كدعوة لتأكيد الرقم ولا كنهاية طريق؟',
     MockScenario.entitlementsEmptyGenuine =>
-      'متميّز عن [entitlementsEmptyUnlinked] ولا الاتنين شكلهم واحد؟',
+      'متميّز عن الفاضي بسبب الرقم ولا الاتنين شكلهم واحد؟',
     MockScenario.phoneClaimConflict =>
       'العميلة فاهمة إن المشكلة في الرقم مش في الشبكة؟',
     MockScenario.policiesFull => 'النص الطويل بيتقري ولا بيتلف؟',
