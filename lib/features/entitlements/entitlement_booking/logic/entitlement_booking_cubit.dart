@@ -96,7 +96,7 @@ class EntitlementBookingCubit extends Cubit<EntitlementBookingState> {
       dates,
     ) {
       availableDates = dates;
-      emit(const EntitlementBookingReady());
+      _emitReady();
     });
   }
 
@@ -126,14 +126,24 @@ class EntitlementBookingCubit extends Cubit<EntitlementBookingState> {
       data,
     ) {
       slots = data;
-      emit(const EntitlementBookingReady());
+      _emitReady();
     });
   }
 
   void selectSlot(SlotUiModel slot) {
     selectedSlot = slot;
-    emit(const EntitlementBookingReady());
+    _emitReady();
   }
+
+  /// ⚠ **الحالة بتشيل الاختيار** — من غيره `emit` بعد اختيار ميعاد بيتبلع
+  /// لأن الحالة القديمة والجديدة نفس نسخة الـ`const`. شوف
+  /// [EntitlementBookingReady].
+  void _emitReady() => emit(
+    EntitlementBookingReady(
+      selectedDate: selectedDate,
+      selectedSlotStart: selectedSlot?.startAt,
+    ),
+  );
 
   /// التاريخ والوقت بالشكل اللي السيرفر بيطلبه — `Y-m-d` و`H:i`.
   String get bookingDate => AppFormat.serverDate(selectedDate!);

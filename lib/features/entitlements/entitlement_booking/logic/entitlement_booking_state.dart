@@ -21,9 +21,33 @@ class EntitlementBookingLoadingSlots extends EntitlementBookingState {
   const EntitlementBookingLoadingSlots();
 }
 
-/// جاهز — الاختيارات كلها في الكيوبت.
+/// جاهز — والاختيار الحالي **جوه الحالة**.
+///
+/// ⚠ **الحقول دي مش زخرفة، دي اللي بتخلّي الاختيار يترسم.**
+///
+/// الحالة كانت `const EntitlementBookingReady()` من غير حقول. دارت بتوحّد
+/// نسخ الـ`const`، وbloc بيتجاهل `emit` لما `state == newState` — فاختيار
+/// ميعاد وإحنا أصلاً في `Ready` كان بيتبلع، الشيب مايتحدّدش، وزرار
+/// «أكّد الحجز» يفضل مقفول للأبد.
+///
+/// اختيار **اليوم** كان شغّال بالصدفة لأنه بيمرّ بـ`LoadingSlots` الأول
+/// (نوع مختلف) — وده اللي خلّى الباج يبان كإن المشكلة في المواعيد بس.
+///
+/// نفس الغلطة كانت في `EntitlementsLoaded` — شوفها هناك.
 class EntitlementBookingReady extends EntitlementBookingState {
-  const EntitlementBookingReady();
+  const EntitlementBookingReady({this.selectedDate, this.selectedSlotStart});
+
+  final DateTime? selectedDate;
+  final DateTime? selectedSlotStart;
+
+  @override
+  bool operator ==(Object other) =>
+      other is EntitlementBookingReady &&
+      other.selectedDate == selectedDate &&
+      other.selectedSlotStart == selectedSlotStart;
+
+  @override
+  int get hashCode => Object.hash(selectedDate, selectedSlotStart);
 }
 
 class EntitlementBookingError extends EntitlementBookingState {

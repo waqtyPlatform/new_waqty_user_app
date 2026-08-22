@@ -91,14 +91,20 @@ class EntitlementsCubit extends Cubit<EntitlementsState> {
       return;
     }
 
-    emit(isCurrentTabEmpty ? const EntitlementsEmpty() : const EntitlementsLoaded());
+    _emitContentState();
   }
 
   void selectTab(EntitlementTab next) {
     if (tab == next) return;
     tab = next;
-    emit(isCurrentTabEmpty ? const EntitlementsEmpty() : const EntitlementsLoaded());
+    _emitContentState();
   }
+
+  /// ⚠ **الحالة بتشيل التبويب** — من غيره التبديل بين تبويبين فيهم داتا
+  /// بيبعت نفس نسخة الـ`const` وbloc بيتجاهله. شوف [EntitlementsLoaded].
+  void _emitContentState() => emit(
+    isCurrentTabEmpty ? EntitlementsEmpty(tab) : EntitlementsLoaded(tab),
+  );
 
   /// حجز متابعة.
   ///

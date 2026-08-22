@@ -28,8 +28,29 @@ class EntitlementsLoading extends EntitlementsState {
   const EntitlementsLoading();
 }
 
+/// فيه محتوى في التبويب [tab].
+///
+/// ⚠ **[tab] حقل في الحالة مش في الكيوبت بس — والسبب باج حقيقي.**
+///
+/// الحالة كانت `const EntitlementsLoaded()` من غير حقول. دارت بتوحّد
+/// نسخ الـ`const`، فـ`emit` بعد تبديل التبويب كان بيبعت **نفس النسخة**
+/// بالظبط — وbloc بيتجاهل الإرسال لما `state == newState`. النتيجة: لما
+/// التبويبين الاتنين فيهم داتا، التبديل كان بيغيّر `tab` في الكيوبت
+/// و**الشاشة ماتتبنيش تاني**. التبويب بيتحرك والعين ماتشوفش حاجة.
+///
+/// الاختبار اللي كان موجود عدّى لأنه جرّب `Loaded → Empty` (نوع مختلف)
+/// — الحالة المكسورة هي `Loaded → Loaded`.
 class EntitlementsLoaded extends EntitlementsState {
-  const EntitlementsLoaded();
+  const EntitlementsLoaded(this.tab);
+
+  final EntitlementTab tab;
+
+  @override
+  bool operator ==(Object other) =>
+      other is EntitlementsLoaded && other.tab == tab;
+
+  @override
+  int get hashCode => tab.hashCode;
 }
 
 /// التبويب الحالي مالوش محتوى.
@@ -37,7 +58,16 @@ class EntitlementsLoaded extends EntitlementsState {
 /// ⚠ **مش معناها إن الاتنين فاضيين** — ممكن يبقى عندها باقات ومفيش
 /// متابعات. الشاشة بتفضل موريّة الـsegmented عشان تقدر تعدّي للتاني.
 class EntitlementsEmpty extends EntitlementsState {
-  const EntitlementsEmpty();
+  const EntitlementsEmpty(this.tab);
+
+  final EntitlementTab tab;
+
+  @override
+  bool operator ==(Object other) =>
+      other is EntitlementsEmpty && other.tab == tab;
+
+  @override
+  int get hashCode => tab.hashCode;
 }
 
 class EntitlementsError extends EntitlementsState {

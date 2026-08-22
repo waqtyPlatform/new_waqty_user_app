@@ -297,6 +297,31 @@ void main() {
       await cubit.close();
     });
 
+    /// ⚠ **الاختبار ده اتكتب بعد ما الباج اتشاف على الإيموليتور.**
+    ///
+    /// `EntitlementsLoaded` كانت `const` من غير حقول. دارت بتوحّد نسخ
+    /// الـ`const`، فالتبديل بين تبويبين **الاتنين فيهم داتا** كان بيبعت
+    /// نفس النسخة وbloc بيتجاهلها — التبويب بيتحرك في الكيوبت والشاشة
+    /// ماتتبنيش. الاختبار القديم كان بيجرّب `Loaded → Empty` بس، ونوعهم
+    /// مختلف فكان بيعدّي.
+    test('التبديل بين تبويبين مليانين بيغيّر الحالة فعلاً', () async {
+      // الافتراضي فيه باقات **و** متابعات — ودي الحالة اللي كانت بتكسر.
+      MockConfig.scenario = MockScenario.happyPath;
+      final cubit = buildCubit();
+      await cubit.load();
+
+      expect(cubit.packages, isNotEmpty);
+      expect(cubit.followUps, isNotEmpty);
+
+      final before = cubit.state;
+      cubit.selectTab(EntitlementTab.followUps);
+
+      expect(cubit.tab, EntitlementTab.followUps);
+      // مش بس النوع — النسخة نفسها لازم تكون اتغيّرت عشان الشاشة تتبني.
+      expect(cubit.state, isNot(equals(before)));
+      await cubit.close();
+    });
+
     test('التبويب الفاضي حالته Empty مش Loaded بليستة فاضية', () async {
       MockConfig.scenario = MockScenario.packageMultiSession;
       final cubit = buildCubit();
