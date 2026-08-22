@@ -5,18 +5,24 @@ import 'package:waqty_user_application/core/models/package_entitlement_ui_model.
 
 /// اللي العميلة **مالكاه** — باقات اشترتها ومتابعات استحقّتها.
 ///
-/// ⚠ **مافيش `bookPackageSession` في العقد ده.** الـendpoint موجود على
-/// السيرفر (`POST /entitlements/packages/{uuid}/sessions`)، بس التطبيق
-/// مايقدرش يوصله: بيحتاج `booking_date` و`start_time` من
-/// `/public/bookings/available-slots`، واللي محتاج `branch_uuid` — والفرع
-/// مش موجود في أي صف من صفوف الباقات (BLOCKER-1 · BE-A1).
-///
-/// إضافة الدالة هنا وهي مش قابلة للنداء بتخلّي الـUI يبني زرار بيفشل.
-/// فالعقد بيقول الحقيقة: **الباقات بتتعرض، والمتابعات بتتحجز.**
+/// النوعين بيتحجزوا من التطبيق دلوقتي. قبل BE-A1 كانت الباقات بتتعرض
+/// وبس، لأن الرد مكانش فيه فرع فمكانش فيه مواعيد نعرضها.
 abstract class EntitlementsService {
   Future<Either<Failure, List<PackageEntitlementUiModel>>> packages();
 
   Future<Either<Failure, List<FollowUpEntitlementUiModel>>> followUps();
+
+  /// حجز جلسة من باقة.
+  ///
+  /// `service_uuid` بيتبعت للبركة بس — السيرفر بيتجاهله في باقات الجلسات
+  /// وبياخد خدمة الشراء نفسها (`$purchase->service->uuid`).
+  Future<Either<Failure, Unit>> bookPackageSession({
+    required String uuid,
+    required String bookingDate,
+    required String startTime,
+    String? serviceUuid,
+    String? notes,
+  });
 
   /// حجز متابعة.
   ///

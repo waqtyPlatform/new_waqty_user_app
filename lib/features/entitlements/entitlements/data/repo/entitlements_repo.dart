@@ -14,6 +14,22 @@ class EntitlementsRepo extends BaseRepo<EntitlementsService> {
   Future<Either<Failure, List<FollowUpEntitlementUiModel>>> followUps() =>
       guard(() => source.followUps());
 
+  Future<Either<Failure, Unit>> bookPackageSession({
+    required String uuid,
+    required String bookingDate,
+    required String startTime,
+    String? serviceUuid,
+    String? notes,
+  }) => guard(
+    () => source.bookPackageSession(
+      uuid: uuid,
+      bookingDate: bookingDate,
+      startTime: startTime,
+      serviceUuid: serviceUuid,
+      notes: notes,
+    ),
+  );
+
   Future<Either<Failure, Unit>> bookFollowUp({
     required String uuid,
     required String bookingDate,

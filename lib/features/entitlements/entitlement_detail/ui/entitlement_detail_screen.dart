@@ -8,6 +8,7 @@ import 'package:waqty_user_application/features/entitlements/entitlement_detail/
 import 'package:waqty_user_application/features/entitlements/entitlement_detail/ui/widgets/entitlement_detail_header_widget.dart';
 import 'package:waqty_user_application/features/entitlements/entitlement_detail/ui/widgets/entitlement_purchases_widget.dart';
 import 'package:waqty_user_application/features/entitlements/entitlement_detail/ui/widgets/entitlement_usage_ledger_widget.dart';
+import 'package:waqty_user_application/features/entitlements/entitlement_booking/logic/entitlement_booking_cubit.dart';
 import 'package:waqty_user_application/features/entitlements/entitlement_booking/ui/entitlement_booking_sheet.dart';
 import 'package:waqty_user_application/features/entitlements/entitlements/logic/entitlements_cubit.dart';
 import 'package:waqty_user_application/features/entitlements/entitlements/ui/widgets/entitlement_progress_widget.dart';
@@ -54,6 +55,29 @@ class EntitlementDetailScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  /// بيحجز جلسة من باقة، وبعد التأكيد بيقفل التفاصيل — الاستحقاق اتغيّر
+  /// فإبقاء الشاشة على أرقامه القديمة بيخلّي العميلة تبص على «متاح» لحاجة
+  /// حجزتها توّها.
+  Future<void> _bookPackage(
+    BuildContext context,
+    PackageEntitlementUiModel entitlement,
+  ) async {
+    final booked = await EntitlementBookingSheet.showForPackage(
+      context,
+      cubit: EntitlementsCubit.get(context),
+      package: entitlement,
+    );
+
+    if (!context.mounted || !booked) return;
+    await EntitlementBookingSheet.showConfirmation(
+      context,
+      kind: EntitlementBookingKind.package,
+    );
+
+    if (!context.mounted) return;
+    Navigator.of(context).pop();
   }
 
   List<Widget> _packageBody(
@@ -116,15 +140,17 @@ class EntitlementDetailScreen extends StatelessWidget {
         ],
       ],
 
-      // **الحجز مقفول للباقات — والسبب مكتوب مش مسكوت عنه.**
-      // TODO(api): BE-A1.
-      if (!entitlement.status.isTerminal) ...<Widget>[
-        verticalSpace(AppSpacing.s24),
+      verticalSpace(AppSpacing.s24),
+      if (entitlement.isBookableFromApp)
+        AppButtonWidget(
+          label: 'احجز جلسة',
+          onPressed: () => _bookPackage(context, entitlement),
+        )
+      else if (entitlement.blockedReason != null)
         AppBannerWidget(
-          message: entitlement.blockedReason,
+          message: entitlement.blockedReason!,
           icon: Icons.info_outline_rounded,
         ),
-      ],
     ];
   }
 
@@ -136,7 +162,7 @@ class EntitlementDetailScreen extends StatelessWidget {
     BuildContext context,
     FollowUpEntitlementUiModel entitlement,
   ) async {
-    final booked = await EntitlementBookingSheet.show(
+    final booked = await EntitlementBookingSheet.showForFollowUp(
       context,
       cubit: EntitlementsCubit.get(context),
       followUp: entitlement,

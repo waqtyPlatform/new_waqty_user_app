@@ -20,13 +20,13 @@ class ServiceProviderDetailsCubit extends Cubit<ServiceProviderDetailsState> {
   final ServiceProviderDetailsRepo _repo;
   final EntitlementsRepo _entitlements;
 
-  /// عدد الباقات **الشغّالة** اللي العميلة مالكاها — في أي فرع.
+  /// باقات العميلة الشغّالة **عند المزوّد ده بالتحديد**.
   ///
-  /// ⚠ **مش «باقاتها هنا»**، وده مش تبسيط في التسمية. الرد مافيهوش
-  /// `provider` (BE-A1) والمطابقة بالخدمة مش صالحة (`Service` مشترك بين
-  /// مزوّدين)، فالرقم ده كل اللي نقدر نقوله. الـwidget اللي بيعرضه
-  /// مكتوب على أساس كده — شوف `ProviderPackagesNoticeWidget`.
-  int activePackageCount = 0;
+  /// بقت فلترة حقيقية مع BE-A1. قبله الرد مكانش فيه `provider` والمطابقة
+  /// بالخدمة مش صالحة (`Service` مشترك بين مزوّدين بـbelongsToMany)، فكان
+  /// اللي نقدر نقوله «عندك باقات في مكان ما» — تذكرة مش قسم.
+  List<PackageEntitlementUiModel> providerPackages =
+      <PackageEntitlementUiModel>[];
 
   /// الـ uuid كان مش بيتبعت للشاشة خالص — الراوت كان بيبني الشاشة من غير
   /// أي arguments، فكل الكروت كانت بتفتح نفس المكان.
@@ -55,18 +55,22 @@ class ServiceProviderDetailsCubit extends Cubit<ServiceProviderDetailsState> {
   /// بـ`pushNamed` على الـnavigator بتاع `MaterialApp` — يعني برّه نطاقه.
   /// والبديل (نسخة تانية من الكيوبت) بيعمل نداءين بدل واحد ومصدر حقيقة
   /// تاني.
-  ///
-  /// TODO(api): BE-A1 — لما الرد يقول المزوّد، ده يتحوّل لفلترة على
-  /// باقات الفرع ده بالتحديد بدل عدّاد عام.
+  /// بعد حجز جلسة — الأرقام على الصفحة بتبقى قديمة.
+  Future<void> reloadPackages() => _loadPackageCount();
+
   Future<void> _loadPackageCount() async {
     final result = await _entitlements.packages();
     if (isClosed) return;
 
     result.fold((_) {}, (rows) {
-      activePackageCount = rows
+      final current = provider;
+      if (current == null) return;
+
+      providerPackages = rows
           .where((p) => p.status == PackageStatus.active)
-          .length;
-      if (activePackageCount > 0) emit(DetailsSuccessState());
+          .where((p) => p.owner.providerUuid == current.uuid)
+          .toList();
+      if (providerPackages.isNotEmpty) emit(DetailsSuccessState());
     });
   }
 

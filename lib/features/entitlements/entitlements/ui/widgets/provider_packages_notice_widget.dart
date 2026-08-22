@@ -1,95 +1,144 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:waqty_user_application/core/models/package_entitlement_ui_model.dart';
 import 'package:waqty_user_application/design_system/design_system.dart';
 
-/// **تذكرة بالباقات في صفحة المزوّد — من غير ما تدّعي إنها من هنا.**
+/// **«باقاتك هنا»** — باقات العميلة عند المزوّد اللي هي واقفة عليه.
 ///
-/// ## ليه مافيش زرار حجز
+/// ## اللي اتغيّر مع BE-A1
 ///
-/// السؤال «الباقة دي من الفرع ده؟» **مالوش إجابة في التطبيق**:
+/// أول نسخة من الـwidget ده كانت **تذكرة مش قسم**: «عندك باقتين شغّالين ·
+/// لو واحدة منها من الفرع ده، كلّم الفرع». الصياغة الشرطية دي مكانتش
+/// تواضع — كانت الحقيقة الوحيدة اللي نقدر نقولها، لأن الرد مكانش فيه
+/// `provider` والمطابقة بالخدمة مش صالحة (`Service` عنده `providers()`
+/// belongsToMany، فـ«قص شعر» صف مشترك بين صالونات).
 ///
-///  • رد `/entitlements/packages` مافيهوش `provider` ولا `branch` (BE-A1).
-///  • المطابقة بالخدمة **مش صالحة**: `Service` عنده `providers()`
-///    belongsToMany، يعني «قص شعر» صف واحد مشترك بين صالونات كتير —
-///    فمطابقة `service_uuid` هتدّي إيجابيات كاذبة.
+/// دلوقتي كل صف بيقول مزوّده، فالفلترة حقيقية والزرار بيحجز فعلاً.
 ///
-/// ولو عرضنا زرار حجز غلط، النتيجة مش رسالة خطأ — دي **حجز صامت في
-/// المكان الغلط**: `bookSessionForUser` بياخد الفرع من الشراء نفسه
-/// (`$purchase->branch_id`)، فالعميلة تختار ميعاد من تقويم الصالون اللي
-/// قدامها والحجز يتعمل في صالون تاني.
-///
-/// فالتذكرة بتقول اللي إحنا **متأكدين منه** بس: عندها باقات شغّالة،
-/// والفرع هو اللي بيستخدمها. والباقي رحلة لـ«باقاتي».
-///
-/// TODO(api): BE-A1 — أول ما `provider` و`branch` ينزلوا في الرد، ده
-/// يبقى قسم «باقاتك هنا» بزرار حجز حقيقي، والفلترة تبقى بالمزوّد مش
-/// تخمين.
+/// ⚠ **الفلترة مسؤولية اللي بينده** — الـwidget ده بيرسم اللي يتبعتله.
+/// حطّ الفلترة هنا كان هيخلّي كل مستهلك يفتكر يبعت المزوّد الصح.
 class ProviderPackagesNoticeWidget extends StatelessWidget {
   const ProviderPackagesNoticeWidget({
-    required this.activeCount,
-    this.onTap,
+    required this.packages,
+    this.onOpen,
+    this.onBook,
     super.key,
   });
 
-  /// عدد الباقات **الشغّالة** بس. المنتهية والمكتملة مالهاش لازمة هنا —
-  /// تذكرة بحاجة خلصت مش تذكرة، دي ضوضاء.
-  final int activeCount;
+  /// باقات المزوّد ده **الشغّالة بس**. قسم بيقول «عندك باقة» وهي منتهية
+  /// وعد كاذب.
+  final List<PackageEntitlementUiModel> packages;
 
-  final VoidCallback? onTap;
+  /// فتح «باقاتي».
+  final VoidCallback? onOpen;
 
-  /// جمع عربي بسيط للأعداد الصغيرة.
-  String get _count {
-    if (activeCount == 1) return 'باقة شغّالة';
-    if (activeCount == 2) return 'باقتين شغّالين';
-    if (activeCount <= 10) return '${AppFormat.digits(activeCount)} باقات شغّالة';
-    return '${AppFormat.digits(activeCount)} باقة شغّالة';
-  }
+  /// حجز جلسة من باقة بعينها.
+  final void Function(PackageEntitlementUiModel package)? onBook;
 
   @override
   Widget build(BuildContext context) {
-    if (activeCount <= 0) return const SizedBox.shrink();
+    if (packages.isEmpty) return const SizedBox.shrink();
 
     return AppSurfaceWidget(
       level: AppElevation.raised,
       radius: AppRadius.m,
-      padding: EdgeInsets.all(AppSpacing.cardPadding.r),
-      onTap: onTap,
-      child: Row(
+      padding: EdgeInsets.all(AppSpacing.cardPaddingLoose.r),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Icon(
-            Icons.card_giftcard_rounded,
-            size: 20.r,
-            color: AppSemanticColors.accentText,
-          ),
-          SizedBox(width: AppSpacing.s12.w),
-          // النص هو اللي بيتنازل والسهم لأ — `Expanded` مش `Spacer` عشان
-          // الصف مايفيضش عند مقياس خط ١٫٣.
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                Text(
-                  'عندك $_count',
+          Row(
+            children: <Widget>[
+              Icon(
+                Icons.card_giftcard_rounded,
+                size: 20.r,
+                color: AppSemanticColors.accentText,
+              ),
+              SizedBox(width: AppSpacing.s8.w),
+              Expanded(
+                child: Text(
+                  'باقاتك هنا',
                   style: AppTextStyles.bodyMdStrong,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                SizedBox(height: AppSpacing.titleToSubtitle.h),
-                Text(
-                  // ⚠ **مابتقولش «باقاتك هنا»** — إحنا مش عارفين.
-                  'لو واحدة منها من الفرع ده، كلّم الفرع عشان يستخدمها.',
-                  style: AppTextStyles.caption,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+              ),
+              if (onOpen != null)
+                AppButtonWidget(
+                  label: 'الكل',
+                  variant: AppButtonVariant.ghost,
+                  expand: false,
+                  onPressed: onOpen,
                 ),
-              ],
-            ),
+            ],
           ),
-          SizedBox(width: AppSpacing.s8.w),
-          const DirectionalChevronWidget(),
+
+          for (final package in packages) ...<Widget>[
+            SizedBox(height: AppSpacing.s12.h),
+            _Row(package: package, onBook: onBook),
+          ],
         ],
       ),
+    );
+  }
+}
+
+/// صف باقة واحدة — الاسم والمتبقّي وزرار الحجز.
+///
+/// ⚠ **مش `const`** — بيرسم لون.
+class _Row extends StatelessWidget {
+  const _Row({required this.package, this.onBook});
+
+  final PackageEntitlementUiModel package;
+  final void Function(PackageEntitlementUiModel package)? onBook;
+
+  /// المتبقّي بكلمات النوع بتاعه — الجلسات مش وحدات والعكس.
+  String get _remaining => switch (package) {
+    SessionPackageEntitlement(:final availableSessions, :final isSingleVisit) =>
+      isSingleVisit
+          ? 'زيارة واحدة'
+          : 'فاضل ${AppFormat.digits(availableSessions)} جلسات',
+    UsagePackageEntitlement(:final availableUnits, :final unitName) =>
+      'فاضل ${AppFormat.digits(availableUnits)} $unitName',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final bookable = package.isBookableFromApp && onBook != null;
+
+    return Row(
+      children: <Widget>[
+        // النص هو اللي بيتنازل والزرار لأ — `Expanded` مش `Spacer`، عشان
+        // الصف مايفيضش عند مقياس خط ١٫٣.
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Text(
+                package.packageName,
+                style: AppTextStyles.bodyMd,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              Text(
+                _remaining,
+                style: AppTextStyles.caption,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+        SizedBox(width: AppSpacing.s8.w),
+        if (bookable)
+          AppButtonWidget(
+            label: 'احجز',
+            variant: AppButtonVariant.secondary,
+            expand: false,
+            onPressed: () => onBook!(package),
+          ),
+      ],
     );
   }
 }

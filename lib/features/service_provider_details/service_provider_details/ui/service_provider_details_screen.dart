@@ -14,6 +14,9 @@ import 'package:waqty_user_application/features/account/account/logic/account_cu
 import 'package:waqty_user_application/features/entitlements/entitlements/data/repo/entitlements_repo.dart';
 import 'package:waqty_user_application/features/entitlements/entitlements/logic/entitlements_cubit.dart';
 import 'package:waqty_user_application/features/entitlements/entitlements/ui/entitlements_screen.dart';
+import 'package:waqty_user_application/core/models/package_entitlement_ui_model.dart';
+import 'package:waqty_user_application/features/entitlements/entitlement_booking/logic/entitlement_booking_cubit.dart';
+import 'package:waqty_user_application/features/entitlements/entitlement_booking/ui/entitlement_booking_sheet.dart';
 import 'package:waqty_user_application/features/entitlements/entitlements/ui/widgets/provider_packages_notice_widget.dart';
 import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
@@ -140,20 +143,19 @@ class ServiceProviderDetailsScreen extends StatelessWidget {
                         onShare: null,
                       ),
 
-                      // **تذكرة بالباقات — بعد الاتصال وقبل السياسات.**
+                      // **باقاتك هنا — بعد الاتصال وقبل السياسات.**
                       //
                       // مكانها في منطقة «علاقتك بالفرع ده» مش فوق
-                      // الخدمات: العميلة داخلة تبص على الأسعار، وتذكرة
-                      // فوقها بتزاحم سبب دخولها.
-                      //
-                      // ⚠ **مابتقولش «باقاتك هنا»** — التطبيق مش عارف
-                      // الباقة من أنهي فرع (BE-A1). شوف
-                      // `ProviderPackagesNoticeWidget`.
-                      if (cubit.activePackageCount > 0) ...[
+                      // الخدمات: العميلة داخلة تبص على الأسعار، وقسم
+                      // فوقها بيزاحم سبب دخولها. وهي أصلاً تحت الفرع
+                      // مباشرة، فالباقة بتتقري في سياق المكان اللي
+                      // بتتصرف فيه.
+                      if (cubit.providerPackages.isNotEmpty) ...[
                         verticalSpace(AppSpacing.listRowGap),
                         ProviderPackagesNoticeWidget(
-                          activeCount: cubit.activePackageCount,
-                          onTap: () => _openEntitlements(context),
+                          packages: cubit.providerPackages,
+                          onOpen: () => _openEntitlements(context),
+                          onBook: (package) => _bookPackage(context, package),
                         ),
                       ],
 
@@ -326,6 +328,39 @@ class ServiceProviderDetailsScreen extends StatelessWidget {
     if (didBook == true && context.mounted) {
       Navigator.of(context).pushNamed(Routes.bookingSuccessScreen);
     }
+  }
+
+  /// بيحجز جلسة من باقة **من غير ما يسيب صفحة المزوّد**.
+  ///
+  /// الشيت محتاج `EntitlementsCubit`، واللي مش في نطاق الشاشة دي (بتتفتح
+  /// بـ`pushNamed` فوق الـshell). فبنعمل نسخة مقصورة عليه — نفس معالجة
+  /// `ReassignmentCubit` في `app_routes.dart` — وبعد الحجز بنعيد تحميل
+  /// باقات الصفحة عشان الأرقام تتحدّث تحت إيد العميلة.
+  Future<void> _bookPackage(
+    BuildContext context,
+    PackageEntitlementUiModel package,
+  ) async {
+    final cubit = ServiceProviderDetailsCubit.get(context);
+    final entitlements = EntitlementsCubit(getIt<EntitlementsRepo>());
+
+    final booked = await EntitlementBookingSheet.showForPackage(
+      context,
+      cubit: entitlements,
+      package: package,
+    );
+
+    if (!context.mounted) {
+      await entitlements.close();
+      return;
+    }
+    if (booked) {
+      await EntitlementBookingSheet.showConfirmation(
+        context,
+        kind: EntitlementBookingKind.package,
+      );
+      await cubit.reloadPackages();
+    }
+    await entitlements.close();
   }
 
   /// بيفتح «باقاتي» بنسخة **مقصورة على الشاشة المدفوعة**.

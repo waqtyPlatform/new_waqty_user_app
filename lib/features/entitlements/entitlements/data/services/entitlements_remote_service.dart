@@ -35,6 +35,27 @@ class EntitlementsRemoteService implements EntitlementsService {
       );
 
   @override
+  Future<Either<Failure, Unit>> bookPackageSession({
+    required String uuid,
+    required String bookingDate,
+    required String startTime,
+    String? serviceUuid,
+    String? notes,
+  }) => _client.post(
+    ApiPaths.bookPackageSession(uuid),
+    body: <String, dynamic>{
+      'booking_date': bookingDate,
+      'start_time': startTime,
+      if (serviceUuid != null && serviceUuid.isNotEmpty)
+        'service_uuid': serviceUuid,
+      if (notes != null && notes.isNotEmpty) 'notes': notes,
+    },
+    // ⚠ نفس سبب المتابعة: الرد `Booking` خام مش مورد (BE-A2)، فمابنقراش
+    // جسمه.
+    parse: (_) => unit,
+  );
+
+  @override
   Future<Either<Failure, Unit>> bookFollowUp({
     required String uuid,
     required String bookingDate,

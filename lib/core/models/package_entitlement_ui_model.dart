@@ -1,3 +1,4 @@
+import 'package:waqty_user_application/core/models/entitlement_owner_ui_model.dart';
 import 'package:waqty_user_application/core/models/usage_transaction_ui_model.dart';
 import 'package:waqty_user_application/core/utils/json_parse.dart';
 
@@ -42,18 +43,16 @@ extension PackageStatusLabel on PackageStatus {
 /// الـ`sealed` بيخلّي ده **مستحيل يتكتب** بدل ما يبقى غلطة تتلقط في
 /// المراجعة.
 ///
-/// ⚠ **مافيش `provider` ولا `branch` هنا — ومش سهو.**
-/// `UserEntitlementController::packages()` مابيبعتش ولا واحد فيهم في أي صف
-/// (اتقرا كامل ٢٠٢٦-٠٨-٢١). والقاعدة إن الشاشة ترسم من غير الحقل الناقص،
-/// مش إننا نخترعه. النتيجة العملية: الكارت مابيقولش اسم المحل، و**الحجز
-/// متعطّل** لأن `/public/bookings/available-slots` محتاج `branch_uuid`.
-/// TODO(api): BE-A1.
+/// **[owner] هو اللي بيخلّي الحجز ممكن.** نزل في BE-A1 ومعاه
+/// `service_uuid` — و`/public/bookings/available-slots` مفتاحه (فرع، خدمة).
+/// قبل كده الصفوف كانت بتتعرض وخلاص.
 sealed class PackageEntitlementUiModel {
   const PackageEntitlementUiModel({
     required this.uuid,
     required this.packageName,
     required this.status,
     required this.canBook,
+    this.owner = EntitlementOwnerUiModel.unknown,
     this.purchasedAt,
     this.expiresAt,
   });
@@ -62,33 +61,42 @@ sealed class PackageEntitlementUiModel {
   final String packageName;
   final PackageStatus status;
 
+  /// المزوّد والفرع اللي باعوا الباقة.
+  final EntitlementOwnerUiModel owner;
+
   /// السيرفر بيقول تقدر تحجز ولا لأ.
-  ///
-  /// ⚠ **مش كفاية لوحده عشان الزرار يشتغل.** حتى لما بيبقى `true`،
-  /// التطبيق مايقدرش يجيب مواعيد من غير `branch_uuid` (BE-A1). شوف
-  /// [isBookableFromApp].
   final bool canBook;
 
   final DateTime? purchasedAt;
   final DateTime? expiresAt;
 
-  /// **الحجز من التطبيق مقفول للباقات كلها.**
-  ///
-  /// دي مش قاعدة منتج — دي حدود العقد الحالي. `bookSessionForUser` بيقرا
-  /// المزوّد والفرع من الشراء **على السيرفر**، فالسيرفر عارف؛ هو بس
-  /// مابيقولش للعميل. ومن غير الفرع مفيش `available-slots`، ومن غير
-  /// مواعيد مفيش شاشة حجز.
-  ///
-  /// جرّبنا نطلّعه من حتة تانية وماينفعش: `allowed_services` بيدّي
-  /// `service_uuid` بس، و`PublicServiceDetailResource` بيرجّع **`branches`
-  /// جمع** — يعني الخدمة في أكتر من فرع، واختيار واحد منهم تخمين.
-  ///
-  /// TODO(api): BE-A1 — أول ما ينزل، ده بيرجع [canBook].
-  bool get isBookableFromApp => false;
+  /// الخدمة اللي المواعيد بتتجاب لها. البركة بتسيبها للعميلة تختار من
+  /// [UsagePackageEntitlement.allowedServices].
+  String get slotServiceUuid;
 
-  /// السبب اللي بيتعرض تحت الزرار المتعطّل.
-  String get blockedReason =>
-      'حجز جلسات الباقة من التطبيق لسه مش متاح — كلّم الفرع عشان يظبطلك ميعاد';
+  /// **الحجز من التطبيق شغّال** — بشرط إن السيرفر يسمح، وإن معانا الفرع
+  /// والخدمة اللي بنجيب بيهم المواعيد.
+  ///
+  /// الشرط التاني مش نظري: قبل BE-A1 الرد مكانش فيه فرع خالص، والزرار كان
+  /// متعطّل لكل الباقات. لو الحقل رجع فاضي لأي سبب، بنقفل بدل ما نفتح
+  /// شاشة هتفضل بتدوّر على مواعيد مش هتيجي.
+  bool get isBookableFromApp =>
+      canBook &&
+      status == PackageStatus.active &&
+      owner.canResolveSlots &&
+      slotServiceUuid.isNotEmpty;
+
+  /// السبب اللي بيتعرض لما الحجز مقفول ومفيش زرار.
+  ///
+  /// `null` = مفيش منع يتقال (الحالات النهائية بتتكلم بشارتها).
+  String? get blockedReason {
+    if (status.isTerminal) return null;
+    if (isBookableFromApp) return null;
+    if (!owner.canResolveSlots || slotServiceUuid.isEmpty) {
+      return 'مش قادرين نجيب مواعيد الفرع دلوقتي — كلّم الفرع للحجز';
+    }
+    return 'الباقة موقوفة — كلّم الفرع';
+  }
 
   /// باقي على الانتهاء كام يوم؟ `null` = مفيش تاريخ انتهاء (باقة دائمة).
   int? daysUntilExpiry({DateTime? now}) {
@@ -122,7 +130,10 @@ class SessionPackageEntitlement extends PackageEntitlementUiModel {
     required super.packageName,
     required super.status,
     required super.canBook,
+    super.owner,
     required this.serviceName,
+    this.serviceUuid = '',
+    this.durationMinutes = 0,
     required this.totalSessions,
     required this.completedSessions,
     required this.reservedSessions,
@@ -133,6 +144,12 @@ class SessionPackageEntitlement extends PackageEntitlementUiModel {
   });
 
   final String serviceName;
+
+  /// نزل في BE-A1 — قبله كان الاسم بس، والاسم مايجبش مواعيد.
+  final String serviceUuid;
+
+  final int durationMinutes;
+
   final int totalSessions;
   final int completedSessions;
 
@@ -149,11 +166,17 @@ class SessionPackageEntitlement extends PackageEntitlementUiModel {
   /// جواها» مش «فاضل كام».
   final bool isSingleVisit;
 
+  @override
+  String get slotServiceUuid => serviceUuid;
+
   factory SessionPackageEntitlement.fromJson(Map<String, dynamic> json) =>
       SessionPackageEntitlement(
         uuid: JsonParse.stringValue(json['uuid']),
         packageName: JsonParse.stringValue(json['package_name']),
         serviceName: JsonParse.stringValue(json['service_name']),
+        serviceUuid: JsonParse.stringValue(json['service_uuid']),
+        durationMinutes: JsonParse.intValue(json['duration_minutes']),
+        owner: EntitlementOwnerUiModel.fromJson(json),
         totalSessions: JsonParse.intValue(json['total_sessions']),
         completedSessions: JsonParse.intValue(json['completed_sessions']),
         reservedSessions: JsonParse.intValue(json['reserved_sessions']),
@@ -179,6 +202,7 @@ class UsagePackageEntitlement extends PackageEntitlementUiModel {
     required super.packageName,
     required super.status,
     required super.canBook,
+    super.owner,
     required this.unitName,
     required this.totalUnitsPurchased,
     required this.totalUnitsConsumed,
@@ -212,6 +236,11 @@ class UsagePackageEntitlement extends PackageEntitlementUiModel {
   final List<AllowedServiceUiModel> allowedServices;
   final List<UsageTransactionUiModel> usageHistory;
 
+  /// أول خدمة مسموحة — الشاشة بتسيب العميلة تغيّرها.
+  @override
+  String get slotServiceUuid =>
+      allowedServices.isEmpty ? '' : allowedServices.first.serviceUuid;
+
   factory UsagePackageEntitlement.fromJson(Map<String, dynamic> json) =>
       UsagePackageEntitlement(
         uuid: JsonParse.stringValue(json['uuid']),
@@ -239,6 +268,7 @@ class UsagePackageEntitlement extends PackageEntitlementUiModel {
           JsonParse.stringValue(json['status'], fallback: 'active'),
         ),
         canBook: JsonParse.boolValue(json['can_book']),
+        owner: EntitlementOwnerUiModel.fromJson(json),
       );
 }
 

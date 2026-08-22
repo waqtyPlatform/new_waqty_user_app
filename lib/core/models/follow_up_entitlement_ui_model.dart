@@ -1,3 +1,4 @@
+import 'package:waqty_user_application/core/models/entitlement_owner_ui_model.dart';
 import 'package:waqty_user_application/core/models/package_entitlement_ui_model.dart';
 import 'package:waqty_user_application/core/utils/json_parse.dart';
 
@@ -44,6 +45,14 @@ class FollowUpEntitlementUiModel {
   /// الحجز اللي ولّد المتابعة — **الطريق الوحيد للفرع دلوقتي**.
   final String originalBookingUuid;
 
+  /// المزوّد والفرع اللي ولّدوا المتابعة.
+  final EntitlementOwnerUiModel owner;
+
+  /// الخدمة اللي المواعيد بتتجاب لها.
+  final String serviceUuid;
+
+  final int durationMinutes;
+
   final DateTime? validFrom;
   final DateTime? validUntil;
 
@@ -70,6 +79,9 @@ class FollowUpEntitlementUiModel {
     required this.serviceName,
     required this.status,
     this.originalBookingUuid = '',
+    this.owner = EntitlementOwnerUiModel.unknown,
+    this.serviceUuid = '',
+    this.durationMinutes = 0,
     this.validFrom,
     this.validUntil,
     this.allowedCount = 0,
@@ -100,12 +112,13 @@ class FollowUpEntitlementUiModel {
 
   /// المتابعة قابلة للحجز من التطبيق؟
   ///
-  /// على عكس الباقة، دي **بتشتغل فعلاً** — بشرط إن فيه حجز أصلي نوصل منه
-  /// للفرع، والأخصائي المطلوب موجود.
+  /// نفس شرط الباقة: فرع وخدمة نجيب بيهم المواعيد — زائد إن الأخصائي
+  /// المطلوب موجود لو القاعدة بتلزمه.
   bool get isBookableFromApp =>
       status == PackageStatus.active &&
       availableCount > 0 &&
-      originalBookingUuid.isNotEmpty &&
+      owner.canResolveSlots &&
+      serviceUuid.isNotEmpty &&
       !isOrphaned;
 
   /// باقي على انتهاء الصلاحية كام يوم؟
@@ -122,6 +135,9 @@ class FollowUpEntitlementUiModel {
       uuid: JsonParse.stringValue(json['uuid']),
       serviceName: JsonParse.stringValue(json['service_name']),
       originalBookingUuid: JsonParse.stringValue(json['original_booking_uuid']),
+      owner: EntitlementOwnerUiModel.fromJson(json),
+      serviceUuid: JsonParse.stringValue(json['service_uuid']),
+      durationMinutes: JsonParse.intValue(json['duration_minutes']),
       validFrom: JsonParse.dateOrNull(json['valid_from']),
       validUntil: JsonParse.dateOrNull(json['valid_until']),
       allowedCount: JsonParse.intValue(json['allowed_count']),

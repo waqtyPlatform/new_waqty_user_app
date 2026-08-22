@@ -14,11 +14,13 @@ class PackageSessionCardWidget extends StatelessWidget {
   const PackageSessionCardWidget({
     required this.package,
     this.onTap,
+    this.onBook,
     super.key,
   });
 
   final SessionPackageEntitlement package;
   final VoidCallback? onTap;
+  final VoidCallback? onBook;
 
   @override
   Widget build(BuildContext context) {
@@ -26,13 +28,18 @@ class PackageSessionCardWidget extends StatelessWidget {
 
     return EntitlementCardShellWidget(
       title: package.packageName,
-      subtitle: package.serviceName,
+      subtitle: package.owner.providerName.isEmpty
+          ? package.serviceName
+          : '${package.serviceName} · ${package.owner.providerName}',
       status: package.status,
       expiresAt: package.expiresAt,
       expiresSoon: package.expiresSoon(),
       isMuted: isTerminal,
       onTap: onTap,
-      blockedReason: isTerminal ? null : package.blockedReason,
+      action: package.isBookableFromApp && onBook != null
+          ? AppButtonWidget(label: 'احجز جلسة', onPressed: onBook)
+          : null,
+      blockedReason: package.blockedReason,
       body: <Widget>[
         if (package.isSingleVisit)
           // زيارة واحدة — الشريط بيقول «١ من ١» وده ضوضاء. السؤال هنا

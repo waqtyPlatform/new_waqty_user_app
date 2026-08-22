@@ -23,13 +23,25 @@ class EntitlementsMockService implements EntitlementsService {
       _lift(await MockSource.fetchList(MockEntitlements.followUps));
 
   @override
+  Future<Either<Failure, Unit>> bookPackageSession({
+    required String uuid,
+    required String bookingDate,
+    required String startTime,
+    String? serviceUuid,
+    String? notes,
+  }) => _book();
+
+  @override
   Future<Either<Failure, Unit>> bookFollowUp({
     required String uuid,
     required String bookingDate,
     required String startTime,
     String? employeeUuid,
     String? notes,
-  }) async {
+  }) => _book();
+
+  /// النوعين بيشتركوا في نفس حالات الفشل — الفرق على السيرفر مش هنا.
+  Future<Either<Failure, Unit>> _book() async {
     await Future.delayed(MockConfig.effectiveDelay);
 
     if (MockConfig.isErrorForced) {

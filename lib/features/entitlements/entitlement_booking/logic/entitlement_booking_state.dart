@@ -35,19 +35,28 @@ class EntitlementBookingLoadingSlots extends EntitlementBookingState {
 ///
 /// نفس الغلطة كانت في `EntitlementsLoaded` — شوفها هناك.
 class EntitlementBookingReady extends EntitlementBookingState {
-  const EntitlementBookingReady({this.selectedDate, this.selectedSlotStart});
+  const EntitlementBookingReady({
+    this.selectedDate,
+    this.selectedSlotStart,
+    this.serviceUuid = '',
+  });
 
   final DateTime? selectedDate;
   final DateTime? selectedSlotStart;
+
+  /// البركة بتسيب العميلة تغيّر الخدمة، وده بيغيّر المواعيد — فلازم يدخل
+  /// في المقارنة زي الباقي.
+  final String serviceUuid;
 
   @override
   bool operator ==(Object other) =>
       other is EntitlementBookingReady &&
       other.selectedDate == selectedDate &&
-      other.selectedSlotStart == selectedSlotStart;
+      other.selectedSlotStart == selectedSlotStart &&
+      other.serviceUuid == serviceUuid;
 
   @override
-  int get hashCode => Object.hash(selectedDate, selectedSlotStart);
+  int get hashCode => Object.hash(selectedDate, selectedSlotStart, serviceUuid);
 }
 
 class EntitlementBookingError extends EntitlementBookingState {

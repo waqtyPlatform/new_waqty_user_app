@@ -13,6 +13,7 @@ import 'package:waqty_user_application/features/account/account/logic/account_cu
 import 'package:waqty_user_application/features/account/account/logic/account_state.dart'
     show AccountState;
 import 'package:waqty_user_application/features/account/phone_verification/ui/widgets/phone_claim_result_sheet.dart';
+import 'package:waqty_user_application/features/entitlements/entitlement_booking/logic/entitlement_booking_cubit.dart';
 import 'package:waqty_user_application/features/entitlements/entitlement_booking/ui/entitlement_booking_sheet.dart';
 import 'package:waqty_user_application/features/entitlements/entitlement_detail/ui/entitlement_detail_screen.dart';
 import 'package:waqty_user_application/features/entitlements/entitlements/logic/entitlements_cubit.dart';
@@ -157,10 +158,12 @@ class EntitlementsBodyWidget extends StatelessWidget {
       SessionPackageEntitlement() => PackageSessionCardWidget(
         package: package,
         onTap: () => _openDetail(context, package: package),
+        onBook: () => _bookPackage(context, package),
       ),
       UsagePackageEntitlement() => PackageUsageCardWidget(
         package: package,
         onTap: () => _openDetail(context, package: package),
+        onBook: () => _bookPackage(context, package),
       ),
     };
   }
@@ -186,12 +189,29 @@ class EntitlementsBodyWidget extends StatelessWidget {
   /// من غير التأكيد ده الشيت بيقفل في صمت والعميلة مش متأكدة إن الحجز
   /// اتسجّل — وهي مش هتلاقي رقم حجز تراجعه لأن السيرفر بيرجّع موديل خام
   /// (BE-A2). فالسكوت هنا أوحش من أي مكان تاني.
+  Future<void> _bookPackage(
+    BuildContext context,
+    PackageEntitlementUiModel package,
+  ) async {
+    final booked = await EntitlementBookingSheet.showForPackage(
+      context,
+      cubit: EntitlementsCubit.get(context),
+      package: package,
+    );
+
+    if (!context.mounted || !booked) return;
+    await EntitlementBookingSheet.showConfirmation(
+      context,
+      kind: EntitlementBookingKind.package,
+    );
+  }
+
   Future<void> _book(
     BuildContext context,
     EntitlementsCubit cubit,
     FollowUpEntitlementUiModel followUp,
   ) async {
-    final booked = await EntitlementBookingSheet.show(
+    final booked = await EntitlementBookingSheet.showForFollowUp(
       context,
       cubit: cubit,
       followUp: followUp,

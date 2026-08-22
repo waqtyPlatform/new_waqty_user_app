@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/core/models/follow_up_entitlement_ui_model.dart';
+import 'package:waqty_user_application/core/models/package_entitlement_ui_model.dart';
 import 'package:waqty_user_application/core/services/services_locator.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
 import 'package:waqty_user_application/design_system/design_system.dart';
-import 'package:waqty_user_application/features/booking/booking_details/data/repo/booking_details_repo.dart';
 import 'package:waqty_user_application/features/booking/create_booking/data/repo/create_booking_repo.dart';
 import 'package:waqty_user_application/features/booking/create_booking/ui/widgets/create_booking_date_strip_widget.dart';
 import 'package:waqty_user_application/features/booking/create_booking/ui/widgets/create_booking_slots_widget.dart';
@@ -23,9 +23,10 @@ import 'package:waqty_user_application/features/entitlements/entitlements/logic/
 /// جاي من الحجز الأصلي، والأخصائي إما مقفول بالقاعدة أو مفتوح للسيرفر.
 /// فاللي فاضل سؤالين، ودول شيت مش رحلة.
 class EntitlementBookingSheet extends StatelessWidget {
-  const EntitlementBookingSheet({required this.followUp, super.key});
+  const EntitlementBookingSheet({this.lockedEmployeeName, super.key});
 
-  final FollowUpEntitlementUiModel followUp;
+  /// اسم الأخصائي لما القاعدة بتلزمه — بيتعرض كسطر ثابت من غير picker.
+  final String? lockedEmployeeName;
 
   /// بيفتح الشيت وبيربطه بالـ[EntitlementsCubit] اللي فوق التبويبات.
   ///
@@ -35,27 +36,84 @@ class EntitlementBookingSheet extends StatelessWidget {
   /// ⚠ **الزرار جوه [AppSheetWidget.content] مش في `actions`.** الـ`actions`
   /// بتتبني بره شجرة الـproviders، فزرار محتاج الكيوبتين ماينفعش يعيش
   /// هناك. و`content` بيوصل للاتنين.
-  /// بترجّع `true` لو الحجز اتسجّل — واللي بينده بيوري التأكيد.
-  static Future<bool> show(
+  /// حجز جلسة من **باقة**.
+  ///
+  /// اتفتح مع BE-A1: قبله الرد مكانش فيه فرع، فمكانش فيه مواعيد نعرضها،
+  /// فالزرار كان متعطّل بسبب مكتوب.
+  static Future<bool> showForPackage(
+    BuildContext context, {
+    required EntitlementsCubit cubit,
+    required PackageEntitlementUiModel package,
+  }) => _show(
+    context,
+    cubit: cubit,
+    title: 'احجز جلسة',
+    createBooking: () =>
+        EntitlementBookingCubit.forPackage(
+          package: package,
+          booking: getIt<CreateBookingRepo>(),
+        )..start(),
+    onConfirm: (entitlements, booking) => entitlements.bookPackageSession(
+      uuid: booking.entitlementUuid,
+      bookingDate: booking.bookingDate,
+      startTime: booking.startTime,
+      serviceUuid: booking.selectedServiceUuid,
+    ),
+  );
+
+  /// حجز **متابعة**.
+  static Future<bool> showForFollowUp(
     BuildContext context, {
     required EntitlementsCubit cubit,
     required FollowUpEntitlementUiModel followUp,
+  }) => _show(
+    context,
+    cubit: cubit,
+    title: 'احجز المتابعة',
+    lockedEmployeeName:
+        followUp.employeeRule == FollowUpEmployeeRule.sameRequired
+        ? followUp.employee?.name
+        : null,
+    createBooking: () =>
+        EntitlementBookingCubit.forFollowUp(
+          followUp: followUp,
+          booking: getIt<CreateBookingRepo>(),
+        )..start(),
+    onConfirm: (entitlements, booking) => entitlements.bookFollowUp(
+      uuid: booking.entitlementUuid,
+      bookingDate: booking.bookingDate,
+      startTime: booking.startTime,
+      employeeUuid: booking.lockedEmployeeUuid,
+    ),
+  );
+
+  /// بترجّع `true` لو الحجز اتسجّل — واللي بينده بيوري التأكيد.
+  static Future<bool> _show(
+    BuildContext context, {
+    required EntitlementsCubit cubit,
+    required String title,
+    required EntitlementBookingCubit Function() createBooking,
+    required void Function(
+      EntitlementsCubit entitlements,
+      EntitlementBookingCubit booking,
+    )
+    onConfirm,
+    String? lockedEmployeeName,
   }) async {
     final booked = await AppSheetWidget.show<bool>(
       context,
-      title: 'احجز المتابعة',
+      title: title,
       content: MultiBlocProvider(
         providers: <BlocProvider<dynamic>>[
           BlocProvider<EntitlementsCubit>.value(value: cubit),
-          BlocProvider<EntitlementBookingCubit>(
-            create: (_) => EntitlementBookingCubit(
-              followUp: followUp,
-              bookings: getIt<BookingDetailsRepo>(),
-              booking: getIt<CreateBookingRepo>(),
-            )..start(),
-          ),
+          BlocProvider<EntitlementBookingCubit>(create: (_) => createBooking()),
         ],
-        child: EntitlementBookingSheet(followUp: followUp),
+        child: _SheetScope(
+          onConfirm: onConfirm,
+          child: EntitlementBookingSheet(
+            lockedEmployeeName: lockedEmployeeName,
+          ),
+        ),
       ),
       actions: (_) => const <Widget>[],
     );
@@ -73,13 +131,23 @@ class EntitlementBookingSheet extends StatelessWidget {
   /// وبتقول يلاقيه فين، من غير ما تدّعي إننا عارفين رقمه.
   ///
   /// TODO(api): BE-A2 — لما يرجّع مورد، ده يبقى تنقّل مباشر للتفاصيل.
-  static Future<void> showConfirmation(BuildContext context) {
+  static Future<void> showConfirmation(
+    BuildContext context, {
+    EntitlementBookingKind kind = EntitlementBookingKind.followUp,
+  }) {
     return AppSheetWidget.show<void>(
       context,
       icon: Icons.check_circle_outline_rounded,
       iconTone: AppSemanticColors.positive,
       title: 'الحجز اتسجّل',
-      message: 'هتلاقي ميعاد المتابعة في «حجوزاتي».',
+      // ⚠ النص بيتغيّر بالنوع. كان مكتوب «ميعاد المتابعة» ثابت، فحجز
+      // جلسة باقة كان بيقول للعميلة إنها حجزت متابعة.
+      message: switch (kind) {
+        EntitlementBookingKind.package =>
+          'هتلاقي ميعاد الجلسة في «حجوزاتي».',
+        EntitlementBookingKind.followUp =>
+          'هتلاقي ميعاد المتابعة في «حجوزاتي».',
+      },
       actions: (sheetContext) => <Widget>[
         AppButtonWidget(
           label: 'تمام',
@@ -112,15 +180,6 @@ class EntitlementBookingSheet extends StatelessWidget {
               );
             }
 
-            if (state is EntitlementBookingResolving) {
-              return Padding(
-                padding: EdgeInsets.all(AppSpacing.s32.r),
-                child: Center(
-                  child: AppLoadingWidget(color: AppSemanticColors.accent),
-                ),
-              );
-            }
-
             // **الشيت بيتقيّد بنص الشاشة وبيسكرول جواه.**
             //
             // شريط التواريخ + شبكة المواعيد أطول من نص الشاشة على ٣٦٠×٦٤٠،
@@ -134,12 +193,10 @@ class EntitlementBookingSheet extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
-                    if (followUp.employeeRule ==
-                            FollowUpEmployeeRule.sameRequired &&
-                        followUp.employee != null) ...<Widget>[
+                    if (lockedEmployeeName != null) ...<Widget>[
                       // **مفيش picker — القاعدة مقفولة والسبب مكتوب.**
                       Text(
-                        'المتابعة مع ${followUp.employee!.name}',
+                        'المتابعة مع $lockedEmployeeName',
                         style: AppTextStyles.bodyMd,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -147,7 +204,8 @@ class EntitlementBookingSheet extends StatelessWidget {
                       verticalSpace(AppSpacing.s12),
                     ],
 
-                    if (state is EntitlementBookingLoadingDates)
+                    if (state is EntitlementBookingLoadingDates ||
+                        state is EntitlementBookingResolving)
                       Padding(
                         padding: EdgeInsets.all(AppSpacing.s24.r),
                         child: Center(
@@ -173,7 +231,12 @@ class EntitlementBookingSheet extends StatelessWidget {
                       CreateBookingSlotsWidget(
                         slots: cubit.slots,
                         selectedSlot: cubit.selectedSlot,
-                        baselinePrice: followUp.effectivePrice.toDouble(),
+                        // ⚠ الاستحقاق **مدفوع أصلاً**، فمفيش سعر مرجعي.
+                        // من غير `showPriceDelta: false` كل ميعاد ليه سعر
+                        // كان بيبان كأنه «+٥٠» زيادة — العميلة اللي دفعت
+                        // باقة تفتكر إن فيه فلوس تانية عليها.
+                        baselinePrice: 0,
+                        showPriceDelta: false,
                         isLoading: state is EntitlementBookingLoadingSlots,
                         onSlotTap: cubit.selectSlot,
                       ),
@@ -199,11 +262,9 @@ class EntitlementBookingSheet extends StatelessWidget {
                       label: 'أكّد الحجز',
                       isLoading: isSubmitting,
                       onPressed: cubit.canConfirm && !isSubmitting
-                          ? () => EntitlementsCubit.get(context).bookFollowUp(
-                              uuid: followUp.uuid,
-                              bookingDate: cubit.bookingDate,
-                              startTime: cubit.startTime,
-                              employeeUuid: cubit.employeeUuid,
+                          ? () => _SheetScope.of(context).onConfirm(
+                              EntitlementsCubit.get(context),
+                              cubit,
                             )
                           : null,
                     ),
@@ -216,4 +277,28 @@ class EntitlementBookingSheet extends StatelessWidget {
       },
     );
   }
+}
+
+
+/// بيمرّر دالة التأكيد لجوه الشجرة.
+///
+/// الزرار عايش جوه `content` (عشان يوصل للكيوبتين)، والدالة اللي بتقرر
+/// أنهي endpoint بتتحدد بره في [EntitlementBookingSheet.showForPackage]
+/// أو [EntitlementBookingSheet.showForFollowUp]. `InheritedWidget` أبسط
+/// من تمرير الدالة عبر أربع طبقات builders.
+class _SheetScope extends InheritedWidget {
+  const _SheetScope({required this.onConfirm, required super.child});
+
+  final void Function(
+    EntitlementsCubit entitlements,
+    EntitlementBookingCubit booking,
+  )
+  onConfirm;
+
+  static _SheetScope of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<_SheetScope>()!;
+
+  @override
+  bool updateShouldNotify(_SheetScope oldWidget) =>
+      oldWidget.onConfirm != onConfirm;
 }

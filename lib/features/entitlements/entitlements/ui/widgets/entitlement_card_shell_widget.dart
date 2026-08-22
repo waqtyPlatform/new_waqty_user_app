@@ -38,8 +38,7 @@ class EntitlementCardShellWidget extends StatelessWidget {
   /// السطر اللي بيقول ليه مفيش زرار. `null` = مافيش منع يتقال.
   final String? blockedReason;
 
-  /// زرار الفعل لو فيه. الباقات دلوقتي **مالهاش** — شوف
-  /// [PackageEntitlementUiModel.isBookableFromApp].
+  /// زرار الفعل لو فيه.
   final Widget? action;
 
   final VoidCallback? onTap;

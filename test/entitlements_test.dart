@@ -8,6 +8,10 @@ import 'package:waqty_user_application/core/mock/mock_entitlements.dart';
 import 'package:waqty_user_application/core/mock/mock_scenario.dart';
 import 'package:waqty_user_application/core/models/follow_up_entitlement_ui_model.dart';
 import 'package:waqty_user_application/core/models/package_entitlement_ui_model.dart';
+import 'package:waqty_user_application/core/models/slot_ui_model.dart';
+import 'package:waqty_user_application/features/booking/create_booking/ui/widgets/create_booking_slots_widget.dart';
+import 'package:waqty_user_application/features/entitlements/entitlement_booking/logic/entitlement_booking_cubit.dart';
+import 'package:waqty_user_application/features/entitlements/entitlement_booking/ui/entitlement_booking_sheet.dart';
 import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/features/booking/my_bookings/data/repo/my_bookings_repo.dart';
 import 'package:waqty_user_application/features/booking/my_bookings/data/services/my_bookings_mock_service.dart';
@@ -145,13 +149,14 @@ void main() {
       expect(usage.usageHistory.single.isDebit, isTrue);
     });
 
-    test('الرد مافيهوش provider ولا branch — الموديل مابيخترعهمش', () {
+    test('رد قديم من غير provider/branch — الموديل بيقفل بدل ما يخمّن', () {
       // BE-A1. الاختبار ده بيقع لو حد ضاف الحقول من غير ما السيرفر يبعتها.
       final fields = SessionPackageEntitlement.fromJson(<String, dynamic>{
         'uuid': 'p1',
         'package_type': 'multi_session',
         'package_name': 'باقة',
       });
+      expect(fields.owner.canResolveSlots, isFalse);
       expect(fields.isBookableFromApp, isFalse);
       expect(fields.blockedReason, contains('كلّم الفرع'));
     });
@@ -230,10 +235,36 @@ void main() {
   });
 
   group('الحجز — الحدود الحقيقية للعقد', () {
-    test('كل الباقات مقفولة من التطبيق — BE-A1', () {
-      expect(MockEntitlements.multiSession.isBookableFromApp, isFalse);
-      expect(MockEntitlements.usageBased.isBookableFromApp, isFalse);
-      expect(MockEntitlements.singleVisit.isBookableFromApp, isFalse);
+    /// ⚠ **اتقلبت مع BE-A1.** كانت بتثبّت إن كل الباقات مقفولة، لأن الرد
+    /// مكانش فيه فرع فمكانش فيه مواعيد. دلوقتي `provider` و`branch`
+    /// و`service_uuid` بييجوا في الصف، فالباقة الشغّالة بتتحجز.
+    test('الباقة الشغّالة بتتحجز من التطبيق', () {
+      expect(MockEntitlements.multiSession.isBookableFromApp, isTrue);
+      expect(MockEntitlements.usageBased.isBookableFromApp, isTrue);
+      expect(MockEntitlements.singleVisit.isBookableFromApp, isTrue);
+    });
+
+    test('المنتهية مابتتحجزش مهما كان فيها جلسات', () {
+      expect(MockEntitlements.expired.availableSessions, greaterThan(0));
+      expect(MockEntitlements.expired.isBookableFromApp, isFalse);
+    });
+
+    /// الحد اللي لسه قايم: من غير فرع مفيش مواعيد، فمفيش زرار.
+    test('من غير فرع = مقفولة وبسبب مكتوب', () {
+      const stranded = SessionPackageEntitlement(
+        uuid: 'p-no-branch',
+        packageName: 'باقة',
+        serviceName: 'خدمة',
+        totalSessions: 4,
+        completedSessions: 0,
+        reservedSessions: 0,
+        availableSessions: 4,
+        status: PackageStatus.active,
+        canBook: true,
+      );
+
+      expect(stranded.isBookableFromApp, isFalse);
+      expect(stranded.blockedReason, contains('كلّم الفرع'));
     });
 
     test('المتابعة اللي ليها حجز أصلي بتتحجز', () {
@@ -366,6 +397,91 @@ void main() {
       expect(cubit.state, isA<EntitlementBookingFailed>());
       expect(cubit.bookingError, contains('اتحجز'));
       await cubit.close();
+    });
+  });
+
+  group('نص التأكيد بيطابق اللي اتحجز', () {
+    /// ⚠ **اتكتب بعد ما التأكيد قال «ميعاد المتابعة» على حجز باقة.**
+    ///
+    /// النص كان ثابت للمتابعات، فأول حجز جلسة باقة قال للعميلة إنها
+    /// حجزت متابعة.
+    for (final entry
+        in <EntitlementBookingKind, String>{
+          EntitlementBookingKind.package: 'ميعاد الجلسة',
+          EntitlementBookingKind.followUp: 'ميعاد المتابعة',
+        }.entries) {
+      testWidgets('${entry.key.name} → ${entry.value}', (tester) async {
+        await pump(
+          tester,
+          (context) => AppButtonWidget(
+            label: 'افتح',
+            onPressed: () => EntitlementBookingSheet.showConfirmation(
+              context,
+              kind: entry.key,
+            ),
+          ),
+        );
+
+        await tester.tap(find.text('افتح'));
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining(entry.value), findsOneWidget);
+      });
+    }
+  });
+
+  group('مفيش أسعار على استحقاق مدفوع', () {
+    /// ⚠ **اتكتب بعد ما «+50» ظهرت على الإيموليتور.**
+    ///
+    /// `CreateBookingSlotsWidget` بيحسب فرق السعر بـ
+    /// `slot.price != baselinePrice`. شيت الاستحقاق بيبعت `baselinePrice: 0`
+    /// لأن مفيش سعر مرجعي — والنتيجة إن **كل ميعاد ليه سعر** بيبان كأنه
+    /// زيادة. العميلة اللي دفعت باقة وشافت «+50» جنب كل ميعاد هتفتكر إن
+    /// فيه فلوس تانية عليها.
+    testWidgets('المواعيد مابتوريش فرق سعر لما المفتاح مقفول', (tester) async {
+      final slots = <SlotUiModel>[
+        SlotUiModel(
+          startAt: DateTime(2026, 8, 24, 9),
+          endAt: DateTime(2026, 8, 24, 9, 45),
+          price: 300,
+        ),
+      ];
+
+      await pump(
+        tester,
+        (_) => CreateBookingSlotsWidget(
+          slots: slots,
+          selectedSlot: null,
+          baselinePrice: 0,
+          showPriceDelta: false,
+          onSlotTap: (_) {},
+        ),
+      );
+
+      expect(find.textContaining('+'), findsNothing);
+      expect(find.textContaining('300'), findsNothing);
+    });
+
+    testWidgets('وبيوريه في الويزارد العادي', (tester) async {
+      final slots = <SlotUiModel>[
+        SlotUiModel(
+          startAt: DateTime(2026, 8, 24, 9),
+          endAt: DateTime(2026, 8, 24, 9, 45),
+          price: 300,
+        ),
+      ];
+
+      await pump(
+        tester,
+        (_) => CreateBookingSlotsWidget(
+          slots: slots,
+          selectedSlot: null,
+          baselinePrice: 250,
+          onSlotTap: (_) {},
+        ),
+      );
+
+      expect(find.textContaining('+50'), findsOneWidget);
     });
   });
 

@@ -11,10 +11,16 @@ import 'package:waqty_user_application/features/entitlements/entitlements/ui/wid
 /// (`unit_name` جاي من السيرفر، فيه باقات وحدتها «جلسة ليزر» فعلاً).
 /// الفرق إن الكلمة **بتاعت السيرفر مش بتاعتنا**.
 class PackageUsageCardWidget extends StatelessWidget {
-  const PackageUsageCardWidget({required this.package, this.onTap, super.key});
+  const PackageUsageCardWidget({
+    required this.package,
+    this.onTap,
+    this.onBook,
+    super.key,
+  });
 
   final UsagePackageEntitlement package;
   final VoidCallback? onTap;
+  final VoidCallback? onBook;
 
   @override
   Widget build(BuildContext context) {
@@ -22,12 +28,18 @@ class PackageUsageCardWidget extends StatelessWidget {
 
     return EntitlementCardShellWidget(
       title: package.packageName,
+      subtitle: package.owner.providerName.isEmpty
+          ? null
+          : package.owner.providerName,
       status: package.status,
       expiresAt: package.expiresAt,
       expiresSoon: package.expiresSoon(),
       isMuted: isTerminal,
       onTap: onTap,
-      blockedReason: isTerminal ? null : package.blockedReason,
+      action: package.isBookableFromApp && onBook != null
+          ? AppButtonWidget(label: 'احجز جلسة', onPressed: onBook)
+          : null,
+      blockedReason: package.blockedReason,
       body: <Widget>[
         Text(
           'فاضل ${AppFormat.digits(package.availableUnits)} ${package.unitName}',

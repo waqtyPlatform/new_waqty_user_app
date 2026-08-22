@@ -1,40 +1,94 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:waqty_user_application/core/models/entitlement_owner_ui_model.dart';
 import 'package:waqty_user_application/core/models/follow_up_entitlement_ui_model.dart';
+import 'package:waqty_user_application/core/models/package_entitlement_ui_model.dart';
 import 'package:waqty_user_application/core/models/slot_ui_model.dart';
 import 'package:waqty_user_application/design_system/design_system.dart';
-import 'package:waqty_user_application/features/booking/booking_details/data/repo/booking_details_repo.dart';
 import 'package:waqty_user_application/features/booking/create_booking/data/repo/create_booking_repo.dart';
 import 'package:waqty_user_application/features/entitlements/entitlement_booking/logic/entitlement_booking_state.dart';
 
-/// حجز متابعة — **التاريخ والميعاد بس**، الباقي محسوم من الاستحقاق.
+/// اللي بيتحجز — باقة ولا متابعة.
 ///
-/// ## الخطوة الأولى اللي مش مفروض تكون موجودة
+/// النوعين بياخدوا نفس الشاشة (تاريخ + ميعاد) بس بيروحوا لـendpoint
+/// مختلف، والبركة بتسيب العميلة تختار الخدمة.
+enum EntitlementBookingKind { package, followUp }
+
+/// حجز جلسة من استحقاق — **التاريخ والميعاد بس**، الباقي محسوم.
 ///
-/// عشان نجيب مواعيد، محتاجين `branch_uuid` و`service_uuid`. صف المتابعة
-/// مافيهوش ولا واحد فيهم — فيه `original_booking_uuid` بس. فبنعمل نداء
-/// **زيادة** على `GET /user/bookings/{uuid}`، واللي بيرجّع `branch`
-/// و`service` من الـsnapshots (`BookingCreationService:54-78` بيأكّد إن
-/// الاتنين فيهم `uuid`).
+/// ## اللي اتغيّر مع BE-A1
 ///
-/// ⚠ النداء ده **دين مؤقت** وموصوف كده بالقصد. أول ما BE-A1 ينزّل `branch`
-/// في صف المتابعة نفسه، الخطوة دي تتشال ويبقى الفتح أسرع بنداء كامل.
-/// TODO(api): BE-A1.
+/// الشاشة كانت بتبدأ بنداء **زيادة** على `GET /user/bookings/{uuid}` عشان
+/// تطلّع الفرع والخدمة من snapshots الحجز الأصلي — الحيلة الوحيدة اللي
+/// كانت متاحة للمتابعات، ومكانش ليها مقابل في الباقات أصلاً، فحجز الباقة
+/// كان مقفول بالكامل.
+///
+/// دلوقتي `provider` و`branch` و`service_uuid` بييجوا في الصف نفسه، فالشاشة
+/// بتفتح على نداء المواعيد على طول — أسرع، وشغّالة للنوعين.
 class EntitlementBookingCubit extends Cubit<EntitlementBookingState> {
-  EntitlementBookingCubit({
-    required FollowUpEntitlementUiModel followUp,
-    required BookingDetailsRepo bookings,
+  EntitlementBookingCubit._({
     required CreateBookingRepo booking,
-  }) : _followUp = followUp,
-       _bookings = bookings,
-       _booking = booking,
+    required this.kind,
+    required this.owner,
+    required this.entitlementUuid,
+    required String serviceUuid,
+    required this.durationMinutes,
+    this.lockedEmployeeUuid,
+    this.allowedServices = const <AllowedServiceUiModel>[],
+  }) : _booking = booking,
+       selectedServiceUuid = serviceUuid,
        super(const EntitlementBookingResolving());
 
-  final FollowUpEntitlementUiModel _followUp;
-  final BookingDetailsRepo _bookings;
+  factory EntitlementBookingCubit.forPackage({
+    required PackageEntitlementUiModel package,
+    required CreateBookingRepo booking,
+  }) => EntitlementBookingCubit._(
+    booking: booking,
+    kind: EntitlementBookingKind.package,
+    owner: package.owner,
+    entitlementUuid: package.uuid,
+    serviceUuid: package.slotServiceUuid,
+    durationMinutes: switch (package) {
+      SessionPackageEntitlement(:final durationMinutes) => durationMinutes,
+      UsagePackageEntitlement(:final allowedServices) =>
+        allowedServices.isEmpty ? 0 : allowedServices.first.durationMinutes,
+    },
+    allowedServices: switch (package) {
+      UsagePackageEntitlement(:final allowedServices) => allowedServices,
+      SessionPackageEntitlement() => const <AllowedServiceUiModel>[],
+    },
+  );
+
+  factory EntitlementBookingCubit.forFollowUp({
+    required FollowUpEntitlementUiModel followUp,
+    required CreateBookingRepo booking,
+  }) => EntitlementBookingCubit._(
+    booking: booking,
+    kind: EntitlementBookingKind.followUp,
+    owner: followUp.owner,
+    entitlementUuid: followUp.uuid,
+    serviceUuid: followUp.serviceUuid,
+    durationMinutes: followUp.durationMinutes,
+    // القاعدة `same_employee_required` بتتبعت صراحة — السيرفر بيتحقق منها
+    // برضه، بس بعتها بتخلّي النية واضحة في الطلب.
+    lockedEmployeeUuid:
+        followUp.employeeRule == FollowUpEmployeeRule.sameRequired
+        ? followUp.employee?.uuid
+        : null,
+  );
+
   final CreateBookingRepo _booking;
 
-  String branchUuid = '';
-  String serviceUuid = '';
+  final EntitlementBookingKind kind;
+  final EntitlementOwnerUiModel owner;
+  final String entitlementUuid;
+  final int durationMinutes;
+  final String? lockedEmployeeUuid;
+
+  /// الخدمات اللي البركة تنفع عليها. فاضية = مفيش اختيار (جلسات/متابعة).
+  final List<AllowedServiceUiModel> allowedServices;
+
+  /// الخدمة اللي بنجيب مواعيدها. بتتغيّر للبركة بس.
+  String selectedServiceUuid;
 
   List<DateTime> availableDates = <DateTime>[];
   List<SlotUiModel> slots = <SlotUiModel>[];
@@ -45,50 +99,18 @@ class EntitlementBookingCubit extends Cubit<EntitlementBookingState> {
 
   bool get canConfirm => selectedDate != null && selectedSlot != null;
 
-  /// الأخصائي اللي هيتبعت. `null` = سيب السيرفر يختار.
-  ///
-  /// لما القاعدة `same_employee_required` بنبعت الأخصائي صراحة — السيرفر
-  /// بيتحقق منها برضه، بس بعتها بيخلّي النية واضحة في الطلب.
-  String? get employeeUuid =>
-      _followUp.employeeRule == FollowUpEmployeeRule.sameRequired
-      ? _followUp.employee?.uuid
-      : null;
+  bool get canPickService => allowedServices.length > 1;
 
-  /// بيحلّ الفرع والخدمة من الحجز الأصلي، وبعدين بيجيب تواريخ الشهر.
-  Future<void> start() async {
-    emit(const EntitlementBookingResolving());
-
-    final result = await _bookings.booking(_followUp.originalBookingUuid);
-    if (isClosed) return;
-
-    var failed = '';
-    result.fold((failure) => failed = failure.message, (booking) {
-      branchUuid = booking.branchUuid;
-      serviceUuid = booking.items.isEmpty ? '' : booking.items.first.serviceUuid;
-    });
-
-    if (failed.isNotEmpty || branchUuid.isEmpty || serviceUuid.isEmpty) {
-      emit(
-        EntitlementBookingError(
-          failed.isNotEmpty
-              ? failed
-              : 'مش قادرين نجيب بيانات الفرع — كلّم الفرع للحجز',
-        ),
-      );
-      return;
-    }
-
-    await loadDates();
-  }
+  Future<void> start() => loadDates();
 
   Future<void> loadDates() async {
     emit(const EntitlementBookingLoadingDates());
 
     final result = await _booking.availableDates(
-      branchUuid: branchUuid,
-      serviceUuid: serviceUuid,
+      branchUuid: owner.branchUuid,
+      serviceUuid: selectedServiceUuid,
       month: currentMonth,
-      employeeUuid: employeeUuid,
+      employeeUuid: lockedEmployeeUuid,
     );
     if (isClosed) return;
 
@@ -102,10 +124,16 @@ class EntitlementBookingCubit extends Cubit<EntitlementBookingState> {
 
   void changeMonth(int delta) {
     currentMonth = DateTime(currentMonth.year, currentMonth.month + delta);
-    selectedDate = null;
-    selectedSlot = null;
-    slots = <SlotUiModel>[];
+    _clearSelection();
     loadDates();
+  }
+
+  /// تغيير الخدمة في البركة — بيرمي الاختيار، لأن المواعيد بتختلف بالمدة.
+  Future<void> selectService(String serviceUuid) async {
+    if (serviceUuid == selectedServiceUuid) return;
+    selectedServiceUuid = serviceUuid;
+    _clearSelection();
+    await loadDates();
   }
 
   Future<void> selectDate(DateTime date) async {
@@ -115,10 +143,10 @@ class EntitlementBookingCubit extends Cubit<EntitlementBookingState> {
     emit(const EntitlementBookingLoadingSlots());
 
     final result = await _booking.availableSlots(
-      branchUuid: branchUuid,
-      serviceUuid: serviceUuid,
+      branchUuid: owner.branchUuid,
+      serviceUuid: selectedServiceUuid,
       date: date,
-      employeeUuid: employeeUuid,
+      employeeUuid: lockedEmployeeUuid,
     );
     if (isClosed) return;
 
@@ -135,6 +163,12 @@ class EntitlementBookingCubit extends Cubit<EntitlementBookingState> {
     _emitReady();
   }
 
+  void _clearSelection() {
+    selectedDate = null;
+    selectedSlot = null;
+    slots = <SlotUiModel>[];
+  }
+
   /// ⚠ **الحالة بتشيل الاختيار** — من غيره `emit` بعد اختيار ميعاد بيتبلع
   /// لأن الحالة القديمة والجديدة نفس نسخة الـ`const`. شوف
   /// [EntitlementBookingReady].
@@ -142,19 +176,17 @@ class EntitlementBookingCubit extends Cubit<EntitlementBookingState> {
     EntitlementBookingReady(
       selectedDate: selectedDate,
       selectedSlotStart: selectedSlot?.startAt,
+      serviceUuid: selectedServiceUuid,
     ),
   );
 
-  /// التاريخ والوقت بالشكل اللي السيرفر بيطلبه — `Y-m-d` و`H:i`.
+  /// `Y-m-d` زي ما السيرفر بيطلبه.
   String get bookingDate => AppFormat.serverDate(selectedDate!);
 
   /// **`HH:mm` خام — مش [AppFormat.time].**
   ///
-  /// `bookFollowUp` بيتحقق بـ`date_format:H:i`، و`AppFormat.time` بيرجّع
+  /// الـendpoint بيتحقق بـ`date_format:H:i`، و`AppFormat.time` بيرجّع
   /// «٤:٣٠ م» للعرض. الاتنين مالهمش علاقة: واحد للعميلة وواحد للسيرفر.
-  ///
-  /// محلي مقصود ومش في الكيت — مستهلك واحد، وإضافته لـ`AppFormat` بتلزّمنا
-  /// نزامن `design-kit/` من غير مقابل.
   String get startTime {
     final start = selectedSlot!.startAt;
     final hour = start.hour.toString().padLeft(2, '0');

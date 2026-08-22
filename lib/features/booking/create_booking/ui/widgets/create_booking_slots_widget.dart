@@ -17,6 +17,15 @@ class CreateBookingSlotsWidget extends StatelessWidget {
   final SlotUiModel? takenSlot;
   final bool isLoading;
   final double baselinePrice;
+
+  /// يعرض فرق السعر على الميعاد («٤:٣٠ م · +٥٠»)؟
+  ///
+  /// ⚠ **بيتقفل في حجز الاستحقاق.** الباقة والمتابعة **مدفوعين أصلاً**،
+  /// فمفيش سعر مرجعي نقارن بيه — و[baselinePrice] بصفر بتخلّي كل ميعاد
+  /// ليه سعر يبان كأنه زيادة. العميلة اللي دفعت باقة وشافت «+٥٠» جنب كل
+  /// ميعاد هتفتكر إن فيه فلوس تانية عليها.
+  final bool showPriceDelta;
+
   final ValueChanged<SlotUiModel> onSlotTap;
 
   /// `null` = مفيش قائمة انتظار (مثلاً اليوم مقفول مش مليان).
@@ -28,6 +37,7 @@ class CreateBookingSlotsWidget extends StatelessWidget {
     required this.selectedSlot,
     required this.baselinePrice,
     required this.onSlotTap,
+    this.showPriceDelta = true,
     this.onJoinWaitlist,
     this.takenSlot,
     this.isLoading = false,
@@ -83,6 +93,7 @@ class CreateBookingSlotsWidget extends StatelessWidget {
             selectedSlot: selectedSlot,
             takenSlot: takenSlot,
             baselinePrice: baselinePrice,
+            showPriceDelta: showPriceDelta,
             onSlotTap: onSlotTap,
           );
         }),
@@ -112,6 +123,8 @@ class CreateBookingSlotsWidget extends StatelessWidget {
 }
 
 class _PeriodGroup extends StatelessWidget {
+  final bool showPriceDelta;
+
   final SlotPeriod period;
   final List<SlotUiModel> slots;
   final SlotUiModel? selectedSlot;
@@ -126,6 +139,7 @@ class _PeriodGroup extends StatelessWidget {
     required this.takenSlot,
     required this.baselinePrice,
     required this.onSlotTap,
+    this.showPriceDelta = true,
   });
 
   @override
@@ -181,6 +195,7 @@ class _PeriodGroup extends StatelessWidget {
                 isSelected: selectedSlot?.startAt == slot.startAt,
                 isTaken: isTaken,
                 baselinePrice: baselinePrice,
+                showPriceDelta: showPriceDelta,
                 onTap: isTaken ? null : () => onSlotTap(slot),
               );
             }).toList(),
@@ -196,6 +211,7 @@ class _SlotChip extends StatelessWidget {
   final bool isSelected;
   final bool isTaken;
   final double baselinePrice;
+  final bool showPriceDelta;
   final VoidCallback? onTap;
 
   const _SlotChip({
@@ -203,6 +219,7 @@ class _SlotChip extends StatelessWidget {
     required this.isSelected,
     required this.isTaken,
     required this.baselinePrice,
+    this.showPriceDelta = true,
     this.onTap,
   });
 
@@ -213,7 +230,7 @@ class _SlotChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasDifferentPrice = slot.price != baselinePrice;
+    final hasDifferentPrice = showPriceDelta && slot.price != baselinePrice;
 
     final textColor = isSelected
         ? AppSemanticColors.textOnAccent

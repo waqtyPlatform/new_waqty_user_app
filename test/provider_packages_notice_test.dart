@@ -1,19 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:waqty_user_application/core/mock/mock_entitlements.dart';
+import 'package:waqty_user_application/core/models/package_entitlement_ui_model.dart';
 import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/features/entitlements/entitlements/ui/widgets/provider_packages_notice_widget.dart';
 
-/// **التذكرة بالباقات في صفحة المزوّد.**
+/// **«باقاتك هنا» في صفحة المزوّد.**
 ///
-/// ## الحد اللي الاختبارات دي بتحرسه
+/// ## اللي اتقلب مع BE-A1
 ///
-/// التطبيق **مش عارف** الباقة من أنهي فرع: الرد مافيهوش `provider`
-/// (BE-A1)، والمطابقة بالخدمة مش صالحة لأن `Service` عنده
-/// `providers()` belongsToMany — «قص شعر» صف واحد مشترك بين صالونات.
+/// أول نسخة من الملف ده كانت بتحرس العكس: النص **ممنوع** يدّعي إن الباقة
+/// من الفرع ده، و**ممنوع** يبقى فيه زرار حجز. مكانش تحفّظ — كان الحد
+/// الحقيقي: الرد مكانش فيه `provider`، والمطابقة بالخدمة مش صالحة لأن
+/// `Service` مشترك بين مزوّدين، والتخمين كان هيحجز في صالون تاني بصمت.
 ///
-/// فالتذكرة ممنوع تدّعي ملكية. ولو حد بكرة حوّلها لـ«باقاتك هنا» أو حط
-/// عليها زرار حجز، الاختبارات دي بتقع — والسبب مكتوب فوق.
+/// دلوقتي كل صف بيقول مزوّده، فالادّعاء بقى حقيقة والزرار بيشتغل.
+///
+/// اللي الملف بيحرسه دلوقتي: **الفلترة مسؤولية اللي بينده** — الـwidget
+/// بيرسم اللي يتبعتله ومابيفلترش من عنده. لو حد نسي الفلترة، باقة صالون
+/// تاني هتظهر هنا بزرار حجز يروح لفرع تاني.
 void main() {
   setUp(() => AppSemanticColors.apply(Brightness.light));
   tearDown(() => AppSemanticColors.apply(Brightness.light));
@@ -52,49 +58,94 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('صفر باقات = مفيش تذكرة خالص', (tester) async {
-    await pump(tester, (_) => const ProviderPackagesNoticeWidget(activeCount: 0));
+  testWidgets('مفيش باقات = مفيش قسم خالص', (tester) async {
+    await pump(
+      tester,
+      (_) => const ProviderPackagesNoticeWidget(
+        packages: <PackageEntitlementUiModel>[],
+      ),
+    );
     expect(
       tester.getSize(find.byType(ProviderPackagesNoticeWidget)),
       Size.zero,
     );
   });
 
-  testWidgets('مابتدّعيش إن الباقة من الفرع ده', (tester) async {
+  testWidgets('بيقول «باقاتك هنا» وبيدّي زرار حجز', (tester) async {
     await pump(
       tester,
-      (_) => const ProviderPackagesNoticeWidget(activeCount: 2),
+      (_) => ProviderPackagesNoticeWidget(
+        packages: <PackageEntitlementUiModel>[MockEntitlements.multiSession],
+        onBook: (_) {},
+      ),
     );
 
-    // ⚠ الشرط: النص بيقول «لو واحدة منها من الفرع ده» — احتمال مش خبر.
-    expect(find.textContaining('لو واحدة منها من الفرع ده'), findsOneWidget);
-    expect(find.textContaining('باقاتك هنا'), findsNothing);
-    // ولا زرار حجز — الحجز هيروح لفرع الباقة مش الفرع المعروض.
-    expect(find.textContaining('احجز'), findsNothing);
+    expect(find.text('باقاتك هنا'), findsOneWidget);
+    expect(find.text('باقة قص الشعر'), findsOneWidget);
+    expect(find.textContaining('فاضل 3 جلسات'), findsOneWidget);
+    expect(find.text('احجز'), findsOneWidget);
   });
 
-  testWidgets('بيوجّه للفرع مش للتطبيق', (tester) async {
+  testWidgets('من غير onBook = مفيش زرار، والقسم لسه بيعرض', (tester) async {
     await pump(
       tester,
-      (_) => const ProviderPackagesNoticeWidget(activeCount: 1),
+      (_) => ProviderPackagesNoticeWidget(
+        packages: <PackageEntitlementUiModel>[MockEntitlements.multiSession],
+      ),
     );
-    expect(find.textContaining('كلّم الفرع'), findsOneWidget);
+
+    expect(find.text('باقاتك هنا'), findsOneWidget);
+    expect(find.text('احجز'), findsNothing);
   });
 
-  group('العدد بالعربي', () {
-    for (final entry in <int, String>{
-      1: 'باقة شغّالة',
-      2: 'باقتين شغّالين',
-      3: '3 باقات شغّالة',
-    }.entries) {
-      testWidgets('${entry.key} → ${entry.value}', (tester) async {
-        await pump(
-          tester,
-          (_) => ProviderPackagesNoticeWidget(activeCount: entry.key),
-        );
-        expect(find.textContaining(entry.value), findsOneWidget);
-      });
-    }
+  testWidgets('البركة بتتكلم بالوحدات مش بالجلسات', (tester) async {
+    await pump(
+      tester,
+      (_) => ProviderPackagesNoticeWidget(
+        packages: <PackageEntitlementUiModel>[MockEntitlements.usageBased],
+        onBook: (_) {},
+      ),
+    );
+
+    expect(find.textContaining('فاضل 120 دقيقة'), findsOneWidget);
+    expect(find.textContaining('جلسات'), findsNothing);
+  });
+
+  testWidgets('الزيارة الواحدة مابتقولش «فاضل 1 جلسات»', (tester) async {
+    await pump(
+      tester,
+      (_) => ProviderPackagesNoticeWidget(
+        packages: <PackageEntitlementUiModel>[MockEntitlements.singleVisit],
+        onBook: (_) {},
+      ),
+    );
+
+    expect(find.text('زيارة واحدة'), findsOneWidget);
+  });
+
+  /// ⚠ الـwidget **مابيفلترش** — الفلترة على المزوّد بتحصل في
+  /// `ServiceProviderDetailsCubit`.
+  testWidgets('بيرسم اللي يتبعتله — الفلترة مش شغله', (tester) async {
+    await pump(
+      tester,
+      (_) => ProviderPackagesNoticeWidget(
+        packages: <PackageEntitlementUiModel>[
+          MockEntitlements.multiSession,
+          MockEntitlements.usageBased,
+        ],
+        onBook: (_) {},
+      ),
+    );
+
+    expect(find.text('احجز'), findsNWidgets(2));
+  });
+
+  test('الفكسشرز بتاعت الباقات ليها مزوّدين مختلفين', () {
+    // من غير كده اختبار الفلترة في صفحة المزوّد مالوش معنى.
+    expect(
+      MockEntitlements.multiSession.owner.providerUuid,
+      isNot(equals(MockEntitlements.usageBased.owner.providerUuid)),
+    );
   });
 
   group('الرسم عبر الحالات', () {
@@ -109,7 +160,14 @@ void main() {
       ) async {
         await pump(
           tester,
-          (_) => const ProviderPackagesNoticeWidget(activeCount: 3),
+          (_) => ProviderPackagesNoticeWidget(
+            packages: <PackageEntitlementUiModel>[
+              MockEntitlements.multiSession,
+              MockEntitlements.usageBased,
+            ],
+            onOpen: () {},
+            onBook: (_) {},
+          ),
           brightness: config.b,
           scale: config.s,
           size: config.z,

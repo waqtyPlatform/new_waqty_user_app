@@ -1,6 +1,7 @@
 import 'package:waqty_user_application/core/mock/mock_bookings.dart';
 import 'package:waqty_user_application/core/mock/mock_config.dart';
 import 'package:waqty_user_application/core/mock/mock_scenario.dart';
+import 'package:waqty_user_application/core/models/entitlement_owner_ui_model.dart';
 import 'package:waqty_user_application/core/models/follow_up_entitlement_ui_model.dart';
 import 'package:waqty_user_application/core/models/package_entitlement_ui_model.dart';
 import 'package:waqty_user_application/core/models/usage_transaction_ui_model.dart';
@@ -21,6 +22,25 @@ class MockEntitlements {
 
   static DateTime get _now => DateTime(2026, 8, 21, 12);
 
+  /// نفس المزوّد والفرع اللي في `MockProviders` — عشان تذكرة الباقات على
+  /// صفحة المزوّد تلاقي نفسها فعلاً، والحجز يجيب مواعيد فرع موجود.
+  static const EntitlementOwnerUiModel _captain = EntitlementOwnerUiModel(
+    providerUuid: 'prv-1',
+    providerName: 'صالون كابتن',
+    branchUuid: 'brn-1',
+    branchName: 'فرع المعادي',
+    branchCityName: 'المعادي',
+  );
+
+  /// مزوّد تاني — عشان الفلترة على صفحة المزوّد يبقى ليها معنى.
+  static const EntitlementOwnerUiModel _relax = EntitlementOwnerUiModel(
+    providerUuid: 'prv-4',
+    providerName: 'مركز ريلاكس',
+    branchUuid: 'brn-prv-4',
+    branchName: 'الفرع الرئيسي',
+    branchCityName: 'الدقي',
+  );
+
   // ── باقات ──────────────────────────────────────────────────────────────
 
   /// ٨ جلسات: ٤ خلصوا · **١ محجوزة** · ٣ متاحة.
@@ -31,6 +51,9 @@ class MockEntitlements {
     uuid: 'pkg-multi-1',
     packageName: 'باقة قص الشعر',
     serviceName: 'قص شعر رجالي',
+    serviceUuid: 'srv-1',
+    durationMinutes: 45,
+    owner: _captain,
     totalSessions: 8,
     completedSessions: 4,
     reservedSessions: 1,
@@ -46,6 +69,9 @@ class MockEntitlements {
     uuid: 'pkg-single-1',
     packageName: 'يوم العروسة',
     serviceName: 'مكياج + تسريح + مانيكير',
+    serviceUuid: 'srv-1',
+    durationMinutes: 45,
+    owner: _captain,
     totalSessions: 1,
     completedSessions: 0,
     reservedSessions: 0,
@@ -63,6 +89,9 @@ class MockEntitlements {
         uuid: 'pkg-soon-1',
         packageName: 'باقة الحمام المغربي',
         serviceName: 'حمام مغربي',
+        serviceUuid: 'srv-1',
+        durationMinutes: 45,
+        owner: _captain,
         totalSessions: 4,
         completedSessions: 2,
         reservedSessions: 0,
@@ -81,6 +110,9 @@ class MockEntitlements {
     uuid: 'pkg-expired-1',
     packageName: 'باقة الفيشل',
     serviceName: 'تنظيف بشرة',
+    serviceUuid: 'srv-1',
+    durationMinutes: 45,
+    owner: _captain,
     totalSessions: 6,
     completedSessions: 4,
     reservedSessions: 0,
@@ -96,6 +128,9 @@ class MockEntitlements {
     uuid: 'pkg-done-1',
     packageName: 'باقة الحلاقة الشهرية',
     serviceName: 'حلاقة ذقن',
+    serviceUuid: 'srv-1',
+    durationMinutes: 45,
+    owner: _captain,
     totalSessions: 4,
     completedSessions: 4,
     reservedSessions: 0,
@@ -112,6 +147,7 @@ class MockEntitlements {
     packageName: 'رصيد المساج',
     unitCode: 'min',
     unitName: 'دقيقة',
+    owner: _relax,
     totalUnitsPurchased: 300,
     totalUnitsConsumed: 165,
     availableUnits: 120,
@@ -190,6 +226,7 @@ class MockEntitlements {
         packageName: 'رصيد الليزر',
         unitCode: 'session',
         unitName: 'جلسة ليزر',
+        owner: _relax,
         totalUnitsPurchased: 30,
         totalUnitsConsumed: 12,
         availableUnits: 18,
@@ -256,6 +293,9 @@ class MockEntitlements {
       FollowUpEntitlementUiModel(
         uuid: 'fu-free-1',
         serviceName: 'تنظيف بشرة',
+        serviceUuid: 'srv-1',
+        durationMinutes: 45,
+        owner: _captain,
         // «صالون كابتن · تنظيف بشرة» — حجز مكتمل حقيقي في الفكسشرز،
         // فالتنبيه في تفاصيله بيظهر فعلاً.
         originalBookingUuid: MockBookings.ulid('H3P8'),
@@ -280,6 +320,9 @@ class MockEntitlements {
       FollowUpEntitlementUiModel(
         uuid: 'fu-disc-1',
         serviceName: 'جلسة ليزر',
+        serviceUuid: 'srv-1',
+        durationMinutes: 45,
+        owner: _captain,
         // «مركز ريلاكس» — تاني حجز مكتمل.
         originalBookingUuid: MockBookings.ulid('F7S2'),
         validFrom: _now.subtract(const Duration(days: 1)),
@@ -303,6 +346,9 @@ class MockEntitlements {
       FollowUpEntitlementUiModel(
         uuid: 'fu-orphan-1',
         serviceName: 'تنظيف أسنان',
+        serviceUuid: 'srv-1',
+        durationMinutes: 45,
+        owner: _captain,
         // مش مربوطة بحجز في الفكسشرز بالقصد — الحالة دي بتتجرّب من
         // «باقاتي» مش من تفاصيل حجز.
         originalBookingUuid: MockBookings.ulid('ORPH'),

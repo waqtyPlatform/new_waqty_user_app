@@ -1,4 +1,6 @@
+import 'package:dartz/dartz.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:waqty_user_application/core/exceptions/failure.dart';
 import 'package:waqty_user_application/core/models/follow_up_entitlement_ui_model.dart';
 import 'package:waqty_user_application/core/models/package_entitlement_ui_model.dart';
 import 'package:waqty_user_application/features/entitlements/entitlements/data/repo/entitlements_repo.dart';
@@ -106,27 +108,51 @@ class EntitlementsCubit extends Cubit<EntitlementsState> {
     isCurrentTabEmpty ? EntitlementsEmpty(tab) : EntitlementsLoaded(tab),
   );
 
-  /// حجز متابعة.
+  /// حجز جلسة من باقة.
   ///
-  /// ⚠ **المتابعات بس.** الباقات مالهاش طريق للفرع (BE-A1) فمالهاش دالة
-  /// حجز أصلاً — شوف `EntitlementsService`.
+  /// اتفتح مع BE-A1. قبله الرد مكانش فيه فرع، فمكانش فيه مواعيد نعرضها.
+  Future<void> bookPackageSession({
+    required String uuid,
+    required String bookingDate,
+    required String startTime,
+    String? serviceUuid,
+    String? notes,
+  }) => _book(
+    () => _repo.bookPackageSession(
+      uuid: uuid,
+      bookingDate: bookingDate,
+      startTime: startTime,
+      serviceUuid: serviceUuid,
+      notes: notes,
+    ),
+  );
+
+  /// حجز متابعة.
   Future<void> bookFollowUp({
     required String uuid,
     required String bookingDate,
     required String startTime,
     String? employeeUuid,
     String? notes,
-  }) async {
-    bookingError = '';
-    emit(const EntitlementBookingSubmitting());
-
-    final result = await _repo.bookFollowUp(
+  }) => _book(
+    () => _repo.bookFollowUp(
       uuid: uuid,
       bookingDate: bookingDate,
       startTime: startTime,
       employeeUuid: employeeUuid,
       notes: notes,
-    );
+    ),
+  );
+
+  /// النوعين بيشتركوا في نفس دورة الحياة: قفل الزرار، ونجاح من غير جسم
+  /// (BE-A2)، وإعادة تحميل لأن الاستحقاق اتغيّر — الفرق بس أنهي endpoint.
+  Future<void> _book(
+    Future<Either<Failure, Unit>> Function() call,
+  ) async {
+    bookingError = '';
+    emit(const EntitlementBookingSubmitting());
+
+    final result = await call();
     if (isClosed) return;
 
     await result.fold(
