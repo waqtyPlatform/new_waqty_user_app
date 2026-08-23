@@ -6,6 +6,7 @@ import 'package:waqty_user_application/core/exceptions/failure.dart';
 import 'package:waqty_user_application/core/mock/mock_config.dart';
 import 'package:waqty_user_application/core/mock/mock_entitlements.dart';
 import 'package:waqty_user_application/core/mock/mock_scenario.dart';
+import 'package:waqty_user_application/core/models/entitlement_owner_ui_model.dart';
 import 'package:waqty_user_application/core/models/follow_up_entitlement_ui_model.dart';
 import 'package:waqty_user_application/core/models/package_entitlement_ui_model.dart';
 import 'package:waqty_user_application/core/models/slot_ui_model.dart';
@@ -368,6 +369,63 @@ void main() {
       );
 
       expect(find.text('المتابعة مع نفس الأخصائي'), findsOneWidget);
+    });
+  });
+
+  group('التفاصيل بتقول المكان', () {
+    /// **التفاصيل هي اللي بتتفتح عشان تتأكّد.**
+    ///
+    /// اللي عندها باقات في صالونين — أو في فرعين لنفس الصالون بأسعار
+    /// مختلفة — كانت بتفتح الشاشة وتلاقي اسم الباقة والخدمة وخلاص، والكارت
+    /// اللي جات منه هو الوحيد اللي كان بيقول المكان. الحقول دي نزلت مع
+    /// BE-A1، وقبلها الرأس كان مكتوب فيه إن غيابها **مش نسيان**.
+    testWidgets('الباقة بتقول المزوّد والفرع', (tester) async {
+      final package = MockEntitlements.multiSession;
+      await pumpScreen(tester, EntitlementDetailScreen(package: package));
+
+      expect(find.text(package.owner.providerName), findsOneWidget);
+      expect(find.text(package.owner.branchLabel), findsOneWidget);
+    });
+
+    /// المتابعة بتتحجز في فرع زي الباقة بالظبط، فبتقول مكانها برضه.
+    testWidgets('المتابعة بتقولهم برضه', (tester) async {
+      final followUp = MockEntitlements.followUpFree;
+      await pumpScreen(tester, EntitlementDetailScreen(followUp: followUp));
+
+      expect(find.text(followUp.owner.providerName), findsOneWidget);
+      expect(find.text(followUp.owner.branchLabel), findsOneWidget);
+    });
+
+    /// ⚠ **من غير مزوّد = مفيش صف** — مش قوقعة فيها حرف وسطر فاضي.
+    testWidgets('من غير مزوّد مفيش صف مكان', (tester) async {
+      await pumpScreen(
+        tester,
+        const EntitlementDetailScreen(
+          package: SessionPackageEntitlement(
+            uuid: 'p-no-owner',
+            packageName: 'باقة',
+            serviceName: 'خدمة',
+            totalSessions: 4,
+            completedSessions: 0,
+            reservedSessions: 0,
+            availableSessions: 4,
+            status: PackageStatus.active,
+            canBook: false,
+          ),
+        ),
+      );
+
+      expect(find.byType(EntityAvatarWidget), findsNothing);
+    });
+
+    /// «فرع المعادي · المعادي» مالوش لزمة — الاسم والمدينة واحد.
+    test('المدينة بتتشال لما تبقى نفس اسم الفرع', () {
+      const owner = EntitlementOwnerUiModel(
+        providerName: 'صالون',
+        branchName: 'المعادي',
+        branchCityName: 'المعادي',
+      );
+      expect(owner.branchLabel, 'المعادي');
     });
   });
 

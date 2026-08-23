@@ -91,6 +91,7 @@ class EntitlementDetailScreen extends StatelessWidget {
           SessionPackageEntitlement(:final serviceName) => serviceName,
           UsagePackageEntitlement(:final unitName) => 'رصيد بالـ$unitName',
         },
+        owner: entitlement.owner,
         status: entitlement.status,
         purchasedAt: entitlement.purchasedAt,
         expiresAt: entitlement.expiresAt,
@@ -185,6 +186,7 @@ class EntitlementDetailScreen extends StatelessWidget {
         subtitle: entitlement.isFree
             ? 'المتابعة دي مجانية'
             : AppFormat.money(entitlement.effectivePrice),
+        owner: entitlement.owner,
         status: entitlement.status,
         expiresAt: entitlement.validUntil,
       ),
