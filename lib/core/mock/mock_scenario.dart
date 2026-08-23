@@ -135,6 +135,15 @@ enum MockScenario {
   /// الأخصائي ساب الشغل والمتابعة مربوطة بيه — بتختبر BE-A5.
   followUpEmployeeLeft,
 
+  /// **الفرع مش بايع أي باقة** — القسم لازم يختفي بالكامل.
+  ///
+  /// أهم حالة في كتالوج الباقات: أغلب الفروع في السوق مش عندها باقات
+  /// أصلاً، وقوقعة فاضية اسمها «باقات المكان» بتخلّي الصفحة تبان ناقصة.
+  providerPackagesNone,
+
+  /// باقة عليها عرض شغّال — السعر القديم مشطوب والعرض ليه آخر يوم.
+  providerPackageOnOffer,
+
   /// فاضي **عشان الرقم مش مأكّد** — مش عشان مفيش باقات.
   ///
   /// دي أكتر حالة فاضية متوقعة عند الإطلاق، ونصها لازم يبقى مختلف تمامًا
@@ -195,6 +204,8 @@ enum MockScenario {
     MockScenario.followUpFree => 'متابعة مجانية · نفس الأخصائي',
     MockScenario.followUpDiscounted => 'متابعة بخصم 50%',
     MockScenario.followUpEmployeeLeft => 'متابعة · الأخصائي مشي',
+    MockScenario.providerPackagesNone => 'الفرع مابيبيعش باقات',
+    MockScenario.providerPackageOnOffer => 'باقة عليها عرض',
     MockScenario.entitlementsEmptyUnlinked => 'فاضي · الرقم مش مأكّد',
     MockScenario.entitlementsEmptyGenuine => 'فاضي · مفيش باقات فعلاً',
     MockScenario.phoneClaimConflict => 'الرقم على حساب تاني',
@@ -253,6 +264,10 @@ enum MockScenario {
     MockScenario.followUpDiscounted => 'الخصم على المتابعة بيتلاحظ؟',
     MockScenario.followUpEmployeeLeft =>
       'القرار اتاخد إنها تتقفل — الرسالة بتوضّح ليه ولا شكلها عطل؟',
+    MockScenario.providerPackagesNone =>
+      'الصفحة من غير قسم الباقات شكلها كامل ولا فيها فراغ مكسور؟',
+    MockScenario.providerPackageOnOffer =>
+      'الخصم بيبان إنه مؤقت ولا بيتقري كأنه السعر الدايم؟',
     MockScenario.entitlementsEmptyUnlinked =>
       'الفاضي ده بيتقري كدعوة لتأكيد الرقم ولا كنهاية طريق؟',
     MockScenario.entitlementsEmptyGenuine =>

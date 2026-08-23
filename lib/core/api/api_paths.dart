@@ -29,6 +29,11 @@ class ApiPaths {
   static const String providerBranches = '$_base/api/public/provider-branches';
   static String providerBranch(String uuid) => '$providerBranches/$uuid';
 
+  /// باقات الفرع المعروضة للبيع — **فرعية مش مزوّدية**: نفس الباقة ممكن
+  /// يكون ليها سعر تاني في فرع تاني لنفس الصالون.
+  static String branchPackages(String branchUuid) =>
+      '${providerBranch(branchUuid)}/packages';
+
   static const String employees = '$_base/api/public/employees';
 
   static const String services = '$_base/api/public/services';
@@ -76,8 +81,7 @@ class ApiPaths {
       '$_base/api/user/entitlements/follow-ups';
   static String bookPackageSession(String uuid) =>
       '$entitlementPackages/$uuid/sessions';
-  static String bookFollowUp(String uuid) =>
-      '$entitlementFollowUps/$uuid/book';
+  static String bookFollowUp(String uuid) => '$entitlementFollowUps/$uuid/book';
 
   static const String waitlist = '$_base/api/user/waitlist';
   static String waitlistEntry(String uuid) => '$waitlist/$uuid';

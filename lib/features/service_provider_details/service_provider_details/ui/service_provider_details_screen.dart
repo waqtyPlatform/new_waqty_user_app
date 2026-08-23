@@ -18,6 +18,8 @@ import 'package:waqty_user_application/core/models/package_entitlement_ui_model.
 import 'package:waqty_user_application/features/entitlements/entitlement_booking/logic/entitlement_booking_cubit.dart';
 import 'package:waqty_user_application/features/entitlements/entitlement_booking/ui/entitlement_booking_sheet.dart';
 import 'package:waqty_user_application/features/entitlements/entitlements/ui/widgets/provider_packages_notice_widget.dart';
+import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/widgets/package_offer_sheet.dart';
+import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/widgets/service_provider_details_packages_widget.dart';
 import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
 import 'package:waqty_user_application/features/booking/create_booking/ui/create_booking_sheet.dart';
@@ -156,6 +158,21 @@ class ServiceProviderDetailsScreen extends StatelessWidget {
                           packages: cubit.providerPackages,
                           onOpen: () => _openEntitlements(context),
                           onBook: (package) => _bookPackage(context, package),
+                        ),
+                      ],
+
+                      // **اللي معروض للبيع — بعد اللي دفعت فيه.**
+                      //
+                      // الترتيب مقصود: باقاتها الأول، كتالوج المكان بعده.
+                      // العكس بيحطّ إعلان فوق حاجة العميلة دافعة فيها.
+                      // والقسم بيختفي بالكامل لو الفرع مابيبيعش باقات، وده
+                      // حال أغلب الفروع.
+                      if (cubit.branchPackages.isNotEmpty) ...[
+                        verticalSpace(AppSpacing.listRowGap),
+                        ServiceProviderDetailsPackagesWidget(
+                          packages: cubit.branchPackages,
+                          onOpen: (package) =>
+                              PackageOfferSheet.show(context, package: package),
                         ),
                       ],
 

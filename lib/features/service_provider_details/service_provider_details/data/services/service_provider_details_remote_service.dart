@@ -4,6 +4,7 @@ import 'package:waqty_user_application/core/api/api_paths.dart';
 import 'package:waqty_user_application/core/exceptions/failure.dart';
 import 'package:waqty_user_application/core/models/branch_ui_model.dart';
 import 'package:waqty_user_application/core/models/employee_ui_model.dart';
+import 'package:waqty_user_application/core/models/package_offer_ui_model.dart';
 import 'package:waqty_user_application/core/models/provider_ui_model.dart';
 import 'package:waqty_user_application/core/models/service_ui_model.dart';
 import 'package:waqty_user_application/core/utils/json_parse.dart';
@@ -43,7 +44,9 @@ class ServiceProviderDetailsRemoteService
     // ⚠ `providerUuid` بيتمرّر للموديل عشان يختار **عرض المقدّم ده** من
     // `providers[]` — نفس الخدمة عند مقدّمين مختلفين بسعر مختلف.
     parse: (envelope) => JsonParse.mapListValue(envelope.data)
-        .map((json) => ServiceUiModel.fromJson(json, providerUuid: providerUuid))
+        .map(
+          (json) => ServiceUiModel.fromJson(json, providerUuid: providerUuid),
+        )
         .toList(),
   );
 
@@ -57,5 +60,15 @@ class ServiceProviderDetailsRemoteService
     parse: (envelope) => JsonParse.mapListValue(
       envelope.data,
     ).map((json) => EmployeeUiModel.fromJson(json)).toList(),
+  );
+
+  @override
+  Future<Either<Failure, List<PackageOfferUiModel>>> packages({
+    required String branchUuid,
+  }) => _client.get(
+    ApiPaths.branchPackages(branchUuid),
+    parse: (envelope) => JsonParse.mapListValue(
+      envelope.data,
+    ).map(PackageOfferUiModel.fromJson).toList(),
   );
 }

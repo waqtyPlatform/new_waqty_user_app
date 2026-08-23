@@ -3,6 +3,7 @@ import 'package:waqty_user_application/core/api/base_repo.dart';
 import 'package:waqty_user_application/core/exceptions/failure.dart';
 import 'package:waqty_user_application/core/models/branch_ui_model.dart';
 import 'package:waqty_user_application/core/models/employee_ui_model.dart';
+import 'package:waqty_user_application/core/models/package_offer_ui_model.dart';
 import 'package:waqty_user_application/core/models/provider_ui_model.dart';
 import 'package:waqty_user_application/core/models/service_ui_model.dart';
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/data/services/service_provider_details_service.dart';
@@ -30,4 +31,8 @@ class ServiceProviderDetailsRepo
   }) => guard(
     () => source.employees(providerUuid: providerUuid, branchUuid: branchUuid),
   );
+
+  Future<Either<Failure, List<PackageOfferUiModel>>> packages({
+    required String branchUuid,
+  }) => guard(() => source.packages(branchUuid: branchUuid));
 }

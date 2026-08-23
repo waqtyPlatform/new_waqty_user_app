@@ -7,6 +7,7 @@ import 'package:waqty_user_application/core/models/provider_ui_model.dart';
 import 'package:waqty_user_application/core/models/service_ui_model.dart';
 import 'package:waqty_user_application/features/entitlements/entitlements/data/repo/entitlements_repo.dart';
 import 'package:waqty_user_application/core/models/package_entitlement_ui_model.dart';
+import 'package:waqty_user_application/core/models/package_offer_ui_model.dart';
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/data/repo/service_provider_details_repo.dart';
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/logic/service_provider_details_state.dart';
 
@@ -27,6 +28,13 @@ class ServiceProviderDetailsCubit extends Cubit<ServiceProviderDetailsState> {
   /// اللي نقدر نقوله «عندك باقات في مكان ما» — تذكرة مش قسم.
   List<PackageEntitlementUiModel> providerPackages =
       <PackageEntitlementUiModel>[];
+
+  /// **الباقات اللي الفرع بيبيعها** — مش بتاعت العميلة.
+  ///
+  /// دي بتتحمّل مع الفرع مش مع المزوّد، وبتتحمّل **تاني** لما الفرع
+  /// يتغيّر: `packages.branch_id` حقيقي على السيرفر، فسيبها من غير إعادة
+  /// تحميل معناه إن اللي بدّلت لمدينة نصر بتقرا سعر المعادي.
+  List<PackageOfferUiModel> branchPackages = <PackageOfferUiModel>[];
 
   /// الـ uuid كان مش بيتبعت للشاشة خالص — الراوت كان بيبني الشاشة من غير
   /// أي arguments، فكل الكروت كانت بتفتح نفس المكان.
@@ -79,22 +87,21 @@ class ServiceProviderDetailsCubit extends Cubit<ServiceProviderDetailsState> {
 
     // `fold` واحدة بترجّع `null` عند الفشل — مفيش قيمة احتياطية
     // معقولة لمقدّم مش موجود، فماينفعش `getOrElse`.
-    final loaded = (await _repo.provider(providerUuid)).fold<ProviderUiModel?>(
-      (failure) {
-        emit(DetailsErrorState(message: failure.message));
-        return null;
-      },
-      (value) => value,
-    );
+    final loaded = (await _repo.provider(providerUuid)).fold<ProviderUiModel?>((
+      failure,
+    ) {
+      emit(DetailsErrorState(message: failure.message));
+      return null;
+    }, (value) => value);
 
     if (loaded == null || isClosed) return;
     provider = loaded;
 
     // فشل الفروع مابيوقّفش الصفحة — الهيدر والخدمات لسه ليهم قيمة
     // من غير مبدّل الفروع.
-    branches = (await _repo.branches(providerUuid)).getOrElse(
-      () => const <BranchUiModel>[],
-    );
+    branches = (await _repo.branches(
+      providerUuid,
+    )).getOrElse(() => const <BranchUiModel>[]);
     selectedBranch = branches.isEmpty ? null : branches.first;
 
     // التذكرة بالباقات — **نداء ثانوي، وفشله مابيبانش**.
@@ -132,6 +139,14 @@ class ServiceProviderDetailsCubit extends Cubit<ServiceProviderDetailsState> {
     employees = (await employeesCall).getOrElse(
       () => const <EmployeeUiModel>[],
     );
+
+    // الكتالوج ثانوي زي تذكرة الباقات: فشله بيخفي القسم ومابيكسرش صفحة.
+    // ومن غير فرع مفيش كتالوج أصلاً — السيرفر مفهرس بالفرع.
+    branchPackages = branchUuid == null || branchUuid.isEmpty
+        ? const <PackageOfferUiModel>[]
+        : (await _repo.packages(
+            branchUuid: branchUuid,
+          )).getOrElse(() => const <PackageOfferUiModel>[]);
   }
 
   /// **بيعيد التحميل فعلاً دلوقتي.**
