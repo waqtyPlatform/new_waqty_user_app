@@ -123,6 +123,59 @@ void main() {
     expect(find.text('زيارة واحدة'), findsOneWidget);
   });
 
+  group('باقة من فرع تاني لنفس الصالون', () {
+    /// **«باقاتك هنا» + زرار حجز بيقرا «احجز هنا».**
+    ///
+    /// والحجز بيروح لـ`owner.branchUuid` — الفرع اللي باع الباقة، مش اللي
+    /// الصفحة واقفة عليه. صالون كابتن ليه فرعين، فاللي شارية من المعادي
+    /// وواقفة على مدينة نصر كانت بتشوف زرار بيوعد بالمكان ده.
+    ///
+    /// ⚠ **والحل مش إخفاء الباقة** — لو خبّيناها العميلة تفتكر إنها ضاعت.
+    /// الحل إن الصف يقول فرعه.
+    testWidgets('الصف بيقول فرعه لما يبقى غير الفرع المفتوح', (tester) async {
+      await pump(
+        tester,
+        (_) => ProviderPackagesNoticeWidget(
+          packages: <PackageEntitlementUiModel>[MockEntitlements.multiSession],
+          selectedBranchUuid: 'brn-2',
+          onBook: (_) {},
+        ),
+      );
+
+      expect(
+        find.textContaining(MockEntitlements.multiSession.owner.branchName),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('نفس الفرع = مفيش لابل زيادة', (tester) async {
+      await pump(
+        tester,
+        (_) => ProviderPackagesNoticeWidget(
+          packages: <PackageEntitlementUiModel>[MockEntitlements.multiSession],
+          selectedBranchUuid: MockEntitlements.multiSession.owner.branchUuid,
+          onBook: (_) {},
+        ),
+      );
+
+      expect(find.text('فاضل 3 جلسات'), findsOneWidget);
+    });
+
+    testWidgets('من غير فرع مفتوح مفيش لابل — الشاشة هي اللي بتعرف', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        (_) => ProviderPackagesNoticeWidget(
+          packages: <PackageEntitlementUiModel>[MockEntitlements.multiSession],
+          onBook: (_) {},
+        ),
+      );
+
+      expect(find.text('فاضل 3 جلسات'), findsOneWidget);
+    });
+  });
+
   /// ⚠ الـwidget **مابيفلترش** — الفلترة على المزوّد بتحصل في
   /// `ServiceProviderDetailsCubit`.
   testWidgets('بيرسم اللي يتبعتله — الفلترة مش شغله', (tester) async {
@@ -155,25 +208,26 @@ void main() {
       (b: Brightness.light, s: 1.3, z: const Size(360, 640)),
       (b: Brightness.dark, s: 1.3, z: const Size(360, 640)),
     ]) {
-      testWidgets('${config.b.name} · ${config.s} · ${config.z.width.toInt()}', (
-        tester,
-      ) async {
-        await pump(
-          tester,
-          (_) => ProviderPackagesNoticeWidget(
-            packages: <PackageEntitlementUiModel>[
-              MockEntitlements.multiSession,
-              MockEntitlements.usageBased,
-            ],
-            onOpen: () {},
-            onBook: (_) {},
-          ),
-          brightness: config.b,
-          scale: config.s,
-          size: config.z,
-        );
-        expect(tester.takeException(), isNull);
-      });
+      testWidgets(
+        '${config.b.name} · ${config.s} · ${config.z.width.toInt()}',
+        (tester) async {
+          await pump(
+            tester,
+            (_) => ProviderPackagesNoticeWidget(
+              packages: <PackageEntitlementUiModel>[
+                MockEntitlements.multiSession,
+                MockEntitlements.usageBased,
+              ],
+              onOpen: () {},
+              onBook: (_) {},
+            ),
+            brightness: config.b,
+            scale: config.s,
+            size: config.z,
+          );
+          expect(tester.takeException(), isNull);
+        },
+      );
     }
   });
 }

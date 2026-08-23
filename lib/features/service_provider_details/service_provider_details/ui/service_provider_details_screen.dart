@@ -156,6 +156,7 @@ class ServiceProviderDetailsScreen extends StatelessWidget {
                         verticalSpace(AppSpacing.listRowGap),
                         ProviderPackagesNoticeWidget(
                           packages: cubit.providerPackages,
+                          selectedBranchUuid: branch.uuid,
                           onOpen: () => _openEntitlements(context),
                           onBook: (package) => _bookPackage(context, package),
                         ),

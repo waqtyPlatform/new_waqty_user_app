@@ -343,6 +343,32 @@ void main() {
       expect(find.textContaining('مابقاش متاح'), findsOneWidget);
       expect(find.text('احجز المتابعة'), findsNothing);
     });
+
+    /// **جملتين بيناقضوا بعض في نفس الشاشة.**
+    ///
+    /// صف «الأخصائي» بيتخفي لما يرجع `null`، بس اللابل اللي تحته كان مربوط
+    /// بالقاعدة لوحدها — فالشاشة كانت بتقول «المتابعة مع نفس الأخصائي» (من
+    /// غير اسم) وتحتها على طول بانر بيقول إنه مابقاش متاح.
+    testWidgets('مابتقولش «مع نفس الأخصائي» وهو مشي', (tester) async {
+      await pumpScreen(
+        tester,
+        EntitlementDetailScreen(
+          followUp: MockEntitlements.followUpEmployeeLeft,
+        ),
+      );
+
+      expect(find.text('المتابعة مع نفس الأخصائي'), findsNothing);
+    });
+
+    /// ولسه بتتقال لما الأخصائي موجود — دي معلومة مفيدة مش سطر اتشال.
+    testWidgets('لسه بتتقال لما الأخصائي موجود', (tester) async {
+      await pumpScreen(
+        tester,
+        EntitlementDetailScreen(followUp: MockEntitlements.followUpFree),
+      );
+
+      expect(find.text('المتابعة مع نفس الأخصائي'), findsOneWidget);
+    });
   });
 
   group('الحالات النهائية', () {

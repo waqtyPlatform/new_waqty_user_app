@@ -142,6 +142,19 @@ class _PeriodGroup extends StatelessWidget {
     this.showPriceDelta = true,
   });
 
+  /// **عدد المواعيد بقواعد العدد في العربي.**
+  ///
+  /// ٣–١٠ بياخدوا جمع («٨ مواعيد»)، و١١ فأكتر بياخدوا **مفرد**
+  /// («١٣ ميعاد»). الشاشة كانت بتقول «13 مواعيد» — غلط نحوي بيتشاف في
+  /// كل يوم مواعيده كتير، وده أغلب الأيام.
+  static String _countLabel(int count) {
+    final digits = AppFormat.digits(count);
+    if (count == 1) return 'ميعاد واحد';
+    if (count == 2) return 'ميعادين';
+    if (count <= 10) return '$digits مواعيد';
+    return '$digits ميعاد';
+  }
+
   @override
   Widget build(BuildContext context) {
     if (slots.isEmpty) {
@@ -165,7 +178,7 @@ class _PeriodGroup extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  '${period.label} · ${AppFormat.digits(slots.length)} مواعيد',
+                  '${period.label} · ${_countLabel(slots.length)}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTextStyles.bodyMdStrong,

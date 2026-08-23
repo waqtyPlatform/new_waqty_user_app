@@ -20,6 +20,7 @@ import 'package:waqty_user_application/design_system/design_system.dart';
 class ProviderPackagesNoticeWidget extends StatelessWidget {
   const ProviderPackagesNoticeWidget({
     required this.packages,
+    this.selectedBranchUuid,
     this.onOpen,
     this.onBook,
     super.key,
@@ -34,6 +35,15 @@ class ProviderPackagesNoticeWidget extends StatelessWidget {
 
   /// حجز جلسة من باقة بعينها.
   final void Function(PackageEntitlementUiModel package)? onBook;
+
+  /// الفرع اللي الصفحة واقفة عليه دلوقتي.
+  ///
+  /// ⚠ **مش فلتر — لابل.** الباقات هنا مفلترة بالمزوّد بالقصد: صالون بفرعين
+  /// والعميلة شارية من فرع، لو خبّينا الباقة وهي في الفرع التاني بتفتكر
+  /// إنها ضاعت. بس «باقاتك **هنا**» + زرار حجز على باقة بتاعة فرع تاني
+  /// بتقرا «احجز هنا» والحجز بيروح للفرع اللي باعها. فالصف بيقول اسم فرعه
+  /// لما يبقى مختلف.
+  final String? selectedBranchUuid;
 
   @override
   Widget build(BuildContext context) {
@@ -75,7 +85,14 @@ class ProviderPackagesNoticeWidget extends StatelessWidget {
 
           for (final package in packages) ...<Widget>[
             SizedBox(height: AppSpacing.s12.h),
-            _Row(package: package, onBook: onBook),
+            _Row(
+              package: package,
+              onBook: onBook,
+              showBranch:
+                  selectedBranchUuid != null &&
+                  package.owner.branchUuid.isNotEmpty &&
+                  package.owner.branchUuid != selectedBranchUuid,
+            ),
           ],
         ],
       ),
@@ -87,10 +104,13 @@ class ProviderPackagesNoticeWidget extends StatelessWidget {
 ///
 /// ⚠ **مش `const`** — بيرسم لون.
 class _Row extends StatelessWidget {
-  const _Row({required this.package, this.onBook});
+  const _Row({required this.package, this.onBook, this.showBranch = false});
 
   final PackageEntitlementUiModel package;
   final void Function(PackageEntitlementUiModel package)? onBook;
+
+  /// الباقة بتاعة فرع تاني — الاسم بيتقال عشان الزرار ما يوعدش بالفرع ده.
+  final bool showBranch;
 
   /// المتبقّي بكلمات النوع بتاعه — الجلسات مش وحدات والعكس.
   String get _remaining => switch (package) {
@@ -122,7 +142,9 @@ class _Row extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               Text(
-                _remaining,
+                showBranch
+                    ? '$_remaining · ${package.owner.branchName}'
+                    : _remaining,
                 style: AppTextStyles.caption,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,

@@ -190,18 +190,27 @@ class EntitlementDetailScreen extends StatelessWidget {
       ),
       verticalSpace(AppSpacing.s24),
 
-      if (entitlement.employee != null)
+      // ⚠ **السطرين مربوطين بوجود الأخصائي، مش بالقاعدة لوحدها.**
+      //
+      // لما الأخصائي يمشي بيرجع `null` والقاعدة بتفضل `sameRequired` — يعني
+      // الشاشة كانت بتقول «المتابعة مع نفس الأخصائي» (من غير اسم) وتحتها
+      // على طول بانر بيقول إنه مابقاش متاح. جملتين بيناقضوا بعض في نفس
+      // الشاشة، وبينهم فراغ صف الاسم اللي اتشال.
+      if (entitlement.employee != null) ...<Widget>[
         AppDetailRowWidget(
           label: 'الأخصائي',
           value: entitlement.employee!.name,
         ),
-      if (entitlement.employeeRule == FollowUpEmployeeRule.sameRequired)
-        Padding(
-          padding: EdgeInsetsDirectional.only(top: AppSpacing.s8.h),
-          child: Text('المتابعة مع نفس الأخصائي', style: AppTextStyles.caption),
-        ),
-
-      verticalSpace(AppSpacing.s24),
+        if (entitlement.employeeRule == FollowUpEmployeeRule.sameRequired)
+          Padding(
+            padding: EdgeInsetsDirectional.only(top: AppSpacing.s8.h),
+            child: Text(
+              'المتابعة مع نفس الأخصائي',
+              style: AppTextStyles.caption,
+            ),
+          ),
+        verticalSpace(AppSpacing.s24),
+      ],
 
       if (entitlement.isBookableFromApp)
         AppButtonWidget(
