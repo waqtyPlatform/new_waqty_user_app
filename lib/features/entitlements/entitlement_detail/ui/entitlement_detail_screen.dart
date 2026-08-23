@@ -198,10 +198,7 @@ class EntitlementDetailScreen extends StatelessWidget {
       if (entitlement.employeeRule == FollowUpEmployeeRule.sameRequired)
         Padding(
           padding: EdgeInsetsDirectional.only(top: AppSpacing.s8.h),
-          child: Text(
-            'المتابعة مع نفس الأخصائي',
-            style: AppTextStyles.caption,
-          ),
+          child: Text('المتابعة مع نفس الأخصائي', style: AppTextStyles.caption),
         ),
 
       verticalSpace(AppSpacing.s24),
@@ -211,11 +208,9 @@ class EntitlementDetailScreen extends StatelessWidget {
           label: 'احجز المتابعة',
           onPressed: () => _book(context, entitlement),
         )
-      else if (entitlement.isOrphaned)
+      else if (entitlement.blockedReason != null)
         AppBannerWidget(
-          message:
-              'الأخصائي بتاع المتابعة مابقاش متاح — كلّم الفرع عشان يظبطلك '
-              'ميعاد',
+          message: entitlement.blockedReason!,
           tone: AppPillTone.warning,
           icon: Icons.info_outline_rounded,
         ),

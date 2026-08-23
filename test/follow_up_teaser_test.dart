@@ -6,6 +6,8 @@ import 'package:waqty_user_application/core/mock/mock_config.dart';
 import 'package:waqty_user_application/core/mock/mock_entitlements.dart';
 import 'package:waqty_user_application/core/mock/mock_scenario.dart';
 import 'package:waqty_user_application/core/models/booking_ui_model.dart';
+import 'package:waqty_user_application/core/models/follow_up_entitlement_ui_model.dart';
+import 'package:waqty_user_application/core/models/package_entitlement_ui_model.dart';
 import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/features/booking/booking_details/data/repo/booking_details_repo.dart';
 import 'package:waqty_user_application/features/booking/booking_details/data/services/booking_details_mock_service.dart';
@@ -177,6 +179,27 @@ void main() {
       );
 
       expect(find.textContaining('مابقاش متاح'), findsOneWidget);
+      expect(find.text('احجز المتابعة'), findsNothing);
+    });
+
+    /// ⚠ **مش الأخصائي بس.** التنبيه كان بيفرّق على `isOrphaned` لوحدها،
+    /// فمتابعة من غير فرع كانت بتوري «احجز المتابعة» وتفتح شيت بيدوّر على
+    /// مواعيد مالهاش فرع تجيبها منه.
+    testWidgets('من غير فرع = بانر بالسبب مش دعوة للحجز', (tester) async {
+      await pump(
+        tester,
+        (_) => FollowUpTeaserWidget(
+          followUp: const FollowUpEntitlementUiModel(
+            uuid: 'fu-no-branch',
+            serviceName: 'خدمة',
+            status: PackageStatus.active,
+            availableCount: 1,
+          ),
+          onTap: () {},
+        ),
+      );
+
+      expect(find.textContaining('كلّم الفرع'), findsOneWidget);
       expect(find.text('احجز المتابعة'), findsNothing);
     });
   });

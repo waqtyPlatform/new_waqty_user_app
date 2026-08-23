@@ -47,22 +47,23 @@ class MockEntitlements {
   ///
   /// الجلسة المحجوزة هي سبب وجود الفكسشر ده. لو الشريط رسم شريحتين بس،
   /// العميلة بتشوف ٤ متاحين وهي عندها ٣.
-  static SessionPackageEntitlement get multiSession => SessionPackageEntitlement(
-    uuid: 'pkg-multi-1',
-    packageName: 'باقة قص الشعر',
-    serviceName: 'قص شعر رجالي',
-    serviceUuid: 'srv-1',
-    durationMinutes: 45,
-    owner: _captain,
-    totalSessions: 8,
-    completedSessions: 4,
-    reservedSessions: 1,
-    availableSessions: 3,
-    status: PackageStatus.active,
-    canBook: true,
-    purchasedAt: _now.subtract(const Duration(days: 60)),
-    expiresAt: _now.add(const Duration(days: 120)),
-  );
+  static SessionPackageEntitlement get multiSession =>
+      SessionPackageEntitlement(
+        uuid: 'pkg-multi-1',
+        packageName: 'باقة قص الشعر',
+        serviceName: 'قص شعر رجالي',
+        serviceUuid: 'srv-1',
+        durationMinutes: 45,
+        owner: _captain,
+        totalSessions: 8,
+        completedSessions: 4,
+        reservedSessions: 1,
+        availableSessions: 3,
+        status: PackageStatus.active,
+        canBook: true,
+        purchasedAt: _now.subtract(const Duration(days: 60)),
+        expiresAt: _now.add(const Duration(days: 120)),
+      );
 
   /// زيارة واحدة فيها كذا خدمة — السؤال «إيه اللي جواها» مش «فاضل كام».
   static SessionPackageEntitlement get singleVisit => SessionPackageEntitlement(
@@ -337,11 +338,12 @@ class MockEntitlements {
         status: PackageStatus.active,
       );
 
-  /// **الأخصائي ساب الشغل والمتابعة مربوطة بيه — BE-A5.**
+  /// **الأخصائي ساب الشغل والمتابعة مربوطة بيه — BE-A5 اتقفل.**
   ///
   /// `employee: null` مع `same_employee_required` = شرط مستحيل يتحقق.
-  /// التطبيق **مابيرخّيهوش من عنده**: في متابعة طبية ده معناه نحط مريضة
-  /// مع دكتور تاني بقرار من الموبايل.
+  /// القرار: تفضل متعطّلة والعميلة تتوجّه للفرع — والسيرفر بيرمي 422 على
+  /// المسار ده أصلاً. فالسيناريو ده بيتجرّب إن **الرسالة** واضحة، مش إن
+  /// الزرار مقفول.
   static FollowUpEntitlementUiModel get followUpEmployeeLeft =>
       FollowUpEntitlementUiModel(
         uuid: 'fu-orphan-1',

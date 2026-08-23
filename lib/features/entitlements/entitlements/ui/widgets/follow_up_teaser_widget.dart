@@ -36,13 +36,20 @@ class FollowUpTeaserWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // الأخصائي مشي والقاعدة بتقول لازم هو — الحجز مقفول (BE-A5)، فالسطر
-    // بيقول الحقيقة بدل ما يوعد بحاجة هتفشل.
-    if (followUp.isOrphaned) {
+    // **أي منع = بانر بالسبب، مش دعوة للحجز.**
+    //
+    // كان الشرط `isOrphaned` بس، فمتابعة الفرع مش موجود فيها كانت بتوري
+    // «احجز المتابعة» وتفتح شيت بيدوّر على مواعيد مالهاش فرع. `blockedReason`
+    // بيغطّي الحالتين.
+    //
+    // ⚠ **النص من الموديل مش مكتوب هنا تاني** — الكارت والتفاصيل والتنبيه
+    // بيقولوا نفس الجملة، ونسخها تلات مرات معناها إنها تتصلّح في مكان
+    // وتفضل قديمة في اتنين.
+    final blocked = followUp.blockedReason;
+    if (blocked != null) {
       return AppBannerWidget(
         title: 'ليكي متابعة',
-        message:
-            'الأخصائي بتاع المتابعة مابقاش متاح — كلّم الفرع عشان يظبطلك ميعاد',
+        message: blocked,
         tone: AppPillTone.warning,
         icon: Icons.event_repeat_rounded,
       );

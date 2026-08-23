@@ -7,11 +7,10 @@ import 'package:waqty_user_application/features/entitlements/entitlements/ui/wid
 
 /// كارت **متابعة مستحقة**.
 ///
-/// ## دي الحاجة الوحيدة في الشاشة اللي بتتحجز فعلاً
-///
-/// الباقة مالهاش طريق للفرع (BE-A1). المتابعة عندها `original_booking_uuid`
-/// — ومنه `GET /user/bookings/{uuid}` بيدّي `branch.uuid`، ومنه المواعيد.
-/// فالزرار هنا **شغّال**، وهو الفرق العملي بين التبويبين النهاردة.
+/// من BE-A1 الباقة بقت بتتحجز هي كمان، فالكارت ده مابقاش استثناء — الزرار
+/// شغّال في التبويبين. اللي فاضل فرق حقيقي: **قاعدة الأخصائي**. لو الخدمة
+/// متظبّطة `same_employee_required` مفيش picker هنا، ولو الأخصائي مشي خالص
+/// الحجز بيتقفل بسبب مكتوب (BE-A5).
 class FollowUpCardWidget extends StatelessWidget {
   const FollowUpCardWidget({
     required this.followUp,
@@ -36,7 +35,7 @@ class FollowUpCardWidget extends StatelessWidget {
       expiresSoon: _expiresSoon,
       isMuted: followUp.status.isTerminal,
       onTap: onTap,
-      blockedReason: _blockedReason,
+      blockedReason: followUp.blockedReason,
       action: bookable && onBook != null
           ? AppButtonWidget(label: 'احجز المتابعة', onPressed: onBook)
           : null,
@@ -92,20 +91,5 @@ class FollowUpCardWidget extends StatelessWidget {
     if (followUp.status != PackageStatus.active) return false;
     final days = followUp.daysUntilExpiry();
     return days != null && days >= 0 && days <= 7;
-  }
-
-  /// **الأخصائي مشي والقاعدة بتقول لازم هو — قرار BE-A5 لسه مفتوح.**
-  ///
-  /// مابنرخّيش القاعدة من عندنا. في متابعة طبية ده معناه نحط مريضة مع
-  /// دكتور تاني بقرار اتاخد في الموبايل — وده مش قرار التطبيق.
-  String? get _blockedReason {
-    if (followUp.status.isTerminal) return null;
-    if (followUp.isOrphaned) {
-      return 'الأخصائي بتاع المتابعة مابقاش متاح — كلّم الفرع عشان يظبطلك ميعاد';
-    }
-    if (followUp.originalBookingUuid.isEmpty && followUp.availableCount > 0) {
-      return 'مش قادرين نوصل لبيانات الفرع دلوقتي — كلّم الفرع للحجز';
-    }
-    return null;
   }
 }

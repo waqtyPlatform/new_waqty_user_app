@@ -28,21 +28,18 @@ extension FollowUpEmployeeRuleParse on FollowUpEmployeeRule {
 /// يعني العميلة ماشترتهاش — استحقّتها. وده بيغيّر النبرة: الكارت بيقول
 /// «ليكي متابعة» مش «عندك رصيد».
 ///
-/// ## الفرق الجوهري عن الباقة: **دي بتتحجز فعلاً**
+/// ## الحجز
 ///
-/// الباقة مالهاش طريق للفرع (BLOCKER-1)، بس المتابعة عندها
-/// [originalBookingUuid] — و`GET /user/bookings/{uuid}` بيرجّع `branch`
-/// و`provider` من الـ snapshots (`BookingCreationService:72-78` بيأكّد إن
-/// `branch_snapshot` فيه `uuid`). فمنها بنجيب الفرع، ومن الفرع بنجيب
-/// المواعيد.
-///
-/// TODO(api): BE-A1 — أول ما `branch` ينزل في صف المتابعة نفسه، النداء
-/// الزيادة ده يتشال.
+/// من BE-A1 الصف نفسه بيقول `provider` و`branch` و`service_uuid`، فالمواعيد
+/// بتتجاب على طول. قبل كده كان لازم نداء زيادة على
+/// `GET /user/bookings/{original_booking_uuid}` عشان نطلّع الفرع من snapshots
+/// الحجز — النداء ده اتشال.
 class FollowUpEntitlementUiModel {
   final String uuid;
   final String serviceName;
 
-  /// الحجز اللي ولّد المتابعة — **الطريق الوحيد للفرع دلوقتي**.
+  /// الحجز اللي ولّد المتابعة — بيربطها بأصلها في الواجهة. **مابقاش الطريق
+  /// للفرع**؛ الفرع في [owner].
   final String originalBookingUuid;
 
   /// المزوّد والفرع اللي ولّدوا المتابعة.
@@ -98,15 +95,22 @@ class FollowUpEntitlementUiModel {
 
   bool get isDiscounted => priceType == 'discounted' && effectivePrice > 0;
 
-  /// الأخصائي إجباري وهو **مش موجود** — الحالة اللي BE-A5 لسه مجاوبهاش.
+  /// الأخصائي إجباري وهو **مش موجود**.
   ///
   /// السيرفر بيرجّع `employee: null` لما الأخصائي يمشي (`employment_status`
   /// مابقاش `active`). ساعتها القاعدة بتقول «نفس الأخصائي» والأخصائي
   /// مالوش وجود — يعني الشرط مستحيل يتحقق.
   ///
-  /// ⚠ **مابنرخّيهاش من عندنا.** لو رخّينا لأي حد، ممكن نحط مريضة مع دكتور
-  /// تاني في متابعة طبية — قرار مش بتاعنا. فالحجز بيتقفل والعميلة بتتوجّه
-  /// للفرع لحد ما BE-A5 يتقرر.
+  /// ## BE-A5 اتقفل: **تفضل متعطّلة والعميلة تتوجّه للفرع**
+  ///
+  /// وده مش تحفّظ من الواجهة — ده اللي السيرفر بيفرضه أصلاً.
+  /// `FollowUpService::bookFromEntitlement` **بيتجاهل** `employee_uuid` اللي
+  /// في الطلب لما القاعدة `same_employee_required`، وبياخد بتاع الاستحقاق
+  /// نفسه — ولو `null` بيرمي 422 «The original employee is required for this
+  /// follow-up».
+  ///
+  /// يعني ترخية الزرار من عندنا كانت هتخلّي العميلة تختار يوم وميعاد وتاخد
+  /// خطأ سيرفر في آخر خطوة. المنع هنا **بيقول الحقيقة بدري**.
   bool get isOrphaned =>
       employeeRule == FollowUpEmployeeRule.sameRequired && employee == null;
 
@@ -120,6 +124,26 @@ class FollowUpEntitlementUiModel {
       owner.canResolveSlots &&
       serviceUuid.isNotEmpty &&
       !isOrphaned;
+
+  /// السبب اللي بيتعرض لما الحجز مقفول ومفيش زرار.
+  ///
+  /// ⚠ **زرار متعطّل من غير سبب أوحش من مفيش زرار** — العميلة بتدوس وتدوس
+  /// وتفتكر إن التطبيق باظ. فالقاعدة: أي منع **مش باين في الكارت** لازم
+  /// يتقال بالنص.
+  ///
+  /// `null` = المنع باين أصلاً. الحالة النهائية شارتها بتتكلم،
+  /// و`available_count == 0` الكارت بيقول عليها «اتستخدمت».
+  String? get blockedReason {
+    if (status.isTerminal) return null;
+    if (isBookableFromApp) return null;
+    if (isOrphaned) {
+      return 'الأخصائي بتاع المتابعة مابقاش متاح — كلّم الفرع عشان يظبطلك ميعاد';
+    }
+    if (!owner.canResolveSlots || serviceUuid.isEmpty) {
+      return 'مش قادرين نجيب مواعيد الفرع دلوقتي — كلّم الفرع للحجز';
+    }
+    return null;
+  }
 
   /// باقي على انتهاء الصلاحية كام يوم؟
   int? daysUntilExpiry({DateTime? now}) {

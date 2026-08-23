@@ -252,7 +252,7 @@ enum MockScenario {
     MockScenario.followUpFree => 'واضح إنها مجانية ومربوطة بأخصائي معيّن؟',
     MockScenario.followUpDiscounted => 'الخصم على المتابعة بيتلاحظ؟',
     MockScenario.followUpEmployeeLeft =>
-      'من غير أخصائي — نرخّيها لأي حد ولا نوجّه للفرع؟ (قرار BE-A5)',
+      'القرار اتاخد إنها تتقفل — الرسالة بتوضّح ليه ولا شكلها عطل؟',
     MockScenario.entitlementsEmptyUnlinked =>
       'الفاضي ده بيتقري كدعوة لتأكيد الرقم ولا كنهاية طريق؟',
     MockScenario.entitlementsEmptyGenuine =>

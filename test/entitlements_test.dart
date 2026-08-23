@@ -23,6 +23,8 @@ import 'package:waqty_user_application/features/entitlements/entitlements/logic/
 import 'package:waqty_user_application/features/entitlements/entitlements/logic/entitlements_state.dart';
 import 'package:waqty_user_application/features/entitlements/entitlements/ui/widgets/entitlement_progress_widget.dart';
 import 'package:waqty_user_application/features/entitlements/entitlements/ui/widgets/entitlement_strip_widget.dart';
+import 'package:waqty_user_application/features/entitlements/entitlement_detail/ui/entitlement_detail_screen.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/ui/widgets/follow_up_card_widget.dart';
 import 'package:waqty_user_application/features/entitlements/entitlements/ui/widgets/package_session_card_widget.dart';
 import 'package:waqty_user_application/features/entitlements/entitlements/ui/widgets/package_usage_card_widget.dart';
 
@@ -74,6 +76,29 @@ void main() {
               body: SingleChildScrollView(child: Builder(builder: build)),
             ),
           ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+  }
+
+  /// **شاشة كاملة** — من غير `SingleChildScrollView` حواليها.
+  ///
+  /// الشاشة جوّاها `Scaffold > ListView`؛ لفّها في scroll view تاني بيدّي
+  /// الـviewport ارتفاع غير محدود وبيرمي وقت التخطيط.
+  Future<void> pumpScreen(WidgetTester tester, Widget screen) async {
+    tester.view.physicalSize = const Size(375, 812);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(
+      ScreenUtilInit(
+        designSize: const Size(375, 812),
+        minTextAdapt: true,
+        builder: (context, _) => MaterialApp(
+          theme: appTheme(),
+          locale: const Locale('ar', 'EG'),
+          home: Directionality(textDirection: TextDirection.rtl, child: screen),
         ),
       ),
     );
@@ -166,11 +191,8 @@ void main() {
     testWidgets('المحجوز بيترسم لوحده مش مع المتاح', (tester) async {
       await pump(
         tester,
-        (_) => const EntitlementProgressWidget(
-          used: 4,
-          reserved: 1,
-          available: 3,
-        ),
+        (_) =>
+            const EntitlementProgressWidget(used: 4, reserved: 1, available: 3),
       );
 
       // تلات لابلات = تلات كميات مميزة. لو المحجوز اتلمّ مع حاجة تانية
@@ -183,11 +205,8 @@ void main() {
     testWidgets('الكمية الصفر مابتاخدش لابل', (tester) async {
       await pump(
         tester,
-        (_) => const EntitlementProgressWidget(
-          used: 4,
-          reserved: 0,
-          available: 3,
-        ),
+        (_) =>
+            const EntitlementProgressWidget(used: 4, reserved: 0, available: 3),
       );
 
       expect(find.textContaining('محجوز'), findsNothing);
@@ -196,17 +215,11 @@ void main() {
     testWidgets('الإجمالي صفر = مافيش شريط خالص', (tester) async {
       await pump(
         tester,
-        (_) => const EntitlementProgressWidget(
-          used: 0,
-          reserved: 0,
-          available: 0,
-        ),
+        (_) =>
+            const EntitlementProgressWidget(used: 0, reserved: 0, available: 0),
       );
 
-      expect(
-        tester.getSize(find.byType(EntitlementProgressWidget)),
-        Size.zero,
-      );
+      expect(tester.getSize(find.byType(EntitlementProgressWidget)), Size.zero);
     });
   });
 
@@ -272,13 +285,23 @@ void main() {
       expect(MockEntitlements.followUpDiscounted.isBookableFromApp, isTrue);
     });
 
-    test('الأخصائي مشي = مقفولة ومابنرخّيش القاعدة — BE-A5', () {
+    /// **BE-A5 اتقفل: تفضل متعطّلة والعميلة تتوجّه للفرع.**
+    ///
+    /// مش تحفّظ — `FollowUpService::bookFromEntitlement` بيتجاهل
+    /// `employee_uuid` اللي في الطلب لما القاعدة `same_employee_required`
+    /// وبياخد بتاع الاستحقاق، ولو `null` بيرمي 422. فترخية الزرار من عندنا
+    /// كانت هتوصّل العميلة لآخر خطوة وترميها.
+    test('الأخصائي مشي = مقفولة وبسبب مكتوب', () {
       final orphan = MockEntitlements.followUpEmployeeLeft;
       expect(orphan.isOrphaned, isTrue);
       expect(orphan.isBookableFromApp, isFalse);
+      expect(orphan.blockedReason, contains('كلّم الفرع'));
     });
 
-    test('من غير حجز أصلي مفيش طريق للفرع', () {
+    /// ⚠ **الاسم اتغيّر مع BE-A1.** كان «من غير حجز أصلي» — الحجز الأصلي
+    /// كان الطريق الوحيد للفرع. دلوقتي الفرع في الصف نفسه، فاللي بيقفل
+    /// الحجز هو غيابه هو.
+    test('المتابعة من غير فرع = مقفولة وبسبب مكتوب', () {
       const stranded = FollowUpEntitlementUiModel(
         uuid: 'x',
         serviceName: 'خدمة',
@@ -286,6 +309,39 @@ void main() {
         availableCount: 1,
       );
       expect(stranded.isBookableFromApp, isFalse);
+      expect(stranded.blockedReason, contains('كلّم الفرع'));
+    });
+
+    /// السبب لازم يوصل للعميلة **على الكارت**، مش يفضل قيمة في موديل.
+    testWidgets('الكارت بيكتب السبب ومابيسيبش زرار', (tester) async {
+      await pump(
+        tester,
+        (_) => FollowUpCardWidget(
+          followUp: MockEntitlements.followUpEmployeeLeft,
+          // ⚠ **مبعوت بالقصد.** الكارت هو اللي بيقرر — فلو حد ربط الزرار
+          // بـ`onBook != null` من غير `isBookableFromApp`، الاختبار ده هو
+          // اللي هيمسكها.
+          onBook: () {},
+        ),
+      );
+
+      expect(find.textContaining('مابقاش متاح'), findsOneWidget);
+      expect(find.text('احجز المتابعة'), findsNothing);
+    });
+
+    /// التلات سطوح بيقروا نفس القيمة من الموديل. ده آخر مكان العميلة
+    /// بتدوّر فيه على تفسير — لو اتنسي، تكون فتحت التفاصيل عشان تفهم
+    /// وطلعت من غير ما تفهم.
+    testWidgets('شاشة التفاصيل بتكتب السبب برضه', (tester) async {
+      await pumpScreen(
+        tester,
+        EntitlementDetailScreen(
+          followUp: MockEntitlements.followUpEmployeeLeft,
+        ),
+      );
+
+      expect(find.textContaining('مابقاش متاح'), findsOneWidget);
+      expect(find.text('احجز المتابعة'), findsNothing);
     });
   });
 
@@ -405,11 +461,10 @@ void main() {
     ///
     /// النص كان ثابت للمتابعات، فأول حجز جلسة باقة قال للعميلة إنها
     /// حجزت متابعة.
-    for (final entry
-        in <EntitlementBookingKind, String>{
-          EntitlementBookingKind.package: 'ميعاد الجلسة',
-          EntitlementBookingKind.followUp: 'ميعاد المتابعة',
-        }.entries) {
+    for (final entry in <EntitlementBookingKind, String>{
+      EntitlementBookingKind.package: 'ميعاد الجلسة',
+      EntitlementBookingKind.followUp: 'ميعاد المتابعة',
+    }.entries) {
       testWidgets('${entry.key.name} → ${entry.value}', (tester) async {
         await pump(
           tester,
@@ -584,8 +639,8 @@ class _HalfBrokenService extends EntitlementsMockService {
   const _HalfBrokenService();
 
   @override
-  Future<Either<Failure, List<FollowUpEntitlementUiModel>>>
-  followUps() async => const Left(ServerFailure(message: 'فشل'));
+  Future<Either<Failure, List<FollowUpEntitlementUiModel>>> followUps() async =>
+      const Left(ServerFailure(message: 'فشل'));
 }
 
 class _BrokenService extends EntitlementsMockService {
@@ -596,6 +651,6 @@ class _BrokenService extends EntitlementsMockService {
       const Left(ServerFailure(message: 'فشل'));
 
   @override
-  Future<Either<Failure, List<FollowUpEntitlementUiModel>>>
-  followUps() async => const Left(ServerFailure(message: 'فشل'));
+  Future<Either<Failure, List<FollowUpEntitlementUiModel>>> followUps() async =>
+      const Left(ServerFailure(message: 'فشل'));
 }
