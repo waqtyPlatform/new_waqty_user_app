@@ -2,13 +2,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/config/routes/routes.dart';
+import 'package:waqty_user_application/core/api/data_source.dart';
 import 'package:waqty_user_application/core/mock/mock_config.dart';
 import 'package:waqty_user_application/core/mock/mock_scenario.dart';
-import 'package:waqty_user_application/core/utils/app_radius.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/demo_mode.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
 import 'package:waqty_user_application/my_app.dart';
 
@@ -154,6 +152,36 @@ class _Badge extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Text('مصدر الداتا', style: AppTextStyles.sectionHeader),
+              verticalSpace(AppSpacing.s4),
+              Text(
+                'الحقيقي بيكلّم السيرفر، والوهمي بيشغّل السيناريوهات',
+                style: AppTextStyles.caption,
+              ),
+              verticalSpace(AppSpacing.s12),
+
+              // ⚠ الصف ده **فوق** قايمة السيناريوهات بقصد: السيناريو مالوش
+              // معنى وإحنا على الحقيقي، فالمستخدم لازم يشوف المصدر الأول.
+              ValueListenableBuilder<DataSourceMode>(
+                valueListenable: DataSource.mode,
+                builder: (_, mode, __) => AppSegmentedWidget<DataSourceMode>(
+                  value: mode,
+                  segments: const [
+                    AppSegment(
+                      value: DataSourceMode.live,
+                      label: 'داتا حقيقية',
+                    ),
+                    AppSegment(value: DataSourceMode.mock, label: 'داتا وهمية'),
+                  ],
+                  onChanged: (next) {
+                    DataSource.use(next);
+                    Navigator.of(sheetContext).pop();
+                    _restart();
+                  },
+                ),
+              ),
+
+              verticalSpace(AppSpacing.s20),
               Text('سيناريو العرض', style: AppTextStyles.sectionHeader),
               verticalSpace(AppSpacing.s4),
               Text(
@@ -162,39 +190,54 @@ class _Badge extends StatelessWidget {
               ),
               verticalSpace(AppSpacing.s16),
               Expanded(
-                child: ListView.builder(
-                  controller: controller,
-                  itemCount: MockScenario.values.length,
-                  itemBuilder: (_, index) {
-                    final item = MockScenario.values[index];
-                    final isCurrent = item == scenario;
+                // القايمة بتبهت وهي مطفّية عشان تفضل مقروءة كسياق، بس
+                // ماتديش إحساس إنها بتعمل حاجة وهي مش بتعمل.
+                child: ValueListenableBuilder<DataSourceMode>(
+                  valueListenable: DataSource.mode,
+                  builder: (_, mode, __) {
+                    final isMockActive = mode == DataSourceMode.mock;
 
-                    return ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(
-                        item.title,
-                        style: isCurrent
-                            ? AppTextStyles.cardTitle.copyWith(
-                                color: AppSemanticColors.accent,
-                              )
-                            : AppTextStyles.cardTitle,
+                    return Opacity(
+                      opacity: isMockActive ? 1 : 0.4,
+                      child: IgnorePointer(
+                        ignoring: !isMockActive,
+                        child: ListView.builder(
+                          controller: controller,
+                          itemCount: MockScenario.values.length,
+                          itemBuilder: (_, index) {
+                            final item = MockScenario.values[index];
+                            final isCurrent = item == scenario;
+
+                            return ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title: Text(
+                                item.title,
+                                style: isCurrent
+                                    ? AppTextStyles.cardTitle.copyWith(
+                                        color: AppSemanticColors.accentText,
+                                      )
+                                    : AppTextStyles.cardTitle,
+                              ),
+                              // السؤال مش وصف — هو سبب وجود السيناريو.
+                              subtitle: Text(
+                                item.question,
+                                style: AppTextStyles.caption,
+                              ),
+                              trailing: isCurrent
+                                  ? Icon(
+                                      Icons.check_rounded,
+                                      color: AppSemanticColors.accent,
+                                    )
+                                  : null,
+                              onTap: () {
+                                MockConfig.scenario = item;
+                                Navigator.of(sheetContext).pop();
+                                _restart();
+                              },
+                            );
+                          },
+                        ),
                       ),
-                      // السؤال مش وصف — هو سبب وجود السيناريو.
-                      subtitle: Text(
-                        item.question,
-                        style: AppTextStyles.caption,
-                      ),
-                      trailing: isCurrent
-                          ? Icon(
-                              Icons.check_rounded,
-                              color: AppSemanticColors.accent,
-                            )
-                          : null,
-                      onTap: () {
-                        MockConfig.scenario = item;
-                        Navigator.of(sheetContext).pop();
-                        _restart();
-                      },
                     );
                   },
                 ),

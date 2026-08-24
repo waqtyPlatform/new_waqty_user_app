@@ -2,13 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/core/models/service_ui_model.dart';
 import 'package:waqty_user_application/core/mock/mock_services.dart';
-import 'package:waqty_user_application/core/utils/app_format.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/app_row_widget.dart';
-import 'package:waqty_user_application/core/widgets/directional_chevron_widget.dart';
 
 /// صف الخدمة — **هو نفسه مدخل الحجز**.
 ///
@@ -36,17 +31,29 @@ class ServiceProviderDetailsServiceRowWidget extends StatelessWidget {
       AppSpacing.cardPadding * 2 + AppSpacing.titleToSubtitle;
 
   /// **الحسبة عند مقياس خط ١٫٠:**
-  /// `bodyMdStrong` ١٤×١٫٥٠ = ٢١ · `caption` ١٢×١٫٤٠ = ١٦٫٨. **المجموع ٣٧٫٨.**
-  static const double _textPart = 37.8;
+  /// `bodyMdStrong` ١٤×١٫٥٠ = ٢١ · والسطر التاني ارتفاعه أطول حاجة فيه،
+  /// وهي شارة المدة (`captionStrong` ١٦٫٨ + ٨ حشوة = ٢٤٫٨؛ السعر
+  /// `cardTitle` ٢٢٫٤ أقصر منها). المجموع الحسابي **٤٥٫٨**.
+  ///
+  /// الرقم هنا **٤٩**: فلاتر بيقرّب ارتفاع كل سطر لأعلى وقت التشكيل،
+  /// والحسبة الدقيقة كانت بتسيب **صفر فراغ** — فعند مقياس خط ١٫٣ الكسور
+  /// المتراكمة كانت بتفيّض الصف ٤ بكسل. الفراغ الزيادة بيتوزّع في الصف
+  /// (ارتفاعه مفروض)، فمالوش تكلفة — والناقص هو اللي بيفيض.
+  static const double _textPart = 49;
 
-  /// أرضية زرار «احجز»: ٤٤ من `outlinedButtonTheme` + ٢٤ حشوة = **٦٨**.
+  /// أرضية زرار «احجز»: **٥٠** من `outlinedButtonTheme` + ٢٤ حشوة = **٧٤**.
   ///
   /// الزرار مش نص من ناحية الارتفاع — ارتفاعه مفروض من الثيم ومابيكبرش
-  /// مع مقياس الخط. فعند ١٫٠ هو الأطول (٤٤ مقابل ٤١٫٨ لعمود النص)، وبعد
-  /// مقياس ١٫٠٦ تقريبًا النص بيعدّيه. أرضية بدل ما نزوّد الرقم الثابت،
-  /// عشان الجزء اللي بيكبر يفضل هو الجزء اللي فيه نص فعلاً.
+  /// مع مقياس الخط. فعند ١٫٠ هو الأطول، وبعد مقياس معيّن النص بيعدّيه.
+  /// أرضية بدل ما نزوّد الرقم الثابت، عشان الجزء اللي بيكبر يفضل هو
+  /// الجزء اللي فيه نص فعلاً.
+  ///
+  /// ⚠ **مش `touchTarget`.** ده كان بيدي ٦٨ والزرار بيرسم ٧٤ — فيضان ٦
+  /// بكسل في قايمة خدمات **كل** مقدّم خدمة. `outlinedButtonTheme` في
+  /// الكيت بيحط `Size(0, 50.h)` مش ٤٤، و[AppButtonWidget.height] هو
+  /// نفس الـ٥٠ دي معلنة باسم — فالقراءة من هناك بتفضل صح لو الثيم اتغيّر.
   static const double _buttonFloor =
-      AppSpacing.touchTarget + AppSpacing.cardPadding * 2;
+      AppButtonWidget.height + AppSpacing.cardPadding * 2;
 
   /// المصدر الوحيد للارتفاع — وصف التصنيف بياخده كمان.
   ///
@@ -85,7 +92,7 @@ class ServiceProviderDetailsServiceRowWidget extends StatelessWidget {
       // مفيش `leading`، فالخط الشعري بيبدأ من هامش الصفحة — تحت النص
       // بالظبط، وده الافتراضي بتاع [AppRowWidget].
       trailing: service.isCategory
-          ? const DirectionalChevronWidget(
+          ? DirectionalChevronWidget(
               size: 24,
               color: AppSemanticColors.textTertiary,
             )
@@ -102,8 +109,17 @@ class ServiceProviderDetailsServiceRowWidget extends StatelessWidget {
     style: AppTextStyles.bodyMdStrong,
   );
 
-  // السعر تحت الاسم مع المدة. كان عمود تالت لوحده جنب الزرار، فالصف كان
-  // تلات أعمدة على عرض ٣٧٥ — والاسم بيتقص بعد ١٢ حرف.
+  /// السعر تحت الاسم مع المدة. كان عمود تالت لوحده جنب الزرار، فالصف كان
+  /// تلات أعمدة على عرض ٣٧٥ — والاسم بيتقص بعد ١٢ حرف.
+  ///
+  /// ## المدة بقت شارة والسعر بقى رقم
+  ///
+  /// الاتنين كانوا سطر رمادي واحد (`٤٥ دقيقة · من ٢٥٠ ج.م`) بنفس الوزن
+  /// ونفس اللون. وهما **مش نفس النوع**: المدة قيد (بتخطط بيها يومك)،
+  /// والسعر هو اللي بتقارن بيه بين خدمة وخدمة.
+  ///
+  /// الشارة بتدي المدة حدود فبتقرا كحقيقة، و`cardTitle` بيدي السعر وزن
+  /// بيخليه ثاني أعلى صوت في الصف بعد الاسم.
   Widget _serviceLabel() => Column(
     mainAxisSize: MainAxisSize.min,
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -115,11 +131,22 @@ class ServiceProviderDetailsServiceRowWidget extends StatelessWidget {
         style: AppTextStyles.bodyMdStrong,
       ),
       verticalSpace(AppSpacing.titleToSubtitle),
-      Text(
-        '${AppFormat.duration(service.durationMinutes)} · من ${AppFormat.money(service.price)}',
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: AppTextStyles.caption,
+      Row(
+        children: [
+          AppPillWidget(
+            label: AppFormat.duration(service.durationMinutes),
+            icon: Icons.schedule_rounded,
+          ),
+          horizontalSpace(AppSpacing.s8),
+          Flexible(
+            child: Text(
+              AppFormat.money(service.price),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTextStyles.cardTitle,
+            ),
+          ),
+        ],
       ),
     ],
   );

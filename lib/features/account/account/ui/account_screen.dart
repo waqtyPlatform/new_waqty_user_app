@@ -3,19 +3,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/config/routes/routes.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/extentions.dart';
+import 'package:waqty_user_application/core/models/phone_claim_result_ui_model.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/button_widget.dart';
-import 'package:waqty_user_application/core/widgets/error_state_widget.dart';
 import 'package:waqty_user_application/features/account/account/logic/account_cubit.dart';
+import 'package:waqty_user_application/features/account/phone_verification/ui/widgets/phone_claim_result_sheet.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/logic/entitlements_cubit.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/logic/entitlements_state.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/ui/entitlements_screen.dart';
 import 'package:waqty_user_application/features/account/account/logic/account_state.dart';
 import 'package:waqty_user_application/features/account/account/ui/widgets/account_header_skeleton_widget.dart';
 import 'package:waqty_user_application/features/account/account/ui/widgets/account_header_widget.dart';
-import 'package:waqty_user_application/features/account/account/ui/widgets/account_menu_group_widget.dart';
-import 'package:waqty_user_application/features/account/account/ui/widgets/account_menu_item_widget.dart';
+import 'package:waqty_user_application/features/account/account/ui/widgets/account_theme_item_widget.dart';
 
 class AccountScreen extends StatelessWidget {
   const AccountScreen({super.key});
@@ -37,7 +37,7 @@ class AccountScreen extends StatelessWidget {
         if (state is AccountErrorState) {
           return Padding(
             padding: AppSpacing.page,
-            child: ErrorStateWidget(
+            child: AppErrorStateWidget(
               message: state.message,
               onRetry: cubit.getProfile,
             ),
@@ -63,61 +63,122 @@ class AccountScreen extends StatelessWidget {
             else
               AccountHeaderWidget(account: account),
 
-            verticalSpace(AppSpacing.sectionBreak),
+            // **المجموعتين بقوا قسمين بعنوان.**
+            //
+            // كانوا كارتين مالهمش لابل، والمسافة ٢٤ بينهم كانت **الإشارة
+            // الوحيدة** إنهم موضوعين مختلفين — الكومنت القديم كان بيقول
+            // كده بالحرف. `AppMenuRowWidget` بتاع الكيت كارت لكل صف، فلو
+            // سبناهم من غير عناوين كانوا هيبقوا ست كروت متساوية ومفيش أي
+            // حاجة بتقول فين القسم بيخلص.
+            //
+            // العنوان بيقول اللي المسافة كانت بتلمّح له، و`AppSectionHeader`
+            // **بيملك مسافته بنفسه** (`sectionBreak` فوق · `headerToContent`
+            // تحت) — فمافيش `verticalSpace` مكتوب بالإيد بينهم خالص.
+            const AppSectionHeaderWidget(title: 'حسابك'),
 
-            // مجموعتين بدل خمس صفوف سايبة: **حسابك** و**الأبلكيشن**.
-            // التقسيم ده مش شكلي — الصفوف الأولانية بتخص داتا العميل،
-            // والتانية بتخص الأبلكيشن نفسه.
-            AccountMenuGroupWidget(
-              items: [
-                AccountMenuItemWidget(
-                  icon: Icons.person_outline_rounded,
-                  label: 'بياناتي',
-                  onTap: () {},
-                ),
-                // **«حجوزاتي» اتشالت — كانت مكررة وميتة.**
-                //
-                // فيه تبويب اسمه «الحجوزات» في الشريط تحت وشغّال. الصف
-                // ده كان `onTap: () {}`، يعني بيوعد بنفس المكان ومايوصلش
-                // — والعميل اللي يدوسه مرة بيتعلّم إن الشاشة دي مابتردش.
-              ],
+            // ⚠ **«بياناتي» لسه ميت.** مفيش `PUT /api/user/profile` في
+            // الباك-إند أصلاً (المقدّم والموظف عندهم واحد، والعميل لأ).
+            // شاشة تعديل مالهاش endpoint تحفظ فيه أوحش من صف ساكت.
+            AppMenuRowWidget(
+              icon: Icons.person_outline_rounded,
+              title: 'بياناتي',
+              onTap: () {},
+            ),
+            // **«رقم تليفوني» — الصف اللي بيوصّل العميلة بفلوسها.**
+            //
+            // `PackageEntitlementService::listForUser()` بيطابق على
+            // `provider_customers.platform_user_id`. لو الريسبشن عمل
+            // العميلة من رقم من غير ربط، الباقة اللي دفعت فيها كاش
+            // **مش موجودة** بالنسبة للتطبيق. والشيب هنا بيقرا
+            // `phone_verified_at` من السيرفر — مافيش نسخة محلية للحالة دي.
+            AppMenuRowWidget(
+              icon: Icons.phone_iphone_rounded,
+              title: 'رقم تليفوني',
+              subtitle: account?.phone,
+              trailing: account == null
+                  ? null
+                  : AppPillWidget(
+                      label: account.isPhoneVerified ? 'مأكّد' : 'مش مأكّد',
+                      tone: account.isPhoneVerified
+                          ? AppPillTone.positive
+                          : AppPillTone.warning,
+                    ),
+              onTap: () => _verifyPhone(context),
+            ),
+            // **«باقاتي ومتابعاتي» — البيت الدايم للاستحقاقات.**
+            //
+            // فيه مدخلين تانيين (شريط في «حجوزاتي» وسطر في تفاصيل حجز
+            // مكتمل)، بس الاتنين **مشروطين**: بيبانوا لما يبقى فيه حاجة
+            // تتقال. الصف ده بيفضل موجود دايمًا — عشان اللي بيدوّر يلاقي،
+            // ومايبقاش الطريق الوحيد للباقة هو إن التطبيق يفتكر يفكّرها.
+            //
+            // العدّاد بيعدّ **القابل للتصرف بس** — باقة منتهية في العدّاد
+            // وعد كاذب.
+            BlocBuilder<EntitlementsCubit, EntitlementsState>(
+              builder: (context, _) {
+                final entitlements = EntitlementsCubit.get(context);
+                final count = entitlements.actionableCount;
+
+                return AppMenuRowWidget(
+                  icon: Icons.card_giftcard_rounded,
+                  title: 'باقاتي ومتابعاتي',
+                  trailing: count == 0
+                      ? null
+                      : AppPillWidget(
+                          label: AppFormat.digits(count),
+                          tone: AppPillTone.accent,
+                        ),
+                  onTap: () => _openEntitlements(context),
+                );
+              },
+            ),
+            AppMenuRowWidget(
+              icon: Icons.receipt_long_rounded,
+              title: 'مدفوعاتي',
+              onTap: () => context.pushNamed(Routes.paymentsScreen),
+            ),
+            // **«حجوزاتي» اتشالت — كانت مكررة وميتة.**
+            //
+            // فيه تبويب اسمه «الحجوزات» في الشريط تحت وشغّال. الصف ده كان
+            // `onTap: () {}`، يعني بيوعد بنفس المكان ومايوصلش — والعميل
+            // اللي يدوسه مرة بيتعلّم إن الشاشة دي مابتردش.
+            const AppSectionHeaderWidget(title: 'الأبلكيشن'),
+
+            // اللغة مكانها هنا.
+            //
+            // كانت على شاشة التسجيل بس — يعني أول ما خلّينا اللي عامل
+            // دخول يفتح على الهوم، اللغة بقت مستحيل تتغير. فالصف ده
+            // شرط أساسي مش رفاهية.
+            //
+            // القيمة بقت `subtitle` مش `trailingText`: صف الكيت بيحجز
+            // مساحة السطر التاني **دايمًا** عشان الصفوف ماترقصش، فالقيمة
+            // تحت اللابل مجانية — وعلى اليمين كانت بتزاحم السهم.
+            AppMenuRowWidget(
+              icon: Icons.language_rounded,
+              title: 'اللغة',
+              subtitle: context.locale.languageCode == 'ar'
+                  ? 'العربية'
+                  : 'English',
+              onTap: () => _showLanguageSheet(context),
+            ),
+            // **المظهر — الطريق الوحيد للوضع الغامق.**
+            //
+            // الافتراضي «حسب الجهاز»، فمعظم الناس مش هيدخلوا هنا أصلاً.
+            // الصف موجود للحالتين اللي النظام مابيغطّيهمش: حد عايز
+            // الأبلكيشن غامق طول الوقت، وحد جهازه غامق بس عايزه فاتح.
+            const AccountThemeItemWidget(),
+            AppMenuRowWidget(
+              icon: Icons.help_outline_rounded,
+              title: 'المساعدة',
+              onTap: () {},
+            ),
+            AppMenuRowWidget(
+              icon: Icons.description_rounded,
+              title: 'الشروط وسياسة الخصوصية',
+              onTap: () {},
             ),
 
-            // ٢٤ مش ١٢. المجموعتين مالهمش لابل، فالمسافة بينهم هي **الإشارة
-            // الوحيدة** إنهم موضوعين مختلفين. ١٢ (نفس مسافة الصفوف) كانت
-            // بتخليهم يقروا كارت واحد مقطوع. و٤٠ كتير — ده مش فاصل أقسام،
-            // الاتنين لسه «قايمة».
-            verticalSpace(AppSpacing.s24),
-
-            AccountMenuGroupWidget(
-              items: [
-                // اللغة مكانها هنا.
-                //
-                // كانت على شاشة التسجيل بس — يعني أول ما خلّينا اللي عامل
-                // دخول يفتح على الهوم، اللغة بقت مستحيل تتغير. فالصف ده
-                // شرط أساسي مش رفاهية.
-                AccountMenuItemWidget(
-                  icon: Icons.language_rounded,
-                  label: 'اللغة',
-                  trailingText: context.locale.languageCode == 'ar'
-                      ? 'العربية'
-                      : 'English',
-                  onTap: () => _showLanguageSheet(context),
-                ),
-                AccountMenuItemWidget(
-                  icon: Icons.help_outline_rounded,
-                  label: 'المساعدة',
-                  onTap: () {},
-                ),
-                AccountMenuItemWidget(
-                  icon: Icons.description_rounded,
-                  label: 'الشروط وسياسة الخصوصية',
-                  onTap: () {},
-                ),
-              ],
-            ),
-
-            verticalSpace(AppSpacing.sectionBreak),
+            verticalSpace(AppSpacing.s16),
 
             // **الخروج مابيصرّخش.**
             //
@@ -131,15 +192,18 @@ class AccountScreen extends StatelessWidget {
             //
             // الأحمر على النص كفاية للوضوح، وهدف اللمس لسه كامل العرض
             // بارتفاع `touchTarget` — يعني رجع لورا من غير ما يصعب.
-            ButtonWidget(
-              isLoading: state is LogoutLoadingState,
-              buttonText: 'تسجيل الخروج',
-              fourGroundColor: AppSemanticColors.danger,
-              textStyle: AppTextStyles.bodyMdStrong.copyWith(
-                color: AppSemanticColors.danger,
-              ),
-              buttonHeight: AppSpacing.touchTarget.r,
+            TextButton(
               onPressed: () => _confirmLogout(context, cubit),
+              style: TextButton.styleFrom(
+                foregroundColor: AppSemanticColors.danger,
+                minimumSize: Size(double.infinity, AppSpacing.touchTarget.r),
+              ),
+              child: Text(
+                'تسجيل الخروج',
+                style: AppTextStyles.bodyMdStrong.copyWith(
+                  color: AppSemanticColors.danger,
+                ),
+              ),
             ),
           ],
         );
@@ -147,102 +211,99 @@ class AccountScreen extends StatelessWidget {
     );
   }
 
-  void _showLanguageSheet(BuildContext context) {
-    // الخلفية والاستدارة ومقبض السحب كلهم جايين من `bottomSheetTheme`.
-    // و`useSafeArea` بدل الـ SafeArea الداخلية — كده كل الـ sheets بتقعد
-    // على نفس الهامش السفلي.
-    showModalBottomSheet<void>(
-      context: context,
-      useSafeArea: true,
-      builder: (sheetContext) => Padding(
-        padding: EdgeInsetsDirectional.only(
-          start: AppSpacing.s16.w,
-          end: AppSpacing.s16.w,
-          top: AppSpacing.s8.h,
-          bottom: AppSpacing.s16.h,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('اللغة', style: AppTextStyles.sectionHeader),
-            verticalSpace(AppSpacing.s8),
-            // الاسم باللغة نفسها — مش «Arabic» و «English».
-            _languageTile(sheetContext, 'العربية', const Locale('ar', 'EG')),
-            _languageTile(sheetContext, 'English', const Locale('en', 'US')),
-          ],
-        ),
-      ),
+  /// الورقة بترجّع اللغة المختارة، **والشاشة هي اللي بتطبّقها**.
+  ///
+  /// ده مبدأ `AppSheetWidget`: الورقة مابتناديش `Navigator.pop` ولا بتنفّذ
+  /// الفعل من جواها. الترتيب هنا مش تفصيلة — `setLocale` بترمي الشجرة،
+  /// فلو اتنادت والورقة لسه مفتوحة كان الـ `Navigator` اللي هي قاعدة فيه
+  /// بيتحذف من تحتها.
+  /// بيفتح «باقاتي» — شوف [EntitlementsScreen.open] لسبب وجودها.
+  void _openEntitlements(BuildContext context) {
+    EntitlementsScreen.open(context);
+  }
+
+  /// بيفتح شاشة التأكيد وبيعيد تحميل الحساب لما تنجح.
+  ///
+  /// **إعادة التحميل مش تفصيلة.** التأكيد بيغيّر `phone_verified_at` على
+  /// السيرفر وبيربط سجلات — فلو الشاشة رجعت من غير ما تعيد تحميل، الشيب
+  /// هيفضل «مش مأكّد» بعد تأكيد ناجح، والعميلة هتعيد الكلّة.
+  Future<void> _verifyPhone(BuildContext context) async {
+    final cubit = AccountCubit.get(context);
+    final result = await Navigator.of(
+      context,
+    ).pushNamed(Routes.phoneVerificationScreen);
+
+    if (!context.mounted) return;
+    if (result is! PhoneClaimResultUiModel) return;
+
+    final entitlements = EntitlementsCubit.get(context);
+    await cubit.getProfile();
+    // الباقات هي اللي العميلة أكّدت رقمها عشانها — فبنعيد تحميلها
+    // **قبل** ما نقول النتيجة، عشان الرقم في الورقة يبقى حقيقي.
+    await entitlements.load();
+
+    if (!context.mounted) return;
+    await PhoneClaimResultSheet.show(
+      context,
+      result: result,
+      packagesFound: entitlements.packages.length,
+      onOpenEntitlements: () => _openEntitlements(context),
     );
   }
 
-  Widget _languageTile(BuildContext context, String label, Locale locale) {
-    final isSelected = context.locale.languageCode == locale.languageCode;
+  void _showLanguageSheet(BuildContext context) {
+    const locales = [
+      // الاسم باللغة نفسها — مش «Arabic» و«English».
+      (label: 'العربية', locale: Locale('ar', 'EG')),
+      (label: 'English', locale: Locale('en', 'US')),
+    ];
 
-    // الحشوة والستايل جايين من `listTileTheme`.
-    return ListTile(
-      title: Text(label),
-      trailing: isSelected
-          ? const Icon(
-              Icons.check_circle_rounded,
-              color: AppSemanticColors.accent,
-            )
-          : null,
-      onTap: () {
-        context.setLocale(locale);
-        Navigator.of(context).pop();
-      },
-    );
+    final current = context.locale.languageCode;
+
+    AppSheetWidget.show<Locale>(
+      context,
+      title: 'اللغة',
+      content: Builder(
+        builder: (sheetContext) => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final item in locales)
+              AppChoiceRowWidget(
+                title: item.label,
+                selected: current == item.locale.languageCode,
+                style: AppChoiceStyle.radio,
+                onTap: () => Navigator.of(sheetContext).pop(item.locale),
+              ),
+          ],
+        ),
+      ),
+      actions: (_) => const [],
+    ).then((picked) {
+      if (picked != null && context.mounted) context.setLocale(picked);
+    });
   }
 
   void _confirmLogout(BuildContext context, AccountCubit cubit) {
-    showModalBottomSheet<void>(
-      context: context,
-      useSafeArea: true,
-      builder: (sheetContext) => Padding(
-        padding: EdgeInsetsDirectional.only(
-          start: AppSpacing.s16.w,
-          end: AppSpacing.s16.w,
-          top: AppSpacing.s8.h,
-          bottom: AppSpacing.s16.h,
+    AppSheetWidget.show<bool>(
+      context,
+      icon: Icons.logout_rounded,
+      iconTone: AppSemanticColors.danger,
+      title: 'تسجيل الخروج؟',
+      message: 'هتحتاج تسجّل دخول تاني عشان تشوف حجوزاتك',
+      actions: (sheetContext) => [
+        AppButtonWidget(
+          label: 'تسجيل الخروج',
+          variant: AppButtonVariant.danger,
+          onPressed: () => Navigator.of(sheetContext).pop(true),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('تسجيل الخروج؟', style: AppTextStyles.sectionHeader),
-            verticalSpace(AppSpacing.s4),
-            Text(
-              'هتحتاج تسجّل دخول تاني عشان تشوف حجوزاتك',
-              style: AppTextStyles.caption,
-            ),
-            verticalSpace(AppSpacing.s16),
-            ButtonWidget(
-              isLoading: false,
-              buttonText: 'تسجيل الخروج',
-              backGroundColor: AppSemanticColors.danger,
-              borderColor: AppSemanticColors.danger,
-              textStyle: AppTextStyles.button,
-              buttonHeight: 52.h,
-              onPressed: () {
-                Navigator.of(sheetContext).pop();
-                cubit.logout();
-              },
-            ),
-            verticalSpace(AppSpacing.s8),
-            // الحد الأدنى للمس جاي من `textButtonTheme` — مش محتاج SizedBox.
-            TextButton(
-              onPressed: () => Navigator.of(sheetContext).pop(),
-              child: Text(
-                'رجوع',
-                style: AppTextStyles.bodyMdStrong.copyWith(
-                  color: AppSemanticColors.textSecondary,
-                ),
-              ),
-            ),
-          ],
+        AppButtonWidget(
+          label: 'رجوع',
+          variant: AppButtonVariant.ghost,
+          onPressed: () => Navigator.of(sheetContext).pop(false),
         ),
-      ),
-    );
+      ],
+    ).then((confirmed) {
+      if (confirmed ?? false) cubit.logout();
+    });
   }
 }

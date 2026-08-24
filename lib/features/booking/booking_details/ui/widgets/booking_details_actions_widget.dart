@@ -1,13 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/core/models/booking_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_radius.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/app_surface_widget.dart';
-import 'package:waqty_user_application/core/widgets/button_widget.dart';
 
 /// إجراءات الحجز.
 ///
@@ -42,28 +37,18 @@ class BookingDetailsActionsWidget extends StatelessWidget {
         // مايتقيّموش أبدًا. التقييمات مربوطة بـ `booking_item_id` في
         // السيرفر، فالحجز ده تلات تقييمات مستقلة.
         if (booking.hasPendingRatings)
-          ButtonWidget(
-            isLoading: false,
-            buttonText: booking.rateableItems.length == 1
+          AppButtonWidget(
+            label: booking.rateableItems.length == 1
                 ? 'قيّم الخدمة'
                 : 'قيّم الخدمات',
-            backGroundColor: AppSemanticColors.accent,
-            borderColor: AppSemanticColors.accent,
-            textStyle: AppTextStyles.button,
-            buttonHeight: 52.h,
             onPressed: onRate,
           ),
 
         if (!booking.status.isUpcoming) ...[
           verticalSpace(AppSpacing.listRowGap),
-          ButtonWidget(
-            isLoading: false,
-            buttonText: 'احجز تاني',
-            backGroundColor: AppSemanticColors.surfaceRaised,
-            borderColor: AppSemanticColors.accent,
-            borderWidth: 1,
-            textStyle: AppTextStyles.cardTitle,
-            buttonHeight: 52.h,
+          AppButtonWidget(
+            label: 'احجز تاني',
+            variant: AppButtonVariant.secondary,
             onPressed: onRebook,
           ),
         ],
@@ -71,16 +56,9 @@ class BookingDetailsActionsWidget extends StatelessWidget {
         if (booking.status.isUpcoming) ...[
           verticalSpace(AppSpacing.listRowGap),
           if (booking.canCancel)
-            ButtonWidget(
-              isLoading: false,
-              buttonText: 'إلغاء الحجز',
-              backGroundColor: AppSemanticColors.surfaceRaised,
-              borderColor: AppSemanticColors.dangerBorder,
-              borderWidth: 1,
-              textStyle: AppTextStyles.cardTitle.copyWith(
-                color: AppSemanticColors.danger,
-              ),
-              buttonHeight: 52.h,
+            AppButtonWidget(
+              label: 'إلغاء الحجز',
+              variant: AppButtonVariant.danger,
               onPressed: onCancel,
             )
           else
@@ -99,9 +77,23 @@ class BookingDetailsActionsWidget extends StatelessWidget {
                     color: AppSemanticColors.textSecondary,
                   ),
                   horizontalSpace(AppSpacing.s8),
+                  // **القاعدة الحقيقية إن الميعاد بدأ، مش إنه النهاردة.**
+                  //
+                  // `Booking::getCanCancelAttribute()` بيرجّع false لما
+                  // الميعاد **يعدّي**، مش عشان هو في نفس اليوم. حجز
+                  // النهاردة ٦م وإنت بتبصّ ٢ظ `can_cancel: true` — فالنص
+                  // القديم كان بيمنع العميل من حاجة مسموحة له، ويبعته
+                  // يكلّم الفرع في مشكلة مش موجودة.
+                  //
+                  // ولو المزوّد كاتب `cancellation_policy` بنفسه، **كلامه
+                  // هو اللي يتعرض** — هو صاحب القاعدة، وإحنا بنقولها
+                  // بالنيابة عنه بس لما هو ما يكتبهاش.
+                  // TODO(api): BE-B1 — `policies` على payload الفرع.
                   Expanded(
                     child: Text(
-                      'حجز النهاردة مش هينفع يتلغي من الأبلكيشن — كلّم الفرع لو محتاج تعدّل',
+                      booking.policies.cancellationPolicy.isNotEmpty
+                          ? booking.policies.cancellationPolicy
+                          : 'الميعاد ده بدأ خلاص — كلّم الفرع لو محتاج تعدّل أو تلغي',
                       style: AppTextStyles.caption,
                     ),
                   ),

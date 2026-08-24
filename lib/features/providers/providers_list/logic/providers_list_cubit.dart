@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:waqty_user_application/core/mock/mock_categories.dart';
-import 'package:waqty_user_application/core/mock/mock_providers.dart';
-import 'package:waqty_user_application/core/mock/mock_source.dart';
 import 'package:waqty_user_application/core/models/category_ui_model.dart';
 import 'package:waqty_user_application/core/models/provider_ui_model.dart';
+import 'package:waqty_user_application/features/providers/providers_list/data/repo/providers_list_repo.dart';
 import 'package:waqty_user_application/features/providers/providers_list/logic/providers_list_state.dart';
 
 class ProvidersListCubit extends Cubit<ProvidersListState> {
-  ProvidersListCubit({String? initialCategoryUuid})
+  final ProvidersListRepo _repo;
+
+  ProvidersListCubit(this._repo, {String? initialCategoryUuid})
     : selectedCategoryUuid = initialCategoryUuid ?? '',
       super(InitialState());
 
@@ -18,30 +18,101 @@ class ProvidersListCubit extends Cubit<ProvidersListState> {
   List<ProviderUiModel> providers = <ProviderUiModel>[];
   String selectedCategoryUuid;
 
+  static const int perPage = 15;
+
+  int _page = 1;
+
+  /// **المصدر الوحيد لـ«فيه كمان؟»** — من رقم السيرفر مش من طول القايمة.
+  bool hasMore = false;
+
+  bool isLoadingMore = false;
+
   Future<void> loadInitial() async {
-    categories = MockCategories.all;
+    final result = await _repo.categories();
+    categories = result.getOrElse(() => <CategoryUiModel>[]);
     await search();
   }
 
   Future<void> search() async {
     emit(ProvidersListLoadingState());
 
-    // TODO(api): GET /api/public/providers?search=&category_uuid=
-    final result = await MockSource.fetchList(
-      MockProviders.search(
-        searchController.text,
-        categoryUuid: selectedCategoryUuid,
-      ),
+    _page = 1;
+    hasMore = false;
+    isLoadingMore = false;
+
+    // **الفلاتر بتتصوّر قبل الانتظار.**
+    //
+    // لو العميل غيّر التصنيف والطلب لسه شغّال، الرد الراجع بتاع الفلتر
+    // **القديم** كان هيتحط مكان الجديد. نفس حارس `MyBookingsCubit`.
+    final requestedQuery = searchController.text;
+    final requestedCategory = selectedCategoryUuid;
+
+    final result = await _repo.search(
+      query: requestedQuery,
+      categoryUuid: requestedCategory,
+      page: 1,
+      perPage: perPage,
     );
 
-    result.fold((failure) => emit(ProvidersListErrorState(message: failure)), (
-      data,
-    ) {
-      providers = data;
-      emit(
-        data.isEmpty ? ProvidersListEmptyState() : ProvidersListSuccessState(),
-      );
-    });
+    if (isClosed) return;
+    if (searchController.text != requestedQuery ||
+        selectedCategoryUuid != requestedCategory) {
+      return;
+    }
+
+    result.fold(
+      (failure) => emit(ProvidersListErrorState(message: failure.message)),
+      (page) {
+        providers = page.data;
+        _page = page.currentPage;
+        hasMore = page.hasMore;
+        emit(
+          page.isEmpty
+              ? ProvidersListEmptyState()
+              : ProvidersListSuccessState(),
+        );
+      },
+    );
+  }
+
+  Future<void> loadMore() async {
+    if (isLoadingMore || !hasMore) return;
+
+    isLoadingMore = true;
+    emit(ProvidersListLoadingMoreState());
+
+    final requestedQuery = searchController.text;
+    final requestedCategory = selectedCategoryUuid;
+
+    final result = await _repo.search(
+      query: requestedQuery,
+      categoryUuid: requestedCategory,
+      page: _page + 1,
+      perPage: perPage,
+    );
+
+    if (isClosed) return;
+    isLoadingMore = false;
+
+    if (searchController.text != requestedQuery ||
+        selectedCategoryUuid != requestedCategory) {
+      return;
+    }
+
+    result.fold(
+      (_) {
+        // فشل صفحة إضافية **مش** بيمسح اللي قدام العميل. `hasMore` بتتقفل
+        // عشان التحميل التلقائي مايفضلش يحاول في كل سكرول.
+        hasMore = false;
+        emit(ProvidersListSuccessState());
+      },
+      (page) {
+        providers = [...providers, ...page.data];
+        _page = page.currentPage;
+        hasMore = page.hasMore;
+        emit(ProvidersListSuccessState());
+      },
+    );
   }
 
   /// الضغط على نفس التصنيف بيلغي الاختيار — عشان العميل يقدر يرجع

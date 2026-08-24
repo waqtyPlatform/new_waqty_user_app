@@ -54,6 +54,64 @@ void main() {
       expect(data.hasLiveEstimate, isTrue);
     });
 
+    group('من غير تقدير — B8 · قرار BE-17', () {
+      test('السطر بيقف عند الحقيقة ومابيسيبش فاصل معلّق', () {
+        final booking = bookingFor(MockScenario.waitingNoEstimate);
+        final data = MockInBranch.forBooking(booking, DateTime.now())!;
+
+        // الباج القديم: `estimateLabel` كانت بترجّع «دقايق» لما مفيش
+        // تقدير، فالسطر يطلع «لسه مع عميل · دقايق» — وحدة قياس معلّقة
+        // ورا رقم اتمسح.
+        expect(data.subline, 'لسه مع عميل');
+        expect(data.subline, isNot(contains('·')));
+        expect(data.subline, isNot(contains('دقايق')));
+      });
+
+      test('التقدير فاضي والحالة بتفضل صادقة', () {
+        final booking = bookingFor(MockScenario.waitingNoEstimate);
+        final data = MockInBranch.forBooking(booking, DateTime.now())!;
+
+        expect(data.estimateLow, isNull);
+        expect(data.estimateHigh, isNull);
+        expect(data.estimateLabel, isEmpty);
+        expect(data.hasLiveEstimate, isFalse);
+      });
+
+      test('الأجزاء الحقيقية بتفضل شغّالة — الاسم والنداء', () {
+        final booking = bookingFor(MockScenario.waitingNoEstimate);
+        final data = MockInBranch.forBooking(booking, DateTime.now())!;
+
+        // دي اللي كانت حقيقية من الأول: الحالة عمود في السيرفر والاسم
+        // من عناصر الحجز. اللي اتشال هو **المخترع** بس.
+        expect(data.headline, booking.items.first.employeeName);
+        expect(data.label, BookingStatus.waiting.label);
+        expect(data.announcement, isNotEmpty);
+        expect(data.bannerLabel, isNotEmpty);
+      });
+
+      test('مفيش تنبيه بيقطع على العميل من غير رقم يبرّره', () {
+        final booking = bookingFor(MockScenario.waitingNoEstimate);
+        final data = MockInBranch.forBooking(booking, DateTime.now())!;
+
+        // `needsAttention` لـ`waiting` مبنية على «التقدير بقى ٥ دقايق أو
+        // أقل». من غير تقدير مفيش لحظة اسمها «قرب» — فالتنبيه مايتقالش.
+        expect(data.needsAttention, isFalse);
+      });
+
+      test('السيناريوهين بيعرضوا نفس الحجز — المتغيّر واحد بس', () {
+        // ده شرط المقارنة اللي بيقرر BE-17: لو الحجزين اختلفوا، الجلسة
+        // بتقيس فرقين مش فرق واحد والنتيجة مابتجاوبش على السؤال.
+        final withEstimate = bookingFor(MockScenario.waitingInBranch);
+        final without = bookingFor(MockScenario.waitingNoEstimate);
+
+        expect(without.uuid, withEstimate.uuid);
+        expect(
+          without.items.first.employeeName,
+          withEstimate.items.first.employeeName,
+        );
+      });
+    });
+
     test('العنوان قصير كفاية للسطر الواحد', () {
       // البؤرة `displayXl` (٤٠sp) و`maxLines: 1`. سطر بالعرض ده سعته
       // حوالي ١٢ حرف عربي على شاشة ٣٧٥ — أي عنوان أطول بيتقص، والقصّة
@@ -111,7 +169,10 @@ void main() {
       final booking = bookingFor(MockScenario.waitingInBranch);
       final data = MockInBranch.forBooking(booking, DateTime.now())!;
 
-      expect(data.estimateHigh!.inMinutes, greaterThan(data.estimateLow!.inMinutes));
+      expect(
+        data.estimateHigh!.inMinutes,
+        greaterThan(data.estimateLow!.inMinutes),
+      );
     });
   });
 

@@ -1,16 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/core/mock/mock_slots.dart';
-import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
-import 'package:waqty_user_application/core/utils/app_format.dart';
-import 'package:waqty_user_application/core/utils/app_motion.dart';
-import 'package:waqty_user_application/core/utils/app_radius.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/app_surface_widget.dart';
-import 'package:waqty_user_application/core/widgets/directional_chevron_widget.dart';
 
 /// شريط التواريخ الأفقي.
 ///
@@ -67,11 +59,16 @@ class CreateBookingDateStripWidget extends StatelessWidget {
       children: [
         Row(
           children: [
-            Text(
-              AppFormat.monthYear(currentMonth),
-              style: AppTextStyles.bodyMdStrong,
+            // `Expanded` مش نص سايب: «سبتمبر ٢٠٢٦» مع سهمين ٤٤ لكل واحد
+            // بيضيّقوا السطر عند مقياس خط عالي.
+            Expanded(
+              child: Text(
+                AppFormat.monthYear(currentMonth),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyles.bodyMdStrong,
+              ),
             ),
-            const Spacer(),
             _ArrowButton(
               // «الشهر اللي فات» = عكس اتجاه القراءة
               direction: ChevronDirection.back,
@@ -121,11 +118,15 @@ class CreateBookingDateStripWidget extends StatelessWidget {
         // والشخطة معناها «خلاص». الاستنتاج ده بيتعلّم بالتجربة والخطأ،
         // والتجربة والخطأ في شاشة حجز غالية.
         verticalSpace(AppSpacing.s8),
+        // `_LegendDot` جوه `Expanded` — النص طويل ومالوش سقف، وعند مقياس
+        // خط ١٫٣ كان **بيفيض ١٤٣ بكسل** على حافة الشاشة.
         Row(
           children: [
-            _LegendDot(
-              color: AppSemanticColors.accent,
-              label: 'مليان — ينفع تدخل قائمة الانتظار',
+            Expanded(
+              child: _LegendDot(
+                color: AppSemanticColors.accent,
+                label: 'مليان — ينفع تدخل قائمة الانتظار',
+              ),
             ),
           ],
         ),
@@ -175,7 +176,14 @@ class _LegendDot extends StatelessWidget {
           ),
         ),
         horizontalSpace(AppSpacing.s4),
-        Text(label, style: AppTextStyles.overline),
+        Flexible(
+          child: Text(
+            label,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: AppTextStyles.overline,
+          ),
+        ),
       ],
     );
   }
@@ -198,7 +206,7 @@ class _ArrowButton extends StatelessWidget {
           direction: direction,
           size: 24,
           color: onTap == null
-              ? AppColors.greyColor200
+              ? AppSemanticColors.borderStrong
               : AppSemanticColors.textPrimary,
         ),
       ),
@@ -303,7 +311,7 @@ class _StrikePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = AppColors.greyColor200
+      ..color = AppSemanticColors.borderStrong
       ..strokeWidth = 1.2;
     canvas.drawLine(
       Offset(size.width * .22, size.height * .76),

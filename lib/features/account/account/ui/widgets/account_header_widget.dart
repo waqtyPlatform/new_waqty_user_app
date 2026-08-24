@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:waqty_user_application/core/models/account_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_format.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
 
 /// اسم صاحب الحساب — **بؤرة شاشة الحساب**.

@@ -1,4 +1,4 @@
-import 'package:waqty_user_application/core/utils/app_format.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/json_parse.dart';
 
 /// موديل عرض للميعاد المتاح.

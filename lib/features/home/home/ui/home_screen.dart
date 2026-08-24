@@ -3,11 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/config/routes/routes.dart';
 import 'package:waqty_user_application/core/models/booking_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/extentions.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/app_section_header_widget.dart';
-import 'package:waqty_user_application/core/widgets/error_state_widget.dart';
 import 'package:waqty_user_application/features/home/home/logic/home_cubit.dart';
 import 'package:waqty_user_application/features/home/home/logic/home_state.dart';
 import 'package:waqty_user_application/features/home/home/ui/widgets/home_app_bar_widget.dart';
@@ -19,6 +17,7 @@ import 'package:waqty_user_application/features/booking/in_branch/ui/widgets/in_
 import 'package:waqty_user_application/features/home/home/ui/widgets/home_rebook_widget.dart';
 import 'package:waqty_user_application/features/home/home/ui/widgets/home_search_widget.dart';
 import 'package:waqty_user_application/features/home/home/ui/widgets/home_waitlist_offer_widget.dart';
+import 'package:waqty_user_application/features/booking/reassignment/ui/widgets/reassignment_alert_banner_widget.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -37,7 +36,7 @@ class HomeScreen extends StatelessWidget {
           return Center(
             child: Padding(
               padding: EdgeInsetsDirectional.symmetric(horizontal: 16.w),
-              child: ErrorStateWidget(
+              child: AppErrorStateWidget(
                 message: state.message,
                 onRetry: cubit.loadHome,
               ),
@@ -57,21 +56,43 @@ class HomeScreen extends StatelessWidget {
               bottom: AppSpacing.screenBottom.h,
             ),
             children: [
-              _gutter(HomeAppBarWidget(cityName: cubit.selectedCity)),
-              verticalSpace(AppSpacing.s16),
-              _gutter(
-                HomeSearchWidget(
-                  onTap: () => context.pushNamed(Routes.providersListScreen),
+              // **أول الصفحة مش فراغ.**
+              //
+              // التحية والمدينة والبحث كانوا قاعدين على لون الصفحة الصافي،
+              // فأول ٢٠٠ بكسل في الأبلكيشن مالهمش أي عمق. الهالة بتدّي
+              // للصفحة نقطة بداية من غير ما تحط عنصر جديد يتقري — بتنتهي
+              // عند شفافية صفر فمفيش حافة ولا مربع.
+              //
+              // مش ملفوفة في `_gutter`: الهالة لازم تاخد العرض كله، والهامش
+              // بيتحط لولادها.
+              AppRevealWidget(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(gradient: AppGradients.pageGlow),
+                  child: Column(
+                    children: [
+                      _gutter(HomeAppBarWidget(cityName: cubit.selectedCity)),
+                      verticalSpace(AppSpacing.s16),
+                      _gutter(
+                        HomeSearchWidget(
+                          onTap: () =>
+                              context.pushNamed(Routes.providersListScreen),
+                        ),
+                      ),
+                      verticalSpace(AppSpacing.s24),
+                    ],
+                  ),
                 ),
               ),
-              verticalSpace(AppSpacing.s24),
 
-              HomeCategoriesWidget(
-                categories: cubit.categories,
-                isLoading: isLoading,
-                onCategoryTap: (category) => context.pushNamed(
-                  Routes.providersListScreen,
-                  arguments: {'categoryUuid': category.uuid},
+              AppRevealWidget(
+                index: 1,
+                child: HomeCategoriesWidget(
+                  categories: cubit.categories,
+                  isLoading: isLoading,
+                  onCategoryTap: (category) => context.pushNamed(
+                    Routes.providersListScreen,
+                    arguments: {'categoryUuid': category.uuid},
+                  ),
                 ),
               ),
 
@@ -88,7 +109,17 @@ class HomeScreen extends StatelessWidget {
               //
               // القسم بيطوّي نفسه لصفر لما مفيش عرض شغّال، فالترتيب ده
               // مالوش تكلفة في الحالة الغالبة.
-              const HomeWaitlistOfferWidget(),
+              const AppRevealWidget(index: 2, child: HomeWaitlistOfferWidget()),
+
+              // ⚠ **فوق البؤرة بقصد.** تغيير في حجز قايم أهم من عرض الميعاد
+              // الجاي نفسه — المهلة ١٥ دقيقة ومفيش push يقول للعميل.
+              // البانر بيطوّي نفسه لصفر لما مفيش طلب، ودي الحالة الغالبة.
+              Padding(
+                padding: EdgeInsetsDirectional.symmetric(
+                  horizontal: AppSpacing.pageGutter.w,
+                ),
+                child: const ReassignmentAlertBannerWidget(),
+              ),
 
               // **البؤرة.** مايتبنيش خالص لو مفيش حجز — مش كارت فاضي.
               //
@@ -107,7 +138,10 @@ class HomeScreen extends StatelessWidget {
               // إن الشريط مايبقاش موجود أصلاً.
               if (cubit.upcomingBooking != null) ...[
                 verticalSpace(AppSpacing.sectionBreak),
-                const InBranchHeroSectionWidget(),
+                const AppRevealWidget(
+                  index: 2,
+                  child: InBranchHeroSectionWidget(),
+                ),
               ],
 
               // **«زي المرة اللي فاتت» فوق الطية.**
@@ -117,28 +151,37 @@ class HomeScreen extends StatelessWidget {
               // ده بيتبع نية العميل مش تصنيف المحتوى.
               if (cubit.lastCompleted != null) ...[
                 verticalSpace(AppSpacing.sectionBreak),
-                _gutter(
-                  HomeRebookWidget(
-                    booking: cubit.lastCompleted!,
-                    onTap: () => _rebook(context, cubit.lastCompleted!),
+                AppRevealWidget(
+                  index: 3,
+                  child: _gutter(
+                    HomeRebookWidget(
+                      booking: cubit.lastCompleted!,
+                      onTap: () => _rebook(context, cubit.lastCompleted!),
+                    ),
                   ),
                 ),
               ],
 
-              _gutter(
-                AppSectionHeaderWidget(
-                  title: 'الأكثر طلبًا',
-                  actionLabel: 'عرض الكل',
-                  onAction: () =>
-                      context.pushNamed(Routes.providersListScreen),
+              AppRevealWidget(
+                index: 4,
+                child: _gutter(
+                  AppSectionHeaderWidget(
+                    title: 'الأكثر طلبًا',
+                    actionLabel: 'عرض الكل',
+                    onAction: () =>
+                        context.pushNamed(Routes.providersListScreen),
+                  ),
                 ),
               ),
-              HomeProvidersRailWidget(
-                providers: cubit.popularProviders,
-                isLoading: isLoading,
-                onProviderTap: (provider) => context.pushNamed(
-                  Routes.serviceProviderDetailsScreen,
-                  arguments: {'providerUuid': provider.uuid},
+              AppRevealWidget(
+                index: 4,
+                child: HomeProvidersRailWidget(
+                  providers: cubit.popularProviders,
+                  isLoading: isLoading,
+                  onProviderTap: (provider) => context.pushNamed(
+                    Routes.serviceProviderDetailsScreen,
+                    arguments: {'providerUuid': provider.uuid},
+                  ),
                 ),
               ),
 
@@ -146,8 +189,7 @@ class HomeScreen extends StatelessWidget {
                 AppSectionHeaderWidget(
                   title: 'قريب منك',
                   actionLabel: 'عرض الكل',
-                  onAction: () =>
-                      context.pushNamed(Routes.providersListScreen),
+                  onAction: () => context.pushNamed(Routes.providersListScreen),
                 ),
               ),
               // مش ملفوف في `_gutter`: بقت صفوف full-bleed، والهامش ١٦

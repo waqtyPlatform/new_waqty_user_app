@@ -1,5 +1,5 @@
 import 'package:waqty_user_application/core/mock/mock_config.dart';
-import 'package:waqty_user_application/core/mock/mock_scenario.dart';
+import 'package:waqty_user_application/core/mock/mock_policies.dart';
 import 'package:waqty_user_application/core/models/branch_ui_model.dart';
 import 'package:waqty_user_application/core/models/provider_ui_model.dart';
 
@@ -119,6 +119,37 @@ class MockProviders {
 
   // ── الفروع ──────────────────────────────────────────────────────────────
 
+  /// فرع بالـ uuid — `null` لو مش تابع للمحل ده.
+  ///
+  /// بيرجّع `null` مش أول فرع، عكس [byUuid]: uuid فرع غلط معناه بق في
+  /// الداتا، والوقوع على فرع تاني بيخفيه ويطلّع للعميل عنوان مكان مش
+  /// هيروحه.
+  static BranchUiModel? branchByUuid({
+    required String providerUuid,
+    required String branchUuid,
+  }) {
+    for (final branch in branchesOf(providerUuid)) {
+      if (branch.uuid == branchUuid) return branch;
+    }
+    return null;
+  }
+
+  /// ترتيب الفرع في قايمة محله — **الأساسي صفر**.
+  ///
+  /// ده مفتاح كل حاجة فرعية (السعر، الطاقم)، لأن الـ uuids **بتتولّد**
+  /// لخمسة من ستة محلات فمافيش مفتاح ثابت غير الترتيب.
+  ///
+  /// ⚠ **ماتشتقّهوش من نص الـ uuid.** `uuid.endsWith('-2')` شكلها صح
+  /// وغلط: `brn-prv-2` هو الفرع **الأساسي** بتاع المحل التاني، وهتتصنّف
+  /// فرع تاني وتاخد سعره.
+  static int branchIndexOf({required String providerUuid, String? branchUuid}) {
+    if (branchUuid == null || branchUuid.isEmpty) return 0;
+    final index = branchesOf(
+      providerUuid,
+    ).indexWhere((b) => b.uuid == branchUuid);
+    return index < 0 ? 0 : index;
+  }
+
   /// معظم المحلات فرع واحد — وده مقصود، عشان نتأكد إن الفلو بيتخطى خطوة
   /// اختيار الفرع لما يبقى فيه واحد بس. «صالون كابتن» ليه فرعين عشان
   /// نجرّب الحالة التانية.
@@ -129,7 +160,7 @@ class MockProviders {
   /// من الـ enums. دلوقتي أي محل التستر يفتحه بيوصله لاختيار الفرع.
   static List<BranchUiModel> branchesOf(String providerUuid) {
     if (providerUuid == 'prv-1') {
-      return const <BranchUiModel>[
+      return <BranchUiModel>[
         BranchUiModel(
           uuid: 'brn-1',
           name: 'فرع المعادي',
@@ -142,6 +173,7 @@ class MockProviders {
           openStatusLabel: 'مفتوح · يقفل 9:00 م',
           isOpenNow: true,
           workingHours: _standardHours,
+          policies: MockPolicies.current,
         ),
         BranchUiModel(
           uuid: 'brn-2',
@@ -155,6 +187,7 @@ class MockProviders {
           openStatusLabel: 'مفتوح · يقفل 10:00 م',
           isOpenNow: true,
           workingHours: _standardHours,
+          policies: MockPolicies.current,
         ),
       ];
     }
@@ -174,12 +207,13 @@ class MockProviders {
         openStatusLabel: 'مفتوح · يقفل 9:00 م',
         isOpenNow: true,
         workingHours: _standardHours,
+        policies: MockPolicies.current,
       ),
 
       // الفرع التاني بيتولّد **من المحل نفسه** — الاسم والمنطقة والـ uuid
       // كلهم مشتقين، عشان مايبقاش فيه فرع اسمه «المعادي» تحت محل في
       // المهندسين ولا uuid يتكرر بين محلين.
-      if (MockConfig.scenario == MockScenario.twoBranches)
+      if (MockConfig.scenario.hasTwoBranches)
         BranchUiModel(
           uuid: 'brn-$providerUuid-2',
           name: 'فرع مدينة نصر',
@@ -192,6 +226,7 @@ class MockProviders {
           openStatusLabel: 'مفتوح · يقفل 9:00 م',
           isOpenNow: true,
           workingHours: _standardHours,
+          policies: MockPolicies.current,
         ),
     ];
   }

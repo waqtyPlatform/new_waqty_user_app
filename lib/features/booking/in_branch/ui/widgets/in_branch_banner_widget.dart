@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/core/models/in_branch_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_motion.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
 import 'package:waqty_user_application/core/widgets/app_band_widget.dart';
-import 'package:waqty_user_application/core/widgets/directional_chevron_widget.dart';
 
 /// شريط رفيع فوق التبويبات — بيظهر لما الكرسي يقرب، على **أي تبويب**.
 ///
@@ -50,9 +46,7 @@ class InBranchBannerWidget extends StatelessWidget {
         duration: AppMotion.base,
         curve: AppMotion.standard,
         opacity: isVisible ? 1 : 0,
-        child: isVisible
-            ? _band(live)
-            : const SizedBox(width: double.infinity),
+        child: isVisible ? _band(live) : const SizedBox(width: double.infinity),
       ),
     );
   }
@@ -78,13 +72,15 @@ class InBranchBannerWidget extends StatelessWidget {
               live.bannerLabel,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
+              // **`textOnAccentDeep` مش `textOnAccent`** — التاني بينقلب
+              // لحبر غامق في الوضع الغامق، وعلى الأخضر الغامق بيدي 2.52:1.
               style: AppTextStyles.bodyMdStrong.copyWith(
-                color: AppSemanticColors.textOnAccent,
+                color: AppSemanticColors.textOnAccentDeep,
               ),
             ),
           ),
           horizontalSpace(AppSpacing.s8),
-          const DirectionalChevronWidget(
+          DirectionalChevronWidget(
             size: 18,
             color: AppSemanticColors.textOnAccentMuted,
           ),

@@ -25,6 +25,22 @@ import 'package:waqty_user_application/features/service_provider_details/service
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/service_provider_details_screen.dart';
 import 'package:waqty_user_application/features/splash/logic/splash_cubit.dart';
 import 'package:waqty_user_application/features/splash/ui/splash_screen.dart';
+import 'package:waqty_user_application/features/providers/providers_list/data/repo/providers_list_repo.dart';
+import 'package:waqty_user_application/features/service_provider_details/service_provider_details/data/repo/service_provider_details_repo.dart';
+import 'package:waqty_user_application/features/booking/booking_details/data/repo/booking_details_repo.dart';
+import 'package:waqty_user_application/features/booking/reassignment/data/repo/reassignment_repo.dart';
+import 'package:waqty_user_application/features/booking/reassignment/logic/reassignment_cubit.dart';
+import 'package:waqty_user_application/features/booking/reassignment/ui/reassignment_screen.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/data/repo/entitlements_repo.dart';
+import 'package:waqty_user_application/features/account/phone_verification/data/repo/phone_verification_repo.dart';
+import 'package:waqty_user_application/features/account/phone_verification/logic/phone_verification_cubit.dart';
+import 'package:waqty_user_application/features/account/phone_verification/ui/phone_verification_screen.dart';
+import 'package:waqty_user_application/features/account/payments/data/repo/payments_repo.dart';
+import 'package:waqty_user_application/features/account/payments/logic/payments_cubit.dart';
+import 'package:waqty_user_application/features/account/payments/ui/payments_screen.dart';
+import 'package:waqty_user_application/core/api/session_store.dart';
+import 'package:waqty_user_application/features/splash/data/repo/app_gate_repo.dart';
+import 'package:waqty_user_application/features/home/home/data/repo/home_repo.dart';
 
 class RouteGenerator {
   static Route<dynamic>? generateRoute(RouteSettings settings) {
@@ -33,7 +49,10 @@ class RouteGenerator {
       case Routes.splashScreen:
         return MaterialPageRoute(
           builder: (_) => BlocProvider(
-            create: (context) => SplashCubit()..checkSession(),
+            create: (context) => SplashCubit(
+              getIt<AppGateRepo>(),
+              getIt<SessionStore>(),
+            )..checkSession(),
             child: const SplashScreen(),
           ),
         );
@@ -92,8 +111,9 @@ class RouteGenerator {
         return MaterialPageRoute(
           builder: (_) => BlocProvider(
             create: (context) => ButtonNavigationBarCubit(
+              getIt<HomeRepo>(),
               initialIndex: (navArgs['initialIndex'] as int?) ?? 0,
-            ),
+            )..start(),
             child: const ButtonNavigationBarScreen(),
           ),
         );
@@ -101,11 +121,39 @@ class RouteGenerator {
       case Routes.bookingSuccessScreen:
         return MaterialPageRoute(builder: (_) => const BookingSuccessScreen());
 
+      case Routes.paymentsScreen:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (context) => PaymentsCubit(getIt<PaymentsRepo>())..load(),
+            child: const PaymentsScreen(),
+          ),
+        );
+
+      case Routes.phoneVerificationScreen:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (context) =>
+                PhoneVerificationCubit(getIt<PhoneVerificationRepo>()),
+            child: const PhoneVerificationScreen(),
+          ),
+        );
+
+      case Routes.reassignmentScreen:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (context) =>
+                ReassignmentCubit(getIt<ReassignmentRepo>())..start(),
+            child: const ReassignmentScreen(),
+          ),
+        );
+
       case Routes.bookingDetailsScreen:
         final bookingArgs = args is Map ? args : const <String, dynamic>{};
         return MaterialPageRoute(
           builder: (_) => BlocProvider(
             create: (context) => BookingDetailsCubit(
+              getIt<BookingDetailsRepo>(),
+              getIt<EntitlementsRepo>(),
               bookingUuid: (bookingArgs['bookingUuid'] as String?) ?? '',
             )..loadBooking(),
             child: const BookingDetailsScreen(),
@@ -116,6 +164,8 @@ class RouteGenerator {
         return MaterialPageRoute(
           builder: (_) => BlocProvider(
             create: (context) => ServiceProviderDetailsCubit(
+              getIt<ServiceProviderDetailsRepo>(),
+              getIt<EntitlementsRepo>(),
               providerUuid: (detailsArgs['providerUuid'] as String?) ?? '',
             )..loadDetails(),
             child: const ServiceProviderDetailsScreen(),
@@ -129,6 +179,7 @@ class RouteGenerator {
         return MaterialPageRoute(
           builder: (_) => BlocProvider(
             create: (context) => ProvidersListCubit(
+              getIt<ProvidersListRepo>(),
               initialCategoryUuid: map['categoryUuid'] as String?,
             )..loadInitial(),
             // الـ Scaffold والـ AppBar مكانهم هنا مش جوه الشاشة.

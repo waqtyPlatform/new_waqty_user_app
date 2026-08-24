@@ -1,14 +1,11 @@
+import 'package:waqty_user_application/core/widgets/discount_price_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/core/mock/mock_in_branch.dart';
 import 'package:waqty_user_application/core/models/booking_ui_model.dart';
 import 'package:waqty_user_application/core/models/in_branch_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_format.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/app_row_widget.dart';
 import 'package:waqty_user_application/core/widgets/booking_status_chip_widget.dart';
 import 'package:waqty_user_application/features/booking/in_branch/ui/widgets/in_branch_chip_widget.dart';
 
@@ -36,29 +33,44 @@ import 'package:waqty_user_application/features/booking/in_branch/ui/widgets/in_
 /// هو الهيرو في الهوم وبلوك التفاصيل بس، وهما واحد في الشاشة.
 class MyBookingRowWidget extends StatelessWidget {
   /// **الحسبة:** ١٢ حشوة فوق + ١٢ تحت (من [AppRowWidget]) = ٢٤، زائد
-  /// المسافات جوه عمود النص: ٤ (`titleToSubtitle`) + ٨ (`subtitleToMeta`)
-  /// = ١٢. **المجموع ٣٦.**
+  /// المسافات جوه عمود النص: ٤ (`titleToSubtitle`) + ٤ = **٣٢**.
   ///
-  /// كان ٤٠ في الكارت لأن المسافة قبل صف البيانات كانت `s12` مكتوبة بإيدها.
-  /// بقت `subtitleToMeta` — نفس الدور في كل الصفوف بنفس الرقم.
-  static const double _fixedPart = 36;
+  /// ⚠ **مشتق من التوكنز مش رقم مكتوب.** الرقم ده اتكتب ٣٦ أول ما الحشوة
+  /// كانت ١٢، وبقى ٤٠ لما بقت ١٦ — ومع الكيت رجعت ١٢ تاني. تلات مرات
+  /// نفس الرقم يتصلّح بالإيد كفاية: خلّيه يقرا من التوكن.
+  ///
+  /// والمسافة قبل صف البيانات نزلت من ٨ لـ ٤: التلات سطور دول بيانات الحجز
+  /// نفسه، والفصل الحقيقي بين اسم المحل وبينهم.
+  static const double _fixedPart =
+      (AppSpacing.cardPadding * 2) + AppSpacing.titleToSubtitle + AppSpacing.s4;
 
   /// **الحسبة عند مقياس خط ١٫٠:**
-  /// `cardTitle` ١٦×١٫٤٠ = ٢٢٫٤ · `caption` ١٢×١٫٤٠ = ١٦٫٨ ·
-  /// `bodyMdStrong` ١٤×١٫٥٠ = ٢١. **المجموع ٦٠٫٢.**
+  /// `cardTitle` ١٦×١٫٤٠ = ٢٢٫٤ · `caption` ١٢×١٫٤٠ = ١٦٫٨ · وسطر البيانات
+  /// أطول حاجة فيه شارة الميعاد (١٤٫٣ + ٨ حشوة = ٢٢٫٣) أو السعر
+  /// (`bodyMdStrong` ٢١) — بنحجز ٢٤٫٨. المجموع الحسابي **٦٤**، والرقم هنا ٦٨ — تلات سطور، وفلاتر بيقرّب كل واحد فيهم لأعلى
+  /// لتقريب فلاتر لارتفاع السطر.
   ///
-  /// السطر الأول بيتحسب بالعنوان مش بالشارة: الشارة `overline` ١١×١٫٣٠ =
-  /// ١٤٫٣ زائد ٨ حشوة رأسية = **٢٢٫٣** — أقصر من العنوان بعُشر بكسل،
-  /// فالعنوان هو اللي بيحدد الارتفاع دايمًا. وأيقونات البيانات ١٦ وصفها
-  /// نصه ٢١، فهي كمان مابتحددش حاجة.
-  static const double _textPart = 60.2;
+  /// الشارة `captionStrong` ١٢×١٫٤٠ =
+  /// ١٦٫٨ زائد ٨ حشوة رأسية = **٢٤٫٨** — أطول من العنوان، فهي اللي
+  /// بتحدد ارتفاع السطر التالت.
+  static const double _textPart = 68;
+
+  /// شارة «قيّم الخدمة» بتزوّد سطر — مسافة ٤ وحشوة الشارة ٨ ثابتين،
+  /// ونصها (`captionStrong` = ١٢×١٫٤٠) بيكبر مع المقياس.
+  static const double _ratingFixed = AppSpacing.s4 + AppSpacing.s8;
+  static const double _ratingText = 16.8;
 
   /// المصدر الوحيد للارتفاع — **و`MyBookingRowSkeletonWidget` بيقراه من هنا**.
-  static double heightOf(BuildContext context) => AppSpacing.scaledHeight(
-    context,
-    fixed: _fixedPart,
-    text: _textPart,
-  );
+  ///
+  /// ⚠ [hasRatingLine] **لازم يتبعت.** شارة التقييم كانت بتترسم من غير ما
+  /// تتحسب خالص — يعني أي حجز مكتمل من غير تقييم كان صفه **بيفيض ٢٠ بكسل**.
+  /// الـ skeleton بيسيبها `false` لأنه مابيعرفش إيه اللي جاي.
+  static double heightOf(BuildContext context, {bool hasRatingLine = false}) =>
+      AppSpacing.scaledHeight(
+        context,
+        fixed: _fixedPart + (hasRatingLine ? _ratingFixed : 0),
+        text: _textPart + (hasRatingLine ? _ratingText : 0),
+      );
 
   final BookingUiModel booking;
   final VoidCallback onTap;
@@ -80,7 +92,7 @@ class MyBookingRowWidget extends StatelessWidget {
 
     return AppRowWidget(
       onTap: onTap,
-      height: heightOf(context).h,
+      height: heightOf(context, hasRatingLine: booking.hasPendingRatings).h,
       showHairline: showHairline,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -131,30 +143,36 @@ class MyBookingRowWidget extends StatelessWidget {
           // («فاهمين إن التقييم لكل خدمة؟»). رقم في الصف بيجاوب السؤال
           // قبل ما العميل يفتح أصلاً.
           if (booking.hasPendingRatings) ...[
-            verticalSpace(AppSpacing.titleToSubtitle),
-            Text(
-              booking.rateableItems.length == 1
+            verticalSpace(AppSpacing.s4),
+            // شارة مش نص أخضر — نفس لغة «أقرب موعد» في صف المحل: الحاجة
+            // اللي عايزة فعل من العميل بتاخد حدود وخلفية عشان تتفرّق عن
+            // الوصف اللي حواليها.
+            AppPillWidget(
+              label: booking.rateableItems.length == 1
                   ? 'قيّم الخدمة'
                   : 'قيّم ${AppFormat.digits(booking.rateableItems.length)} خدمات',
-              style: AppTextStyles.captionAccent,
+              icon: Icons.star_rounded,
+              tone: AppPillTone.accent,
             ),
           ],
-          verticalSpace(AppSpacing.subtitleToMeta),
+          verticalSpace(AppSpacing.s4),
           Row(
             children: [
-              _MetaIcon(icon: Icons.calendar_today_rounded),
-              horizontalSpace(AppSpacing.s4),
-              Text(
-                AppFormat.relativeDate(booking.startAt),
-                style: AppTextStyles.captionInk,
+              // **شارة واحدة بدل أربع عناصر.**
+              //
+              // كان: أيقونة + تاريخ + مسافة + أيقونة + وقت. الخمسة دول
+              // بيتمدّوا مع مقياس الخط، وعند ١٫٣ الصف كان **بيفيض ١٠٣
+              // بكسل عرضًا** — يعني السعر بيتقص من الشاشة في أهم صف.
+              //
+              // «النهاردة ٦:٠٠ م» نص واحد في شارة واحدة: أضيق، وبيقرا
+              // كوحدة زمنية واحدة بدل حاجتين جنب بعض.
+              Flexible(
+                child: AppPillWidget(
+                  label: AppFormat.relativeDateTime(booking.startAt),
+                  icon: Icons.calendar_today_rounded,
+                ),
               ),
-              horizontalSpace(AppSpacing.s12),
-              _MetaIcon(icon: Icons.access_time_rounded),
-              horizontalSpace(AppSpacing.s4),
-              Text(
-                AppFormat.time(booking.startAt),
-                style: AppTextStyles.captionInk,
-              ),
+              horizontalSpace(AppSpacing.s8),
               const Spacer(),
               // **الخصم بيبان من القايمة مش من التفاصيل بس.**
               //
@@ -166,10 +184,7 @@ class MyBookingRowWidget extends StatelessWidget {
               // بيمرّ على القايمة، مابيفتحش كل حجز. سعر مشطوب جنب السعر
               // الجديد بيقول القصة في نص ثانية من غير لابل ولا لون صارخ.
               if (booking.hasDiscount) ...[
-                Text(
-                  AppFormat.money(booking.originalPrice!),
-                  style: AppTextStyles.captionStruck,
-                ),
+                DiscountPriceWidget(amount: booking.originalPrice!),
                 horizontalSpace(AppSpacing.s4),
               ],
               Text(
@@ -193,17 +208,4 @@ class MyBookingRowWidget extends StatelessWidget {
       MockInBranch.forBooking(booking, DateTime.now());
 }
 
-/// أيقونة بيانات صغيرة — رمادية دايمًا، حجم موحّد.
-///
-/// كان فيه ١١ حجم أيقونة لـ ٢٤ أيقونة في الأبلكيشن. الأحجام بقت ٤ بس:
-/// **١٦ للبيانات · ٢٠ للأفعال · ٢٤ للتنقّل · ٣٢ للحالات الفاضية.**
-class _MetaIcon extends StatelessWidget {
-  final IconData icon;
-
-  const _MetaIcon({required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    return Icon(icon, size: 16.r, color: AppSemanticColors.textTertiary);
-  }
-}
+// `_MetaIcon` اتشال — التاريخ والوقت بقوا شارة واحدة، والأيقونة جوّاها.

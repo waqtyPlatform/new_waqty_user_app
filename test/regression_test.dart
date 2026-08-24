@@ -1,18 +1,52 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:waqty_user_application/core/mock/mock_bookings.dart';
 import 'package:waqty_user_application/core/mock/mock_config.dart';
+import 'package:waqty_user_application/core/mock/mock_employees.dart';
+import 'package:waqty_user_application/core/mock/mock_in_branch.dart';
 import 'package:waqty_user_application/core/mock/mock_providers.dart';
 import 'package:waqty_user_application/core/mock/mock_scenario.dart';
 import 'package:waqty_user_application/core/mock/mock_waitlist.dart';
 import 'package:waqty_user_application/core/models/booking_ui_model.dart';
+import 'package:waqty_user_application/core/models/service_ui_model.dart';
+import 'package:waqty_user_application/features/booking/booking_details/logic/booking_details_cubit.dart';
 import 'package:waqty_user_application/features/booking/create_booking/logic/create_booking_cubit.dart';
 import 'package:waqty_user_application/features/booking/create_booking/logic/create_booking_state.dart';
+import 'package:waqty_user_application/features/service_provider_details/service_provider_details/logic/service_provider_details_cubit.dart';
+import 'package:waqty_user_application/features/service_provider_details/service_provider_details/data/repo/service_provider_details_repo.dart';
+import 'package:waqty_user_application/features/service_provider_details/service_provider_details/data/services/service_provider_details_mock_service.dart';
+import 'package:waqty_user_application/features/booking/booking_details/data/repo/booking_details_repo.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/data/repo/entitlements_repo.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/data/services/entitlements_mock_service.dart';
+import 'package:waqty_user_application/features/booking/booking_details/data/services/booking_details_mock_service.dart';
+import 'package:waqty_user_application/features/booking/create_booking/data/services/create_booking_mock_service.dart';
+import 'package:waqty_user_application/features/booking/create_booking/data/repo/create_booking_repo.dart';
 
 /// باجات اتلقت في مراجعة شغل الأسابيع ١–٣.
 ///
 /// كل اختبار هنا **وقع فعلاً** قبل ما يتصلّح. الغرض إنهم مايرجعوش.
+/// بيستنى لحد ما [condition] تبقى صح، أو يطلع وقته.
+///
+/// بديل `Future.delayed` بمدة مخمّنة: المدة الثابتة بتبقى معايرة لعدد
+/// نداءات معيّن، فأول ما العدد يتغيّر الاختبار يبقى هش من غير ما السلوك
+/// يتكسر.
+Future<void> _until(
+  bool Function() condition, {
+  Duration timeout = const Duration(seconds: 2),
+}) async {
+  final deadline = DateTime.now().add(timeout);
+  while (!condition() && DateTime.now().isBefore(deadline)) {
+    await Future<void>.delayed(const Duration(milliseconds: 5));
+  }
+}
+
 void main() {
-  setUp(() => MockConfig.delay = Duration.zero);
+  setUp(() {
+    MockConfig.delay = Duration.zero;
+    // ⚠ **حالة ساكنة لازم تتصفّر.** محاكاة «الميعاد راح» بتوقّع
+    // مرة واحدة في الجلسة (عشان العميل يقدر يكمّل بعدها)، فمن غير
+    // التصفير أول اختبار بيحرقها واللي بعده مايشوفهاش.
+    CreateBookingMockService.resetScenario();
+  });
   tearDown(() {
     MockConfig.scenario = MockScenario.happyPath;
     MockConfig.delay = const Duration(milliseconds: 600);
@@ -53,16 +87,212 @@ void main() {
     });
   });
 
+  /// **«احجز تاني» من التفاصيل كان بيوقّع العميل على مختار الخدمات.**
+  ///
+  /// المدخل التاني لنفس الـ sheet (بطاقة الإشعار في «مواعيدي») كان بيبعت
+  /// `serviceUuid` من الأول، فنفس الزرار بالظبط كان بيدّي نتيجتين مختلفتين
+  /// على حسب العميل دخل منين. والتعليق اللي في الشاشة كان بيقول إن ده
+  /// مستحيل لأن `serviceUuid` مش موجود — وهو حقل **مطلوب** من الأصل.
+  group('«احجز تاني» بيتخطى اختيار الخدمة', () {
+    test('الخدمة بتتحط في السلة والخطوة بتبقى الميعاد', () async {
+      final booking = MockBookings.upcoming.first;
+
+      // نفس النداء اللي `_rebook` بيعمله بالظبط.
+      final cubit = CreateBookingCubit(
+        CreateBookingRepo(
+      const CreateBookingMockService(),
+      const CreateBookingMockService(),
+    ),
+        providerUuid: booking.providerUuid,
+        providerName: booking.providerName,
+        initialBranchUuid: booking.branchUuid,
+        initialServiceUuid: booking.items.first.serviceUuid,
+      );
+      await cubit.bootstrap();
+
+      expect(cubit.currentStep, BookingStep.dateTime);
+      expect(cubit.items.single.service.uuid, booking.items.first.serviceUuid);
+      addTearDown(cubit.close);
+    });
+
+    /// الحقل اللي التعليق القديم كان بيقول إنه مش موجود.
+    test('كل بند في كل حجز عنده serviceUuid', () {
+      for (final booking in <BookingUiModel>[
+        ...MockBookings.upcoming,
+        ...MockBookings.past,
+      ]) {
+        for (final item in booking.items) {
+          expect(
+            item.serviceUuid,
+            isNotEmpty,
+            reason: '«${item.serviceName}» في ${booking.uuid} من غير uuid',
+          );
+        }
+      }
+    });
+  });
+
+  /// **العميل كان بيكتب رأيه والأبلكيشن بيرميه.**
+  ///
+  /// نفس الباج اللي `cancelBooking` اتصلّح منه — واتصلّح في نصه بس.
+  group('تعليق التقييم بيوصل', () {
+    test('اللي اتكتب بيتخزّن على الخدمة', () async {
+      MockConfig.scenario = MockScenario.completedUnrated;
+      final booking = MockBookings.past.first;
+      final item = booking.rateableItems.first;
+
+      final cubit = BookingDetailsCubit(BookingDetailsRepo(
+        const BookingDetailsMockService(),
+        const BookingDetailsMockService(),
+      ), EntitlementsRepo(
+        const EntitlementsMockService(),
+        const EntitlementsMockService(),
+      ), bookingUuid: booking.uuid)
+        ..startRating(item)
+        ..changeRating(4);
+      cubit.rateCommentController.text = '  الحلاقة كانت ممتازة  ';
+
+      await cubit.submitRating();
+
+      expect(item.rating, 4);
+      // مقصوص من الجناب — نفس اللي `cancelBooking` بيعمله بالظبط.
+      expect(item.ratingComment, 'الحلاقة كانت ممتازة');
+      // والحقل بيتفضّى بعد الإرسال عشان التقييم اللي بعده يبدأ نضيف.
+      expect(cubit.rateCommentController.text, isEmpty);
+
+      await cubit.close();
+    });
+
+    test('من غير تعليق مافيش حاجة تتعرض', () async {
+      MockConfig.scenario = MockScenario.completedUnrated;
+      final booking = MockBookings.past.first;
+      final item = booking.rateableItems.first;
+
+      final cubit = BookingDetailsCubit(BookingDetailsRepo(
+        const BookingDetailsMockService(),
+        const BookingDetailsMockService(),
+      ), EntitlementsRepo(
+        const EntitlementsMockService(),
+        const EntitlementsMockService(),
+      ), bookingUuid: booking.uuid)
+        ..startRating(item)
+        ..changeRating(5);
+
+      await cubit.submitRating();
+
+      expect(item.rating, 5);
+      expect(item.ratingComment, isEmpty);
+
+      await cubit.close();
+    });
+  });
+
+  /// **`changeBranch` كان بيحطّ الفرع ويـ`emit` وبس.**
+  ///
+  /// وتعليقه فوقه بيقول «بيحمّل الخدمات من الأول» — يعني التوثيق كان
+  /// بيوصف كود مش موجود. النتيجة إن العميل بيغيّر الفرع وبيفضل بيبصّ على
+  /// أسعار وأخصائيين الفرع اللي ساب.
+  group('تغيير الفرع في شاشة المحل بيعيد التحميل فعلاً', () {
+    test('الأسعار والأخصائيين بيتغيّروا', () async {
+      final cubit = ServiceProviderDetailsCubit(ServiceProviderDetailsRepo(
+        const ServiceProviderDetailsMockService(),
+        const ServiceProviderDetailsMockService(),
+      ), EntitlementsRepo(
+        const EntitlementsMockService(),
+        const EntitlementsMockService(),
+      ), providerUuid: 'prv-1');
+      await cubit.loadDetails();
+
+      final before = cubit.services.map((s) => s.price).toList();
+      final staffBefore = cubit.employees.map((e) => e.uuid).toList();
+      expect(before, isNotEmpty);
+      expect(staffBefore, isNotEmpty);
+
+      await cubit.changeBranch(cubit.branches[1]);
+
+      expect(cubit.services.map((s) => s.price), isNot(before));
+      expect(cubit.employees.map((e) => e.uuid), isNot(staffBefore));
+      expect(cubit.isReloadingBranch, isFalse);
+
+      await cubit.close();
+    });
+
+    /// **الشارة فوق كانت بتقول ٢٥٠ والصف تحتها بيقول ٢٩٠.**
+    ///
+    /// `ProviderUiModel.priceFrom` و`servicesCount` مستوى **المحل**، فأول
+    /// ما الأسعار بقت فرعية بقوا بيناقضوا القايمة اللي تحتيهم على نفس
+    /// الشاشة من غير سكرول.
+    test('«يبدأ من» وعدد الخدمات بيتحسبوا من خدمات الفرع', () async {
+      final cubit = ServiceProviderDetailsCubit(ServiceProviderDetailsRepo(
+        const ServiceProviderDetailsMockService(),
+        const ServiceProviderDetailsMockService(),
+      ), EntitlementsRepo(
+        const EntitlementsMockService(),
+        const EntitlementsMockService(),
+      ), providerUuid: 'prv-1');
+      await cubit.loadDetails();
+
+      double cheapest(List<ServiceUiModel> list) => list
+          .where((s) => !s.isCategory && s.price > 0)
+          .map((s) => s.price)
+          .reduce((a, b) => a < b ? a : b);
+
+      final before = cheapest(cubit.services);
+      await cubit.changeBranch(cubit.branches[1]);
+
+      expect(cheapest(cubit.services), greaterThan(before));
+
+      await cubit.close();
+    });
+
+    /// الأخصائيين كانوا بيتحمّلوا بـ`forService('')` — نص فاضي بيقع في
+    /// الـ `null` بتاع خريطة الخدمات فبيرجّع الفريق كله **بالصدفة**.
+    test('الأخصائيين طاقم الفرع مش الفريق كله بالصدفة', () async {
+      final cubit = ServiceProviderDetailsCubit(ServiceProviderDetailsRepo(
+        const ServiceProviderDetailsMockService(),
+        const ServiceProviderDetailsMockService(),
+      ), EntitlementsRepo(
+        const EntitlementsMockService(),
+        const EntitlementsMockService(),
+      ), providerUuid: 'prv-1');
+      await cubit.loadDetails();
+
+      expect(
+        cubit.employees.map((e) => e.uuid),
+        MockEmployees.rosterOf().map((e) => e.uuid),
+      );
+      expect(cubit.employees.any((e) => e.isAnyAvailable), isFalse);
+
+      await cubit.changeBranch(cubit.branches[1]);
+      expect(
+        cubit.employees.map((e) => e.uuid),
+        MockEmployees.rosterOf(branchIndex: 1).map((e) => e.uuid),
+      );
+
+      await cubit.close();
+    });
+  });
+
   group('تغيير الفرع بيعيد تحميل الكارت المفتوح', () {
     test('الكارت مابيفضلش فاضي بعد التغيير', () async {
       final cubit = CreateBookingCubit(
+        CreateBookingRepo(
+      const CreateBookingMockService(),
+      const CreateBookingMockService(),
+    ),
         providerUuid: 'prv-1',
         providerName: 'صالون كابتن',
         initialServiceUuid: 'srv-1',
       )..enterDateTimeStep();
+      await cubit.bootstrap();
 
-      // نستنى أول تحميل يخلص. الافتراضي بعد Phase 4 هو الاقتراحات.
-      await Future<void>.delayed(const Duration(milliseconds: 20));
+      // ⚠ **استنى على الحالة مش على مدة ثابتة.**
+      //
+      // الاقتراحات بقت نداء تواريخ + نداءات مواعيد متوازية بدل نداء
+      // واحد. الـ٢٠ ملي ثانية كانت معايرة للنداء الواحد، وبقت بتقع
+      // لما الاختبارات تتشغّل مع بعض (حمل على الجهاز). الانتظار على
+      // النتيجة مش على الوقت بيشيل الهشاشة دي خالص.
+      await _until(() => cubit.items.single.proposals.isNotEmpty);
       expect(cubit.items.single.proposals, isNotEmpty);
 
       final other = MockProviders.branchesOf('prv-1')[1];
@@ -71,7 +301,7 @@ void main() {
       // `_clearScheduling` بيفضّي التواريخ، و`enterDateTimeStep` بيرجع
       // من غير ما يعمل حاجة لو فيه كارت مفتوح — فالكارت كان بيفضل مفتوح
       // على تقويم من غير أيام.
-      await Future<void>.delayed(const Duration(milliseconds: 20));
+      await _until(() => cubit.items.single.proposals.isNotEmpty);
 
       expect(cubit.selectedBranch?.uuid, other.uuid);
       expect(cubit.items.single.proposals, isNotEmpty);
@@ -81,12 +311,17 @@ void main() {
 
     test('اختيار نفس الفرع مابيرميش الشغل', () async {
       final cubit = CreateBookingCubit(
+        CreateBookingRepo(
+      const CreateBookingMockService(),
+      const CreateBookingMockService(),
+    ),
         providerUuid: 'prv-1',
         providerName: 'صالون كابتن',
         initialServiceUuid: 'srv-1',
       )..enterDateTimeStep();
+      await cubit.bootstrap();
 
-      await Future<void>.delayed(const Duration(milliseconds: 20));
+      await _until(() => cubit.items.single.proposals.isNotEmpty);
       final item = cubit.items.single;
       item.selectedSlot = item.proposals.first;
 
@@ -102,12 +337,17 @@ void main() {
       MockConfig.scenario = MockScenario.slotLostAtConfirm;
 
       final cubit = CreateBookingCubit(
+        CreateBookingRepo(
+      const CreateBookingMockService(),
+      const CreateBookingMockService(),
+    ),
         providerUuid: 'prv-1',
         providerName: 'صالون كابتن',
         initialServiceUuid: 'srv-1',
       )..enterDateTimeStep();
+      await cubit.bootstrap();
 
-      await Future<void>.delayed(const Duration(milliseconds: 20));
+      await _until(() => cubit.items.single.proposals.isNotEmpty);
       final item = cubit.items.single;
       item.selectedSlot = item.proposals.first;
 
@@ -136,27 +376,86 @@ void main() {
   });
 
   group('الفرع بيتنقل بالـ uuid كمان', () {
-    test('«احجز تاني» بيفتح على فرع الحجز القديم', () {
+    test('«احجز تاني» بيفتح على فرع الحجز القديم', () async {
       final cubit = CreateBookingCubit(
+        CreateBookingRepo(
+      const CreateBookingMockService(),
+      const CreateBookingMockService(),
+    ),
         providerUuid: 'prv-1',
         providerName: 'صالون كابتن',
         // فرع مدينة نصر — مش الأول في القايمة.
         initialBranchUuid: 'brn-2',
       );
+      await cubit.bootstrap();
 
       expect(cubit.selectedBranch?.uuid, 'brn-2');
       cubit.close();
     });
 
-    test('uuid مش موجود بيقع على أول فرع', () {
+    test('uuid مش موجود بيقع على أول فرع', () async {
       final cubit = CreateBookingCubit(
+        CreateBookingRepo(
+      const CreateBookingMockService(),
+      const CreateBookingMockService(),
+    ),
         providerUuid: 'prv-1',
         providerName: 'صالون كابتن',
         initialBranchUuid: 'brn-does-not-exist',
       );
+      await cubit.bootstrap();
 
       expect(cubit.selectedBranch?.uuid, 'brn-1');
       cubit.close();
+    });
+  });
+
+  /// **النص كان بيقول قاعدة السيرفر مالهاش وجود.**
+  ///
+  /// `Booking::getCanCancelAttribute()` بيقفل الإلغاء لما الميعاد
+  /// **يعدّي** — مش عشان هو في نفس اليوم. والفيكستشر كانت مشفّرة نفس
+  /// سوء الفهم، فأي حد يقراها كان هيعيد استنتاج النص الغلط.
+  group('نافذة الإلغاء', () {
+    test('حجز النهاردة اللي لسه ما بدأش ينفع يتلغي', () {
+      MockConfig.scenario = MockScenario.happyPath;
+      final booking = MockBookings.upcoming.single;
+
+      expect(booking.canCancel, isTrue);
+    });
+
+    test('الميعاد اللي بدأ الإلغاء عنده مقفول', () {
+      MockConfig.scenario = MockScenario.cancelWindowClosed;
+      final booking = MockBookings.upcoming.single;
+
+      expect(booking.canCancel, isFalse);
+      // بدأ فعلاً — مش «النهاردة» وبس.
+      expect(booking.items.first.startAt.isBefore(DateTime.now()), isTrue);
+      // ولسه في «القادمة» عشان الفرع ما علّمش الوصول، وده اللي بيخلي
+      // العميل يلاقيه ويدوس عليه.
+      expect(booking.status, BookingStatus.confirmed);
+    });
+
+    /// الحالة دي مكانش ليها fixture خالص، فالنص عمره ما اتشاف في سياقه.
+    test('فيه سيناريو واحد بالظبط بيوصّل للحالة دي', () {
+      final producing = <MockScenario>[];
+
+      for (final scenario in MockScenario.values) {
+        MockConfig.scenario = scenario;
+        if (MockBookings.upcoming.any((b) => !b.canCancel)) {
+          producing.add(scenario);
+        }
+      }
+
+      // حالات الفرع بتديها كمان — وده **صح** بقاعدة السيرفر: «وصل»
+      // و«مستني» و«في الخدمة» كلهم معناهم إن الميعاد بدأ.
+      expect(producing, contains(MockScenario.cancelWindowClosed));
+      for (final scenario in producing) {
+        expect(
+          scenario == MockScenario.cancelWindowClosed || scenario.isInBranch,
+          isTrue,
+          reason: '«${scenario.title}» بيقفل الإلغاء من غير ما الميعاد يبدأ',
+        );
+      }
     });
   });
 
@@ -180,19 +479,45 @@ void main() {
     String fingerprintOf(MockScenario scenario) {
       MockConfig.scenario = scenario;
 
+      // `canCancel` في البصمة عشان `cancelWindowClosed` **كل فرقها هو
+      // ده** — من غيره البصمة مابتشوفش الحاجة اللي السيناريو معمول عشانها.
+      //
+      // وحالة كل زيارة لنفس السبب بالظبط: بقى ينفع سيناريوهين يتطابقوا في
+      // كل حاجة ويفترقوا في إن زيارة خلصت والتانية لأ — وده فرق **بيبان
+      // على الشاشة**، بلوك «إنت في الفرع» بيظهر ولا لأ.
       String describe(List<BookingUiModel> list) => list
-          .map((b) =>
-              '${b.status.name}:${b.branchUuid}:${b.items.map((i) => '${i.serviceUuid}@${i.startAt}=${i.price}/${i.ratingStatus.name}').join(',')}')
+          .map(
+            (b) =>
+                '${b.status.name}:${b.branchUuid}:${b.canCancel}'
+                ':${b.visits.map((v) => '${v.uuid}=${v.status.name}').join('+')}'
+                ':${b.items.map((i) => '${i.serviceUuid}@${i.startAt}=${i.price}/${i.ratingStatus.name}').join(',')}',
+          )
           .join(' , ');
 
-      final waitlist = MockWaitlist.forUser(DateTime.now())
-          .map((e) => '${e.status.name}:${e.serviceName}')
+      final waitlist = MockWaitlist.forUser(
+        DateTime.now(),
+      ).map((e) => '${e.status.name}:${e.serviceName}').join(' , ');
+
+      // **بلوك «إنت في الفرع» جزء من اللي التستر بيشوفه.**
+      //
+      // `waitingInBranch` و`waitingNoEstimate` بيعرضوا **نفس الحجز
+      // بالظبط** — وده مقصود، عشان المقارنة بينهم تبقى على متغيّر واحد.
+      // الفرق كله عايش في `MockInBranch`. من غير السطر ده البصمة بتشوف
+      // السيناريوهين متطابقين وبتفشل على تطابق حقيقي ومقصود.
+      //
+      // بناخد `hasLiveEstimate` مش النص: التقدير نفسه بيتحرّك مع ساعة
+      // الجهاز، فالنص كان هيدّي بصمات مختلفة كل ثانية ويخفي أي تصادم
+      // حقيقي ورا فرق وهمي.
+      final inBranch = MockBookings.upcoming
+          .map((b) => MockInBranch.forBooking(b, DateTime.now()))
+          .map((d) => d == null ? '—' : '${d.status.name}/${d.hasLiveEstimate}')
           .join(' , ');
 
       return 'قادمة[${describe(MockBookings.upcoming)}] '
           'سابقة[${describe(MockBookings.past)}] '
           'إشعارات[${describe(MockBookings.notices)}] '
-          'انتظار[$waitlist]';
+          'انتظار[$waitlist] '
+          'في الفرع[$inBranch]';
     }
 
     /// دول بيتحكموا من `MockConfig` (تأخير · خطأ · فاضي) مش من الـ
@@ -208,7 +533,9 @@ void main() {
 
       for (final scenario in MockScenario.values) {
         if (systemStates.contains(scenario)) continue;
-        byFingerprint.putIfAbsent(fingerprintOf(scenario), () => []).add(scenario);
+        byFingerprint
+            .putIfAbsent(fingerprintOf(scenario), () => [])
+            .add(scenario);
       }
 
       final clashes = byFingerprint.entries.where((e) => e.value.length > 1);
@@ -216,7 +543,8 @@ void main() {
       expect(
         clashes,
         isEmpty,
-        reason: 'سيناريوهات بتعرض نفس الحجوزات بالحرف: '
+        reason:
+            'سيناريوهات بتعرض نفس الحجوزات بالحرف: '
             '${clashes.map((e) => e.value.map((s) => s.title).join(' = ')).join(' · ')}',
       );
     });

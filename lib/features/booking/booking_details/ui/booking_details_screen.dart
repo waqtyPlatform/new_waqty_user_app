@@ -5,14 +5,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/config/routes/routes.dart';
 import 'package:waqty_user_application/core/models/booking_item_ui_model.dart';
 import 'package:waqty_user_application/core/models/booking_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/extentions.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/button_widget.dart';
-import 'package:waqty_user_application/core/widgets/error_state_widget.dart';
-import 'package:waqty_user_application/core/widgets/loading_widget.dart';
 import 'package:waqty_user_application/features/booking/booking_details/logic/booking_details_cubit.dart';
 import 'package:waqty_user_application/features/booking/booking_details/logic/booking_details_state.dart';
 import 'package:waqty_user_application/features/booking/booking_details/ui/widgets/booking_details_actions_widget.dart';
@@ -20,7 +15,15 @@ import 'package:waqty_user_application/features/booking/booking_details/ui/widge
 import 'package:waqty_user_application/features/booking/booking_details/ui/widgets/booking_details_in_branch_widget.dart';
 import 'package:waqty_user_application/features/booking/booking_details/ui/widgets/booking_rate_sheet_widget.dart';
 import 'package:waqty_user_application/features/booking/create_booking/ui/create_booking_sheet.dart';
+import 'package:waqty_user_application/features/booking/in_branch/ui/widgets/in_branch_block_widget.dart';
 import 'package:waqty_user_application/core/widgets/booking_status_chip_widget.dart';
+import 'package:waqty_user_application/core/services/services_locator.dart';
+import 'package:waqty_user_application/features/entitlements/entitlement_detail/ui/entitlement_detail_screen.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/data/repo/entitlements_repo.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/logic/entitlements_cubit.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/ui/widgets/follow_up_teaser_widget.dart';
+import 'package:waqty_user_application/core/widgets/policy_accordion_widget.dart';
+import 'package:waqty_user_application/core/widgets/policy_note_widget.dart';
 
 class BookingDetailsScreen extends StatelessWidget {
   const BookingDetailsScreen({super.key});
@@ -41,15 +44,13 @@ class BookingDetailsScreen extends StatelessWidget {
           }
           if (state is RateSuccessState) {
             Navigator.of(context).pop();
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                backgroundColor: AppSemanticColors.accent,
-                content: Text(
-                  'شكرًا، وصلنا تقييمك',
-                  style: AppTextStyles.labelOnAccent,
-                ),
-              ),
-            );
+            // **`AppSnack` مش `SnackBar` مكتوب بالإيد.**
+            //
+            // اللي كان هنا `textOnAccent` (أبيض) على تعبئة `accent` —
+            // **3.96:1**، راسب لنص. جدول README الكيت §٥ بيحط الحالة دي
+            // بالاسم. `AppSnack` بيقعد على `surfaceInverse` بـ
+            // `textOnInverse`، وبيلغي أي snackbar شغّال قبل ما يعرض.
+            AppSnack.show(context, message: 'شكرًا، وصلنا تقييمك');
           }
         },
         builder: (context, state) {
@@ -58,7 +59,7 @@ class BookingDetailsScreen extends StatelessWidget {
           if (state is BookingDetailsErrorState) {
             return Padding(
               padding: EdgeInsetsDirectional.symmetric(horizontal: 16.w),
-              child: ErrorStateWidget(
+              child: AppErrorStateWidget(
                 message: state.message,
                 onRetry: cubit.loadBooking,
               ),
@@ -67,8 +68,8 @@ class BookingDetailsScreen extends StatelessWidget {
 
           final booking = cubit.booking;
           if (booking == null) {
-            return const Center(
-              child: LoadingWidget(color: AppSemanticColors.accent),
+            return Center(
+              child: AppLoadingWidget(color: AppSemanticColors.accent),
             );
           }
 
@@ -96,6 +97,16 @@ class BookingDetailsScreen extends StatelessWidget {
               ),
               verticalSpace(AppSpacing.s16),
 
+              // **تعليمات قبل الزيارة — فوق كل حاجة، وقبل الميعاد بـ٢٤ ساعة
+              // بس.** دي الحاجة الوحيدة في الصفحة اللي العميلة **محتاجة
+              // تعمل حاجة بناءً عليها**، ولو نزلت تحت التفاصيل بتتقري بعد
+              // ما تبقى ما بقاش ينفع تتنفّذ. الـwidget بيطوي نفسه بره
+              // النافذة ولما النص فاضي.
+              PreVisitBannerWidget(
+                policies: booking.policies,
+                startAt: booking.startAt,
+              ),
+
               // الدور فوق التفاصيل — ده الرقم الوحيد في الصفحة اللي
               // بيتغيّر وإنت واقف تبصله. رقم الحجز والفرع والسعر ثابتين
               // ومحدش بيفتح الصفحة عشانهم وهو في الطريق للمحل.
@@ -105,15 +116,59 @@ class BookingDetailsScreen extends StatelessWidget {
               // مطلوب، وحالة الحجز مابتتغيّرش والصفحة مفتوحة فمافيش
               // حركة بتتقتل.
               // الـ widget بيخفي نفسه لما الحجز مش في الفرع — والشرط
-              // بقى `isInBranch` مش `isUpcoming`. حجز بكرة **مالوش**
-              // حالة فرع، والقديم كان بيبني `BranchQueueCubit` بمؤقت
-              // لكل حجز جاي حتى لو معاده الأسبوع الجاي.
-              if (booking.status.isInBranch) ...[
+              // بقى حالة **الزيارة الحالية** مش `isUpcoming`. حجز بكرة
+              // **مالوش** حالة فرع، والقديم كان بيبني `BranchQueueCubit`
+              // بمؤقت لكل حجز جاي حتى لو معاده الأسبوع الجاي.
+              //
+              // ⚠ **نفس الدالة اللي جوه الـ widget بالظبط.** لو الاتنين
+              // اختلفوا، الشرط ده بيعدّي والـ widget بيرجّع `shrink` —
+              // فتفضل مسافة فاضية تحتها من غير أي حاجة فوقها.
+              if (shouldShowInBranch(booking, DateTime.now())) ...[
                 BookingDetailsInBranchWidget(booking: booking),
                 verticalSpace(AppSpacing.s16),
               ],
 
+              // **المتابعة اللي الحجز ده ولّدها — تحت التفاصيل مباشرة.**
+              //
+              // مكانها بعد التفاصيل مش فوقها: العميلة فتحت الشاشة عشان
+              // الحجز، والمتابعة **معلومة جديدة** بتتقدّم بعد ما تلاقي
+              // اللي جاية عشانه. فوق كانت هتزاحم الغرض الأساسي.
+              if (cubit.followUp != null) ...[
+                verticalSpace(AppSpacing.s16),
+                FollowUpTeaserWidget(
+                  followUp: cubit.followUp!,
+                  onTap: cubit.followUp!.isBookableFromApp
+                      ? () => _openFollowUp(context, cubit)
+                      : null,
+                ),
+              ],
+
               BookingDetailsInfoWidget(booking: booking),
+
+              // **سياسة الفلوس بتظهر في الحالة اللي بتلزم فيها بس.**
+              //
+              // الاسترجاع بيهم حجز اتلغى، وعدم الحضور بيهم حجز الفرع
+              // علّمه `no_show` — وعرضهم على حجز جاي ضوضاء بتخوّف من
+              // غير سبب. الـ`column` بيلمّ الموجود بس فمافيش فاصل
+              // بيتحط لسطر مش هيترسم.
+              // TODO(api): BE-B1.
+              if (booking.status.isCancelled ||
+                  booking.status == BookingStatus.noShow) ...[
+                verticalSpace(AppSpacing.s16),
+                PolicyNoteWidget.column(<PolicyNoteWidget>[
+                  if (booking.status.isCancelled)
+                    PolicyNoteWidget(
+                      label: 'الاسترجاع',
+                      text: booking.policies.refundPolicy,
+                    ),
+                  if (booking.status == BookingStatus.noShow)
+                    PolicyNoteWidget(
+                      label: 'لو ما حضرتش',
+                      text: booking.policies.noShowPolicy,
+                    ),
+                ]),
+              ],
+
               verticalSpace(AppSpacing.s24),
               BookingDetailsActionsWidget(
                 booking: booking,
@@ -134,10 +189,17 @@ class BookingDetailsScreen extends StatelessWidget {
   /// و«زي المرة اللي فاتت» هو السلوك الغالب عند الكوافير والباربر، فده
   /// أعلى لحظة نية في الشاشة كلها وكانت بتترمي.
   ///
-  /// **الخدمة لسه مش متحدّدة مسبقًا.** ده محتاج `serviceUuid` على
-  /// `BookingItemUiModel` وهو مش موجود — بيتضاف مع شغل التقييم لكل خدمة
-  /// (البند 1.4) لأنه لازم ليه برضه. لحد ساعتها العميل بيقع على مختار
-  /// الخدمات بتاع المحل الصح، وده أحسن من الرجوع لليستة.
+  /// **الخدمة بتتحدّد مسبقًا** — زي بطاقة الإشعار في «مواعيدي» بالظبط.
+  ///
+  /// كان مكتوب هنا إن ده مستحيل لأن `serviceUuid` مش موجود على
+  /// `BookingItemUiModel`. **هو موجود** وحقل مطلوب من الأصل
+  /// (`booking_item_ui_model.dart:51`)، و`my_bookings_screen.dart` كان
+  /// بيبعته فعلاً. يعني مكانش فيه قرار تصميم — كان فيه مدخلين لنفس الـ
+  /// sheet وواحد بس بينفّذ صح، والعميل بياخد نتيجة أحسن أو أوحش على حسب
+  /// دخل منين.
+  ///
+  /// أول خدمة بس، زي المدخل التاني. حجز بكذا خدمة محتاج `List<String>` على
+  /// الـ sheet — والاتساق بين المدخلين أهم من ده دلوقتي.
   Future<void> _rebook(BuildContext context, BookingUiModel booking) async {
     final didBook = await CreateBookingSheet.show(
       context,
@@ -146,6 +208,7 @@ class BookingDetailsScreen extends StatelessWidget {
       // نفس فرع الحجز القديم — «زي المرة اللي فاتت» معناها نفس المكان
       // كمان، مش أول فرع في القايمة.
       branchUuid: booking.branchUuid,
+      serviceUuid: booking.items.first.serviceUuid,
     );
 
     if (didBook == true && context.mounted) {
@@ -154,63 +217,63 @@ class BookingDetailsScreen extends StatelessWidget {
   }
 
   /// تأكيد الإلغاء — الإجراء ده مالوش رجعة، فبنسأل.
+  ///
+  /// **الكيبورد بقى شغل الكيت.** الورقة دي فيها حقل نص، وكانت بتحسب
+  /// `viewInsets` بإيدها. `AppSheetWidget` بقى بيعملها لكل ورقة — شوف
+  /// `app_sheet_widget.dart`.
   void _confirmCancel(BuildContext context, BookingDetailsCubit cubit) {
-    showModalBottomSheet<void>(
-      context: context,
-      useSafeArea: true,
-      isScrollControlled: true,
-      builder: (sheetContext) => Padding(
-        padding: EdgeInsetsDirectional.only(
-          start: AppSpacing.s16.w,
-          end: AppSpacing.s16.w,
-          top: AppSpacing.s8.h,
-          // الكيبورد بيفتح على الحقل ده، فمحتاجين viewInsets كمان.
-          bottom:
-              MediaQuery.of(sheetContext).viewInsets.bottom + AppSpacing.s16.h,
+    AppSheetWidget.show<bool>(
+      context,
+      title: 'تلغي الحجز؟',
+      message: 'هتلغي حجزك في ${cubit.booking?.providerName ?? ''}',
+      // الحشوة والحدود والخلفية كلهم من `inputDecorationTheme`.
+      content: TextField(
+        controller: cubit.cancelReasonController,
+        maxLines: 2,
+        decoration: const InputDecoration(hintText: 'سبب الإلغاء (اختياري)'),
+      ),
+      actions: (sheetContext) => [
+        AppButtonWidget(
+          label: 'تأكيد الإلغاء',
+          variant: AppButtonVariant.danger,
+          onPressed: () => Navigator.of(sheetContext).pop(true),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('تلغي الحجز؟', style: AppTextStyles.sectionHeader),
-            verticalSpace(AppSpacing.s4),
-            Text(
-              'هتلغي حجزك في ${cubit.booking?.providerName ?? ''}',
-              style: AppTextStyles.caption,
-            ),
-            verticalSpace(AppSpacing.s16),
-            // الحشوة والحدود والخلفية كلهم من `inputDecorationTheme`.
-            TextField(
-              controller: cubit.cancelReasonController,
-              maxLines: 2,
-              decoration: const InputDecoration(
-                hintText: 'سبب الإلغاء (اختياري)',
-              ),
-            ),
-            verticalSpace(AppSpacing.s16),
-            ButtonWidget(
-              isLoading: false,
-              buttonText: 'تأكيد الإلغاء',
-              backGroundColor: AppSemanticColors.danger,
-              borderColor: AppSemanticColors.danger,
-              textStyle: AppTextStyles.button,
-              buttonHeight: 52.h,
-              onPressed: () {
-                Navigator.of(sheetContext).pop();
-                cubit.cancelBooking();
-              },
-            ),
-            verticalSpace(AppSpacing.s8),
-            TextButton(
-              onPressed: () => Navigator.of(sheetContext).pop(),
-              child: Text(
-                'رجوع',
-                style: AppTextStyles.bodyMdStrong.copyWith(
-                  color: AppSemanticColors.textSecondary,
-                ),
-              ),
-            ),
-          ],
+        AppButtonWidget(
+          label: 'رجوع',
+          variant: AppButtonVariant.ghost,
+          onPressed: () => Navigator.of(sheetContext).pop(false),
+        ),
+      ],
+    ).then((confirmed) {
+      if (confirmed ?? false) cubit.cancelBooking();
+    });
+  }
+
+  /// بيفتح تفاصيل المتابعة بنسخة **مقصورة على الشاشة دي** من
+  /// [EntitlementsCubit].
+  ///
+  /// ## ليه نسخة مقصورة
+  ///
+  /// شاشة التفاصيل بتعيش على الـnavigator بتاع `MaterialApp`، فوق
+  /// الـproviders بتوع الـshell — يعني النسخة المشتركة مش في نطاقها.
+  /// ودي **نفس معالجة `ReassignmentCubit`** الموجودة أصلاً في
+  /// `app_routes.dart`: نسخة فوق التبويبات للبانر، ونسخة للشاشة
+  /// المدفوعة.
+  ///
+  /// ⚠ **الأثر:** لو حجزت متابعة من هنا، عدّاد «حسابي» والشريط في
+  /// «حجوزاتي» بيفضلوا على قيمتهم القديمة لحد ما «حجوزاتي» تتسحب لتحت
+  /// (الـ`RefreshIndicator` بيعيد تحميل الاستحقاقات كمان). الشاشتين
+  /// **مش بيتعرضوا مع بعض**، فمافيش رقمين متناقضين قدام العين في نفس
+  /// اللحظة — وده الشرط اللي القاعدة موجودة عشانه.
+  void _openFollowUp(BuildContext context, BookingDetailsCubit cubit) {
+    final followUp = cubit.followUp;
+    if (followUp == null) return;
+
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => BlocProvider<EntitlementsCubit>(
+          create: (_) => EntitlementsCubit(getIt<EntitlementsRepo>())..load(),
+          child: EntitlementDetailScreen(followUp: followUp),
         ),
       ),
     );
@@ -229,68 +292,54 @@ class BookingDetailsScreen extends StatelessWidget {
   ///
   /// **٣. الرجوع من غير كلام** بيخلي العميل مش متأكد إن الإلغاء اتنفذ
   /// أصلاً.
-  void _afterCancel(BuildContext context, {required BookingDetailsCubit cubit}) {
+  ///
+  /// ⚠ **الرسالة كانت بتوعد وعد مش بتاعنا.** «الإلغاء مجاني ومفيش أي رسوم
+  /// عليك» كانت **ثابتة ومطلقة**، والمزوّد بيكتب `refund_policy` بنفسه في
+  /// إعدادات الفرع — وفيه مزوّدين فعلاً بيخصموا. يعني التطبيق كان بيدّي
+  /// ضمان مالي بالنيابة عن حد تاني ما اتسألش.
+  ///
+  /// دلوقتي: سياسة المزوّد لو موجودة، وإلا **الحقيقة اللي إحنا متأكدين
+  /// منها بس** — إن الإلغاء اتنفّذ. الفلوس بتتقال من الفرع، مش من هنا.
+  void _afterCancel(
+    BuildContext context, {
+    required BookingDetailsCubit cubit,
+  }) {
     final booking = cubit.booking;
+    final refundPolicy = booking?.policies.refundPolicy ?? '';
 
-    showModalBottomSheet<void>(
-      context: context,
-      useSafeArea: true,
+    AppSheetWidget.show<bool>(
+      context,
       isDismissible: false,
-      builder: (sheetContext) => Padding(
-        padding: EdgeInsetsDirectional.all(AppSpacing.s16.r),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.check_circle_outline_rounded,
-                  color: AppSemanticColors.positive,
-                  size: 22.r,
-                ),
-                horizontalSpace(AppSpacing.s8),
-                Text('اتلغى الحجز', style: AppTextStyles.sectionHeader),
-              ],
-            ),
-            verticalSpace(AppSpacing.s4),
-            // TODO(api): سياسة الإلغاء من إعدادات الفرع — دلوقتي ثابتة.
-            Text(
-              'الإلغاء مجاني ومفيش أي رسوم عليك',
-              style: AppTextStyles.caption,
-            ),
-            verticalSpace(AppSpacing.s24),
-            ButtonWidget(
-              isLoading: false,
-              buttonText: 'تحب تحجز ميعاد تاني؟',
-              backGroundColor: AppSemanticColors.accent,
-              borderColor: AppSemanticColors.accent,
-              textStyle: AppTextStyles.button,
-              buttonHeight: 52.h,
-              onPressed: () {
-                Navigator.of(sheetContext).pop();
-                if (booking != null) _rebook(context, booking);
-              },
-            ),
-            verticalSpace(AppSpacing.listRowGap),
-            Center(
-              child: TextButton(
-                onPressed: () {
-                  Navigator.of(sheetContext).pop();
-                  context.pop();
-                },
-                child: Text(
-                  'مش دلوقتي',
-                  style: AppTextStyles.bodyMdStrong.copyWith(
-                    color: AppSemanticColors.textSecondary,
-                  ),
-                ),
-              ),
-            ),
-          ],
+      icon: Icons.check_circle_outline_rounded,
+      iconTone: AppSemanticColors.positive,
+      title: 'اتلغى الحجز',
+      // TODO(api): BE-B1 — `refund_policy` من إعدادات الفرع. لحد ما تنزل،
+      // بنقول اللي حصل بس ومابنوعدش بحاجة عن الفلوس.
+      message: refundPolicy.isNotEmpty
+          ? refundPolicy
+          : 'الميعاد اتشال من مواعيدك. أي كلام عن الفلوس بيتحدد من الفرع.',
+      actions: (sheetContext) => [
+        AppButtonWidget(
+          label: 'تحب تحجز ميعاد تاني؟',
+          onPressed: () => Navigator.of(sheetContext).pop(true),
         ),
-      ),
-    );
+        AppButtonWidget(
+          label: 'مش دلوقتي',
+          variant: AppButtonVariant.ghost,
+          onPressed: () => Navigator.of(sheetContext).pop(false),
+        ),
+      ],
+    ).then((wantsRebook) {
+      if (!context.mounted) return;
+      // `isDismissible: false` يعني مافيش خروج من غير اختيار — والـ`null`
+      // هنا احتياط لو حد شال المنع بكرة.
+      if (wantsRebook == null) return;
+      if (wantsRebook) {
+        if (booking != null) _rebook(context, booking);
+      } else {
+        context.pop();
+      }
+    });
   }
 
   /// **خدمة واحدة بس بتتقيّم في المرة.**
@@ -308,44 +357,36 @@ class BookingDetailsScreen extends StatelessWidget {
       return;
     }
 
-    showModalBottomSheet<void>(
-      context: context,
-      useSafeArea: true,
-      builder: (sheetContext) => Padding(
-        padding: EdgeInsetsDirectional.all(AppSpacing.s16.r),
-        child: Column(
+    // الورقة بترجّع الخدمة المختارة، والشاشة هي اللي بتفتح التقييم —
+    // فورقة التقييم مابتتفتحش وورقة الاختيار لسه في الشجرة.
+    //
+    // الصفوف بقت [AppMenuRowWidget]: عنوان + «مع فلان» + سهم اتجاهي.
+    // نفس اللي `ListTile` كان بيعمله، بس بحشوة من سلّم المسافات وسهم
+    // بيتقلب صح لوحده (`chevron_left` المكتوبة بالإيد كانت بتشاور **يمين**
+    // في العربي، يعني «ارجع» في صف معناه «كمّل»).
+    AppSheetWidget.show<BookingItemUiModel>(
+      context,
+      title: 'تقيّم أنهي خدمة؟',
+      message: 'كل خدمة ليها تقييمها لوحدها',
+      content: Builder(
+        builder: (sheetContext) => Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('تقيّم أنهي خدمة؟', style: AppTextStyles.sectionHeader),
-            verticalSpace(AppSpacing.s4),
-            Text(
-              'كل خدمة ليها تقييمها لوحدها',
-              style: AppTextStyles.caption,
-            ),
-            verticalSpace(AppSpacing.s16),
             for (final item in items)
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(item.serviceName, style: AppTextStyles.cardTitle),
-                subtitle: Text(
-                  'مع ${item.employeeName}',
-                  style: AppTextStyles.caption,
-                ),
-                trailing: Icon(
-                  Icons.chevron_left_rounded,
-                  color: AppSemanticColors.textSecondary,
-                ),
-                onTap: () {
-                  Navigator.of(sheetContext).pop();
-                  cubit.startRating(item);
-                  _openRateSheet(context, cubit);
-                },
+              AppMenuRowWidget(
+                title: item.serviceName,
+                subtitle: 'مع ${item.employeeName}',
+                onTap: () => Navigator.of(sheetContext).pop(item),
               ),
           ],
         ),
       ),
-    );
+      actions: (_) => const [],
+    ).then((item) {
+      if (item == null || !context.mounted) return;
+      cubit.startRating(item);
+      _openRateSheet(context, cubit);
+    });
   }
 
   void _openRateSheet(BuildContext context, BookingDetailsCubit cubit) {

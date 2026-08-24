@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart' as intl;
 import 'package:toastification/toastification.dart';
 
-import 'app_colors_white_theme.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 
 bool isLoggedInUser = false;
 bool isOnBoarding = true;
@@ -17,7 +16,7 @@ class AppConstant {
       title: Text(message),
       icon: Icon(
         isTrue ? Icons.check_circle_outline_rounded : Icons.close,
-        color: isTrue ? AppColors.greenColor300 : AppColors.errorColor100,
+        color: isTrue ? AppSemanticColors.positive : AppSemanticColors.danger,
       ),
       autoCloseDuration: const Duration(seconds: 5),
     );

@@ -1,15 +1,14 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:waqty_user_application/core/mock/mock_bookings.dart';
-import 'package:waqty_user_application/core/mock/mock_categories.dart';
-import 'package:waqty_user_application/core/mock/mock_providers.dart';
-import 'package:waqty_user_application/core/mock/mock_source.dart';
 import 'package:waqty_user_application/core/models/booking_ui_model.dart';
 import 'package:waqty_user_application/core/models/category_ui_model.dart';
 import 'package:waqty_user_application/core/models/provider_ui_model.dart';
+import 'package:waqty_user_application/features/home/home/data/repo/home_repo.dart';
 import 'package:waqty_user_application/features/home/home/logic/home_state.dart';
 
 class HomeCubit extends Cubit<HomeState> {
-  HomeCubit() : super(InitialState());
+  final HomeRepo _repo;
+
+  HomeCubit(this._repo) : super(InitialState());
 
   List<CategoryUiModel> categories = <CategoryUiModel>[];
   List<ProviderUiModel> popularProviders = <ProviderUiModel>[];
@@ -24,8 +23,6 @@ class HomeCubit extends Cubit<HomeState> {
   /// **«نفس اللي فات» هو السلوك الغالب** عند الكوافير والباربر، ومكانش
   /// ليه أي سطح في الأبلكيشن: مدفون في تبويب اسمه «السابقة»، ورا زرار
   /// «احجز تاني» كان بيعمل `context.pop()`.
-  ///
-  /// ومحتاجش أي داتا جديدة — آخر حجز مكتمل، نفس الخدمة، نفس الأخصائي.
   BookingUiModel? lastCompleted;
 
   String selectedCity = 'القاهرة';
@@ -33,33 +30,52 @@ class HomeCubit extends Cubit<HomeState> {
   Future<void> loadHome() async {
     emit(HomeLoadingState());
 
-    // TODO(api): GET /api/public/categories
-    final categoriesResult = await MockSource.fetchList(MockCategories.all);
+    // ⚠ التصنيفات هي الوحيدة اللي فشلها بيوقف الشاشة — من غيرها مفيش
+    // نقطة دخول لأي حاجة. الباقي بيتحمّل بالتوازي وكل واحد بيطوي سطره
+    // لوحده لو فشل: رئيسية من غير «موعدك الجاي» أحسن من شاشة خطأ.
+    final categoriesResult = await _repo.categories();
 
-    final failure = categoriesResult.fold<String?>((l) => l, (_) => null);
+    // ⚠ **حراسة `isClosed` بعد كل انتظار.**
+    //
+    // القشرة بتعمل `HomeCubit` جوّه `IndexedStack`، وأي إعادة بناء
+    // للقشرة (مبدّل السيناريوهات مثلاً، أو الرمية بتاعة ٤٠١) بتقفله
+    // والنداءات لسه ماشية. `emit` بعد القفل بيرمي
+    // «Cannot emit new states after calling close» — وده اتمسك فعلاً
+    // في لوج المحاكي.
+    if (isClosed) return;
+
+    final failure = categoriesResult.fold<String?>(
+      (f) => f.message,
+      (_) => null,
+    );
     if (failure != null) {
       emit(HomeErrorState(message: failure));
       return;
     }
-
     categories = categoriesResult.getOrElse(() => <CategoryUiModel>[]);
 
-    // TODO(api): GET /api/public/providers
-    final providersResult = await MockSource.fetchList(MockProviders.all);
-    popularProviders = providersResult.getOrElse(() => <ProviderUiModel>[]);
-    nearbyProviders = MockProviders.nearby.take(3).toList();
+    // التلاتة بيبدأوا مع بعض — الـfuture بيشتغل ساعة ما يتنده مش ساعة ما
+    // يتعمله `await`. (`Future.wait` كان هيحتاج كاست لأن الأنواع مختلفة.)
+    final providersCall = _repo.providers();
+    final upcomingCall = _repo.upcomingBooking();
+    final lastCompletedCall = _repo.lastCompletedBooking();
 
-    // TODO(api): GET /api/user/bookings?upcoming=true&per_page=1
-    final bookings = MockBookings.upcoming;
-    upcomingBooking = bookings.isEmpty ? null : bookings.first;
+    popularProviders = (await providersCall).getOrElse(
+      () => <ProviderUiModel>[],
+    );
+    if (isClosed) return;
 
-    // TODO(api): GET /api/user/bookings?past=true&per_page=1
-    //   بنعرض أحدث حجز **مكتمل** بس — الملغي والـ no-show مش «مرة فاتت».
-    final past = MockBookings.past
-        .where((b) => b.status == BookingStatus.completed)
-        .toList();
-    lastCompleted = past.isEmpty ? null : past.first;
+    // «قريب منك» تلاتة بس — الليستة الكاملة تحتها على طول، فالتكرار
+    // بياخد شاشة من غير ما يضيف اختيار.
+    nearbyProviders = popularProviders.take(3).toList();
 
+    // ⚠ `getOrElse(() => null)` مقصودة: الحجز مش موجود والحجز فشل تحميله
+    // **نفس النتيجة على الشاشة** — الكارت مايظهرش. مفيش داعي لحالة خطأ
+    // لكارت اختياري.
+    upcomingBooking = (await upcomingCall).getOrElse(() => null);
+    lastCompleted = (await lastCompletedCall).getOrElse(() => null);
+
+    if (isClosed) return;
     emit(HomeSuccessState());
   }
 

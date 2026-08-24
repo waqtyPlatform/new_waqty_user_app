@@ -50,21 +50,66 @@ class MockEmployees {
     'srv-7': <String>[], // فرد بروتين — **محدش في الفرع ده**
   };
 
+  /// **مين شغّال في أنهي فرع** — بترتيب الفرع، مش بالـ uuid.
+  ///
+  /// الـ uuids **بتتولّد** لخمسة من ستة محلات (`brn-$providerUuid`)، فمافيش
+  /// مفتاح ثابت غير الترتيب. شوف [MockProviders.branchIndexOf].
+  ///
+  /// **أحمد (الغالي) في الفرع الرئيسي بس.** التعيينات في السيرفر
+  /// (أخصائي × خدمة × فرع) بتسمح بده، وهو اللي بيخلي فرقين حقيقيين يبانوا
+  /// مع بعض لما العميل يغيّر الفرع:
+  ///
+  ///   • **قايمة الأخصائيين بتقصر** — واحد منهم مش هنا.
+  ///   • **«قص + ذقن» بتختفي خالص** من الفرع التاني، لأنه الوحيد اللي
+  ///     بيعملها. الحالة دي **مشتقّة مش مكتوبة** — ومن غير كده كنا هنكتب
+  ///     كتالوج خدمات لكل فرع، وده مالوش نهاية مع uuids متولّدة.
+  static const Map<int, List<String>> _branchStaff = <int, List<String>>{
+    0: <String>['emp-1', 'emp-2', 'emp-3'],
+    1: <String>['emp-2', 'emp-3'],
+  };
+
   /// «أي أخصائي متاح» أول القايمة دايمًا وهو الافتراضي — عشان منقللش
   /// المواعيد المتاحة قدام العميل قبل ما يشوفها.
   ///
   /// بترجّع **ليستة فاضية بالكامل** لما مفيش حد بيعمل الخدمة — من غير
   /// «أي أخصائي متاح» كمان، لأن مفيش أي حد يتوزّع عليه. اللي بينده
   /// بيقرا الفراغ ده ويعرض طريق مسدود مشروح.
-  static List<EmployeeUiModel> forService(String serviceUuid) {
-    final allowed = _serviceStaff[serviceUuid];
-    final staff = allowed == null
-        ? _staff
-        : _staff.where((e) => allowed.contains(e.uuid)).toList();
+  ///
+  /// ⚠ **[branchIndex] افتراضيه صفر عن قصد.** كل النداءات اللي كانت موجودة
+  /// قبل بُعد الفرع بتفضل شغالة بنفس النتيجة بالحرف — والفرع بيتحدد في
+  /// المواضع اللي عندها فرع فعلاً.
+  static List<EmployeeUiModel> forService(
+    String serviceUuid, {
+    int branchIndex = 0,
+  }) {
+    final staff = _staffAt(
+      branchIndex,
+    ).where((e) => _doesService(e.uuid, serviceUuid)).toList();
 
     if (staff.isEmpty) return const <EmployeeUiModel>[];
 
     return <EmployeeUiModel>[EmployeeUiModel.anyAvailable, ...staff];
+  }
+
+  /// طاقم الفرع كله — **من غير «أي أخصائي متاح»**.
+  ///
+  /// ده اللي صفحة المحل عايزاه: قايمة ناس حقيقيين. «أي أخصائي متاح» مفهوم
+  /// بتاع فلو الحجز مش عضو في الفريق.
+  ///
+  /// الموضع ده كان بينده `forService('')` — نص فاضي بيقع في الـ `null`
+  /// بتاع الخريطة فبيرجّع الفريق كله بالصدفة. شغّال، بس بيقول حاجة تانية
+  /// خالص عن اللي بيحصل.
+  static List<EmployeeUiModel> rosterOf({int branchIndex = 0}) =>
+      _staffAt(branchIndex);
+
+  static List<EmployeeUiModel> _staffAt(int branchIndex) {
+    final allowed = _branchStaff[branchIndex] ?? _branchStaff[0]!;
+    return _staff.where((e) => allowed.contains(e.uuid)).toList();
+  }
+
+  static bool _doesService(String employeeUuid, String serviceUuid) {
+    final allowed = _serviceStaff[serviceUuid];
+    return allowed == null || allowed.contains(employeeUuid);
   }
 
   static EmployeeUiModel byUuid(String uuid) => _staff.firstWhere(

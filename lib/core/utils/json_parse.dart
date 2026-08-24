@@ -61,16 +61,45 @@ class JsonParse {
     return fallback;
   }
 
-  /// تاريخ من نص ISO 8601.
+  /// الإزاحة في آخر نص ISO — `Z` أو `+03:00` أو `-0500`.
   ///
-  /// **بيرجّع الوقت زي ما وصل من غير تحويل لتوقيت الجهاز.** توقيت الفرع
-  /// هو المرجع — لو حوّلنا للمحلي، عميل مسافر أو جهازه على منطقة غلط
-  /// هيشوف مواعيد غلط. اللي بيتعرض هو ساعة الفرع.
+  /// مابتمسكش `2026-08-10`: الشكل ده آخره `-10`، رقمين بعد الإشارة،
+  /// والنمط عايز أربعة.
+  static final RegExp _trailingOffset = RegExp(r'(?:Z|[+-]\d{2}:?\d{2})$');
+
+  /// تاريخ من نص ISO 8601 — **بساعة الفرع زي ما وصلت**.
+  ///
+  /// توقيت الفرع هو المرجع: الصالون بيقول «ميعادك ٦» ويقصد ٦ عنده. لو
+  /// حوّلنا لتوقيت الجهاز، عميل مسافر أو جهازه على منطقة غلط هيشوف
+  /// ميعاد تاني لنفس الحجز.
+  ///
+  /// ## `DateTime.parse` لوحدها مكانتش بتعمل ده
+  ///
+  /// النية دي كانت مكتوبة هنا من الأول، بس الكود مكانش بيحققها.
+  /// `DateTime.parse('2026-08-10T18:00:00+03:00')` بترجّع **UTC** —
+  /// `hour` بتساوي **١٥** و`isUtc` بتساوي `true`. و`AppFormat.time`
+  /// بتقرا `.hour` على طول، فالعميل كان هيشوف **٣:٠٠ م** لميعاد الساعة
+  /// **٦:٠٠ م**.
+  ///
+  /// يعني القديم مكانش بيعرض ساعة الفرع ولا ساعة الجهاز — كان بيعرض
+  /// **UTC**. ومخفي دلوقتي لأن الـ mock بيبني `DateTime` محلي، فالباج
+  /// كان هيطلع أول يوم الربط على كل تاريخ في الأبلكيشن.
+  ///
+  /// الحل: نشيل الإزاحة ونقرا ساعة الحائط كما هي. `+03:00` بتتشال
+  /// فتبقى `18:00` محلية — نفس الرقم اللي في الرد، وهو نفس الرقم اللي
+  /// الريسيبشن شايفه على الداشبورد.
+  ///
+  /// ⚠ **`Z` بتتعامل زي أي إزاحة.** السيرفر بيبعت `toIso8601String()`
+  /// على وقت بمنطقة التطبيق، يعني `+03:00` مش `Z`. لو ابتدى يبعت `Z`
+  /// فعلاً، الرد مابيحملش إزاحة الفرع أصلاً والقرار ده بيحتاج مراجعة.
   static DateTime? dateOrNull(dynamic value) {
     if (value == null) return null;
     if (value is DateTime) return value;
     if (value is String && value.trim().isNotEmpty) {
-      return DateTime.tryParse(value.trim());
+      final raw = value.trim();
+      // الاحتياطي بيمسك الأشكال اللي شيل الإزاحة بيخليها غير صالحة.
+      return DateTime.tryParse(raw.replaceFirst(_trailingOffset, '')) ??
+          DateTime.tryParse(raw);
     }
     return null;
   }
@@ -86,5 +115,38 @@ class JsonParse {
   static List<Map<String, dynamic>> mapListValue(dynamic value) {
     if (value is! List) return const <Map<String, dynamic>>[];
     return value.whereType<Map<String, dynamic>>().toList();
+  }
+
+  /// ⚠ **الاسم بيوصل بشكلين مختلفين حسب الـendpoint.**
+  ///
+  /// متحقّق منه بنداء حقيقي:
+  ///
+  /// | الـendpoint | `name` |
+  /// |---|---|
+  /// | `GET /api/public/services` | `"كشف باطنة"` — نص |
+  /// | `GET /api/user/bookings` | `{"ar": "غيار جرح", "en": "Wound Dressing"}` |
+  ///
+  /// الفرق إن الموارد العامة بتعدّي على `detect.language` وبترجّع اللغة
+  /// المطلوبة، والـsnapshot المتخزّن في الحجز بيحتفظ بالترجمتين. الشاشة
+  /// عايزة نص واحد في الحالتين.
+  ///
+  /// [locale] بتحدد الأولوية، والاحتياطي أول قيمة موجودة — أحسن من فراغ.
+  static String localizedValue(
+    dynamic value, {
+    String locale = 'ar',
+    String fallback = '',
+  }) {
+    if (value is String) return value;
+
+    if (value is Map) {
+      final preferred = value[locale];
+      if (preferred is String && preferred.isNotEmpty) return preferred;
+
+      for (final entry in value.values) {
+        if (entry is String && entry.isNotEmpty) return entry;
+      }
+    }
+
+    return fallback;
   }
 }

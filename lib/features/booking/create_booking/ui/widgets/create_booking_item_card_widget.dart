@@ -2,15 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/core/models/employee_ui_model.dart';
 import 'package:waqty_user_application/core/models/slot_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_format.dart';
-import 'package:waqty_user_application/core/utils/app_motion.dart';
-import 'package:waqty_user_application/core/utils/app_radius.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/app_surface_widget.dart';
-import 'package:waqty_user_application/core/widgets/empty_state_widget.dart';
 import 'package:waqty_user_application/features/booking/create_booking/logic/booking_draft_item.dart';
 import 'package:waqty_user_application/features/booking/create_booking/ui/widgets/create_booking_date_strip_widget.dart';
 import 'package:waqty_user_application/features/booking/create_booking/ui/widgets/create_booking_proposals_widget.dart';
@@ -174,7 +167,7 @@ class CreateBookingItemCardWidget extends StatelessWidget {
                 minHeight: AppSpacing.touchTarget.r,
               ),
               padding: EdgeInsets.zero,
-              icon: const Icon(
+              icon: Icon(
                 Icons.close_rounded,
                 color: AppSemanticColors.textTertiary,
               ),
@@ -212,7 +205,7 @@ class CreateBookingItemCardWidget extends StatelessWidget {
     if (item.employees.isEmpty) {
       return Padding(
         padding: EdgeInsetsDirectional.only(top: AppSpacing.s16.h),
-        child: EmptyStateWidget(
+        child: AppEmptyStateWidget(
           icon: Icons.person_off_outlined,
           title: 'الخدمة دي مش متاحة في الفرع ده',
           message: 'جرّب فرع تاني، أو غيّر الخدمة',
@@ -231,13 +224,16 @@ class CreateBookingItemCardWidget extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        verticalSpace(AppSpacing.s16),
+        verticalSpace(AppSpacing.s12),
         CreateBookingStaffRowWidget(
           employees: item.employees,
           selectedEmployee: item.employee,
           onEmployeeSelected: onEmployeeSelected,
         ),
-        verticalSpace(AppSpacing.s24),
+        // ١٦ مش ٢٤ — كل اللي جوه الكارت خطوة واحدة («حدّد الميعاد»)،
+        // والمسافات جواها المفروض تجمّع مش تفصل. الفصل الحقيقي بين كارت
+        // خدمة وكارت الخدمة اللي بعدها.
+        verticalSpace(AppSpacing.s16),
 
         // **الاقتراحات هي الافتراضي، والشبكة ورا ضغطة.**
         //
@@ -261,7 +257,9 @@ class CreateBookingItemCardWidget extends StatelessWidget {
             alignment: AlignmentDirectional.centerStart,
             child: TextButton.icon(
               onPressed: onBrowseAll,
-              icon: Icon(Icons.arrow_forward_rounded, size: 18.r),
+              // اللابل «رجوع» — يبقى السهم `arrow_back` (فلاتر بيقلبه
+              // لوحده فبيشاور يمين في العربي).
+              icon: Icon(Icons.arrow_back_rounded, size: 18.r),
               label: Text('رجوع للاقتراحات', style: AppTextStyles.label),
             ),
           ),
@@ -276,8 +274,8 @@ class CreateBookingItemCardWidget extends StatelessWidget {
             onMonthChange: onMonthChange,
             onFullDayTap: onJoinWaitlist,
           ),
-          // ٢٤ في المكانين — نفس العلاقة بنفس القيمة.
-          verticalSpace(AppSpacing.s24),
+          // ١٦ في المكانين — نفس العلاقة بنفس القيمة.
+          verticalSpace(AppSpacing.s16),
           CreateBookingSlotsWidget(
             slots: item.slots,
             selectedSlot: item.selectedSlot,

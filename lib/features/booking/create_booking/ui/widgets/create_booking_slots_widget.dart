@@ -1,16 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/core/models/slot_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_format.dart';
-import 'package:waqty_user_application/core/utils/app_motion.dart';
-import 'package:waqty_user_application/core/utils/app_radius.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/app_surface_widget.dart';
-import 'package:waqty_user_application/core/widgets/empty_state_widget.dart';
-import 'package:waqty_user_application/core/widgets/skeleton_box_widget.dart';
 
 /// المواعيد — مقسّمة صباحًا / بعد الظهر / مساءً، ٣ في الصف.
 ///
@@ -25,6 +17,15 @@ class CreateBookingSlotsWidget extends StatelessWidget {
   final SlotUiModel? takenSlot;
   final bool isLoading;
   final double baselinePrice;
+
+  /// يعرض فرق السعر على الميعاد («٤:٣٠ م · +٥٠»)؟
+  ///
+  /// ⚠ **بيتقفل في حجز الاستحقاق.** الباقة والمتابعة **مدفوعين أصلاً**،
+  /// فمفيش سعر مرجعي نقارن بيه — و[baselinePrice] بصفر بتخلّي كل ميعاد
+  /// ليه سعر يبان كأنه زيادة. العميلة اللي دفعت باقة وشافت «+٥٠» جنب كل
+  /// ميعاد هتفتكر إن فيه فلوس تانية عليها.
+  final bool showPriceDelta;
+
   final ValueChanged<SlotUiModel> onSlotTap;
 
   /// `null` = مفيش قائمة انتظار (مثلاً اليوم مقفول مش مليان).
@@ -36,6 +37,7 @@ class CreateBookingSlotsWidget extends StatelessWidget {
     required this.selectedSlot,
     required this.baselinePrice,
     required this.onSlotTap,
+    this.showPriceDelta = true,
     this.onJoinWaitlist,
     this.takenSlot,
     this.isLoading = false,
@@ -46,7 +48,7 @@ class CreateBookingSlotsWidget extends StatelessWidget {
     if (isLoading) {
       // shimmer في نفس الشبكة ٣ في الصف — عشان مفيش حاجة تتزحلق لما
       // المواعيد الحقيقية توصل.
-      return SkeletonGroupWidget(
+      return AppSkeletonGroupWidget(
         child: Wrap(
           spacing: AppSpacing.chipGap.w,
           runSpacing: AppSpacing.chipGap.h,
@@ -54,11 +56,10 @@ class CreateBookingSlotsWidget extends StatelessWidget {
             9,
             // الارتفاع بيتقرا من الشيب نفسه — فمفيش إزاحة لما المواعيد
             // الحقيقية توصل.
-            (_) => SkeletonBoxWidget(
+            (_) => AppSkeletonBoxWidget(
               width: 96,
               height: _SlotChip.height,
               radius: AppRadius.pill,
-              animate: false,
             ),
           ),
         ),
@@ -71,10 +72,11 @@ class CreateBookingSlotsWidget extends StatelessWidget {
       // ده طلب قابل قدامه عرض فاضي — مش «مقفول» اللي بيقفل الكلام.
       // `POST /user/waitlist` مبني وشغال في السيرفر، والأبلكيشن كان
       // بيرد على اليوم المليان بطريق مسدود.
-      return EmptyStateWidget(
+      return AppEmptyStateWidget(
         icon: Icons.event_busy_outlined,
         title: 'اليوم ده مليان',
-        message: 'جرّب يوم تاني من الشريط اللي فوق، أو خلينا نبلّغك أول ما يفضى',
+        message:
+            'جرّب يوم تاني من الشريط اللي فوق، أو خلينا نبلّغك أول ما يفضى',
         actionLabel: onJoinWaitlist == null ? null : 'ضيفني لقائمة الانتظار',
         onAction: onJoinWaitlist,
       );
@@ -91,6 +93,7 @@ class CreateBookingSlotsWidget extends StatelessWidget {
             selectedSlot: selectedSlot,
             takenSlot: takenSlot,
             baselinePrice: baselinePrice,
+            showPriceDelta: showPriceDelta,
             onSlotTap: onSlotTap,
           );
         }),
@@ -120,6 +123,8 @@ class CreateBookingSlotsWidget extends StatelessWidget {
 }
 
 class _PeriodGroup extends StatelessWidget {
+  final bool showPriceDelta;
+
   final SlotPeriod period;
   final List<SlotUiModel> slots;
   final SlotUiModel? selectedSlot;
@@ -134,7 +139,21 @@ class _PeriodGroup extends StatelessWidget {
     required this.takenSlot,
     required this.baselinePrice,
     required this.onSlotTap,
+    this.showPriceDelta = true,
   });
+
+  /// **عدد المواعيد بقواعد العدد في العربي.**
+  ///
+  /// ٣–١٠ بياخدوا جمع («٨ مواعيد»)، و١١ فأكتر بياخدوا **مفرد**
+  /// («١٣ ميعاد»). الشاشة كانت بتقول «13 مواعيد» — غلط نحوي بيتشاف في
+  /// كل يوم مواعيده كتير، وده أغلب الأيام.
+  static String _countLabel(int count) {
+    final digits = AppFormat.digits(count);
+    if (count == 1) return 'ميعاد واحد';
+    if (count == 2) return 'ميعادين';
+    if (count <= 10) return '$digits مواعيد';
+    return '$digits ميعاد';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -153,32 +172,26 @@ class _PeriodGroup extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // `Expanded` على العنوان: «بعد الظهر · ١٢ مواعيد» جنب شارة
+          // «آخر موعد» كانوا **بيفيضوا ٥٥ بكسل** عند مقياس خط ١٫٣.
           Row(
             children: [
-              Text(
-                '${period.label} · ${AppFormat.digits(slots.length)} مواعيد',
-                style: AppTextStyles.bodyMdStrong,
+              Expanded(
+                child: Text(
+                  '${period.label} · ${_countLabel(slots.length)}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.bodyMdStrong,
+                ),
               ),
               // آخر ميعادين؟ نقول كده — الندرة معلومة مفيدة للعميل.
-              // نفس حشوة `BookingStatusChipWidget` بالظبط — الشارتين
-              // كانوا بحشوتين مختلفتين وشكلهم مش واحد.
+              // بقت `AppPillWidget` بدل `Container` مكتوب بالإيد — نفس
+              // شكل كل شارات الأبلكيشن، ومن غير حشوة متكرّرة.
               if (slots.length <= 2) ...[
                 horizontalSpace(AppSpacing.s8),
-                Container(
-                  padding: EdgeInsetsDirectional.symmetric(
-                    horizontal: AppSpacing.s8.w,
-                    vertical: AppSpacing.s4.h,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppSemanticColors.warningSoft,
-                    borderRadius: BorderRadius.circular(AppRadius.pill.r),
-                  ),
-                  child: Text(
-                    'آخر موعد',
-                    style: AppTextStyles.overline.copyWith(
-                      color: AppSemanticColors.warning,
-                    ),
-                  ),
+                const AppPillWidget(
+                  label: 'آخر موعد',
+                  tone: AppPillTone.warning,
                 ),
               ],
             ],
@@ -195,6 +208,7 @@ class _PeriodGroup extends StatelessWidget {
                 isSelected: selectedSlot?.startAt == slot.startAt,
                 isTaken: isTaken,
                 baselinePrice: baselinePrice,
+                showPriceDelta: showPriceDelta,
                 onTap: isTaken ? null : () => onSlotTap(slot),
               );
             }).toList(),
@@ -210,6 +224,7 @@ class _SlotChip extends StatelessWidget {
   final bool isSelected;
   final bool isTaken;
   final double baselinePrice;
+  final bool showPriceDelta;
   final VoidCallback? onTap;
 
   const _SlotChip({
@@ -217,6 +232,7 @@ class _SlotChip extends StatelessWidget {
     required this.isSelected,
     required this.isTaken,
     required this.baselinePrice,
+    this.showPriceDelta = true,
     this.onTap,
   });
 
@@ -227,7 +243,7 @@ class _SlotChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasDifferentPrice = slot.price != baselinePrice;
+    final hasDifferentPrice = showPriceDelta && slot.price != baselinePrice;
 
     final textColor = isSelected
         ? AppSemanticColors.textOnAccent

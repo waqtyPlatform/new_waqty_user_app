@@ -1,14 +1,8 @@
-import 'package:waqty_user_application/core/utils/app_radius.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/core/models/employee_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
-import 'package:waqty_user_application/core/utils/app_format.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/entity_avatar_widget.dart';
 
 /// صف الأخصائي — **صف واحد، مش شاشة لوحدها**.
 ///
@@ -51,7 +45,7 @@ class CreateBookingStaffRowWidget extends StatelessWidget {
                 EntityAvatarWidget(
                   name: selectedEmployee.name,
                   size: 36,
-                  radius: 18,
+                  shape: AvatarShape.person,
                 ),
               horizontalSpace(10),
               Expanded(
@@ -71,65 +65,46 @@ class CreateBookingStaffRowWidget extends StatelessWidget {
   }
 
   void _showStaffSheet(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      useSafeArea: true,
-      builder: (_) => Padding(
-        padding: EdgeInsetsDirectional.only(
-          start: AppSpacing.s16.w,
-          end: AppSpacing.s16.w,
-          top: AppSpacing.s8.h,
-          bottom: AppSpacing.s16.h,
-        ),
-        child: Column(
+    // **[AppChoiceRowWidget] راديو مش `ListTile` بعلامة صح.**
+    //
+    // اختيار واحد من عدة — والراديو بيقول الاتنين: فيه اختيارات تانية،
+    // وده الشغّال. واتشال معاه لوح «أي أخصائي» المكتوب بالإيد (دايرة
+    // ٤٠ بأيقونة ٢٠) — بقى `trailing` بأفاتار أو أيقونة على نفس المقاس.
+    AppSheetWidget.show<EmployeeUiModel>(
+      context,
+      title: 'اختار الأخصائي',
+      content: Builder(
+        builder: (sheetContext) => Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('اختار الأخصائي', style: AppTextStyles.sectionHeader),
-            verticalSpace(AppSpacing.s12),
-            ...employees.map(
-              (employee) => ListTile(
-                leading: employee.isAnyAvailable
-                    ? Container(
-                        height: 40.r,
-                        width: 40.r,
-                        decoration: const BoxDecoration(
-                          color: AppSemanticColors.surfaceSunken,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.groups_outlined,
-                          size: 20.r,
-                          color: AppSemanticColors.textSecondary,
-                        ),
+            for (final employee in employees)
+              AppChoiceRowWidget(
+                title: employee.name,
+                subtitle: employee.isAnyAvailable
+                    ? 'أوسع اختيار مواعيد'
+                    : 'من ${AppFormat.money(employee.price)}',
+                selected: employee.uuid == selectedEmployee.uuid,
+                style: AppChoiceStyle.radio,
+                trailing: employee.isAnyAvailable
+                    ? Icon(
+                        Icons.groups_outlined,
+                        size: 24.r,
+                        color: AppSemanticColors.textSecondary,
                       )
                     : EntityAvatarWidget(
                         name: employee.name,
-                        size: 40,
-                        radius: 20,
+                        size: 32,
+                        shape: AvatarShape.person,
                       ),
-                title: Text(employee.name),
-                subtitle: Text(
-                  employee.isAnyAvailable
-                      ? 'أوسع اختيار مواعيد'
-                      : 'من ${AppFormat.money(employee.price)}',
-                ),
-                trailing: employee.uuid == selectedEmployee.uuid
-                    ? const Icon(
-                        Icons.check_circle_rounded,
-                        color: AppSemanticColors.accent,
-                      )
-                    : null,
-                onTap: () {
-                  onEmployeeSelected(employee);
-                  Navigator.of(context).pop();
-                },
+                onTap: () => Navigator.of(sheetContext).pop(employee),
               ),
-            ),
           ],
         ),
       ),
-    );
+      actions: (_) => const [],
+    ).then((employee) {
+      if (employee != null) onEmployeeSelected(employee);
+    });
   }
 }
 
@@ -152,12 +127,17 @@ class _AvatarStack extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: AppColors.whiteColor, width: 1.5),
+                // حلقة بلون الكارت اللي تحت الأفاتارات المتراكبة — بتفصلهم
+                // عن بعض. لازم تبقى لون **السطح** مش أبيض ثابت.
+                border: Border.all(
+                  color: AppSemanticColors.surfaceRaised,
+                  width: 1.5.r,
+                ),
               ),
               child: EntityAvatarWidget(
                 name: shown[index].name,
                 size: 32,
-                radius: 16,
+                shape: AvatarShape.person,
               ),
             ),
           );

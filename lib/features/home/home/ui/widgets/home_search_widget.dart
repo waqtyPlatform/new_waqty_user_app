@@ -1,11 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:waqty_user_application/core/utils/app_radius.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
-import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/app_surface_widget.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 
 /// شريط البحث في الهوم — **زرار مش TextField**.
 ///
@@ -15,6 +9,17 @@ import 'package:waqty_user_application/core/widgets/app_surface_widget.dart';
 ///
 /// خليناه زرار بيودّي على شاشة بحث كاملة — ده الشكل الصح في أي marketplace،
 /// لأن نتايج البحث محتاجة فلاتر وترتيب وحالة فاضية، ومكانهاش شريط في الهوم.
+///
+/// ## ليه [AppSearchFieldWidget] معطّل مش سطح مكتوب بالإيد
+///
+/// الشكل لازم يقول «ده حقل بحث» عشان الضغطة تبقى متوقّعة — والحقل المعطّل
+/// بتاع الكيت **هو نفسه** اللي بيترسم في تبويب «استكشاف» لما توصله. يعني
+/// الزرار هنا بيوعد بالشكل اللي هيلاقيه هناك بالحرف.
+///
+/// اللي اتشال: ارتفاع خام (`52.h`)، ومقاس أيقونة خام (`24.r`)، وقرارات
+/// سطح واستدارة مكتوبة بالإيد كانت بتحاول تقلّد حقل الإدخال.
+///
+/// `AbsorbPointer` عشان الحقل نفسه مايخطفش اللمسة — الضغطة كلها للزرار.
 class HomeSearchWidget extends StatelessWidget {
   final VoidCallback onTap;
 
@@ -22,29 +27,18 @@ class HomeSearchWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppSurfaceWidget(
-      onTap: onTap,
-      // **غاطس.** ده كروم بحث، والمفروض يترجع لورا عشان الكروت اللي تحته
-      // هي اللي تسحب العين. لو رفعناه بظل هيتنافس مع المحتوى.
-      level: AppElevation.sunken,
-      radius: AppRadius.m,
-      height: 52.h,
-      padding: EdgeInsets.symmetric(horizontal: AppSpacing.s16.w),
-      child: Row(
-        children: [
-          Icon(
-            Icons.search_rounded,
-            size: 24.r,
-            color: AppSemanticColors.textOnSunken,
+    return Semantics(
+      button: true,
+      label: 'دوّر على صالون أو خدمة',
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: const AbsorbPointer(
+          child: AppSearchFieldWidget(
+            hintText: 'دوّر على صالون أو خدمة',
+            enabled: false,
           ),
-          horizontalSpace(AppSpacing.s8),
-          Expanded(
-            child: Text(
-              'دوّر على صالون أو خدمة',
-              style: AppTextStyles.bodyMdMuted,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

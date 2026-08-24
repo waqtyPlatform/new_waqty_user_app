@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:waqty_user_application/core/utils/app_radius.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/app_surface_widget.dart';
 
 /// اتصال · الاتجاهات · مشاركة.
 ///
@@ -76,7 +72,18 @@ class _ActionTile extends StatelessWidget {
         // غاطسة — دي كنترولات مساعدة، مش المحتوى.
         level: AppElevation.sunken,
         radius: AppRadius.m,
-        height: 64.h,
+        // **كان `64.h` أصم.**
+        //
+        // «الاتجاهات» على تلت العرض عند مقياس خط ١٫٣ **بتتلف سطرين**،
+        // فالعمود كان بيطلع ٦٧٫٧ في صندوق ٦٤ — فيضان ٤ بكسل. حاجتين
+        // اتظبطوا: الارتفاع بقى بيكبر مع النص، واللابل بقى سطر واحد مقصوص.
+        height: AppSpacing.scaledHeight(
+          context,
+          // أيقونة ٢٠ + مسافة ٤ + حشوة ٢٤.
+          fixed: 48,
+          // `captionInk` ١٢×١٫٤٠.
+          text: 16.8,
+        ).h,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -84,7 +91,12 @@ class _ActionTile extends StatelessWidget {
             // العين لأقل تلات أفعال أهمية في الصفحة.
             Icon(icon, size: 20.r, color: AppSemanticColors.textSecondary),
             verticalSpace(AppSpacing.s4),
-            Text(label, style: AppTextStyles.captionInk),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTextStyles.captionInk,
+            ),
           ],
         ),
       ),

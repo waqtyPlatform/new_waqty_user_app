@@ -1,3 +1,5 @@
+import 'package:waqty_user_application/core/mock/mock_config.dart';
+import 'package:waqty_user_application/core/mock/mock_scenario.dart';
 import 'package:waqty_user_application/core/models/booking_ui_model.dart';
 import 'package:waqty_user_application/core/models/in_branch_ui_model.dart';
 
@@ -28,37 +30,57 @@ class MockInBranch {
   /// طول دورة التقدير — ٦ دقايق، بينزل ويلف من الأول.
   static const int _cycleSteps = 18;
 
-  /// `null` لما الحجز مش في الفرع دلوقتي.
+  /// `null` لما الزيارة الحالية مش في الفرع دلوقتي.
+  ///
+  /// ⚠ **الزيارة مش الحجز.** الاتنين كانوا واحد لما الحالة كانت على الحجز
+  /// الأب بس — وساعتها `items.first` كانت بتدّي أخصائي **أول زيارة** حتى
+  /// وإنت واقف في التانية، فالشاشة كانت بتقول اسم غلط.
   static InBranchUiModel? forBooking(BookingUiModel booking, DateTime now) {
-    if (!booking.status.isInBranch) return null;
+    final visit = booking.currentVisit(now);
+    if (!visit.status.isInBranch) return null;
 
-    final item = booking.items.first;
+    final item = visit.items.first;
 
-    if (booking.status == BookingStatus.inProgress) {
+    if (visit.status == BookingStatus.inProgress) {
       return InBranchUiModel(
-        status: booking.status,
+        status: visit.status,
         employeeName: item.employeeName,
-        expectedFinishAt: item.endAt,
+        // نهاية **الزيارة** مش نهاية أول خدمة — الزيارة اللي فيها خدمتين
+        // ورا بعض العميل بيخلص فيها مع آخر واحدة.
+        expectedFinishAt: visit.endAt,
         updatedAt: now,
       );
     }
 
-    if (booking.status == BookingStatus.arrived) {
+    if (visit.status == BookingStatus.arrived) {
       // لسه ما دخلش الطابور — مفيش تقدير يتقال.
       return InBranchUiModel(
-        status: booking.status,
+        status: visit.status,
         employeeName: item.employeeName,
         updatedAt: now,
       );
     }
 
-    // `waiting` — التقدير بينزل مع الوقت عشان الشاشة تبان حية في العرض.
+    // `waiting` من غير تقدير — **ده الشكل اللي السيرفر بيوفّره النهاردة**.
+    //
+    // الحالة `waiting` عمود حقيقي، والتوقّع الزمني لأ: مفيش عمود ولا
+    // حساب ولا endpoint. فالسيناريو ده مش «حالة تدهور» نادرة — هو الـ
+    // payload المتوقّع يوم الربط، والتاني هو اللي محتاج طلب للباك إند.
+    if (MockConfig.scenario == MockScenario.waitingNoEstimate) {
+      return InBranchUiModel(
+        status: visit.status,
+        employeeName: item.employeeName,
+        updatedAt: now,
+      );
+    }
+
+    // التقدير بينزل مع الوقت عشان الشاشة تبان حية في العرض.
     // deterministic من ساعة الجهاز، فمفيش قفزات عشوائية قدام العميل.
     final ticks = (now.minute * 60 + now.second) ~/ 20;
     final step = _cycleSteps - (ticks % _cycleSteps);
 
     return InBranchUiModel(
-      status: booking.status,
+      status: visit.status,
       employeeName: item.employeeName,
       estimateLow: Duration(minutes: step),
       estimateHigh: Duration(minutes: step + 10),

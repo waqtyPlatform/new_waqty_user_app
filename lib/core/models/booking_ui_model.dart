@@ -1,5 +1,7 @@
 import 'package:waqty_user_application/core/models/booking_item_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_format.dart';
+import 'package:waqty_user_application/core/models/policy_ui_model.dart';
+import 'package:waqty_user_application/core/models/booking_visit_ui_model.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/json_parse.dart';
 
 /// حالات الحجز اللي العميل بيشوفها.
@@ -140,8 +142,33 @@ class BookingUiModel {
   final String cancellationReason;
 
   /// جاي من السيرفر — **مش بنحسبه في الموبايل.**
-  /// حجز النهاردة عمره ما ينفع يتلغي، والقاعدة دي عند السيرفر.
+  ///
+  /// `Booking::getCanCancelAttribute()` بيقفله لما الميعاد **يعدّي**.
+  /// التعليق هنا كان بيقول «حجز النهاردة عمره ما ينفع يتلغي» — وده غلط:
+  /// حجز النهاردة ٦م وإنت بتبصّ ٢ظ `can_cancel: true`.
+  ///
+  /// ⚠ **بوليان واحد من غير سبب.** لو السيرفر قفل الإلغاء لسبب تاني
+  /// (سياسة المحل، حالة دفع، حجز بدأ فعلاً)، الأبلكيشن هيقول للعميل إن
+  /// الميعاد بدأ وهو مش بدأ. الحل كود سبب في الرد — طلب للباك إند.
   final bool canCancel;
+
+  /// حالة كل زيارة لوحدها — `visitUuid` → الحالة.
+  ///
+  /// **الغايب هنا معناه «زي الحجز»، مش «مالوش حالة».** الحجز بزيارة واحدة
+  /// عمره ما هيحتاج الخريطة دي، وكل الـ fixtures القديمة شغّالة من غير
+  /// تعديل. اللي بيحتاجها هو الحجز اللي زياراته اتفرقت فعلاً — زيارة
+  /// خلصت وزيارة لسه.
+  ///
+  /// ⚠️ **مش مصدر حقيقة تاني لحالة الحجز.** الحجز الأب بيفضل بيجي من
+  /// السيرفر زي ما هو (`recalculateBookingStatus()` هو اللي بيلمّه من
+  /// زياراته هناك). إحنا بنقرا مش بنحسب.
+  final Map<String, BookingStatus> visitStatuses;
+
+  /// سياسات الفرع اللي الحجز ده فيه.
+  ///
+  /// **بتيجي مع الحجز مش بنداء تاني** — العميلة واقفة على شاشة الحجز
+  /// والسياسة جزء من الحجز مش معلومة جانبية. TODO(api): BE-B1.
+  final PolicyUiModel policies;
 
   const BookingUiModel({
     required this.uuid,
@@ -158,6 +185,8 @@ class BookingUiModel {
     this.notes = '',
     this.cancellationReason = '',
     this.canCancel = false,
+    this.visitStatuses = const <String, BookingStatus>{},
+    this.policies = PolicyUiModel.none,
   }) : assert(items.length > 0, 'الحجز لازم يكون فيه خدمة واحدة على الأقل');
 
   /// من رد `GET /api/user/bookings/{uuid}`.
@@ -183,6 +212,18 @@ class BookingUiModel {
         : JsonParse.mapListValue(
             json['items'],
           ).map(BookingItemUiModel.fromJson).toList();
+
+    // `booking_visits.status` — عمود حقيقي، والداشبورد بيحرّكه لوحده عن
+    // الحجز الأب. بيوصل مع `visits` بس، يعني على شاشة التفاصيل. ليستة
+    // `GET /user/bookings` مابتحمّلش `visits` (backend ask BE-13)، وساعتها
+    // الخريطة بتفضل فاضية وكل زيارة بتاخد حالة الحجز — نفس سلوك النهاردة.
+    final visitStatuses = <String, BookingStatus>{
+      for (final visit in visits)
+        if (visit['status'] != null)
+          JsonParse.stringValue(visit['uuid']): BookingStatusLabel.fromApi(
+            JsonParse.stringValue(visit['status']),
+          ),
+    };
 
     // ⚠️ **الـ snapshots فيها `uuid` و`name` وبس.**
     //
@@ -222,6 +263,12 @@ class BookingUiModel {
       notes: JsonParse.stringValue(json['notes']),
       cancellationReason: JsonParse.stringValue(json['cancellation_reason']),
       canCancel: JsonParse.boolValue(json['can_cancel']),
+      visitStatuses: visitStatuses,
+      policies: PolicyUiModel.fromJson(
+        branch['policies'] is Map<String, dynamic>
+            ? branch['policies'] as Map<String, dynamic>
+            : null,
+      ),
     );
   }
 
@@ -243,6 +290,35 @@ class BookingUiModel {
   /// بداية أول خدمة.
   DateTime get startAt =>
       items.map((i) => i.startAt).reduce((a, b) => a.isBefore(b) ? a : b);
+
+  /// نسخة بنفس الحجز و[policies] مختلفة.
+  ///
+  /// **موجودة عشان الـmock بس.** السيرفر بيبعت السياسات جوه payload الفرع
+  /// مع الحجز، فالمسار الحقيقي بيقراها في [BookingUiModel.fromJson] ومابيعدّيش
+  /// من هنا. الـmock عنده ١٩ fixture مكتوبين بالإيد، وحقن السياسة في كل
+  /// واحد فيهم كان هيخلّي أي تغيير في السياسات تعديل في ١٩ مكان — فبنحقنها
+  /// في نقطة واحدة (`MockBookings.byUuid`) بدل كده.
+  ///
+  /// مش `copyWith` عام: ماينفعش يبقى فيه طريق تاني لتعديل حجز جاي من
+  /// السيرفر — الحجز بيتقرا مابيتحسبش.
+  BookingUiModel withPolicies(PolicyUiModel next) => BookingUiModel(
+    uuid: uuid,
+    providerUuid: providerUuid,
+    providerName: providerName,
+    branchUuid: branchUuid,
+    branchName: branchName,
+    imagePath: imagePath,
+    items: items,
+    status: status,
+    branchAddress: branchAddress,
+    paymentStatus: paymentStatus,
+    currency: currency,
+    notes: notes,
+    cancellationReason: cancellationReason,
+    canCancel: canCancel,
+    visitStatuses: visitStatuses,
+    policies: next,
+  );
 
   /// نهاية آخر خدمة.
   DateTime get endAt =>
@@ -275,19 +351,50 @@ class BookingUiModel {
   /// واحدة بس، وهي بالظبط الحالة اللي بتكسر: يومين خدمات في نفس اليوم
   /// بفارق كبير (صبغة ١٠ص وحمام كريم ٨م) بيتحجزوا **زيارتين** — والتجميع
   /// باليوم كان هيعرضهم زيارة واحدة بتمتد عشر ساعات.
-  List<List<BookingItemUiModel>> get visits {
+  List<BookingVisitUiModel> get visits {
     final grouped = <String, List<BookingItemUiModel>>{};
     for (final item in items) {
-      grouped.putIfAbsent(item.visitUuid, () => <BookingItemUiModel>[]).add(item);
+      grouped
+          .putIfAbsent(item.visitUuid, () => <BookingItemUiModel>[])
+          .add(item);
     }
 
-    final visits = grouped.values.toList();
-    for (final visit in visits) {
-      visit.sort((a, b) => a.startAt.compareTo(b.startAt));
-    }
-    visits.sort((a, b) => a.first.startAt.compareTo(b.first.startAt));
+    final visits = grouped.entries.map((entry) {
+      final items = entry.value..sort((a, b) => a.startAt.compareTo(b.startAt));
+      return BookingVisitUiModel(
+        uuid: entry.key,
+        // الغايب = زي الحجز. في حجز بزيارة واحدة ده صح دايمًا.
+        status: visitStatuses[entry.key] ?? status,
+        items: items,
+      );
+    }).toList();
+    visits.sort((a, b) => a.startAt.compareTo(b.startAt));
 
     return visits;
+  }
+
+  /// الزيارة اللي العميل عايش فيها **دلوقتي**.
+  ///
+  /// الترتيب مقصود:
+  ///  ١. الزيارة اللي [now] واقع جوه شباكها — دي أوضح إجابة.
+  ///  ٢. لو مفيش، أول زيارة لسه ماخلصتش. ده بيمسك الحالتين اللي الشباك
+  ///     مابيمسكهمش: العميل جه بدري (لسه قبل البداية) والزيارة اتأخرت
+  ///     (عدّت النهاية وهي لسه `in_progress`).
+  ///  ٣. لو كله خلص، آخر زيارة — عشان الشاشة تعرض النهاية مش تفضى.
+  ///
+  /// **بياخد [now] كمعامل مش بيقراه من `DateTime.now()`** — الاختيار ده
+  /// هو اللي بيخلي السلوك قابل للاختبار من غير ما نزوّر ساعة الجهاز.
+  BookingVisitUiModel currentVisit(DateTime now) {
+    final all = visits;
+
+    for (final visit in all) {
+      if (visit.containsTime(now)) return visit;
+    }
+    for (final visit in all) {
+      if (!visit.isFinished) return visit;
+    }
+
+    return all.last;
   }
 
   bool get isMultiService => items.length > 1;

@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:waqty_user_application/core/models/booking_ui_model.dart';
 import 'package:waqty_user_application/core/models/in_branch_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_format.dart';
-import 'package:waqty_user_application/core/utils/app_motion.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
 import 'package:waqty_user_application/core/widgets/app_band_widget.dart';
-import 'package:waqty_user_application/core/widgets/app_hairline_widget.dart';
+import 'package:waqty_user_application/core/widgets/app_watermark_glyph_widget.dart';
 
 /// **بؤرة الهوم.** الحاجة الغامقة الوحيدة في الأبلكيشن.
 ///
@@ -64,20 +60,37 @@ class InBranchHeroWidget extends StatelessWidget {
       color: isAttention
           ? AppSemanticColors.surfaceAccentDeep
           : AppSemanticColors.surfaceInk,
+      // **الغسلتين بقوا في نفس الاتجاه — الاتنين بيتضوّوا.**
+      //
+      // كانت `accentDeep` بتغمّق ناحية الركن عن قصد: `textOnAccentMuted`
+      // على الأخضر الغامق كان **4.74:1**، يعني ٠٫٢٤ بس فوق AA، وأي تفتيح
+      // كان بياكل الهامش ويطيّح أهم شريط في الأبلكيشن.
+      //
+      // بالتة الكيت رفعت الرقم ده لـ**6.00:1** (`textOnAccentMuted` بقى
+      // `#C0FFD6` بدل `#C9DCD0`) — الهامش بقى ١٫٥، فـ`brandBand` بتقدر
+      // تحط مصدر ضوء حقيقي زي `ink` بالظبط من غير ما تكسر حاجة.
+      gradient: isAttention ? AppGradients.brandBand : AppGradients.ink,
+      // حرف المحل باهت وخارج من الحافة — الشريط بيبقى **بتاع الحجز ده**
+      // مش مستطيل عام. بيتغيّر بتغيّر المحل، فالشاشة مش واحدة عند الكل.
+      backdrop: AppWatermarkGlyphWidget(name: booking.providerName, color: ink),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             live?.label ?? 'موعدك الجاي',
-            style: AppTextStyles.sectionLabel.copyWith(color: inkMuted),
+            style: AppTextStyles.overline.copyWith(color: inkMuted),
           ),
           verticalSpace(AppSpacing.s4),
 
           AnimatedSwitcher(
             duration: AppMotion.base,
             switchInCurve: AppMotion.standard,
-            child: _Headline(booking: booking, data: live, ink: ink,
-                inkMuted: inkMuted),
+            child: _Headline(
+              booking: booking,
+              data: live,
+              ink: ink,
+              inkMuted: inkMuted,
+            ),
           ),
 
           verticalSpace(AppSpacing.s12),
@@ -146,7 +159,10 @@ class _Headline extends StatelessWidget {
           headline,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: AppTextStyles.displayXl.copyWith(color: ink),
+          // `numeric(32)` مش `displayLg` — الاتنين ٣٢sp، بس `numeric`
+          // `height: 1.0` و`displayLg` ١٫١٥، والفرق ٤٫٨pt الهيرو مش
+          // مستوعبها. الميعاد رقم بيتقاس بالمساحة مش خطوة في السلّم.
+          style: AppTextStyles.numeric(32, color: ink),
         ),
         if (sub.isNotEmpty) ...[
           verticalSpace(AppSpacing.s4),

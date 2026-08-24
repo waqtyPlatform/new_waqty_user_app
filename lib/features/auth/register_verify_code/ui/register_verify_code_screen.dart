@@ -1,9 +1,9 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:waqty_user_application/core/widgets/auth_header_widget.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/utils/styles.dart';
 import 'package:waqty_user_application/features/auth/register_verify_code/logic/register_verify_code_cubit.dart';
 import 'package:waqty_user_application/features/auth/register_verify_code/ui/widgets/register_code_text_field_widget.dart';
 import 'package:waqty_user_application/features/auth/register_verify_code/ui/widgets/register_verify_button_widget.dart';
@@ -16,51 +16,28 @@ class RegisterVerifyCodeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.whiteColor,
       resizeToAvoidBottomInset: true,
-
-      appBar: AppBar(
-        backgroundColor: AppColors.whiteColor,
-        elevation: 0,
-        leading: IconButton(
-          onPressed: () {
-            if (Navigator.canPop(context)) {
-              Navigator.pop(context);
-            }
-          },
-          icon: Icon(Icons.arrow_back, color: AppColors.greyColor900),
-        ),
-      ),
-
+      appBar: AppBar(),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: 24.w),
+          padding: EdgeInsetsDirectional.symmetric(
+            horizontal: AppSpacing.pageGutter.w,
+          ),
           child: Form(
             key: RegisterVerifyCodeCubit.get(context).registerVerifyCodeKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                verticalSpace(16),
-
-                Text(
-                  context.tr('registerVerifyCode.title'),
-
-                  style: TextStyles.font24greyColor900Weight600,
+                AuthHeaderWidget(
+                  title: context.tr('registerVerifyCode.title'),
+                  description: context.tr('registerVerifyCode.description'),
                 ),
-                verticalSpace(6),
-                Text(
-                  context.tr('registerVerifyCode.description'),
-                  style: TextStyles.font14greyColor4002Weight400,
-                ),
-                verticalSpace(32),
-
                 RegisterCodeTextFieldWidget(email: email),
-
-                verticalSpace(48),
+                verticalSpace(AppSpacing.s32),
                 RegisterResendCodeWidget(email: email),
-                verticalSpace(32),
+                verticalSpace(AppSpacing.s32),
                 RegisterVerifyButtonWidget(email: email),
-                verticalSpace(24),
+                verticalSpace(AppSpacing.s24),
               ],
             ),
           ),

@@ -2,22 +2,33 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/config/routes/routes.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/core/models/phone_claim_result_ui_model.dart';
+import 'package:waqty_user_application/features/account/account/logic/account_cubit.dart';
+// `show` مش استيراد كامل: `account_state` و`my_bookings_state` الاتنين
+// فيهم `InitialState`، والتصادم بيوقف الترجمة.
+import 'package:waqty_user_application/features/account/account/logic/account_state.dart'
+    show AccountState;
+import 'package:waqty_user_application/features/account/phone_verification/ui/widgets/phone_claim_result_sheet.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/logic/entitlements_cubit.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/logic/entitlements_state.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/ui/entitlements_screen.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/ui/widgets/entitlements_body_widget.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/ui/widgets/entitlement_strip_widget.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/extentions.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/empty_state_widget.dart';
-import 'package:waqty_user_application/core/widgets/error_state_widget.dart';
 import 'package:waqty_user_application/features/booking/my_bookings/logic/my_bookings_cubit.dart';
 import 'package:waqty_user_application/features/booking/my_bookings/logic/my_bookings_state.dart';
 import 'package:waqty_user_application/features/booking/my_bookings/ui/widgets/my_booking_row_skeleton_widget.dart';
 import 'package:waqty_user_application/features/booking/create_booking/ui/create_booking_sheet.dart';
 import 'package:waqty_user_application/features/booking/my_bookings/ui/widgets/my_booking_row_widget.dart';
 import 'package:waqty_user_application/features/booking/my_bookings/ui/widgets/my_bookings_notice_widget.dart';
-import 'package:waqty_user_application/features/booking/my_bookings/ui/widgets/my_bookings_tabs_widget.dart';
+import 'package:waqty_user_application/features/booking/waitlist/ui/waitlist_screen.dart';
 import 'package:waqty_user_application/features/booking/waitlist/logic/waitlist_cubit.dart';
 import 'package:waqty_user_application/features/booking/waitlist/logic/waitlist_state.dart';
+import 'package:waqty_user_application/core/models/waitlist_ui_model.dart';
 import 'package:waqty_user_application/features/booking/waitlist/ui/widgets/waitlist_card_widget.dart';
+import 'package:waqty_user_application/features/booking/waitlist/ui/widgets/waitlist_change_request_sheet.dart';
 
 class MyBookingsScreen extends StatelessWidget {
   const MyBookingsScreen({super.key});
@@ -30,29 +41,91 @@ class MyBookingsScreen extends StatelessWidget {
 
         return Column(
           children: [
+            // **[AppScreenHeaderWidget] من غير `onBack`** — ده تبويب مش
+            // شاشة مدفوعة، فمافيش دايرة رجوع. الارتفاع بيكبر مع مقياس
+            // الخط بدل ما يفضل `titleLg` في `Row` مالوش ارتفاع معرّف.
             Padding(
               padding: EdgeInsetsDirectional.only(
                 start: AppSpacing.pageGutter.w,
                 end: AppSpacing.pageGutter.w,
                 top: AppSpacing.s8.h,
               ),
-              child: Row(
-                children: [Text('حجوزاتي', style: AppTextStyles.titleLg)],
-              ),
+              child: const AppScreenHeaderWidget(title: 'حجوزاتي'),
             ),
             verticalSpace(AppSpacing.headerToContent),
+            // **[AppTabBarWidget] مش مقسّم بحبّة بتزحلق.**
+            //
+            // التقسيم هنا **حالات لنفس المحتوى** (حجز قادم / حجز خلص) —
+            // وده تعريف التبويب في الكيت. المقسّم بيغيّر **مدى** نفس
+            // المحتوى (الشهر ده / الشهر اللي فات)، وده مش اللي بيحصل.
+            //
+            // اللي اتشال معاه: ٧٨ سطر `Stack` + `AnimatedAlign` +
+            // `FractionallySizedBox`، والارتفاع الخام `48.h`.
             Padding(
               padding: EdgeInsetsDirectional.symmetric(
                 horizontal: AppSpacing.pageGutter.w,
               ),
-              child: MyBookingsTabsWidget(
-                selectedTab: cubit.selectedTab,
-                onTabChanged: cubit.changeTab,
+              child: AppTabBarWidget<int>(
+                value: cubit.selectedTab,
+                onChanged: cubit.changeTab,
+                // **تبويب تالت مش تبويب خامس في الشريط تحت.**
+                //
+                // الباقة بتتشتري من الفرع وأغلب العملاء مالهمش واحدة عند
+                // الإطلاق. تبويب خامس فاضي لـ٩٠٪ من الناس بيدرّبهم
+                // يتجاهلوه. وهنا العميلة موجودة أصلاً وهي بتفكّر في
+                // مواعيدها — أقرب لحظة للباقة.
+                tabs: const [
+                  AppSegment(value: 0, label: 'القادمة'),
+                  AppSegment(value: 1, label: 'السابقة'),
+                  AppSegment(
+                    value: MyBookingsCubit.entitlementsTab,
+                    label: 'باقاتي',
+                  ),
+                ],
               ),
             ),
             verticalSpace(AppSpacing.headerToContent),
             Expanded(child: _body(context, cubit, state)),
           ],
+        );
+      },
+    );
+  }
+
+  /// بيعيد تحميل الحجوزات **والاستحقاقات** — الاتنين معروضين هنا.
+  Future<void> _refreshAll(BuildContext context) async {
+    final bookings = MyBookingsCubit.get(context);
+    final entitlements = EntitlementsCubit.get(context);
+    await Future.wait<void>(<Future<void>>[
+      bookings.loadBookings(),
+      entitlements.load(),
+    ]);
+  }
+
+  /// شريط «عندك ٣ جلسات» — **فوق كل حاجة في «القادمة»**.
+  ///
+  /// **مفيش `BlocProvider` هنا** زي قوائم الانتظار بالظبط: الـcubit
+  /// بيتعمل مرة واحدة فوق التبويبات، وده الشريط والعدّاد في «حسابي»
+  /// والقايمة نفسها بيقروا من نفس النسخة.
+  ///
+  /// بيختفي في تبويب «السابقة» — الباقة حاجة **جاية**، وعرضها فوق سجل
+  /// قديم بيقرا زي إعلان.
+  Widget _entitlementStrip(BuildContext context) {
+    if (MyBookingsCubit.get(context).selectedTab != 0) {
+      return const SizedBox.shrink();
+    }
+
+    return BlocBuilder<EntitlementsCubit, EntitlementsState>(
+      builder: (context, _) {
+        final cubit = EntitlementsCubit.get(context);
+        if (cubit.actionableCount == 0) return const SizedBox.shrink();
+
+        return EntitlementStripWidget(
+          package: cubit.highlightPackage,
+          followUpCount: cubit.followUps
+              .where((f) => f.isBookableFromApp)
+              .length,
+          onTap: () => EntitlementsScreen.open(context),
         );
       },
     );
@@ -90,10 +163,29 @@ class MyBookingsScreen extends StatelessWidget {
         return WaitlistSectionWidget(
           entries: state.entries,
           now: DateTime.now(),
-          onRemove: WaitlistCubit.get(context).removeEntry,
+          onRemove: WaitlistCubit.get(context).leaveQueue,
+          onAccept: WaitlistCubit.get(context).acceptOffer,
+          onRequestChange: (entry) => _requestChange(context, entry),
+          // الشاشة الكاملة بتوري كمان اللي **خلص** — اتحوّل لحجز أو
+          // الميعاد راح. القسم هنا بيعرض الشغّال، وده صح: التبويب بيجاوب
+          // «أنا مستني إيه؟» مش «حصل إيه قبل كده؟».
+          onSeeAll: () => WaitlistScreen.push(context),
         );
       },
     );
+  }
+
+  /// نفس فلو الشاشة المستقلة — السبب مطلوب في السيرفر.
+  Future<void> _requestChange(
+    BuildContext context,
+    WaitlistUiModel entry,
+  ) async {
+    final cubit = WaitlistCubit.get(context);
+    final reason = await WaitlistChangeRequestSheet.show(context, entry);
+
+    if (reason == null) return;
+
+    cubit.requestChange(entry.uuid, reason);
   }
 
   Widget _body(
@@ -101,6 +193,15 @@ class MyBookingsScreen extends StatelessWidget {
     MyBookingsCubit cubit,
     MyBookingsState state,
   ) {
+    // **تبويب «باقاتي» محتواه من كيوبت تاني بالكامل.**
+    //
+    // بيرجع بدري قبل أي منطق حجوزات — `state` هنا بتاع `MyBookingsCubit`
+    // ومالوش دعوة بالاستحقاقات، ولو عدّينا كنا هنرسم skeleton حجوزات فوق
+    // قايمة باقات.
+    if (cubit.selectedTab == MyBookingsCubit.entitlementsTab) {
+      return const EntitlementsBodyWidget();
+    }
+
     // **الهامش الأفقي بقى صفر.** [MyBookingRowWidget] صف full-bleed شايل
     // الـ ١٦ بتاعه **جواه**، فلو الـ `ListView` كمان حطّ ١٦ يبقى النص على
     // ٣٢ والخط الشعري عمره ما هيوصل لحافة الشاشة.
@@ -132,7 +233,7 @@ class MyBookingsScreen extends StatelessWidget {
         padding: EdgeInsetsDirectional.symmetric(
           horizontal: AppSpacing.pageGutter.w,
         ),
-        child: ErrorStateWidget(
+        child: AppErrorStateWidget(
           message: state.message,
           onRetry: cubit.loadBookings,
         ),
@@ -161,6 +262,10 @@ class MyBookingsScreen extends StatelessWidget {
             bottom: AppSpacing.screenBottom.h,
           ),
           children: [
+            // الشريط بيظهر هنا كمان: عميلة معاها باقة ومالهاش حجز جاي
+            // **لازم** تشوفها — دي بالظبط الحالة اللي الفيتشر موجود
+            // عشانها.
+            _entitlementStrip(context),
             // الحالة الفاضية بتترسم **مكان** كارت القائمة لو مفيش
             // إدخالات — مش تحته. لو فيه إشعارات، هي اللي حصل فعلاً
             // فمفيش داعي لأي حالة فاضية أصلاً.
@@ -178,7 +283,14 @@ class MyBookingsScreen extends StatelessWidget {
 
     // لون المؤشر جاي من `colorScheme.primary` في الثيم.
     return RefreshIndicator(
-      onRefresh: cubit.loadBookings,
+      // **السحب بيحدّث الشاشة كلها مش الحجوزات بس.**
+      //
+      // شريط «عندك ٣ جلسات» عايش على الشاشة دي، والعميلة اللي حجزت متابعة
+      // من تفاصيل حجز (بنسخة كيوبت مقصورة على الشاشة دي — شوف
+      // `BookingDetailsScreen._openFollowUp`) بترجع هنا والشريط لسه على
+      // رقمه القديم. السحب هو الطريق الطبيعي اللي بتصلّح بيه، فبيصلّح
+      // الاتنين مع بعض.
+      onRefresh: () => _refreshAll(context),
       // **التحميل بيبدأ قبل ما العميل يوصل الآخر.**
       //
       // `GET /user/bookings` مقسّم لصفحات (١٥ افتراضي)، فعميل عنده ٤٠
@@ -195,12 +307,12 @@ class MyBookingsScreen extends StatelessWidget {
           return false;
         },
         child: ListView.builder(
-        // **من غير السطر ده الـ `RefreshIndicator` ميت.**
-        //
-        // تلات صفوف × ٩٦٫٢ + ٣٢ = ٣٢١ في نافذة ~٥٧٤ — يعني المحتوى أقصر
-        // من الشاشة، فالـ `ListView` بيرفض السحب أصلاً والمؤشر عمره ما
-        // بيتنادى. والتحويل من كروت لصفوف قصّر القايمة أكتر، فالباج بقى
-        // مضمون بدل ما كان محتمل.
+          // **من غير السطر ده الـ `RefreshIndicator` ميت.**
+          //
+          // تلات صفوف × ٩٦٫٢ + ٣٢ = ٣٢١ في نافذة ~٥٧٤ — يعني المحتوى أقصر
+          // من الشاشة، فالـ `ListView` بيرفض السحب أصلاً والمؤشر عمره ما
+          // بيتنادى. والتحويل من كروت لصفوف قصّر القايمة أكتر، فالباج بقى
+          // مضمون بدل ما كان محتمل.
           physics: const AlwaysScrollableScrollPhysics(),
           padding: padding,
           // صف زيادة للمؤشر لما فيه صفحة جاية.
@@ -212,6 +324,7 @@ class MyBookingsScreen extends StatelessWidget {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  _entitlementStrip(context),
                   _waitlist(context),
                   _notices(context, cubit),
                   _row(context, cubit, 0),
@@ -224,13 +337,11 @@ class MyBookingsScreen extends StatelessWidget {
                 padding: EdgeInsetsDirectional.symmetric(
                   vertical: AppSpacing.s16.h,
                 ),
-                child: const Center(
-                  child: SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                ),
+                // `AppLoadingWidget` مش `CircularProgressIndicator` عاري:
+                // المقاس والسُمك كانوا رقمين خام (`20` و`strokeWidth: 2`)،
+                // وده مؤشر التحميل الوحيد في الأبلكيشن اللي كان بيرسم
+                // بمقاس مختلف عن باقي المؤشرات.
+                child: const Center(child: AppLoadingWidget(size: 20)),
               );
             }
 
@@ -241,10 +352,47 @@ class MyBookingsScreen extends StatelessWidget {
     );
   }
 
+  /// **فاضيتين بسببين مختلفين — ونصين مختلفين.**
+  ///
+  /// العميلة اللي حجزت من الفرع ورقمها مش مأكّد **عندها حجوزات فعلاً**،
+  /// التطبيق بس مش شايفها: `Booking.user_id` مابيتحطش غير لما
+  /// `provider_customers` يترّبط بحساب المنصة، واللي بيحصل في `verify-phone`.
+  ///
+  /// فـ«مفيش حجوزات جاية» في الحالة دي **معلومة غلط**، و«دوّر على مكان
+  /// قريب» بتبعتها تحجز حاجة هي حاجزاها. الفرع ده بيحوّل الطريق المسدود
+  /// لفعل.
   Widget _emptyState(BuildContext context, MyBookingsCubit cubit) {
-    final isUpcoming = cubit.selectedTab == 0;
+              // ⚠ **`BlocBuilder` على `AccountCubit` مش قراية مباشرة.**
+              //
+              // النص هنا بيتفرّع على `phone_verified_at`، والحساب
+              // والاستحقاقات بيتحمّلوا **متوازيين**. لو الحساب خلص بعد
+              // الاستحقاقات، القراية المباشرة كانت بتشوف `null` وترسم
+              // «لسه مافيش باقات» — و**مافيش حاجة بترجع تبنيها تاني**،
+              // فالعميلة اللي رقمها مش مأكّد كانت بتقعد على النص الغلط.
+    return BlocBuilder<AccountCubit, AccountState>(
+      builder: (context, _) => _emptyStateBody(context, cubit),
+    );
+  }
 
-    return EmptyStateWidget(
+  Widget _emptyStateBody(BuildContext context, MyBookingsCubit cubit) {
+    final isUpcoming = cubit.selectedTab == 0;
+    final account = AccountCubit.get(context).account;
+
+    // `null` = الحساب لسه بيتحمّل. مابنفترضش إنه مأكّد ولا مش مأكّد —
+    // بنعرض النص المحايد لحد ما نعرف.
+    final needsVerification = account != null && !account.isPhoneVerified;
+
+    if (needsVerification) {
+      return AppEmptyStateWidget(
+        icon: Icons.phone_iphone_rounded,
+        title: 'مش لاقي حجوزاتك؟',
+        message: 'لو حجزت من الفرع، أكّد رقم تليفونك عشان تظهر هنا.',
+        actionLabel: 'أكّد رقمي',
+        onAction: () => _verifyPhone(context, cubit),
+      );
+    }
+
+    return AppEmptyStateWidget(
       icon: Icons.event_note_outlined,
       title: isUpcoming ? 'مفيش حجوزات جاية' : 'مفيش حجوزات سابقة',
       message: isUpcoming
@@ -254,6 +402,40 @@ class MyBookingsScreen extends StatelessWidget {
       onAction: isUpcoming
           ? () => context.pushNamed(Routes.providersListScreen)
           : null,
+    );
+  }
+
+  /// بيفتح التأكيد، وبعد النجاح **بيعيد تحميل الحساب والحجوزات**.
+  ///
+  /// الترتيب مهم: الحساب الأول عشان الشيب والحالة الفاضية يعرفوا إن الرقم
+  /// بقى مأكّد، وبعدين الحجوزات عشان اللي اترّبط يظهر.
+  Future<void> _verifyPhone(BuildContext context, MyBookingsCubit cubit) async {
+    final accountCubit = AccountCubit.get(context);
+    final result = await Navigator.of(
+      context,
+    ).pushNamed(Routes.phoneVerificationScreen);
+
+    if (!context.mounted) return;
+    if (result is! PhoneClaimResultUiModel) return;
+
+    final entitlements = EntitlementsCubit.get(context);
+    await accountCubit.getProfile();
+    if (!context.mounted) return;
+    // الحجوزات **والاستحقاقات**: الاتنين اترّبطوا في نفس الترانزاكشن على
+    // السيرفر، والاتنين معروضين على الشاشة دي.
+    await Future.wait<void>(<Future<void>>[
+      cubit.loadBookings(),
+      entitlements.load(),
+    ]);
+
+    if (!context.mounted) return;
+    await PhoneClaimResultSheet.show(
+      context,
+      result: result,
+      packagesFound: entitlements.packages.length,
+      // العميلة واقفة على «حجوزاتي»، فلو باقات ظهرت الطريق ليها بيتعرض
+      // هنا. (في شاشة «باقاتي» نفسها الزرار ده مالوش لازمة فمابيتبعتش.)
+      onOpenEntitlements: () => EntitlementsScreen.open(context),
     );
   }
 

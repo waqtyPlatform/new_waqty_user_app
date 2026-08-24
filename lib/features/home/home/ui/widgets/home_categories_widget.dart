@@ -1,83 +1,89 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/core/models/category_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_format.dart';
-import 'package:waqty_user_application/core/utils/app_radius.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/app_surface_widget.dart';
-import 'package:waqty_user_application/core/widgets/skeleton_box_widget.dart';
+import 'package:waqty_user_application/core/widgets/category_icon_widget.dart';
 
-/// صف التصنيفات — `ListView.builder` أفقي، **كل تصنيف بلاطة بيضا**.
+/// صف التصنيفات — **كارت لكل تصنيف، والعدد جواه**.
 ///
-/// ## البلاطة رجعت — وطبق الأيقونة لأ
+/// ## ليه رجع كارت بعد ما كان طبق دائري
 ///
-/// النسخة اللي قبل دي شالت كل حاجة: التصنيف بقى أيقونة واسم قاعدين على
-/// الصفحة مباشرة. ده حلّ مشكلة الزحام، بس خلق واحدة تانية — **التصنيف
-/// بطّل يبان إنه قابل للضغط**. أيقونة رمادية جنب نص رمادي على أرضية
-/// دافية بتقرا «عنوان قسم»، مش «اضغط هنا».
+/// النسخة اللي فاتت كانت دايرة سايبة والاسم والعدد نص طايح تحتها. اتشالت
+/// لسببين اتقالوا من الاستخدام الحقيقي:
 ///
-/// البلاطة البيضا بترجّع الإشارة دي: سطح مرفوع = هدف لمس. والصفحة دافية
-/// (`page`) فالأبيض عليها ليه حد واضح من غير ما يحتاج ظل تقيل.
+/// **١. العدد كان بيقرا إنه مش تابع لحاجة.** «٢٤ خدمة» كانت آخر سطر في
+/// عمود مالوش حدود، فمافيش حاجة بتقول إنها بتوصف التصنيف اللي فوقها —
+/// وبينها وبين اسم التصنيف مسافة زي المسافة بينها وبين اللي بعدها.
 ///
-/// **بس طبق الأيقونة الدايرة ماترجعش.** ده كان الصندوق التاني جوه نفس
-/// العنصر — بلاطة جوه بلاطة. الأيقونة على أرضية البلاطة مباشرة كفاية،
-/// والفرق بين ٨ صناديق و٤ هو اللي كان بيدوّخ الشاشة.
+/// **٢. الدايرة بتتقص وحش.** الصف بيسيب آخر عنصر مقصوص من الحافة عشان
+/// يقول «فيه كمان». الكارت المقصوص بيقرا كارت ناقص — إشارة مفهومة. **نص
+/// الدايرة بيقرا عطل رسم**، لأن الدايرة مالهاش حالة «نصها بس».
 ///
-/// **والأيقونة بتفضل رمادية.** ٦ أيقونات خضرا هنا كانت أكبر سبب إن
-/// الأخضر بطّل يعلّم حاجة في الهوم.
+/// الاعتراض القديم (إن الكروت هتزاحم كروت المحلات اللي تحت) اتحل من غير ما
+/// نرجع للدايرة: الكارت هنا **غاطس مش مرفوع** ومقاسه نص كارت المحل، فبيقرا
+/// كصف كنترولات مش كصف محتوى.
+///
+/// ## الحلقة
+///
+/// المختار بياخد خلفية `accentSoft` **وحلقة `accent` بسمك ٢**. الحلقة دي
+/// إشارة تانية جنب اللون — والقاعدة إن أي حالة اختيار لازمها إشارتين، عشان
+/// اللون لوحده بيضيع في الشمس وعلى شاشة رخيصة.
 class HomeCategoriesWidget extends StatelessWidget {
-  /// عرض العنصر — **١٠٠ مش ٩٢**.
+  /// عرض الكارت.
   ///
-  /// البلاطة بتاكل ١٢ حشوة من كل جنب، فلو فضلت ٩٢ كان الباقي للنص ٦٨
-  /// و«عناية بالبشرة» كانت هتتلف تلات سطور. الـ ١٠٠ بترجّع نفس الـ ٧٦
-  /// المتاحة للنص.
-  static const double itemWidth = 100;
+  /// **١٢٤**: العرض المتاح للنص ١٢٤ − ٢٤ = ١٠٠ — «مساج واسترخاء» بيتقسم
+  /// على سطرين مريحين بدل ما يتزنق.
+  static const double itemWidth = 124;
 
-  /// حشوة البلاطة.
-  static const double tilePadding = AppSpacing.s12;
+  /// حشوة الكارت.
+  static const double cardPadding = AppSpacing.s12;
 
-  /// المسافة بين بلاطة وبلاطة.
+  /// قطر الطبق الدائري جوه الكارت.
   ///
-  /// رجعت ٨ لما البلاطة رجعت. الـ ٢٤ اللي كانت هنا كانت بتعوّض إن مفيش
-  /// حواف — دلوقتي الحافة نفسها بتفصل، و٢٤ فوقها كانت هتفكّك الصف.
-  static const double itemGap = AppSpacing.chipGap;
+  /// **٤٤ مش ٥٦**: بقى جوه كارت، والطبق اللي بيملا عرض الكارت بيقرا خلفية
+  /// مش أيقونة. و٤٤ هو نفسه [AppSpacing.touchTarget] — الطبق بيقرا كهدف
+  /// لمس حتى لو اللي بيتداس هو الكارت كله.
+  static const double plateSize = AppSpacing.touchTarget;
 
-  /// مقاس الأيقونة. كانت ٢٠ جوه طبق ٣٦ — بره الطبق الـ ٢٠ بتبقى ضايعة،
-  /// فطلعت ٢٨ عشان تفضل مرساة الصف من غير ما توزن أكتر من الاسم.
-  static const double iconSize = 28;
+  /// مقاس الأيقونة جوه الطبق.
+  static const double iconSize = 24;
 
-  /// الجزء اللي مالوش دعوة بمقياس الخط: حشوة ١٢ فوق + ١٢ تحت + أيقونة ٢٨
-  /// + ٨ (`s8`) + ٤ (`s4`). **المجموع ٦٤.**
-  static const double _fixedPart = 64;
+  /// المسافة بين كارت وكارت.
+  static const double itemGap = AppSpacing.s12;
+
+  /// الجزء اللي مالوش دعوة بمقياس الخط: حشوة ١٢×٢ + طبق ٤٤ + ٨ + ٤.
+  /// **المجموع ٨٠.**
+  static const double _fixedPart =
+      (cardPadding * 2) + plateSize + AppSpacing.s8 + AppSpacing.s4;
 
   /// النص عند مقياس ١٫٠: سطرين اسم (`captionInk` ١٢×١٫٤٠×٢ = ٣٣٫٦)
-  /// + العدد (`overline` ١١×١٫٣٠ = ١٤٫٣). **المجموع ٤٧٫٩.**
-  static const double _textPart = 47.9;
+  /// + العدد (`overline` ١٠×١٫٣٠ = ١٣). المجموع الحسابي ٤٦٫٦، والرقم هنا
+  /// **٤٨** لأن فلاتر بيقرّب ارتفاع السطر لأعلى وقت التشكيل.
+  static const double _textPart = 48;
 
-  /// كان **٩٦ ثابت والمحتوى بيطلع ١١٣٫٦** لما اسم التصنيف يتلف سطرين —
-  /// فيضان مضمون مش احتمال. وحتى بعد ما بقى ١٢٤، **الرقم الثابت فاض تاني
-  /// عند مقياس خط ١٫٣** (`OVERFLOWED BY 8.4 PIXELS` على «مساج واسترخاء»).
+  /// الارتفاع الوحيد للصف — **والـ skeleton بيقراه من هنا**.
   ///
-  /// الحل مش رقم أكبر — الحل إن الجزء اللي فيه نص يكبر مع النص لوحده.
-  /// الإجمالي دلوقتي **٨٧٫٩ عند ١٫٠ و١٠٢٫٣ عند ١٫٣** (٤٠ + ٤٧٫٩×١٫٣).
-  static double itemHeight(BuildContext context) => AppSpacing.scaledHeight(
-    context,
-    fixed: _fixedPart,
-    text: _textPart,
-  );
+  /// الرقم الثابت كان بيفيض عند مقياس خط ١٫٣ (`OVERFLOWED BY 8.4 PIXELS` على
+  /// «مساج واسترخاء»). الحل مش رقم أكبر — الحل إن الجزء اللي فيه نص يكبر مع
+  /// النص لوحده.
+  static double itemHeight(BuildContext context) =>
+      AppSpacing.scaledHeight(context, fixed: _fixedPart, text: _textPart);
 
   final List<CategoryUiModel> categories;
   final bool isLoading;
   final ValueChanged<CategoryUiModel> onCategoryTap;
+
+  /// التصنيف المختار — `null` في الرئيسية (مفيش اختيار، الضغط بينقل).
+  /// بيتملى في شاشة الاستكشاف حيث الصف بيشتغل كفلتر.
+  final String? selectedUuid;
 
   const HomeCategoriesWidget({
     super.key,
     required this.categories,
     required this.onCategoryTap,
     this.isLoading = false,
+    this.selectedUuid,
   });
 
   @override
@@ -94,14 +100,15 @@ class HomeCategoriesWidget extends StatelessWidget {
         padding: EdgeInsetsDirectional.symmetric(
           horizontal: AppSpacing.pageGutter.w,
         ),
-        itemCount: isLoading ? 4 : categories.length,
+        itemCount: isLoading ? 5 : categories.length,
         separatorBuilder: (_, __) => horizontalSpace(itemGap),
         itemBuilder: (context, index) {
-          if (isLoading) return const _CategorySkeleton();
+          if (isLoading) return _CategorySkeleton();
 
           final category = categories[index];
           return _CategoryItem(
             category: category,
+            isSelected: selectedUuid != null && selectedUuid == category.uuid,
             onTap: () => onCategoryTap(category),
           );
         },
@@ -112,121 +119,146 @@ class HomeCategoriesWidget extends StatelessWidget {
 
 class _CategoryItem extends StatelessWidget {
   final CategoryUiModel category;
+  final bool isSelected;
   final VoidCallback onTap;
 
-  const _CategoryItem({required this.category, required this.onTap});
+  const _CategoryItem({
+    required this.category,
+    required this.isSelected,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return AppSurfaceWidget(
-      onTap: onTap,
-      radius: AppRadius.m,
-      padding: EdgeInsets.all(HomeCategoriesWidget.tilePadding.r),
-      child: SizedBox(
-          width:
-              (HomeCategoriesWidget.itemWidth -
-                      HomeCategoriesWidget.tilePadding * 2)
-                  .w,
-          child: Column(
-            children: [
-              Icon(
-                _iconFor(category.name),
-                size: HomeCategoriesWidget.iconSize.r,
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      child: AppSurfaceWidget(
+        onTap: onTap,
+        width: HomeCategoriesWidget.itemWidth.w,
+        // **غاطس مش مرفوع.** ده صف كنترولات فوق صف محتوى — لو اتساوى مع
+        // كروت المحلات في السطح والظل، الاتنين بيتنافسوا والعين بتتوه.
+        level: AppElevation.sunken,
+        color: isSelected ? AppSemanticColors.accentSoft : null,
+        radius: AppRadius.m,
+        padding: EdgeInsetsDirectional.all(HomeCategoriesWidget.cardPadding.r),
+        border: isSelected
+            ? Border.all(color: AppSemanticColors.accent, width: 2.r)
+            : null,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AnimatedContainer(
+              duration: AppMotion.base,
+              curve: AppMotion.standard,
+              height: HomeCategoriesWidget.plateSize.r,
+              width: HomeCategoriesWidget.plateSize.r,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                // **قرص محدّب مش خرم.**
+                //
+                // الطبق المسطّح بيقرا كفراغ في الكارت. التدرّج المضوّي من
+                // فوق بيخليه يقرا كجسم، والفرق ده هو الفرق بين «أيقونة
+                // تصنيف» و«مربع صورة ما حمّلتش».
+                gradient: isSelected
+                    ? AppGradients.plateSelected
+                    : AppGradients.plate,
+                shape: BoxShape.circle,
+              ),
+              child: CategoryIconWidget(
+                categoryName: category.name,
+                size: HomeCategoriesWidget.iconSize,
                 // **خضرا — لون البراند.**
                 //
-                // كانت رمادية بحجة إن ٦ أيقونات خضرا بتخفّف قيمة الأخضر
-                // في الهوم. الحجة دي اتراجعنا عنها: الرمادي خلّى صف
-                // التصنيفات يقرا **معطّل** — ٦ مربعات بيضا فيها أيقونة
-                // رمادية ونص رمادي مافيهاش حاجة تقول إنها بتتداس.
-                //
-                // والأخضر هنا مش بيزاحم حاجة: البؤرة الحقيقية في الهوم
-                // شريط غامق (`surfaceInk`/`surfaceAccentDeep`) بيكسب على
-                // أي أيقونة بالحجم واللون.
-                //
-                // التباين مع الكارت الأبيض 3.96:1 — فوق حد الـ3:1
-                // المطلوب لعنصر واجهة مش نص.
-                color: AppSemanticColors.accent,
+                // كانت رمادية بحجة إن ٦ أيقونات خضرا بتخفّف قيمة الأخضر في
+                // الهوم. الحجة دي اتراجعنا عنها: الرمادي خلّى الصف يقرا
+                // **معطّل**. والأخضر هنا مش بيزاحم حاجة — البؤرة الحقيقية
+                // في الرئيسية شريط غامق بيكسب على أي أيقونة بالحجم واللون.
+                color: AppSemanticColors.accentText,
               ),
-              verticalSpace(AppSpacing.s8),
-              // `Expanded` عشان العدد يقعد على نفس الخط في كل العناصر.
-              // من غيره الاسم اللي سطر واحد بيرفع عدده فوق عن اللي سطرين،
-              // والصف بيقرا مايل. المساحة محجوزة لسطرين أصلًا في الارتفاع.
-              Expanded(
-                child: Text(
-                  category.name,
-                  maxLines: 2,
-                  textAlign: TextAlign.center,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.captionInk,
-                ),
-              ),
-              if (category.servicesCount > 0)
-                Text(
-                  '${AppFormat.digits(category.servicesCount)} خدمة',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  // الرمادي بقى `textSecondary` مش `textOnSunken` — مفيش
-                  // سطح غاطس تحته دلوقتي (القيمتين نفس اللون، الفرق إن
-                  // الاسم بقى بيوصف المكان الصح).
-                  style: AppTextStyles.overline.copyWith(
-                    color: AppSemanticColors.textSecondary,
+            ),
+            verticalSpace(AppSpacing.s8),
+            // **الاسم والعدد ملزوقين في قاع الكارت.**
+            //
+            // قبل كده الاسم كان `Expanded` والعدد بعده — يعني الاسم بياخد
+            // مساحة سطرين وبيترسم في أولها، فالاسم اللي سطر واحد كان بيسيب
+            // **شريط فاضي** بينه وبين عدده في نص الكارت. الشريط ده كان أول
+            // حاجة العين تشوفها في الصف.
+            //
+            // دلوقتي الفراغ بيروح **فوق** الاسم، تحت الطبق — فبيقرا تنفّس
+            // مش فجوة. والعدد فضل على نفس الخط في كل الكروت زي ما كان.
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    category.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    // **w600 دايمًا مش عند الاختيار بس.** ده عنوان الكارت،
+                    // والوزن العادي بيخليه يقرا كسطر وصف. حالة الاختيار
+                    // ليها إشارتين أقوى أصلاً — الحد واللون.
+                    style: AppTextStyles.captionInk.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-            ],
-          ),
+                  if (category.servicesCount > 0) verticalSpace(AppSpacing.s4),
+                  if (category.servicesCount > 0)
+                    Text(
+                      '${AppFormat.digits(category.servicesCount)} خدمة',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.overline.copyWith(
+                        color: AppSemanticColors.textSecondary,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
-
-  /// أيقونة مؤقتة لحد ما صور التصنيفات تيجي من السيرفر.
-  ///
-  /// كلها `_rounded` — كان فيه خلط `_outlined`/`_rounded` في نفس الصف،
-  /// وده بيبان كأن الأيقونات من مكتبتين مختلفتين.
-  IconData _iconFor(String name) => switch (name) {
-    'حلاقة رجالي' => Icons.content_cut_rounded,
-    'كوافير حريمي' => Icons.face_retouching_natural_rounded,
-    'عناية بالبشرة' => Icons.spa_rounded,
-    'مساج واسترخاء' => Icons.self_improvement_rounded,
-    'أظافر' => Icons.back_hand_rounded,
-    _ => Icons.medical_services_rounded,
-  };
 }
 
 /// التحميل بشكل العنصر نفسه — **مش مستطيل واحد بمقاس البلاطة**.
 ///
-/// كان `SkeletonBoxWidget` واحد بعرض ٩٢ وارتفاع الصف كله واستدارة ١٦،
-/// يعني التحميل كان بيرسم بالظبط الصناديق اللي احنا شايلينها، والصفحة
-/// بتتغيّر شكلها لما الداتا توصل. دلوقتي بيرسم أيقونة وسطرين وعدد.
-///
-/// الارتفاع بيتقرا من [HomeCategoriesWidget.itemHeight] فمفيش احتمال
-/// إن اللستة تنطّ بين حالة وحالة.
+/// الارتفاع بيتقرا من [HomeCategoriesWidget.itemHeight] فمفيش احتمال إن
+/// اللستة تنطّ بين حالة وحالة.
 class _CategorySkeleton extends StatelessWidget {
-  const _CategorySkeleton();
-
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: HomeCategoriesWidget.itemWidth.w,
       height: HomeCategoriesWidget.itemHeight(context).h,
-      // موجة واحدة للعنصر كله — الأربع مستطيلات جواها `animate: false`،
-      // من غير كده كل مستطيل بيعمل موجته لوحده والنتيجة وميض عشوائي.
-      child: SkeletonGroupWidget(
-        child: Column(
-          children: [
-            SkeletonBoxWidget(
-              width: HomeCategoriesWidget.iconSize,
-              height: HomeCategoriesWidget.iconSize,
-              radius: AppRadius.xs,
-              animate: false,
-            ),
-            verticalSpace(AppSpacing.s8),
-            // الأعراض بتقلّ سطر ورا سطر زي الاسم الحقيقي لما يتلف.
-            const SkeletonBoxWidget(width: 72, height: 10, animate: false),
-            verticalSpace(AppSpacing.s4),
-            const SkeletonBoxWidget(width: 48, height: 10, animate: false),
-            verticalSpace(AppSpacing.s8),
-            const SkeletonBoxWidget(width: 40, height: 8, animate: false),
-          ],
+      // موجة واحدة للعنصر كله — اللي جواها `animate: false`، من غير كده كل
+      // مستطيل بيعمل موجته لوحده والنتيجة وميض عشوائي.
+      child: AppSkeletonGroupWidget(
+        // نفس حشوة الكارت الحقيقي — من غيرها الـ skeleton بيبدأ من الحافة
+        // والصف بينطّ لما الداتا تيجي.
+        child: Padding(
+          padding: EdgeInsetsDirectional.all(
+            HomeCategoriesWidget.cardPadding.r,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // دايرة زي الطبق الحقيقي — الاستدارة نص القطر.
+              AppSkeletonBoxWidget(
+                width: HomeCategoriesWidget.plateSize,
+                height: HomeCategoriesWidget.plateSize,
+                radius: HomeCategoriesWidget.plateSize / 2,
+              ),
+              verticalSpace(AppSpacing.s8),
+              const AppSkeletonBoxWidget(width: 78, height: 10),
+              verticalSpace(AppSpacing.s4),
+              const AppSkeletonBoxWidget(width: 52, height: 10),
+              verticalSpace(AppSpacing.s8),
+              const AppSkeletonBoxWidget(width: 40, height: 8),
+            ],
+          ),
         ),
       ),
     );

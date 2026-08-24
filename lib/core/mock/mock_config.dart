@@ -64,7 +64,6 @@ class MockConfig {
   static bool get isEmptyForced =>
       forceEmpty || scenario == MockScenario.emptyState;
 
-  static Duration get effectiveDelay => scenario == MockScenario.slowNetwork
-      ? const Duration(seconds: 3)
-      : delay;
+  static Duration get effectiveDelay =>
+      scenario == MockScenario.slowNetwork ? const Duration(seconds: 3) : delay;
 }

@@ -1,21 +1,48 @@
 import 'dart:convert';
 import 'package:waqty_user_application/core/api/api_consumer.dart';
-import 'package:waqty_user_application/core/api/app_interceptor.dart';
-import 'package:waqty_user_application/core/services/services_locator.dart';
-import 'package:http_interceptor/http_interceptor.dart';
 import 'package:http/http.dart' as http;
 
+/// ناقل HTTP على [http.Client] المحقون.
+///
+/// ⚠ **الكلاس ده كان بيرمي الـclient اللي بيتحقنله.** الكونستركتور كان:
+///
+/// ```dart
+/// HttpConsumer(this._client) {
+///   _client = InterceptedClient.build(interceptors: [getIt<AppInterceptor>()]);
+/// }
+/// ```
+///
+/// البراميتر بيتداس في السطر اللي بعده. نتيجتين: الـ`http.Client()` المسجّل في
+/// `services_locator` ميت، و**مفيش service ينفع يتختبر** — `MockClient` من
+/// `package:http/testing.dart` (موجود مع `http: ^1.5`) مكنش يوصل خالص.
+///
+/// دلوقتي الـ`InterceptedClient` بيتبني في الـDI ويتحقن من بره، والكلاس ده
+/// بقى ناقل صافي.
 class HttpConsumer implements ApiConsumer {
-  http.Client _client;
+  final http.Client _client;
 
-  HttpConsumer(this._client) {
-    _client = InterceptedClient.build(interceptors: [getIt<AppInterceptor>()]);
+  const HttpConsumer(this._client);
+
+  /// بتبني الـURI بالـquery، وبتشيل القيم `null` عشان `?employee_uuid=null`
+  /// مايوصلش للسيرفر كنص.
+  Uri _uri(String path, Map<String, dynamic>? query) {
+    final uri = Uri.parse(path);
+    if (query == null || query.isEmpty) return uri;
+
+    final params = <String, String>{...uri.queryParameters};
+    query.forEach((key, value) {
+      if (value != null) params[key] = '$value';
+    });
+    return uri.replace(queryParameters: params.isEmpty ? null : params);
   }
 
   @override
-  Future<http.Response> get(String path, Map<String, String>? headers) async {
-    final response = await _client.get(Uri.parse(path), headers: headers);
-    return response;
+  Future<http.Response> get(
+    String path,
+    Map<String, String>? headers, {
+    Map<String, dynamic>? query,
+  }) async {
+    return _client.get(_uri(path, query), headers: headers);
   }
 
   @override
@@ -44,6 +71,19 @@ class HttpConsumer implements ApiConsumer {
       headers: headers,
     );
     return response;
+  }
+
+  @override
+  Future<http.Response> patch(
+    String path,
+    Map<String, dynamic>? body,
+    Map<String, String>? headers,
+  ) async {
+    return _client.patch(
+      Uri.parse(path),
+      body: json.encode(body),
+      headers: headers,
+    );
   }
 
   @override

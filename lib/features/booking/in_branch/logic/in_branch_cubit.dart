@@ -2,10 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:waqty_user_application/core/mock/mock_in_branch.dart';
 import 'package:waqty_user_application/core/models/booking_ui_model.dart';
 import 'package:waqty_user_application/core/models/in_branch_ui_model.dart';
 import 'package:waqty_user_application/features/booking/in_branch/logic/in_branch_state.dart';
+import 'package:waqty_user_application/features/booking/in_branch/data/repo/in_branch_repo.dart';
 
 /// حالة العميل جوه الفرع لحجز واحد.
 ///
@@ -37,7 +37,10 @@ class InBranchCubit extends Cubit<InBranchState> {
   /// آخر حالة اتبلّغ عنها — عشان منطلّعش نفس التنبيه مرتين.
   BookingStatus? _lastNotified;
 
-  InBranchCubit({required this.booking}) : super(const InBranchInitialState());
+  final InBranchRepo _repo;
+
+  InBranchCubit(this._repo, {required this.booking})
+    : super(const InBranchInitialState());
 
   static InBranchCubit get(BuildContext context) =>
       BlocProvider.of<InBranchCubit>(context);
@@ -67,16 +70,19 @@ class InBranchCubit extends Cubit<InBranchState> {
   }
 
   /// تحديث **صامت** — مفيش `LoadingState`.
-  void _tick() {
+  ///
+  /// ⚠ **الفشل بيتبلع.** ده نبض كل ٢٠ ثانية؛ نداء واحد فشل (نت اتهزهز)
+  /// مش سبب إن الشريط اللي قدام العميل يتفضّى. اللي على الشاشة بيفضل لحد
+  /// النبضة الجاية.
+  Future<void> _tick() async {
     if (isClosed) return;
 
-    // TODO(api): الحالة بتيجي من `GET /api/user/bookings/{uuid}` — الحقل
-    //   `status` موجود فعلاً. اللي مش موجود هو **التقدير الزمني**، وده
-    //   السبب إن `MockInBranch` هيفضل موجود بعد الربط لحد ما السيرفر
-    //   يوفّر إشارة.
-    final next = MockInBranch.forBooking(booking, DateTime.now());
+    final result = await _repo.status(booking);
+    if (isClosed) return;
 
-    emit(next == null ? const InBranchIdleState() : InBranchReadyState(next));
+    result.fold((_) {}, (next) {
+      emit(next == null ? const InBranchIdleState() : InBranchReadyState(next));
+    });
   }
 
   /// بيرجّع `true` مرة واحدة بس لكل انتقال يستاهل تنبيه.

@@ -2,13 +2,16 @@ import 'package:waqty_user_application/core/services/check_network.dart';
 import 'package:waqty_user_application/core/widgets/offline_alert_dialog.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'config/routes/app_routes.dart';
-import 'config/themes/app_white_theme.dart';
-import 'core/utils/app_colors_white_theme.dart';
-import 'core/utils/app_semantic_colors.dart';
-import 'core/utils/app_spacing.dart';
+import 'config/routes/routes.dart';
+import 'core/api/session_store.dart';
+import 'core/services/services_locator.dart';
+import 'core/utils/extentions.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
+import 'config/themes/theme_cubit.dart';
 
 import 'core/mock/mock_scenario_switcher_widget.dart';
 import 'core/services/biometric_service.dart';
@@ -39,7 +42,31 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
 
     _listenToNetwork();
+    _listenToSessionExpiry();
     if (!kBypassAppLock) _authenticate();
+  }
+
+  /// التوكن اترفض (٤٠١) ← رمية على الدخول.
+  ///
+  /// [ApiClient] بينده `SessionStore.expire()` من جوّه طبقة الـAPI،
+  /// فمفيش cubit محتاج يعرف حاجة عن الـ٤٠١. والـ`ValueNotifier` بينط
+  /// **مرة واحدة** حتى لو عشر نداءات متوازية فشلوا مع بعض، فمفيش
+  /// عشر رميات فوق بعض.
+  void _listenToSessionExpiry() {
+    getIt<SessionStore>().expired.addListener(_onSessionExpired);
+  }
+
+  void _onSessionExpired() {
+    if (!getIt<SessionStore>().expired.value) return;
+
+    final context = navigatorKey.currentContext;
+    if (context == null) return;
+
+    AppSnack.show(context, message: 'الجلسة انتهت، سجّل دخول تاني');
+    context.pushNamedAndRemoveUntil(
+      Routes.loginScreen,
+      predicate: (route) => false,
+    );
   }
 
   /// authenticate using biometric
@@ -81,91 +108,120 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    getIt<SessionStore>().expired.removeListener(_onSessionExpired);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return ScreenUtilInit(
-      designSize: const Size(375, 812),
-      minTextAdapt: true,
-      splitScreenMode: true,
-      builder: (context, snapshot) {
-        // getIt<AppConstant>().setLanguage(context.locale.languageCode);
+    // **الـ ThemeCubit فوق كل حاجة** — شاشة الحساب بتقرا منه وبتكتب فيه،
+    // والقفل الحيوي تحته بردو عشان شاشة القفل ماتطلعش بيضا على جهاز غامق.
+    return BlocProvider(
+      create: (_) => ThemeCubit(),
+      child: ScreenUtilInit(
+        designSize: const Size(375, 812),
+        minTextAdapt: true,
+        splitScreenMode: true,
+        builder: (context, _) => BlocBuilder<ThemeCubit, ThemeMode>(
+          builder: (context, mode) {
+            // `platformBrightnessOf` بيسجّل اعتماد على الـ MediaQuery اللي
+            // `runApp` بيحطها فوق كل حاجة — يعني تبديل الجهاز لـ dark وقت
+            // المغرب بيوصل هنا لوحده من غير `WidgetsBindingObserver`.
+            final brightness = ThemeCubit.resolve(
+              mode,
+              MediaQuery.platformBrightnessOf(context),
+            );
 
-        if (!_isAuthenticated) {
-          return MaterialApp(
-            debugShowCheckedModeBanner: false,
-            // كانت `MaterialApp` تانية **من غير `theme:`** — يعني زرار
-            // الفتح كان بيطلع بنفسجي بتاع Material الافتراضي.
-            theme: themeData(),
-            home: Scaffold(
-              backgroundColor: AppSemanticColors.page,
-              body: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.lock_outline,
-                      size: 80.w,
-                      color: AppColors.greyColor900,
-                    ),
-                    SizedBox(height: 16.h),
-                    Text(
-                      'App Locked',
-                      style: TextStyle(
-                        fontSize: 20.sp,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.greyColor900,
-                      ),
-                    ),
-                    SizedBox(height: 32.h),
-                    ElevatedButton.icon(
-                      onPressed: _authenticate,
-                      icon: const Icon(Icons.fingerprint),
-                      label: const Text('Unlock'),
-                      style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 24.w,
-                          vertical: 12.h,
-                        ),
-                      ),
-                    ),
-                  ],
+            // ⚠ **الترتيب ده مش تفصيلة.** التوكنز بتتقرا من palette عام،
+            // فلازم يتظبط **قبل** ما `appTheme()` تتبني وقبل ما أي widget
+            // تحت يرسم. الـ builder ده بيتنفّذ قبل الشجرة اللي تحته، فده
+            // مضمون.
+            AppSemanticColors.apply(brightness);
+
+            return _app(context, brightness);
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _app(BuildContext context, Brightness brightness) {
+    if (!_isAuthenticated) return _lockScreen(brightness);
+
+    return MaterialApp(
+      // ## ليه مفتاح على الإضاءة
+      //
+      // التوكنز statics مش `InheritedWidget`، يعني الـ widgets اللي متكتوبة
+      // `const` مابتتبنيش تاني لما الوضع يقلب — بتفضل بألوان الوضع القديم.
+      // المفتاح بيرمي الشجرة كلها ويبنيها من الأول، فمستحيل يفضل فيها لون
+      // من الوضع اللي فات.
+      //
+      // الثمن: مكدس التنقّل بيرجع لأوله عند التبديل. ده مقبول لأنه بيحصل
+      // مرتين في اليوم على الأكتر (تبديل يدوي أو مغرب/شروق)، والبديل —
+      // `context` في كل استدعاء لون في ٥٥١ موضع — تكلفته أكبر بكتير.
+      key: ValueKey(brightness),
+      localizationsDelegates: context.localizationDelegates,
+      supportedLocales: context.supportedLocales,
+      locale: context.locale,
+      debugShowCheckedModeBanner: false,
+      navigatorKey: navigatorKey,
+      title: "appName".tr(),
+      theme: appTheme(),
+      initialRoute: widget.navigateWidget,
+      onGenerateRoute: RouteGenerator.generateRoute,
+      // **سطر واحد بيحمي كل ارتفاع ثابت في الأبلكيشن مرة واحدة.**
+      //
+      // أندرويد بيوصّل مقياس الخط لـ ٢× من إعدادات إمكانية الوصول. الأرقام
+      // اللي حسبناها اتحسبت لحد ١٫٣، وفوقها الصناديق بتفيض. بنقصّه هنا بدل
+      // ما نلاحق ٢٠ صندوق واحد واحد.
+      builder: (context, child) => MediaQuery.withClampedTextScaling(
+        maxScaleFactor: AppSpacing.maxTextScale,
+        // MOCK — الشارة والسيناريوهات بيختفوا بالكامل في الـ release.
+        child: MockScenarioSwitcherWidget(
+          child: child ?? const SizedBox.shrink(),
+        ),
+      ),
+    );
+  }
+
+  /// شاشة القفل الحيوي — بتاخد نفس الثيم عشان ماتطلعش بيضا على جهاز غامق.
+  Widget _lockScreen(Brightness brightness) {
+    return MaterialApp(
+      key: ValueKey('lock-$brightness'),
+      debugShowCheckedModeBanner: false,
+      theme: appTheme(),
+      home: Scaffold(
+        body: Center(
+          child: Padding(
+            padding: AppSpacing.page,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.lock_outline_rounded,
+                  size: 72.r,
+                  color: AppSemanticColors.textTertiary,
                 ),
-              ),
-            ),
-          );
-        }
-
-        return Container(
-          color: AppSemanticColors.page,
-          child: MaterialApp(
-            localizationsDelegates: context.localizationDelegates,
-            supportedLocales: context.supportedLocales,
-            locale: context.locale,
-            debugShowCheckedModeBanner: false,
-            navigatorKey: navigatorKey,
-            title: "appName".tr(),
-            theme: themeData(),
-            initialRoute: widget.navigateWidget,
-            onGenerateRoute: RouteGenerator.generateRoute,
-            // **سطر واحد بيحمي كل ارتفاع ثابت في الأبلكيشن مرة واحدة.**
-            //
-            // أندرويد بيوصّل مقياس الخط لـ ٢× من إعدادات إمكانية الوصول.
-            // الأرقام اللي حسبناها اتحسبت لحد ١٫٣، وفوقها الصناديق بتفيض.
-            // بنقصّه هنا بدل ما نلاحق ٢٠ صندوق واحد واحد.
-            builder: (context, child) => MediaQuery.withClampedTextScaling(
-              maxScaleFactor: AppSpacing.maxTextScale,
-              // MOCK — الشارة والسيناريوهات بيختفوا بالكامل في الـ release.
-              child: MockScenarioSwitcherWidget(
-                child: child ?? const SizedBox.shrink(),
-              ),
+                SizedBox(height: AppSpacing.s16.h),
+                Text('الأبلكيشن مقفول', style: AppTextStyles.titleLg),
+                SizedBox(height: AppSpacing.s8.h),
+                Text(
+                  'افتح ببصمتك عشان تكمّل',
+                  style: AppTextStyles.bodyMdMuted,
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: AppSpacing.s32.h),
+                ElevatedButton.icon(
+                  onPressed: _authenticate,
+                  icon: const Icon(Icons.fingerprint_rounded),
+                  label: const Text('افتح'),
+                ),
+              ],
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

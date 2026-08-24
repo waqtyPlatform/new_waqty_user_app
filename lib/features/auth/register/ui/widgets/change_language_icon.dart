@@ -1,78 +1,42 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
-import 'package:waqty_user_application/core/utils/styles.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 
+/// مبدّل اللغة في شاشة التسجيل.
+///
+/// ## كان قرص بيتزحلق، بقى [AppSegmentedWidget]
+///
+/// القديم كان `Container` أخضر جواه `Stack` و`AnimatedAlign` بقرص أبيض —
+/// ٤٠ سطر بيعملوا اللي الكيت بيعمله. واتشال منه كمان تلات أرقام خام
+/// (`64.w` · `32.h` · `28` والهامش `3.w`).
+///
+/// **والأهم إنه كان صعب يتقري**: خلفية خضرا مصمتة بحرف أبيض عليها كانت
+/// أعلى صوت في شاشة التسجيل كلها — أعلى من زرار «سجّل». الـsegmented
+/// لوح غاطس هادي، والمختار هو اللي بيرتفع.
+///
+/// **بيبان في التسجيل بس** — الحساب فيه صف «اللغة» بورقة اختيار.
 class ChangeLanguageIconWidget extends StatelessWidget {
   const ChangeLanguageIconWidget({super.key});
 
+  static const Locale _ar = Locale('ar', 'EG');
+  static const Locale _en = Locale('en', 'US');
+
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        if (context.locale == const Locale('en', 'US')) {
-          context.setLocale(const Locale('ar', 'EG'));
-        } else {
-          context.setLocale(const Locale('en', 'US'));
-        }
-      },
-      child: Container(
-        width: 64.w,
-        height: 32.h,
-        decoration: BoxDecoration(
-          color: AppColors.greenColor500,
-          borderRadius: BorderRadius.circular(20.r),
-        ),
-        child: Stack(
-          children: [
-            AnimatedAlign(
-              duration: const Duration(microseconds: 600),
-              curve: Curves.easeInOut,
-              alignment: context.locale == const Locale('en', 'US')
-                  ? Alignment.centerLeft
-                  : Alignment.centerRight,
-              child: Container(
-                width: 28.w,
-                height: 32.h,
-                margin: EdgeInsets.symmetric(horizontal: 3.w),
+    final isEnglish = context.locale.languageCode == 'en';
 
-                decoration: BoxDecoration(
-                  color: AppColors.whiteColor,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-            Row(
-              children: [
-                Expanded(
-                  child: Center(
-                    child: Text(
-                      context.locale == const Locale('en', 'US') ? 'EN' : 'ع',
-                      style: TextStyles.font14Weight700.copyWith(
-                        color: context.locale == const Locale('en', 'US')
-                            ? AppColors.greenColor500
-                            : AppColors.greenColor500,
-                      ),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: Center(
-                    child: Text(
-                      context.locale == const Locale('en', 'US') ? 'ع' : 'EN',
-                      style: TextStyles.font14Weight700.copyWith(
-                        color: context.locale == const Locale('en', 'US')
-                            ? AppColors.whiteColor
-                            : AppColors.whiteColor,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+    // الـsegmented تباعه `Expanded`، فمحتاج عرض محدود — من غير كده بياخد
+    // الصف كله والوجو بيتزنق.
+    return SizedBox(
+      width: 104.w,
+      child: AppSegmentedWidget<Locale>(
+        value: isEnglish ? _en : _ar,
+        segments: const [
+          AppSegment(value: _ar, label: 'ع'),
+          AppSegment(value: _en, label: 'EN'),
+        ],
+        onChanged: context.setLocale,
       ),
     );
   }

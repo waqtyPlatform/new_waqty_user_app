@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/config/routes/routes.dart';
-import 'package:waqty_user_application/core/utils/app_motion.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/extentions.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/button_widget.dart';
 
 /// شاشة النجاح — **شاشة كاملة، مش toast**.
 ///
@@ -54,13 +50,8 @@ class BookingSuccessScreen extends StatelessWidget {
                       ),
                       const Spacer(),
                       verticalSpace(AppSpacing.sectionBreak),
-                      ButtonWidget(
-                        isLoading: false,
-                        buttonText: 'شوف حجوزاتي',
-                        backGroundColor: AppSemanticColors.accent,
-                        borderColor: AppSemanticColors.accent,
-                        textStyle: AppTextStyles.button,
-                        buttonHeight: 52.h,
+                      AppButtonWidget(
+                        label: 'شوف حجوزاتي',
                         onPressed: () => context.pushNamedAndRemoveUntil(
                           Routes.buttonNavigationBarScreen,
                           arguments: {'initialIndex': 2},
@@ -112,14 +103,14 @@ class _SuccessMark extends StatelessWidget {
       child: Container(
         height: 96.r,
         width: 96.r,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppSemanticColors.accentSoft,
           shape: BoxShape.circle,
         ),
         child: Icon(
           Icons.check_rounded,
           size: 48.r,
-          color: AppSemanticColors.accent,
+          color: AppSemanticColors.accentText,
         ),
       ),
     );

@@ -1,7 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:waqty_user_application/core/utils/styles.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 
 class RegisterTermsAndConditionsWidget extends StatelessWidget {
   const RegisterTermsAndConditionsWidget({super.key});
@@ -15,29 +15,23 @@ class RegisterTermsAndConditionsWidget extends StatelessWidget {
           children: [
             TextSpan(
               text: context.tr('register.accptedWithText'),
-              style: TextStyles.font14greyColor4002Weight400,
+              style: AppTextStyles.caption,
             ),
             TextSpan(
               text: context.tr('register.termsAndConditionsText'),
-              style: TextStyles.font14greenColor500Weight600,
+              style: AppTextStyles.captionAccent,
               recognizer: TapGestureRecognizer()
                 ..onTap = () {
-                  // // TODO: navigate to Terms & Conditions page
-                  // print('Terms & Conditions tapped');
+                  // TODO(nav): شاشة الشروط والأحكام لسه مش موجودة.
                 },
             ),
-
-            TextSpan(
-              text: ' و ',
-              style: TextStyles.font14greyColor4002Weight400,
-            ),
+            TextSpan(text: ' و ', style: AppTextStyles.caption),
             TextSpan(
               text: context.tr('register.privacyPolicyText'),
-              style: TextStyles.font14greenColor500Weight600,
+              style: AppTextStyles.captionAccent,
               recognizer: TapGestureRecognizer()
                 ..onTap = () {
-                  // // TODO: navigate to Terms & Conditions page
-                  // print('Terms & Conditions tapped');
+                  // TODO(nav): شاشة سياسة الخصوصية لسه مش موجودة.
                 },
             ),
           ],

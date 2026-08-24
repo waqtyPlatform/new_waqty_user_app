@@ -1,3 +1,5 @@
+import 'package:waqty_user_application/core/mock/mock_employees.dart';
+import 'package:waqty_user_application/core/mock/mock_providers.dart';
 import 'package:waqty_user_application/core/models/service_ui_model.dart';
 
 /// MOCK — يتشال عند ربط: GET /api/public/services?provider_uuid=
@@ -176,6 +178,92 @@ class MockServices {
         'prv-4' || 'prv-5' => _careServices,
         _ => _menServices,
       };
+
+  // ── بُعد الفرع ──────────────────────────────────────────────────────────
+
+  /// معامل السعر لكل فرع بترتيبه — **الفرع التاني أغلى ١٥٪**.
+  ///
+  /// ## ليه معامل مش كتالوج لكل فرع
+  ///
+  /// **١. الـ uuids بتتولّد.** `MockProviders.branchesOf` بتخترع فرع
+  /// لخمسة من ستة محلات، و`twoBranches` بيضاعفهم. كتالوج مكتوب بالإيد
+  /// على مفاتيح متولّدة مالوش معنى — وأي فرع مش مكتوب هياخد كتالوج
+  /// افتراضي، اللي هو المعامل ده تاني.
+  ///
+  /// **٢. ده شكل السيرفر.** السعر بيتحدد من تعيين
+  /// (أخصائي × خدمة × فرع) في `PriceResolverService` — رقم لكل تعيين، مش
+  /// قايمة خدمات تانية. و`MockEmployees.priceDeltaForSlot` اختارت «فرق مش
+  /// قيمة مطلقة» لنفس السبب بالظبط ومكتوب في تعليقها.
+  static const List<double> _branchPriceFactor = <double>[1.0, 1.15];
+
+  /// السعر بعد معامل الفرع — **مقرّب لأقرب ٥ جنيه**.
+  ///
+  /// من غير التقريب `250 × 1.15 = 287.5`، و`AppFormat.money` بتطلّعها
+  /// `287.50 ج.م`. مفيش صالون في مصر بيحاسب بنص جنيه، والرقم الكسور بيقرا
+  /// **باج حسابي** مش تسعيرة فرع.
+  static double _pricedAt(double price, int branchIndex) {
+    if (price <= 0) return price;
+    final factor = branchIndex < _branchPriceFactor.length
+        ? _branchPriceFactor[branchIndex]
+        : _branchPriceFactor.last;
+    return (price * factor / 5).round() * 5;
+  }
+
+  static ServiceUiModel _priced(ServiceUiModel service, int branchIndex) {
+    if (branchIndex == 0) return service;
+    return ServiceUiModel(
+      uuid: service.uuid,
+      name: service.name,
+      price: _pricedAt(service.price, branchIndex),
+      durationMinutes: service.durationMinutes,
+      isCategory: service.isCategory,
+      parentUuid: service.parentUuid,
+    );
+  }
+
+  /// خدمات **فرع** بعينه — بسعره وبالخدمات اللي فيه حد بيعملها.
+  ///
+  /// الخدمة بتختفي لما **محدش في الفرع بيعملها** — مشتقّة من
+  /// `MockEmployees` مش مكتوبة في قايمة تانية. «قص + ذقن» بيعملها أحمد
+  /// بس، وأحمد في الفرع الرئيسي بس، فالخدمة مش موجودة في التاني.
+  ///
+  /// التصنيفات بتعدّي دايمًا — ولادها هما اللي عليهم الشرط.
+  static List<ServiceUiModel> ofBranch({
+    required String providerUuid,
+    String? branchUuid,
+  }) {
+    final index = MockProviders.branchIndexOf(
+      providerUuid: providerUuid,
+      branchUuid: branchUuid,
+    );
+
+    return ofProvider(providerUuid)
+        .where(
+          (s) =>
+              s.isCategory ||
+              MockEmployees.forService(s.uuid, branchIndex: index).isNotEmpty,
+        )
+        .map((s) => _priced(s, index))
+        .toList();
+  }
+
+  /// ولاد تصنيف بسعر الفرع.
+  ///
+  /// **لازم تتنادى من الـ sheet كمان مش من الصف بس.** لو الصف بيقول ٢٩٠
+  /// والـ sheet اللي بيفتح منه بيقول ٤٠٠، الـ prototype بيناقض نفسه في
+  /// ضغطة واحدة — ودي بالظبط الحاجة اللي بتضيّع جلسة اختبار على باج مش
+  /// حقيقي.
+  static List<ServiceUiModel> childrenOfBranch(
+    String categoryUuid, {
+    required String providerUuid,
+    String? branchUuid,
+  }) {
+    final index = MockProviders.branchIndexOf(
+      providerUuid: providerUuid,
+      branchUuid: branchUuid,
+    );
+    return childrenOf(categoryUuid).map((s) => _priced(s, index)).toList();
+  }
 
   /// الخدمات اللي تحت تصنيف معيّن.
   static List<ServiceUiModel> childrenOf(String categoryUuid) =>

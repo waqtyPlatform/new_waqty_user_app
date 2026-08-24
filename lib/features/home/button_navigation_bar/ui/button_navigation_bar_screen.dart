@@ -1,14 +1,12 @@
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
-import 'package:waqty_user_application/core/utils/app_shadows.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/config/routes/routes.dart';
 import 'package:waqty_user_application/core/models/booking_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/extentions.dart';
 import 'package:waqty_user_application/features/account/account/logic/account_cubit.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/data/repo/entitlements_repo.dart';
+import 'package:waqty_user_application/features/entitlements/entitlements/logic/entitlements_cubit.dart';
 import 'package:waqty_user_application/features/account/account/ui/account_screen.dart';
 import 'package:waqty_user_application/features/booking/in_branch/logic/in_branch_cubit.dart';
 import 'package:waqty_user_application/features/booking/in_branch/logic/in_branch_state.dart';
@@ -22,6 +20,16 @@ import 'package:waqty_user_application/features/home/home/logic/home_cubit.dart'
 import 'package:waqty_user_application/features/home/home/ui/home_screen.dart';
 import 'package:waqty_user_application/features/providers/providers_list/logic/providers_list_cubit.dart';
 import 'package:waqty_user_application/features/providers/providers_list/ui/providers_list_screen.dart';
+import 'package:waqty_user_application/features/home/home/data/repo/home_repo.dart';
+import 'package:waqty_user_application/core/services/services_locator.dart';
+import 'package:waqty_user_application/features/providers/providers_list/data/repo/providers_list_repo.dart';
+import 'package:waqty_user_application/features/booking/my_bookings/data/repo/my_bookings_repo.dart';
+import 'package:waqty_user_application/features/booking/reassignment/data/repo/reassignment_repo.dart';
+import 'package:waqty_user_application/features/booking/reassignment/logic/reassignment_cubit.dart';
+import 'package:waqty_user_application/features/booking/waitlist/data/repo/waitlist_repo.dart';
+import 'package:waqty_user_application/features/account/account/data/repo/account_repo.dart';
+import 'package:waqty_user_application/core/api/session_store.dart';
+import 'package:waqty_user_application/features/booking/in_branch/data/repo/in_branch_repo.dart';
 
 class ButtonNavigationBarScreen extends StatelessWidget {
   const ButtonNavigationBarScreen({super.key});
@@ -39,25 +47,60 @@ class ButtonNavigationBarScreen extends StatelessWidget {
         //
         // الحجز المؤقت عدّاد بينبض **كل ثانية**. لو الرئيسية عملت نسخة
         // ومواعيدي عملت نسخة تانية، بيبقى فيه **مؤقتين ومصدرين حقيقة**
-        // يقدروا يفترقوا: تبويب يقول ٤:٣٢ والتاني ٤:٣١، وواحد يعلن
-        // الانتهاء والتاني لسه شغال. عدّاد بيكدب على نفسه أوحش من عدّاد
-        // مش موجود.
+        // يقدروا يفترقوا: تبويب يقول ٤:٣٢ والتاني ٤:٣١، وواحد يعلن الانتهاء
+        // والتاني لسه شغال. عدّاد بيكدب على نفسه أوحش من عدّاد مش موجود.
         //
-        // وهي **برة** الشرط بتاع `live` عن قصد: كده مكانها في الشجرة
-        // ثابت مهما اتغيّر الحجز الشغّال، فالمؤقت مابيتعملش من الأول.
-        final shell = BlocProvider<WaitlistCubit>(
-          create: (_) => WaitlistCubit()..start(),
+        // وهي **برة** الشرط بتاع `live` عن قصد: كده مكانها في الشجرة ثابت
+        // مهما اتغيّر الحجز الشغّال، فالمؤقت مابيتعملش من الأول.
+        // ⚠ **إعادة التوزيع فوق التبويبات زي قايمة الانتظار** — لنفس
+        // السبب: مؤقت مهلة واحد مش اتنين. وكمان عشان البانر يقدر يبان
+        // في أي تبويب — مفيش push فالفتحة نفسها هي الإشعار.
+        final shell = MultiBlocProvider(
+          providers: [
+            BlocProvider<WaitlistCubit>(
+              create: (_) => WaitlistCubit(getIt<WaitlistRepo>())..start(),
+            ),
+            BlocProvider<ReassignmentCubit>(
+              create: (_) =>
+                  ReassignmentCubit(getIt<ReassignmentRepo>())..start(),
+            ),
+
+            // ⚠ **الحساب اتنقل فوق التبويبات — بقى حالة مشتركة.**
+            //
+            // كان جوه تبويب «حسابي» لوحده. بس `phone_verified_at` بقى
+            // بيفرّق **الحالة الفاضية** في «حجوزاتي»: العميلة اللي رقمها
+            // مش مأكّد لازم تشوف «أكّد رقمك عشان يظهروا» مش «مفيش حجوزات»
+            // — والتانية كدب عليها، هي فعلاً عندها حجوزات بس التطبيق مش
+            // شايفها.
+            //
+            // نسختين من `AccountCubit` = تبويبين ممكن يختلفوا على حالة
+            // التأكيد في نفس اللحظة، وده بالظبط اللي القاعدة موجودة عشانه.
+            // ⚠ **الاستحقاقات فوق التبويبات — تلات سطوح بتقرا منها.**
+            //
+            // الشريط في «حجوزاتي»، وصف العدّاد في «حسابي»، وشاشة
+            // «باقاتي» نفسها. نسختين = العدّاد يقول ٣ والقايمة توري ٢
+            // في نفس اللحظة، وحجز متابعة من شاشة مايحدّثش الشريط في
+            // التبويب التاني.
+            BlocProvider<EntitlementsCubit>(
+              create: (_) => EntitlementsCubit(getIt<EntitlementsRepo>())..load(),
+            ),
+
+            BlocProvider<AccountCubit>(
+              create: (_) =>
+                  AccountCubit(getIt<AccountRepo>(), getIt<SessionStore>())
+                    ..getProfile(),
+            ),
+          ],
           child: _shell(context, cubit, live),
         );
 
         // **الـ Cubit الوحيد لحالة الفرع في الأبلكيشن كله**، ومكانه فوق
         // الأربع تبويبات عشان الشريط (اللي تحت) والبؤرة (اللي جوه الهوم)
-        // يقروا من نفس النسخة. `create` مابيتنادش تاني مع تبديل التبويب —
-        // الـ Element ثابت في مكانه، فالمؤقت بيتعمل مرة واحدة.
+        // يقروا من نفس النسخة.
         if (live == null) return shell;
 
         return BlocProvider(
-          create: (_) => InBranchCubit(booking: live)..start(),
+          create: (_) => InBranchCubit(getIt<InBranchRepo>(), booking: live)..start(),
           child: shell,
         );
       },
@@ -70,93 +113,65 @@ class ButtonNavigationBarScreen extends StatelessWidget {
     BookingUiModel? live,
   ) {
     return Scaffold(
-      // جاي من `scaffoldBackgroundColor` في الثيم — كان أبيض متكتوب
-      // بالإيد وده كان هيمنع الصفحة الدافية على التبويبات الأربعة.
       backgroundColor: AppSemanticColors.page,
-      // IndexedStack بيخلي التبويبات كلها عايشة، فالسكرول والداتا
-      // مابيضيعوش كل ما العميل يبدّل. القديم كان بيعمل Cubit جديد
-      // ونداء شبكة جديد مع كل ضغطة.
+      // IndexedStack بيخلي التبويبات كلها عايشة، فالسكرول والداتا مابيضيعوش
+      // كل ما العميل يبدّل. القديم كان بيعمل Cubit جديد ونداء شبكة جديد مع
+      // كل ضغطة.
       body: SafeArea(
         bottom: false,
         child: IndexedStack(
           index: cubit.currentIndex,
           children: [
             BlocProvider(
-              create: (_) => HomeCubit()..loadHome(),
+              create: (_) => HomeCubit(getIt<HomeRepo>())..loadHome(),
               child: const HomeScreen(),
             ),
             BlocProvider(
-              create: (_) => ProvidersListCubit()..loadInitial(),
+              create: (_) => ProvidersListCubit(getIt<ProvidersListRepo>())..loadInitial(),
               child: const ProvidersListScreen(),
             ),
             BlocProvider(
-              create: (_) => MyBookingsCubit()..loadBookings(),
+              create: (_) => MyBookingsCubit(getIt<MyBookingsRepo>())..loadBookings(),
               child: const MyBookingsScreen(),
             ),
-            BlocProvider(
-              create: (_) => AccountCubit()..getProfile(),
-              child: const AccountScreen(),
-            ),
+            // الـcubit بقى فوق في الـshell — التبويب بيقرا نفس النسخة.
+            const AccountScreen(),
           ],
         ),
       ),
-      // كان ظل مكتوب بالإيد بـ `offset (0,-10)` و`blur 40` **من غير
-      // `.r`** (يعني بنفس البكسلات على كل الأجهزة) وبأسود صافي.
-      // `AppShadows.floatingUp` موجود لنفس الغرض بالظبط وبيتقاس صح،
-      // وهو اللي فوتر الحجز بيستخدمه أصلاً.
-      //
-      // ## ليه الشريط جوه نفس الحاوية بتاعة الظل
-      //
-      // الظل بيتلقّى **لفوق** من الحافة العليا للحاوية. لو الشريط قعد
-      // برة الحاوية وفوقها، الحاوية هتترسم بعده فظلها الغامق هيقع على
-      // ٢٤ بكسل من تحت الشريط ويوسّخ لونه. وهو جوه، الحافة العليا بقت
-      // حافة الشريط نفسه — فالظل فوق الشريط مش عليه، والتبويبات
-      // والشريط بقوا لوح واحد مرفوع، وده هو الصح: لما الشريط يبان،
-      // هما حاجة واحدة قاعدة فوق الصفحة.
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: AppSemanticColors.surfaceRaised,
-          boxShadow: AppShadows.floatingUp,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // فوق الـ SafeArea عن قصد — الـ inset التحتاني شغل شريط
-            // التبويبات اللي تحته، والشريط ده مش ملزوق في حافة الجهاز.
-            _inBranchBanner(context, live),
-            SafeArea(
-              child: SizedBox(
-                height: 62.h,
-                child: BottomNavigationBar(
-                  type: BottomNavigationBarType.fixed,
-                  currentIndex: cubit.currentIndex,
-                  selectedItemColor: AppSemanticColors.accent,
-                  // greyColor500 بدل greyColor3003 — القديم كان تباينه
-                  // ٢٫٣ تقريبًا، أقل بكتير من الحد الأدنى ٤٫٥، وده أصغر
-                  // خط في الأبلكيشن كله.
-                  unselectedItemColor: AppColors.greyColor500,
-                  // الشريط **مرفوع** مش صفحة — عنده ظل `floatingUp`،
-                  // فلازم يبقى أبيض صافي فوق الصفحة الدافية.
-                  backgroundColor: AppSemanticColors.surfaceRaised,
-                  selectedLabelStyle: AppTextStyles.captionAccent,
-                  unselectedLabelStyle: AppTextStyles.caption,
-                  elevation: 0,
-                  onTap: cubit.changeIndex,
-                  items: cubit.buttonNavigationBarItems(),
+      // `AppBottomNavWidget` شايل سطحه وظله بنفسه — الظل بيتلقّى **لفوق**
+      // من حافته العليا، فلو اتلفّ في حاوية تانية ظلها كان هيقع عليه.
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // فوق الـ SafeArea عن قصد — الـ inset التحتاني شغل شريط التبويبات
+          // اللي تحته، والشريط ده مش ملزوق في حافة الجهاز.
+          _inBranchBanner(context, live),
+          // التحويل من `NavTab` لـ`AppNavItem` بيتعمل هنا مش في الـ cubit —
+          // الـ cubit مايعرفش الديزاين سيستم، والشريط مايعرفش راوتات
+          // التطبيق. الاتنين بيتقابلوا في الشاشة بس.
+          AppBottomNavWidget(
+            items: [
+              for (final tab in ButtonNavigationBarCubit.tabs)
+                AppNavItem(
+                  label: tab.label,
+                  icon: tab.icon,
+                  activeIcon: tab.activeIcon,
                 ),
-              ),
-            ),
-          ],
-        ),
+            ],
+            currentIndex: cubit.currentIndex,
+            onTap: cubit.changeIndex,
+          ),
+        ],
       ),
     );
   }
 
   /// الشريط بيتبنى في الحالتين — هو اللي بيطوّي نفسه لصفر.
   ///
-  /// لما مافيش حجز أصلاً، مفيش `InBranchCubit` فوقنا نقرا منه، والحالة
-  /// دي مابتتغيّرش طول الجلسة — فالـ `if` هنا مابيقتلش أي حركة، عكس لو
-  /// لفّينا الشريط نفسه في `if` على حالة الفرع.
+  /// لما مافيش حجز أصلاً، مفيش `InBranchCubit` فوقنا نقرا منه، والحالة دي
+  /// مابتتغيّرش طول الجلسة — فالـ `if` هنا مابيقتلش أي حركة، عكس لو لفّينا
+  /// الشريط نفسه في `if` على حالة الفرع.
   Widget _inBranchBanner(BuildContext context, BookingUiModel? live) {
     if (live == null) {
       return const InBranchBannerWidget(data: null, onTap: _noop);
@@ -173,7 +188,7 @@ class ButtonNavigationBarScreen extends StatelessWidget {
     );
   }
 
-  /// الشريط مطوي ومفيش حاجة تتداس — بس `onTap` مطلوب، فبدل ما نعمل
-  /// closure جديد كل build نستعمل دالة ثابتة تخلّي الـ widget `const`.
+  /// الشريط مطوي ومفيش حاجة تتداس — بس `onTap` مطلوب، فبدل ما نعمل closure
+  /// جديد كل build نستعمل دالة ثابتة تخلّي الـ widget `const`.
   static void _noop() {}
 }

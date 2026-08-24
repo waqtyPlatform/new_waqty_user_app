@@ -1,10 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:waqty_user_application/core/mock/mock_bookings.dart';
 import 'package:waqty_user_application/core/mock/mock_config.dart';
+import 'package:waqty_user_application/core/mock/mock_in_branch.dart';
 import 'package:waqty_user_application/core/mock/mock_scenario.dart';
 import 'package:waqty_user_application/core/models/booking_item_ui_model.dart';
 import 'package:waqty_user_application/core/models/booking_ui_model.dart';
 import 'package:waqty_user_application/core/models/slot_ui_model.dart';
+import 'package:waqty_user_application/features/booking/in_branch/ui/widgets/in_branch_block_widget.dart';
 
 /// اختبارات طبقة الموديل.
 ///
@@ -34,6 +36,24 @@ void main() {
       expect(booking.visits.length, 2);
     });
 
+    test('بيقرا حالة كل زيارة من visits[].status', () {
+      final json = _bookingJson();
+      (json['visits'] as List)[0]['status'] = 'completed';
+      (json['visits'] as List)[1]['status'] = 'confirmed';
+
+      final booking = BookingUiModel.fromJson(json);
+
+      expect(booking.visits.first.status, BookingStatus.completed);
+      expect(booking.visits.last.status, BookingStatus.confirmed);
+    });
+
+    test('الزيارة بتاخد حالة الحجز لما السيرفر مابيبعتش status لها', () {
+      // ليستة `GET /user/bookings` مابتحمّلش `visits` أصلاً، وحتى لما
+      // تحمّلها ممكن الحقل مايجيش. الوقوع على حالة الحجز = سلوك النهاردة.
+      final booking = BookingUiModel.fromJson(_bookingJson());
+
+      expect(booking.visits.every((v) => v.status == booking.status), isTrue);
+    });
     test('بيقع على items المسطّحة لما visits مش موجودة', () {
       // `GET /user/bookings` (الليستة) مابيحمّلش `visits` — الحقل مش
       // موجود في الرد أصلاً، مش فاضي.
@@ -85,7 +105,8 @@ void main() {
     test('بيجمّع سعر ما قبل الخصم من العناصر', () {
       final json = _bookingJson();
       final visits = json['visits'] as List<Map<String, dynamic>>;
-      (visits.first['items'] as List<Map<String, dynamic>>).first['original_price'] =
+      (visits.first['items'] as List<Map<String, dynamic>>)
+              .first['original_price'] =
           '200.00';
 
       final booking = BookingUiModel.fromJson(json);
@@ -101,6 +122,83 @@ void main() {
 
       expect(booking.hasDiscount, isFalse);
       expect(booking.originalPrice, isNull);
+    });
+  });
+
+  /// **B7 — بلوك «إنت في الفرع» بيتربط بالزيارة مش بالحجز.**
+  ///
+  /// الحجز الأب بياخد حالة ملمومة من زياراته، فحجز فيه زيارة شغّالة بيبقى
+  /// كله `in_progress`. الشرط القديم `booking.status.isInBranch` كان بيوري
+  /// البلوك على الحجز كله — يعني من أول زيارة الصبح لآخر زيارة بالليل.
+  group('الزيارة الحالية — B7', () {
+    test('بيختار الزيارة اللي دلوقتي جوه شباكها', () {
+      final booking = _twoVisitBooking(
+        bookingStatus: BookingStatus.inProgress,
+        firstVisit: BookingStatus.inProgress,
+        secondVisit: BookingStatus.confirmed,
+      );
+
+      expect(booking.currentVisit(DateTime.now()).uuid, 'v1');
+    });
+
+    test('بيعدّي للزيارة الجاية بعد ما الأولى تخلص', () {
+      final booking = _twoVisitBooking(
+        bookingStatus: BookingStatus.confirmed,
+        firstVisit: BookingStatus.completed,
+        secondVisit: BookingStatus.confirmed,
+        // بدأت من ساعتين ومدتها ساعة — يعني خلصت من ساعة.
+        firstStartsMinutesAgo: 120,
+      );
+
+      expect(booking.currentVisit(DateTime.now()).uuid, 'v2');
+    });
+
+    test('بيفضل على الزيارة المتأخرة اللي عدّت نهايتها وهي لسه شغّالة', () {
+      // الشباك مابيمسكش دي: الوقت عدّى `endAt` بس الحالة لسه `in_progress`.
+      // لو رمينا الزيارة دي، العميل اللي قاعد على الكرسي دلوقتي هيتنقل
+      // لزيارة بالليل والشاشة هتقول له «ميعادك ٨م» وهو تحت المقص.
+      final booking = _twoVisitBooking(
+        bookingStatus: BookingStatus.inProgress,
+        firstVisit: BookingStatus.inProgress,
+        secondVisit: BookingStatus.confirmed,
+        firstStartsMinutesAgo: 120,
+      );
+
+      expect(booking.currentVisit(DateTime.now()).uuid, 'v1');
+    });
+
+    test('الفجوة بين الزيارتين مالهاش بلوك «إنت في الفرع»', () {
+      // ده **الباج نفسه**: الحجز الأب `in_progress` عشان زيارة ١ خلصت
+      // بداخلها، فالكود القديم كان بيوري بلوك الفرع طول اليوم — بما فيه
+      // الست ساعات اللي العميل فيهم في بيته.
+      final booking = _twoVisitBooking(
+        bookingStatus: BookingStatus.inProgress,
+        firstVisit: BookingStatus.completed,
+        secondVisit: BookingStatus.confirmed,
+        firstStartsMinutesAgo: 120,
+      );
+
+      expect(
+        booking.status.isInBranch,
+        isTrue,
+        reason: 'الحجز الأب لسه بيقول في الفرع — ده شرط الاختبار مش نتيجته',
+      );
+      expect(shouldShowInBranch(booking, DateTime.now()), isFalse);
+      expect(MockInBranch.forBooking(booking, DateTime.now()), isNull);
+    });
+
+    test('بلوك الفرع بيقرا أخصائي الزيارة الحالية مش أول واحد في الحجز', () {
+      final booking = _twoVisitBooking(
+        bookingStatus: BookingStatus.inProgress,
+        firstVisit: BookingStatus.completed,
+        secondVisit: BookingStatus.inProgress,
+        firstStartsMinutesAgo: 120,
+      );
+
+      final inBranch = MockInBranch.forBooking(booking, DateTime.now());
+
+      // `items.first` كانت هتدّي «نهى سمير» — أخصائية زيارة خلصت.
+      expect(inBranch?.employeeName, 'مروة فتحي');
     });
   });
 
@@ -206,6 +304,56 @@ void main() {
       expect(booking.status.canRate, isFalse);
       expect(booking.rateableItems, isEmpty);
     });
+
+    /// **الأبلكيشن كان بيسأل العميل يكتب رأيه وبيرميه.**
+    ///
+    /// `rateCommentController` كان بيتعمل وبيتمسح وبيتربط في الشاشة
+    /// وبيتـ dispose — وولا سطر بيقرا `.text`.
+    group('تعليق التقييم', () {
+      test('بيتقرا من الرد', () {
+        final item = BookingItemUiModel.fromJson(<String, dynamic>{
+          'uuid': 'itm-1',
+          'visit_uuid': 'v1',
+          'service': <String, dynamic>{'uuid': 'srv-1', 'name': 'قص شعر'},
+          'employee': <String, dynamic>{'name': 'أحمد'},
+          'start_at': '2026-08-01 14:00:00',
+          'duration_minutes': 45,
+          'booked_price': 250,
+          'rating': <String, dynamic>{
+            'rating': 5,
+            'status': 'published',
+            'comment': 'ممتاز',
+          },
+        });
+
+        expect(item.rating, 5);
+        expect(item.ratingComment, 'ممتاز');
+      });
+
+      test('مفيش تعليق = نص فاضي مش null', () {
+        final item = BookingItemUiModel.fromJson(<String, dynamic>{
+          'uuid': 'itm-2',
+          'visit_uuid': 'v1',
+          'service': <String, dynamic>{'uuid': 'srv-1', 'name': 'قص شعر'},
+          'employee': <String, dynamic>{'name': 'أحمد'},
+          'start_at': '2026-08-01 14:00:00',
+          'duration_minutes': 45,
+          'booked_price': 250,
+        });
+
+        expect(item.ratingComment, isEmpty);
+      });
+
+      test('الفيكستشر المنشورة عليها تعليق يتعرض', () {
+        MockConfig.scenario = MockScenario.completedPartiallyRated;
+        final booking = MockBookings.past.first;
+
+        final published = booking.items.firstWhere(
+          (i) => i.ratingStatus == RatingStatus.published,
+        );
+        expect(published.ratingComment, isNotEmpty);
+      });
+    });
   });
 
   group('السيناريوهات', () {
@@ -270,6 +418,54 @@ void main() {
   });
 }
 
+/// حجز بزيارتين في نفس اليوم بفجوة — الشكل اللي B7 اتعمل عشانه.
+///
+/// زيارة ١ بتبدأ من [firstStartsMinutesAgo] دقيقة ومدتها ساعة، وزيارة ٢
+/// بعد ٦ ساعات من دلوقتي.
+BookingUiModel _twoVisitBooking({
+  required BookingStatus bookingStatus,
+  required BookingStatus firstVisit,
+  required BookingStatus secondVisit,
+  int firstStartsMinutesAgo = 20,
+}) {
+  final now = DateTime.now();
+  final firstStart = now.subtract(Duration(minutes: firstStartsMinutesAgo));
+  final secondStart = now.add(const Duration(hours: 6));
+
+  return BookingUiModel(
+    uuid: '01K1M9Q4T7B8XC2VF6ND3RGZPW',
+    providerUuid: 'prv-1',
+    providerName: 'استوديو جمال',
+    branchUuid: 'brn-1',
+    branchName: 'الفرع الرئيسي',
+    imagePath: '',
+    status: bookingStatus,
+    visitStatuses: <String, BookingStatus>{'v1': firstVisit, 'v2': secondVisit},
+    items: <BookingItemUiModel>[
+      BookingItemUiModel(
+        uuid: 'itm-1',
+        visitUuid: 'v1',
+        serviceUuid: 'srv-9',
+        serviceName: 'صبغة',
+        employeeName: 'نهى سمير',
+        startAt: firstStart,
+        endAt: firstStart.add(const Duration(minutes: 60)),
+        price: 600,
+      ),
+      BookingItemUiModel(
+        uuid: 'itm-2',
+        visitUuid: 'v2',
+        serviceUuid: 'srv-5',
+        serviceName: 'حمام كريم',
+        employeeName: 'مروة فتحي',
+        startAt: secondStart,
+        endAt: secondStart.add(const Duration(minutes: 30)),
+        price: 180,
+      ),
+    ],
+  );
+}
+
 Map<String, dynamic> _bookingJson() => <String, dynamic>{
   'uuid': '01K1M9Q4T7B8XC2VF6ND3RGZPW',
   'status': 'confirmed',
@@ -287,11 +483,15 @@ Map<String, dynamic> _bookingJson() => <String, dynamic>{
   'visits': <Map<String, dynamic>>[
     <String, dynamic>{
       'uuid': 'vst-1',
-      'items': <Map<String, dynamic>>[_itemJson(uuid: 'itm-1', price: '150.00')],
+      'items': <Map<String, dynamic>>[
+        _itemJson(uuid: 'itm-1', price: '150.00'),
+      ],
     },
     <String, dynamic>{
       'uuid': 'vst-2',
-      'items': <Map<String, dynamic>>[_itemJson(uuid: 'itm-2', price: '300.00')],
+      'items': <Map<String, dynamic>>[
+        _itemJson(uuid: 'itm-2', price: '300.00'),
+      ],
     },
   ],
 };

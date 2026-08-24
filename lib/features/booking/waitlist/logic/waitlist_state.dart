@@ -39,3 +39,13 @@ class WaitlistReadyState extends WaitlistState {
   @override
   int get hashCode => Object.hash(tick, entries.length);
 }
+
+/// ⚠ **فشل القراية مش حالة فاضية.**
+///
+/// «مفيش طلبات» و«مقدرناش نجيب طلباتك» حاجتين مختلفين تمامًا
+/// للعميل اللي مستني دوره — الأولانية بيقفل الأبلكيشن، والتانية بيجرّب تاني.
+class WaitlistErrorState extends WaitlistState {
+  final String message;
+
+  const WaitlistErrorState({required this.message});
+}

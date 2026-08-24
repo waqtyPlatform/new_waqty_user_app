@@ -1,37 +1,53 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/core/models/provider_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_format.dart';
-import 'package:waqty_user_application/core/utils/app_radius.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/app_surface_widget.dart';
 import 'package:waqty_user_application/core/widgets/entity_panel_widget.dart';
-import 'package:waqty_user_application/core/widgets/skeleton_box_widget.dart';
 
-/// صف أفقي للمحلات — `ListView.builder` مكان الـ ١٣١٩ سطر القديمة.
+/// صف أفقي للمحلات.
+///
+/// ## اللوح بقى واصل لحافة الكارت
+///
+/// كان اللوح **مُدرَج جوه حشوة الكارت** — يعني إطار أبيض ٤ جهات حواليه.
+/// الشكل ده بيقرا «صورة متحطّة في خانة»، والـ design DNA بيقول
+/// `content-forward with image thumbnails`: الصورة هي أول حاجة العين
+/// بتمسكها، ومالهاش إطار.
+///
+/// دلوقتي الكارت حشوته **صفر** واللوح بياخد العرض كله لحد الحافة، والنص
+/// بس هو اللي متحشّي. `AppSurfaceWidget` بيقص بالاستدارة، فأركان اللوح
+/// العلوية بتتدوّر مع الكارت لوحدها.
+///
+/// ## الشارة فوق اللوح
+///
+/// «أقرب موعد» كان سطر أخضر مدفون تحت البيانات. هو **أهم معلومة في الكارت**
+/// (ده أبلكيشن حجز)، فطلع شارة فوق اللوح — أول حاجة تتقرا بعد الحرف.
+/// وبيختفي بالكامل لو مفيش موعد قريب، مش بيرسم شارة فاضية.
 class HomeProvidersRailWidget extends StatelessWidget {
-  /// مقاسات الكارت — **مصدر واحد يقراه الـ skeleton كمان.**
-  static const double cardWidth = 168;
+  /// عرض الكارت. **١٧٦ مش ١٦٨** — اللوح بقى كامل العرض فمحتاج مساحة تسنده.
+  static const double cardWidth = 176;
 
-  /// ارتفاع الصورة جوه الكارت. ١٤٤ عرض متاح (١٦٨ − ٢٤ حشوة) على 16:9
-  /// بيدّي ٨١ — قرّبناها لـ ٨٤ عشان الاقتصاص يبقى أقل حدة.
-  static const double _imageHeight = 84;
+  /// ارتفاع لوح الحرف جوه الكارت.
+  static const double imageHeight = 96;
 
-  /// ٢٤ حشوة + ٨٤ صورة + ٨ + ٤ مسافات.
-  static const double _fixedPart = 120;
+  /// حشوة كتلة النص (مش الكارت — الكارت حشوته صفر).
+  static const double textPadding = AppSpacing.s12;
 
-  /// سطرين اسم (١٤×١٫٥٠×٢) + المنطقة + البيانات، عند مقياس ١٫٠.
-  static const double _textPart = 72.8;
+  /// اللوح + حشوة النص فوق وتحت + المسافتين جوه العمود.
+  static const double _fixedPart =
+      imageHeight +
+      (textPadding * 2) +
+      AppSpacing.titleToSubtitle +
+      AppSpacing.subtitleToMeta;
 
-  /// كان ٢٠٨ ثابت والمحتوى ١٩٢٫٨ — ١٥ بكسل فراغ ميت تحت كل كارت.
-  /// وزي كل رقم ثابت، كان هيفيض مع تكبير الخط — فبقى محسوب.
-  static double cardHeight(BuildContext context) => AppSpacing.scaledHeight(
-    context,
-    fixed: _fixedPart,
-    text: _textPart,
-  );
+  /// سطرين اسم (`bodyMdStrong` ١٤×١٫٥٠×٢ = ٤٢) + المنطقة (١٦٫٨) +
+  /// البيانات (١٦٫٨). المجموع الحسابي ٧٥٫٦، والرقم هنا **٧٦** لأن فلاتر
+  /// بيقرّب ارتفاع السطر لأعلى وقت التشكيل.
+  static const double _textPart = 76;
+
+  /// كان ٢٠٨ رقم ثابت — يعني بيفيض مع تكبير الخط بدل ما يكبر معاه.
+  static double cardHeight(BuildContext context) =>
+      AppSpacing.scaledHeight(context, fixed: _fixedPart, text: _textPart);
 
   final List<ProviderUiModel> providers;
   final bool isLoading;
@@ -59,16 +75,15 @@ class HomeProvidersRailWidget extends StatelessWidget {
         separatorBuilder: (_, __) => horizontalSpace(AppSpacing.listRowGap),
         itemBuilder: (context, index) {
           if (isLoading) {
-            return SkeletonBoxWidget(
+            return AppSkeletonBoxWidget(
               width: cardWidth,
               height: height,
-              radius: AppRadius.l,
+              radius: AppRadius.m,
             );
           }
           final provider = providers[index];
           return _CompactProviderCard(
             provider: provider,
-            imageHeight: _imageHeight,
             onTap: () => onProviderTap(provider),
           );
         },
@@ -79,53 +94,95 @@ class HomeProvidersRailWidget extends StatelessWidget {
 
 class _CompactProviderCard extends StatelessWidget {
   final ProviderUiModel provider;
-  final double imageHeight;
   final VoidCallback onTap;
 
-  const _CompactProviderCard({
-    required this.provider,
-    required this.imageHeight,
-    required this.onTap,
-  });
+  const _CompactProviderCard({required this.provider, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return AppSurfaceWidget(
       onTap: onTap,
       width: HomeProvidersRailWidget.cardWidth.w,
-      padding: EdgeInsets.all(AppSpacing.cardPadding.r),
+      // **صفر.** الحشوة نزلت لكتلة النص عشان اللوح يوصل الحافة.
+      padding: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // `isWide` بقى معناه «املا الأب» — فالأب لازم يحدد ارتفاع.
-          // قبل كده كان `AspectRatio` جوه الـ widget نفسه، وده اللي كان
-          // بيخلي الصورة **تتقص** لما الأب يفرض ارتفاع مختلف.
-          SizedBox(
-            height: imageHeight.r,
-            width: double.infinity,
-            child: EntityPanelWidget(name: provider.name),
+          _panel(),
+          Padding(
+            padding: EdgeInsetsDirectional.all(
+              HomeProvidersRailWidget.textPadding.r,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  provider.name,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.bodyMdStrong,
+                ),
+                verticalSpace(AppSpacing.titleToSubtitle),
+                Text(
+                  provider.areaName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.caption,
+                ),
+                verticalSpace(AppSpacing.subtitleToMeta),
+                // ⚠ **الأجزاء الفاضية بتتشال، والـ`Text` بيفضل.**
+                //
+                // `PublicProviderResource` مابيبعتش `price_from` — فالسطر كان
+                // بيطلع «٠ م · من ٠ ج.م»، ودي معلومة **غلط** مش معلومة ناقصة.
+                //
+                // والـ`Text` مابيتشالش لأن ارتفاع الكارت **محسوب**
+                // (`_textPart` فوق) — شيله بيخلّي المحتوى أقصر من المحجوز
+                // والسكيليتون يفترق عن الكارت الحقيقي.
+                Text(
+                  <String>[
+                    if (provider.distanceKm > 0)
+                      AppFormat.distance(provider.distanceKm),
+                    if (provider.priceFrom > 0)
+                      'من ${AppFormat.money(provider.priceFrom)}',
+                  ].join(' · '),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.captionInk,
+                ),
+              ],
+            ),
           ),
-          verticalSpace(AppSpacing.s8),
-          Text(
-            provider.name,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: AppTextStyles.bodyMdStrong,
-          ),
-          verticalSpace(AppSpacing.titleToSubtitle),
-          Text(
-            provider.areaName,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AppTextStyles.caption,
-          ),
-          const Spacer(),
-          Text(
-            '${AppFormat.distance(provider.distanceKm)} · من ${AppFormat.money(provider.priceFrom)}',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AppTextStyles.captionInk,
-          ),
+        ],
+      ),
+    );
+  }
+
+  /// اللوح + الشارة اللي فوقه.
+  ///
+  /// الشارة في الركن السفلي: فوق اللوح فبتقرا كطبقة عليه، وقريبة من النص
+  /// فبتقرا كأنها أول سطر فيه.
+  Widget _panel() {
+    final hasSlot = provider.nextAvailableLabel.isNotEmpty;
+
+    return SizedBox(
+      height: HomeProvidersRailWidget.imageHeight.r,
+      width: double.infinity,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          EntityPanelWidget(name: provider.name),
+          if (hasSlot)
+            PositionedDirectional(
+              start: AppSpacing.s8.w,
+              bottom: AppSpacing.s8.h,
+              child: AppPillWidget(
+                label: provider.nextAvailableLabel,
+                icon: Icons.schedule_rounded,
+                tone: AppPillTone.onImage,
+                // العرض المتاح ناقص الهامشين — الميعاد الطويل بيتقص مش بيفيض.
+                maxWidth: HomeProvidersRailWidget.cardWidth - AppSpacing.s16,
+              ),
+            ),
         ],
       ),
     );

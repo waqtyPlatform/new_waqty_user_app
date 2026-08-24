@@ -1,0 +1,111 @@
+import 'package:waqty_user_application/core/models/booking_ui_model.dart';
+
+/// التبويب المعروض — باقات ولا متابعات.
+enum EntitlementTab { packages, followUps }
+
+extension EntitlementTabLabel on EntitlementTab {
+  String get label => switch (this) {
+    EntitlementTab.packages => 'باقات',
+    EntitlementTab.followUps => 'متابعات',
+  };
+}
+
+/// حالات «اللي عندي».
+///
+/// ## ليه الفاضي حالة لوحده
+///
+/// لأن **الفاضي هنا مش نهاية طريق واحدة**. عميلة رقمها مش مأكّد بتشوف
+/// array فاضية من السيرفر وهي ماسكة باقة مدفوعة — الليستة فاضية بس السبب
+/// مختلف تمامًا، والنص لازم يختلف معاه. لو الفاضي كان `Loaded` بليستة
+/// طولها صفر، الفرق ده كان هيتحط في الـwidget وهيتنسى.
+sealed class EntitlementsState {
+  const EntitlementsState();
+}
+
+class EntitlementsInitial extends EntitlementsState {
+  const EntitlementsInitial();
+}
+
+class EntitlementsLoading extends EntitlementsState {
+  const EntitlementsLoading();
+}
+
+/// فيه محتوى في التبويب [tab].
+///
+/// ⚠ **[tab] حقل في الحالة مش في الكيوبت بس — والسبب باج حقيقي.**
+///
+/// الحالة كانت `const EntitlementsLoaded()` من غير حقول. دارت بتوحّد
+/// نسخ الـ`const`، فـ`emit` بعد تبديل التبويب كان بيبعت **نفس النسخة**
+/// بالظبط — وbloc بيتجاهل الإرسال لما `state == newState`. النتيجة: لما
+/// التبويبين الاتنين فيهم داتا، التبديل كان بيغيّر `tab` في الكيوبت
+/// و**الشاشة ماتتبنيش تاني**. التبويب بيتحرك والعين ماتشوفش حاجة.
+///
+/// الاختبار اللي كان موجود عدّى لأنه جرّب `Loaded → Empty` (نوع مختلف)
+/// — الحالة المكسورة هي `Loaded → Loaded`.
+class EntitlementsLoaded extends EntitlementsState {
+  const EntitlementsLoaded(this.tab);
+
+  final EntitlementTab tab;
+
+  @override
+  bool operator ==(Object other) =>
+      other is EntitlementsLoaded && other.tab == tab;
+
+  @override
+  int get hashCode => tab.hashCode;
+}
+
+/// التبويب الحالي مالوش محتوى.
+///
+/// ⚠ **مش معناها إن الاتنين فاضيين** — ممكن يبقى عندها باقات ومفيش
+/// متابعات. الشاشة بتفضل موريّة الـsegmented عشان تقدر تعدّي للتاني.
+class EntitlementsEmpty extends EntitlementsState {
+  const EntitlementsEmpty(this.tab);
+
+  final EntitlementTab tab;
+
+  @override
+  bool operator ==(Object other) =>
+      other is EntitlementsEmpty && other.tab == tab;
+
+  @override
+  int get hashCode => tab.hashCode;
+}
+
+class EntitlementsError extends EntitlementsState {
+  const EntitlementsError(this.message);
+
+  final String message;
+}
+
+/// بنحجز متابعة — الشيت مقفول والزرار بيلف.
+class EntitlementBookingSubmitting extends EntitlementsState {
+  const EntitlementBookingSubmitting();
+}
+
+/// الحجز نجح.
+///
+/// ⚠ **من غير payload — ومش سهو.** `bookFollowUp` بيرجّع `Booking` خام مش
+/// `UserBookingResource` (BE-A2)، فمافيش `uuid` نقدر نعتمد عليه للتنقّل.
+/// الشاشة بتقفل الشيت وتروح «حجوزاتي» وتعمل refresh — ده صادق وبيكلّف سطر،
+/// والبديل بيبني اعتماد على شكل محدش وعد بيه.
+class EntitlementBookingSucceeded extends EntitlementsState {
+  const EntitlementBookingSucceeded(this.booking);
+
+  final BookingUiModel booking;
+
+  @override
+  bool operator ==(Object other) =>
+      other is EntitlementBookingSucceeded &&
+      other.booking.uuid == booking.uuid;
+
+  @override
+  int get hashCode => booking.uuid.hashCode;
+}
+
+/// الحجز فشل — الشيت **بيفضل مفتوح** بالرسالة دي فوق زرار التأكيد.
+class EntitlementBookingFailed extends EntitlementsState {
+  const EntitlementBookingFailed(this.message);
+
+  final String message;
+}

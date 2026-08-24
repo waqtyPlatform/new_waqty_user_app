@@ -1,11 +1,12 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:waqty_user_application/core/mock/mock_bookings.dart';
-import 'package:waqty_user_application/core/mock/mock_source.dart';
 import 'package:waqty_user_application/core/models/booking_ui_model.dart';
+import 'package:waqty_user_application/features/booking/my_bookings/data/repo/my_bookings_repo.dart';
 import 'package:waqty_user_application/features/booking/my_bookings/logic/my_bookings_state.dart';
 
 class MyBookingsCubit extends Cubit<MyBookingsState> {
-  MyBookingsCubit() : super(InitialState());
+  final MyBookingsRepo _repo;
+
+  MyBookingsCubit(this._repo) : super(InitialState());
 
   /// حجم الصفحة — **نفس الافتراضي بتاع السيرفر**.
   ///
@@ -29,9 +30,18 @@ class MyBookingsCubit extends Cubit<MyBookingsState> {
   /// بنمنع نداءين على نفس الصفحة لما العميل يسحب بسرعة.
   bool isLoadingMore = false;
 
+  /// تبويب «باقاتي» — **مالوش نداء حجوزات**.
+  ///
+  /// المحتوى بتاعه بيجي من `EntitlementsCubit` اللي فوق التبويبات، فنداء
+  /// `GET /user/bookings` هنا طلب شبكة مالوش مستهلك — وأسوأ، بيدوس على
+  /// `bookings` بنتيجة `upcoming: false` فالعميلة لما ترجع لـ«القادمة»
+  /// بتلاقي السابقة.
+  static const int entitlementsTab = 2;
+
   void changeTab(int value) {
     selectedTab = value;
     emit(OnTabChangedState());
+    if (value == entitlementsTab) return;
     loadBookings();
   }
 
@@ -42,15 +52,23 @@ class MyBookingsCubit extends Cubit<MyBookingsState> {
     _page = 1;
     isLoadingMore = false;
 
-    // TODO(api): GET /api/user/bookings?upcoming=true&page=1&per_page=15
-    final result = await MockSource.fetchList(_pageOf(1));
+    final requestedTab = selectedTab;
 
-    result.fold((failure) => emit(MyBookingsErrorState(message: failure)), (
-      data,
+    final result = await _repo.bookings(
+      upcoming: requestedTab == 0,
+      page: 1,
+      perPage: perPage,
+    );
+
+    if (isClosed || selectedTab != requestedTab) return;
+
+    result.fold((failure) => emit(MyBookingsErrorState(message: failure.message)), (
+      page,
     ) {
-      bookings = data;
-      hasMore = data.length >= perPage && _source.length > data.length;
-      emit(data.isEmpty ? MyBookingsEmptyState() : MyBookingsSuccessState());
+      bookings = page.data;
+      _page = page.currentPage;
+      hasMore = page.hasMore;
+      emit(page.isEmpty ? MyBookingsEmptyState() : MyBookingsSuccessState());
     });
   }
 
@@ -65,21 +83,36 @@ class MyBookingsCubit extends Cubit<MyBookingsState> {
     isLoadingMore = true;
     emit(MyBookingsLoadingMoreState());
 
-    // TODO(api): GET /api/user/bookings?page={_page + 1}&per_page=15
-    final result = await MockSource.fetchList(_pageOf(_page + 1));
+    // **التبويب بيتصوّر قبل الانتظار.**
+    //
+    // لو العميل غيّر التبويب والطلب لسه شغّال، الرد الراجع بتاع التبويب
+    // **القديم** كان بيتلحق على قايمة التبويب الجديد — «القادمة» فيها
+    // حجوزات خلصت. الحارس ده بيرمي الرد المتأخر، وهو نفس الشكل اللي نداء
+    // الـ HTTP هيحتاجه يوم الربط.
+    final requestedTab = selectedTab;
+
+    final result = await _repo.bookings(
+      upcoming: requestedTab == 0,
+      page: _page + 1,
+      perPage: perPage,
+    );
+
+    if (isClosed || selectedTab != requestedTab) return;
 
     result.fold(
       (failure) {
         // فشل صفحة إضافية **مش** بيمسح اللي قدام العميل. بيرجع زي ما هو
-        // ويقدر يجرّب تاني بالسحب.
+        // ويقدر يجرّب تاني بالسحب. و`hasMore` بتتقفل عشان التحميل التلقائي
+        // يقف — مش لأن السيرفر قال مفيش كمان.
         isLoadingMore = false;
         hasMore = false;
         emit(MyBookingsSuccessState());
       },
-      (data) {
-        _page += 1;
-        bookings = <BookingUiModel>[...bookings, ...data];
-        hasMore = bookings.length < _source.length;
+      (page) {
+        // من الظرف مش `+= 1` — السيرفر هو اللي بيقرر إنت جبت أنهي صفحة.
+        _page = page.currentPage;
+        bookings = <BookingUiModel>[...bookings, ...page.data];
+        hasMore = page.hasMore;
         isLoadingMore = false;
         emit(MyBookingsSuccessState());
       },
@@ -94,28 +127,41 @@ class MyBookingsCubit extends Cubit<MyBookingsState> {
   /// — والقايمة بتكدب عليه.
   Future<void> refreshAfterChange() => loadBookings();
 
+  /// الـ uuids اللي العميل قفل إشعارها في الجلسة دي.
+  ///
+  /// ⚠ **محلي بالكامل، بيروح مع قفل الأبلكيشن.** مفيش أي حقل «اتقرا» على
+  /// الحجز في الباك-إند ولا endpoint يسجّله. الإخفاء الدايم محتاج شغل
+  /// سيرفر — سيبناه بدل ما نخترع تخزين محلي بيفترق عن الحقيقة.
+  final Set<String> _dismissedNotices = <String>{};
+
   /// إشعارات النهايات المش مكتملة — فوق تبويب «السابقة».
   ///
   /// مكانها هناك مش في «القادمة»: العميل بيدوّر على حجز خلص، فبيلاقي
   /// اللي حصل معاه فوق اللي اتم بنجاح.
-  List<BookingUiModel> get notices =>
-      selectedTab == 1 ? MockBookings.notices : const <BookingUiModel>[];
+  ///
+  /// ⚠ **بتتشتق من الحجوزات المحمّلة مش من endpoint.** مفيش
+  /// `GET /api/user/notifications` أصلاً. فالإشعار هنا = حجز ماضي حالته
+  /// ملغي أو ما حضرش — وده اللي الكارت بيقوله بالظبط.
+  ///
+  /// ونتيجتها إنها بتشوف الصفحة المحمّلة بس: عميل عنده إلغاء من ٦ شهور
+  /// مش هيشوفه غير لما يوصّل لصفحته. مقبول — الإشعار عن «حاجة حصلت
+  /// قريّب» مش أرشيف.
+  List<BookingUiModel> get notices {
+    if (selectedTab != 1) return const <BookingUiModel>[];
 
-  void dismissNotice(String uuid) {
-    MockBookings.dismissNotice(uuid);
-    emit(OnTabChangedState());
+    return bookings
+        .where(
+          (b) =>
+              b.status == BookingStatus.cancelled ||
+              b.status == BookingStatus.noShow,
+        )
+        .where((b) => !_dismissedNotices.contains(b.uuid))
+        .toList();
   }
 
-  List<BookingUiModel> get _source =>
-      selectedTab == 0 ? MockBookings.upcoming : MockBookings.past;
-
-  /// شريحة الصفحة من الـ mock — بيقلّد `LengthAwarePaginator`.
-  List<BookingUiModel> _pageOf(int page) {
-    final all = _source;
-    final start = (page - 1) * perPage;
-    if (start >= all.length) return <BookingUiModel>[];
-    final end = start + perPage;
-    return all.sublist(start, end > all.length ? all.length : end);
+  void dismissNotice(String uuid) {
+    _dismissedNotices.add(uuid);
+    emit(OnTabChangedState());
   }
 
   static MyBookingsCubit get(context) => BlocProvider.of(context);

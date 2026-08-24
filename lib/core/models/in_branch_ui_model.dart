@@ -1,5 +1,6 @@
+import 'package:waqty_user_application/core/utils/json_parse.dart';
 import 'package:waqty_user_application/core/models/booking_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_format.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 
 /// حالة العميل **وهو واقف في الفرع**.
 ///
@@ -52,6 +53,37 @@ class InBranchUiModel {
     this.expectedFinishAt,
   });
 
+  /// بتتبني من `GET /api/user/bookings/{uuid}` — **جزئي بقصد**.
+  ///
+  /// ⚠ **[status] و[employeeName] بس هما اللي من السيرفر.**
+  /// التقدير ([estimateLow] · [estimateHigh] · [expectedFinishAt]) **مالوش
+  /// أي إشارة في الـAPI** — مفيش ترتيب في الطابور ولا وقت متوقّع في أي
+  /// endpoint. بيفضل من `MockInBranch`.
+  ///
+  /// **ماتخترعش تقدير من مدة الخدمة.** «باقي ١٥ دقيقة» محسوبة من الجدول
+  /// المتوقّع مش من الواقع بتبقى كذبة أوحش من «مفيش تقدير» — والصالون
+  /// اللي متأخر ساعة هيدفع تمنها في تقييم العميل. سيناريو
+  /// `waitingNoEstimate` موجود عشان يجاوب: هل التقدير يستاهل شغل باك-إند؟
+  factory InBranchUiModel.fromJson(
+    Map<String, dynamic> json, {
+    Duration? estimateLow,
+    Duration? estimateHigh,
+    DateTime? expectedFinishAt,
+  }) {
+    final employee = JsonParse.mapValue(json['employee']);
+
+    return InBranchUiModel(
+      status: BookingStatusLabel.fromApi(
+        JsonParse.stringValue(json['status'], fallback: 'confirmed'),
+      ),
+      employeeName: JsonParse.localizedValue(employee['name']),
+      updatedAt: JsonParse.dateValue(json['updated_at']),
+      estimateLow: estimateLow,
+      estimateHigh: estimateHigh,
+      expectedFinishAt: expectedFinishAt,
+    );
+  }
+
   /// اللابل الصغير فوق العنوان — **من ألفاظ السيرفر**.
   ///
   /// نفس الكلمة اللي الريسيبشن شايفها على الداشبورد، فلما العميل يقول
@@ -83,10 +115,16 @@ class InBranchUiModel {
     // «لسه مع عميل» نزلت من العنوان هنا. الفاصل بيفصل الحقيقة (هو مشغول)
     // عن التقدير (وده تخمين) — العميل يقدر يصدّق الأولى حتى لو التانية
     // طلعت غلط.
-    BookingStatus.waiting => 'لسه مع عميل · $estimateLabel',
-    BookingStatus.inProgress => expectedFinishAt == null
-        ? ''
-        : 'متوقع تخلص ${AppFormat.time(expectedFinishAt!)}',
+    //
+    // ⚠ **لما مفيش تقدير، الفاصل بيتشال معاه.** الجزء اللي على الشمال هو
+    // الحقيقي، وهو اللي بيفضل. الفاصل مالوش شغل من غير حاجة على ناحيته
+    // التانية.
+    BookingStatus.waiting =>
+      hasLiveEstimate ? 'لسه مع عميل · $estimateLabel' : 'لسه مع عميل',
+    BookingStatus.inProgress =>
+      expectedFinishAt == null
+          ? ''
+          : 'متوقع تخلص ${AppFormat.time(expectedFinishAt!)}',
     _ => '',
   };
 
@@ -98,10 +136,21 @@ class InBranchUiModel {
   ///
   /// (القاعدة دي كانت مكتوبة في `QueueUiModel` واتنقلت معاها — هي أحسن
   /// حاجة في الكود القديم.)
+  /// ⚠ **بترجّع `''` لما مفيش تقدير — مش كلمة بديلة.**
+  ///
+  /// كانت بترجّع «دقايق». وده بيقرا زي وحدة قياس اتعلّقت ورا رقم اتمسح:
+  /// السطر كان بيطلع **«لسه مع عميل · دقايق»**، فاصل بيوعد بمعلومة
+  /// وماوراهوش حاجة. والأسوأ إن `hasLiveEstimate` بترجّع `false` صح في
+  /// الحالة دي، فبتخفي لابل «تقدير» — يعني الكلمة الوحيدة اللي كانت
+  /// هتقول للعميل إن ده تخمين هي بالظبط اللي بتختفي، والكلام الباقي
+  /// بيتقري كأنه حقيقة.
+  ///
+  /// السلسلة الفاضية بتخلي كل مستهلك **يقرر** يعمل إيه بدل ما ياخد نص
+  /// جاهز مالوش معنى. المستهلكين بيسألوا [hasLiveEstimate] الأول.
   String get estimateLabel {
     final low = estimateLow?.inMinutes ?? 0;
     final high = estimateHigh?.inMinutes ?? 0;
-    if (high <= 0) return 'دقايق';
+    if (high <= 0) return '';
     if (low <= 5) return 'أقل من ${AppFormat.digits(high)} دقيقة';
     return 'تقريبًا ${AppFormat.digits(low)}–${AppFormat.digits(high)} دقيقة';
   }

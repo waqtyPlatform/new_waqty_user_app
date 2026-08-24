@@ -1,10 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
-import 'package:waqty_user_application/core/utils/styles.dart';
-import 'package:waqty_user_application/core/widgets/app_drop_down_field.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/features/auth/register/logic/register_cubit.dart';
 import 'package:waqty_user_application/features/auth/register/logic/register_state.dart';
 
@@ -36,54 +33,25 @@ class RegisterGenderWidget extends StatelessWidget {
     ];
 
     return BlocBuilder<RegisterCubit, RegisterState>(
-      buildWhen: (previous, current) {
-        return current is OnChangeGenderState ||
-            current is OnChangeSelectedFieldState;
-      },
+      buildWhen: (previous, current) => current is OnChangeGenderState,
       builder: (context, state) {
         final cubit = RegisterCubit.get(context);
-        return AppDropDownField(
-          hintText: context.tr('register.selectGenderText'),
-          hintStyle: TextStyles.font16greyColor4002Weight500,
-          textStyle: TextStyles.font16greyColor900Weight400,
-          items: genderItems,
-          backgroundColor: cubit.selectedFieldNumber == 4
-              ? AppColors.greenColor505
-              : AppColors.whiteColor,
-          contentPadding: EdgeInsets.symmetric(
-            vertical: 11.h,
-            horizontal: 12.w,
+
+        // **`AppDropDownField<GenderItem>` مش `dynamic`.**
+        //
+        // النسخة القديمة كانت بتقرا `element.name` على `dynamic` — يعني أي
+        // نوع مالوش `name` كان بيقع **وقت التشغيل** مش وقت التحليل.
+        return AppFieldWidget(
+          label: context.tr('register.genderText'),
+          child: AppDropDownField<GenderItem>(
+            hintText: context.tr('register.selectGenderText'),
+            items: genderItems,
+            value: cubit.selectedGender,
+            labelOf: (item) => item.name,
+            onChanged: (item) {
+              if (item != null) cubit.changeGender(item);
+            },
           ),
-          enabledBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: AppColors.greyColor1001, width: 1),
-            borderRadius: BorderRadius.circular(10.r),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide(
-              color: cubit.selectedFieldNumber == 4
-                  ? AppColors.greenColor500
-                  : AppColors.greyColor1001,
-              width: 1,
-            ),
-            borderRadius: BorderRadius.circular(10.r),
-          ),
-          errorBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: AppColors.errorColor100, width: 1),
-            borderRadius: BorderRadius.circular(10.r),
-          ),
-          focusedErrorBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: AppColors.errorColor100, width: 1),
-            borderRadius: BorderRadius.circular(10.r),
-          ),
-          onChanged: (item) {
-            RegisterCubit.get(context).changeGender((item as GenderItem));
-          },
-          onTap: () {
-            RegisterCubit.get(context).changeSelectedField(4);
-          },
-          onTapOutside: () {
-            RegisterCubit.get(context).changeSelectedField(0);
-          },
         );
       },
     );

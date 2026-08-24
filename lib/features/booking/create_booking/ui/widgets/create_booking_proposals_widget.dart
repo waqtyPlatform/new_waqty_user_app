@@ -1,15 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/core/models/slot_ui_model.dart';
-import 'package:waqty_user_application/core/utils/app_format.dart';
-import 'package:waqty_user_application/core/utils/app_motion.dart';
-import 'package:waqty_user_application/core/utils/app_radius.dart';
-import 'package:waqty_user_application/core/utils/app_semantic_colors.dart';
-import 'package:waqty_user_application/core/utils/app_spacing.dart';
-import 'package:waqty_user_application/core/utils/app_text_styles.dart';
+import 'package:waqty_user_application/design_system/design_system.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/widgets/empty_state_widget.dart';
-import 'package:waqty_user_application/core/widgets/skeleton_box_widget.dart';
 
 /// **النافذة الأول، وبعدين اقتراحات.**
 ///
@@ -80,10 +73,16 @@ class CreateBookingProposalsWidget extends StatelessWidget {
         // فاضية = أي وقت. بنقولها بدل ما نسيب العميل يستنتج.
         if (periods.isEmpty) ...[
           verticalSpace(AppSpacing.s4),
-          Text('مفيش تحديد — بنعرض أقرب المواعيد', style: AppTextStyles.caption),
+          Text(
+            'مفيش تحديد — بنعرض أقرب المواعيد',
+            style: AppTextStyles.caption,
+          ),
         ],
 
-        verticalSpace(AppSpacing.s24),
+        // ١٦ مش ٢٤. الفلتر والنتيجة **سؤال وجوابه** — مش قسمين مستقلين.
+        // الـ ٢٤ كانت بتفصلهم لدرجة إن العميل بيغيّر الفلتر ومايربطش
+        // التغيير باللي تحته.
+        verticalSpace(AppSpacing.s16),
         Text('أقرب المواعيد', style: AppTextStyles.bodyMdStrong),
         verticalSpace(AppSpacing.s8),
         _list(),
@@ -108,11 +107,10 @@ class CreateBookingProposalsWidget extends StatelessWidget {
           3,
           (_) => Padding(
             padding: EdgeInsetsDirectional.only(bottom: AppSpacing.chipGap.h),
-            child: const SkeletonBoxWidget(
+            child: const AppSkeletonBoxWidget(
               width: double.infinity,
               height: 56,
               radius: AppRadius.m,
-              animate: false,
             ),
           ),
         ),
@@ -122,7 +120,7 @@ class CreateBookingProposalsWidget extends StatelessWidget {
     if (proposals.isEmpty) {
       // **مفيش مواعيد في النوافذ دي** — مش «مفيش مواعيد خالص». الفرق
       // مهم: الأول بيتحل بتوسيع النافذة، والتاني بقائمة الانتظار.
-      return EmptyStateWidget(
+      return AppEmptyStateWidget(
         icon: Icons.search_off_outlined,
         title: periods.isEmpty
             ? 'مفيش مواعيد قريبة'
@@ -197,16 +195,25 @@ class _PeriodChip extends StatelessWidget {
         child: AnimatedContainer(
           duration: AppMotion.base,
           curve: AppMotion.standard,
+          // **٤٥ — فوق الحد الأدنى للمس (٤٤).**
+          //
+          // كانت الحشوة الرأسية ٨ حوالين نص ٢١، يعني الشيب **٣٧** — تحت
+          // الحد بسبع نقط. وده فلتر بيتداس بالإبهام وسط قايمة، مش لابل.
+          // شيبس المواعيد نفسها (`_SlotChip`) ٤٤ من زمان.
+          //
+          // ⚠ **الحل حشوة، مش `constraints` + `alignment`.** `Container`
+          // اللي عنده `alignment` بيفرد لأقصى عرض متاح — وجوه `Wrap`
+          // العرض المتاح هو الصف كله، فالتلات شيبس بقوا تلات صفوف كاملة.
+          // الأفقي فضل ١٢ زي ما كان: التلات نوافذ لازم يدخلوا في **سطر
+          // واحد** على ٣٧٥، و١٦ كانت بتنزّل «مساءً» لسطر تاني.
           padding: EdgeInsetsDirectional.symmetric(
             horizontal: AppSpacing.s12.w,
-            vertical: AppSpacing.s8.h,
+            vertical: AppSpacing.s12.h,
           ),
           decoration: BoxDecoration(
             borderRadius: radius,
             border: Border.all(
-              color: isSelected
-                  ? AppSemanticColors.accent
-                  : Colors.transparent,
+              color: isSelected ? AppSemanticColors.accent : Colors.transparent,
             ),
           ),
           child: Text(
@@ -269,9 +276,7 @@ class _ProposalCell extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: radius,
             border: Border.all(
-              color: isSelected
-                  ? AppSemanticColors.accent
-                  : Colors.transparent,
+              color: isSelected ? AppSemanticColors.accent : Colors.transparent,
               width: 1.5,
             ),
           ),
@@ -301,7 +306,7 @@ class _ProposalCell extends StatelessWidget {
                     Icon(
                       Icons.check_circle_rounded,
                       size: 16.r,
-                      color: AppSemanticColors.accent,
+                      color: AppSemanticColors.accentText,
                     )
                   // فرق السعر سببه **مين فاضي** مش الساعة، وهو حقيقي في
                   // السيرفر (`effective_price` بيختلف لكل أخصائي).

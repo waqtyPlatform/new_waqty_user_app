@@ -15,3 +15,7 @@ class ProvidersListErrorState extends ProvidersListState {
 }
 
 class OnFilterChangedState extends ProvidersListState {}
+
+/// بيتحمّل صفحة إضافية — القايمة اللي قدام العميل **بتفضل زي ما هي**،
+/// وبيتعرض مؤشر صغير تحتها بس.
+class ProvidersListLoadingMoreState extends ProvidersListState {}
