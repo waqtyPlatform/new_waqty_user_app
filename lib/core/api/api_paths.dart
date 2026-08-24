@@ -73,8 +73,9 @@ class ApiPaths {
 
   // ── الاستحقاقات: باقات ومتابعات ───────────────────────────────────────
   //
-  // ⚠ الردود دي **مافيهاش `provider` ولا `branch`** في أي صف — اتقرا كامل
-  // من `UserEntitlementController` في ٢٠٢٦-٠٨-٢١. TODO(api): BE-A1.
+  // الردود دي بتقول **`provider` و`branch` و`service_uuid`** على كل صف
+  // (BE-A1)، وده اللي بيخلّي الحجز من التطبيق ممكن أصلاً — `available-slots`
+  // مفتاحه (فرع، خدمة). وحجز الجلسة بيرد بـ`UserBookingResource` (BE-A2).
   static const String entitlementPackages =
       '$_base/api/user/entitlements/packages';
   static const String entitlementFollowUps =
