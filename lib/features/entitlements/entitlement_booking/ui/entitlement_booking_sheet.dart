@@ -13,6 +13,8 @@ import 'package:waqty_user_application/features/entitlements/entitlement_booking
 import 'package:waqty_user_application/features/entitlements/entitlement_booking/logic/entitlement_booking_state.dart';
 import 'package:waqty_user_application/features/entitlements/entitlements/logic/entitlements_cubit.dart';
 import 'package:waqty_user_application/features/entitlements/entitlements/logic/entitlements_state.dart';
+import 'package:waqty_user_application/config/routes/routes.dart';
+import 'package:waqty_user_application/core/models/booking_ui_model.dart';
 
 /// **شيت حجز المتابعة** — تاريخ وميعاد وتأكيد.
 ///
@@ -40,7 +42,7 @@ class EntitlementBookingSheet extends StatelessWidget {
   ///
   /// اتفتح مع BE-A1: قبله الرد مكانش فيه فرع، فمكانش فيه مواعيد نعرضها،
   /// فالزرار كان متعطّل بسبب مكتوب.
-  static Future<bool> showForPackage(
+  static Future<BookingUiModel?> showForPackage(
     BuildContext context, {
     required EntitlementsCubit cubit,
     required PackageEntitlementUiModel package,
@@ -48,11 +50,10 @@ class EntitlementBookingSheet extends StatelessWidget {
     context,
     cubit: cubit,
     title: 'احجز جلسة',
-    createBooking: () =>
-        EntitlementBookingCubit.forPackage(
-          package: package,
-          booking: getIt<CreateBookingRepo>(),
-        )..start(),
+    createBooking: () => EntitlementBookingCubit.forPackage(
+      package: package,
+      booking: getIt<CreateBookingRepo>(),
+    )..start(),
     onConfirm: (entitlements, booking) => entitlements.bookPackageSession(
       uuid: booking.entitlementUuid,
       bookingDate: booking.bookingDate,
@@ -62,7 +63,7 @@ class EntitlementBookingSheet extends StatelessWidget {
   );
 
   /// حجز **متابعة**.
-  static Future<bool> showForFollowUp(
+  static Future<BookingUiModel?> showForFollowUp(
     BuildContext context, {
     required EntitlementsCubit cubit,
     required FollowUpEntitlementUiModel followUp,
@@ -74,11 +75,10 @@ class EntitlementBookingSheet extends StatelessWidget {
         followUp.employeeRule == FollowUpEmployeeRule.sameRequired
         ? followUp.employee?.name
         : null,
-    createBooking: () =>
-        EntitlementBookingCubit.forFollowUp(
-          followUp: followUp,
-          booking: getIt<CreateBookingRepo>(),
-        )..start(),
+    createBooking: () => EntitlementBookingCubit.forFollowUp(
+      followUp: followUp,
+      booking: getIt<CreateBookingRepo>(),
+    )..start(),
     onConfirm: (entitlements, booking) => entitlements.bookFollowUp(
       uuid: booking.entitlementUuid,
       bookingDate: booking.bookingDate,
@@ -87,8 +87,9 @@ class EntitlementBookingSheet extends StatelessWidget {
     ),
   );
 
-  /// بترجّع `true` لو الحجز اتسجّل — واللي بينده بيوري التأكيد.
-  static Future<bool> _show(
+  /// بترجّع **الحجز اللي اتعمل**، و`null` لو الورقة اتقفلت من غير حجز.
+  /// واللي بينده بيوري التأكيد.
+  static Future<BookingUiModel?> _show(
     BuildContext context, {
     required EntitlementsCubit cubit,
     required String title,
@@ -100,7 +101,7 @@ class EntitlementBookingSheet extends StatelessWidget {
     onConfirm,
     String? lockedEmployeeName,
   }) async {
-    final booked = await AppSheetWidget.show<bool>(
+    final booked = await AppSheetWidget.show<BookingUiModel>(
       context,
       title: title,
       content: MultiBlocProvider(
@@ -118,39 +119,55 @@ class EntitlementBookingSheet extends StatelessWidget {
       actions: (_) => const <Widget>[],
     );
 
-    return booked ?? false;
+    return booked;
   }
 
-  /// **تأكيد بعد الحجز — بيقول اللي حصل ومكانه.**
+  /// **تأكيد بعد الحجز — بيقول الميعاد نفسه.**
   ///
-  /// ## ليه مابنودّيهاش على الحجز الجديد على طول
+  /// ## اللي اتغيّر مع BE-A2
   ///
-  /// `bookFollowUp` بيرجّع `Booking` **خام** مش `UserBookingResource`
-  /// (BE-A2)، يعني أسماء الحقول بتاعت Eloquent وماينفعش نعتمد على قراية
-  /// `uuid` منه للتنقّل. الورقة دي هي البديل الصادق: بتقول الحجز اتسجّل
-  /// وبتقول يلاقيه فين، من غير ما تدّعي إننا عارفين رقمه.
+  /// الورقة دي كانت بتقول «هتلاقي ميعاد الجلسة في حجوزاتي» وبس، لأن
+  /// الـendpoint كان بيرد بموديل `Booking` خام مالوش عقد — فمكانش فيه
+  /// `uuid` نعتمد عليه للتنقّل ولا ميعاد نعتمد عليه للعرض.
   ///
-  /// TODO(api): BE-A2 — لما يرجّع مورد، ده يبقى تنقّل مباشر للتفاصيل.
+  /// دلوقتي بيرد بـ`UserBookingResource`، فالورقة بتقول **«النهاردة 10:00
+  /// ص»** وبتدّي طريق للحجز نفسه. الفرق مش تجميلي: اللي لسه حاجزة عايزة
+  /// تتأكد إن الميعاد اللي في دماغها هو اللي اتسجّل، ودي كانت بتضطر تخرج
+  /// وتدوّر عليه في «حجوزاتي» عشان تشوفه.
   static Future<void> showConfirmation(
     BuildContext context, {
+    required BookingUiModel booking,
     EntitlementBookingKind kind = EntitlementBookingKind.followUp,
   }) {
+    // ⚠ النص بيتغيّر بالنوع. كان مكتوب «ميعاد المتابعة» ثابت، فحجز جلسة
+    // باقة كان بيقول للعميلة إنها حجزت متابعة.
+    final what = switch (kind) {
+      EntitlementBookingKind.package => 'الجلسة',
+      EntitlementBookingKind.followUp => 'المتابعة',
+    };
+
     return AppSheetWidget.show<void>(
       context,
       icon: Icons.check_circle_outline_rounded,
       iconTone: AppSemanticColors.positive,
       title: 'الحجز اتسجّل',
-      // ⚠ النص بيتغيّر بالنوع. كان مكتوب «ميعاد المتابعة» ثابت، فحجز
-      // جلسة باقة كان بيقول للعميلة إنها حجزت متابعة.
-      message: switch (kind) {
-        EntitlementBookingKind.package =>
-          'هتلاقي ميعاد الجلسة في «حجوزاتي».',
-        EntitlementBookingKind.followUp =>
-          'هتلاقي ميعاد المتابعة في «حجوزاتي».',
-      },
+      message:
+          'ميعاد $what ${AppFormat.relativeDateTime(booking.startAt)}'
+          '${booking.branchName.isEmpty ? '' : ' في ${booking.branchName}'}.',
       actions: (sheetContext) => <Widget>[
         AppButtonWidget(
+          label: 'شوف الحجز',
+          onPressed: () {
+            Navigator.of(sheetContext).pop();
+            Navigator.of(context).pushNamed(
+              Routes.bookingDetailsScreen,
+              arguments: <String, dynamic>{'bookingUuid': booking.uuid},
+            );
+          },
+        ),
+        AppButtonWidget(
           label: 'تمام',
+          variant: AppButtonVariant.ghost,
           onPressed: () => Navigator.of(sheetContext).pop(),
         ),
       ],
@@ -163,7 +180,7 @@ class EntitlementBookingSheet extends StatelessWidget {
       listener: (context, state) {
         // النجاح بيقفل الشيت. الشاشة اللي نادت هي اللي بتودّي «حجوزاتي».
         if (state is EntitlementBookingSucceeded) {
-          Navigator.of(context).pop(true);
+          Navigator.of(context).pop(state.booking);
         }
       },
       builder: (context, entitlementsState) {
@@ -262,10 +279,9 @@ class EntitlementBookingSheet extends StatelessWidget {
                       label: 'أكّد الحجز',
                       isLoading: isSubmitting,
                       onPressed: cubit.canConfirm && !isSubmitting
-                          ? () => _SheetScope.of(context).onConfirm(
-                              EntitlementsCubit.get(context),
-                              cubit,
-                            )
+                          ? () => _SheetScope.of(
+                              context,
+                            ).onConfirm(EntitlementsCubit.get(context), cubit)
                           : null,
                     ),
                   ],
@@ -278,7 +294,6 @@ class EntitlementBookingSheet extends StatelessWidget {
     );
   }
 }
-
 
 /// بيمرّر دالة التأكيد لجوه الشجرة.
 ///

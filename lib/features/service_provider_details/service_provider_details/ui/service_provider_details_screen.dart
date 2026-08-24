@@ -371,9 +371,10 @@ class ServiceProviderDetailsScreen extends StatelessWidget {
       await entitlements.close();
       return;
     }
-    if (booked) {
+    if (booked != null) {
       await EntitlementBookingSheet.showConfirmation(
         context,
+        booking: booked,
         kind: EntitlementBookingKind.package,
       );
       await cubit.reloadPackages();

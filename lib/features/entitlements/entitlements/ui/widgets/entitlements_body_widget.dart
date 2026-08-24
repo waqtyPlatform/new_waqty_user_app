@@ -98,27 +98,27 @@ class EntitlementsBodyWidget extends StatelessWidget {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: _padding,
           children: <Widget>[
-              // ⚠ **`BlocBuilder` على `AccountCubit` مش قراية مباشرة.**
-              //
-              // النص هنا بيتفرّع على `phone_verified_at`، والحساب
-              // والاستحقاقات بيتحمّلوا **متوازيين**. لو الحساب خلص بعد
-              // الاستحقاقات، القراية المباشرة كانت بتشوف `null` وترسم
-              // «لسه مافيش باقات» — و**مافيش حاجة بترجع تبنيها تاني**،
-              // فالعميلة اللي رقمها مش مأكّد كانت بتقعد على النص الغلط.
-              BlocBuilder<AccountCubit, AccountState>(
-                builder: (context, _) {
-                  final account = AccountCubit.get(context).account;
-                  return EntitlementEmptyWidget(
-                    tab: cubit.tab,
-                    // `null` = الحساب لسه بيتحمّل. مابنفترضش حاجة — النص
-                    // المحايد لحد ما نعرف، عشان مانوجّهش عميلة رقمها
-                    // مأكّد لتأكيد تاني.
-                    needsVerification:
-                        account != null && !account.isPhoneVerified,
-                    onVerify: () => _verifyPhone(context, cubit),
-                  );
-                },
-              ),
+            // ⚠ **`BlocBuilder` على `AccountCubit` مش قراية مباشرة.**
+            //
+            // النص هنا بيتفرّع على `phone_verified_at`، والحساب
+            // والاستحقاقات بيتحمّلوا **متوازيين**. لو الحساب خلص بعد
+            // الاستحقاقات، القراية المباشرة كانت بتشوف `null` وترسم
+            // «لسه مافيش باقات» — و**مافيش حاجة بترجع تبنيها تاني**،
+            // فالعميلة اللي رقمها مش مأكّد كانت بتقعد على النص الغلط.
+            BlocBuilder<AccountCubit, AccountState>(
+              builder: (context, _) {
+                final account = AccountCubit.get(context).account;
+                return EntitlementEmptyWidget(
+                  tab: cubit.tab,
+                  // `null` = الحساب لسه بيتحمّل. مابنفترضش حاجة — النص
+                  // المحايد لحد ما نعرف، عشان مانوجّهش عميلة رقمها
+                  // مأكّد لتأكيد تاني.
+                  needsVerification:
+                      account != null && !account.isPhoneVerified,
+                  onVerify: () => _verifyPhone(context, cubit),
+                );
+              },
+            ),
           ],
         ),
       );
@@ -187,8 +187,8 @@ class EntitlementsBodyWidget extends StatelessWidget {
   /// بيفتح شيت الحجز، وبعد النجاح **بيقول اللي حصل**.
   ///
   /// من غير التأكيد ده الشيت بيقفل في صمت والعميلة مش متأكدة إن الحجز
-  /// اتسجّل — وهي مش هتلاقي رقم حجز تراجعه لأن السيرفر بيرجّع موديل خام
-  /// (BE-A2). فالسكوت هنا أوحش من أي مكان تاني.
+  /// اتسجّل. وبعد BE-A2 الورقة بقت تقول ميعاده وتدّي طريق ليه، فالسكوت
+  /// هنا بقى أوحش من الأول.
   Future<void> _bookPackage(
     BuildContext context,
     PackageEntitlementUiModel package,
@@ -199,9 +199,10 @@ class EntitlementsBodyWidget extends StatelessWidget {
       package: package,
     );
 
-    if (!context.mounted || !booked) return;
+    if (!context.mounted || booked == null) return;
     await EntitlementBookingSheet.showConfirmation(
       context,
+      booking: booked,
       kind: EntitlementBookingKind.package,
     );
   }
@@ -217,8 +218,8 @@ class EntitlementsBodyWidget extends StatelessWidget {
       followUp: followUp,
     );
 
-    if (!context.mounted || !booked) return;
-    await EntitlementBookingSheet.showConfirmation(context);
+    if (!context.mounted || booked == null) return;
+    await EntitlementBookingSheet.showConfirmation(context, booking: booked);
   }
 
   /// نفس مسار F2 — وبعد النجاح **بنعيد تحميل الاستحقاقات**، لأن ده كل

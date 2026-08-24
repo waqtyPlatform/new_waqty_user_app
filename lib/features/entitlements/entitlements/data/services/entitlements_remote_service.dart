@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import 'package:waqty_user_application/core/api/api_client.dart';
 import 'package:waqty_user_application/core/api/api_paths.dart';
 import 'package:waqty_user_application/core/exceptions/failure.dart';
+import 'package:waqty_user_application/core/models/booking_ui_model.dart';
 import 'package:waqty_user_application/core/models/follow_up_entitlement_ui_model.dart';
 import 'package:waqty_user_application/core/models/package_entitlement_ui_model.dart';
 import 'package:waqty_user_application/core/utils/json_parse.dart';
@@ -35,7 +36,7 @@ class EntitlementsRemoteService implements EntitlementsService {
       );
 
   @override
-  Future<Either<Failure, Unit>> bookPackageSession({
+  Future<Either<Failure, BookingUiModel>> bookPackageSession({
     required String uuid,
     required String bookingDate,
     required String startTime,
@@ -50,13 +51,12 @@ class EntitlementsRemoteService implements EntitlementsService {
         'service_uuid': serviceUuid,
       if (notes != null && notes.isNotEmpty) 'notes': notes,
     },
-    // ⚠ نفس سبب المتابعة: الرد `Booking` خام مش مورد (BE-A2)، فمابنقراش
-    // جسمه.
-    parse: (_) => unit,
+    parse: (envelope) =>
+        BookingUiModel.fromJson(JsonParse.mapValue(envelope.data)),
   );
 
   @override
-  Future<Either<Failure, Unit>> bookFollowUp({
+  Future<Either<Failure, BookingUiModel>> bookFollowUp({
     required String uuid,
     required String bookingDate,
     required String startTime,
@@ -71,10 +71,11 @@ class EntitlementsRemoteService implements EntitlementsService {
         'employee_uuid': employeeUuid,
       if (notes != null && notes.isNotEmpty) 'notes': notes,
     },
-    // ⚠ **الجسم مابيتقراش عن قصد.** الرد `Booking` خام مش
-    // `UserBookingResource` (BE-A2)، فأسماء حقوله بتاعت Eloquent وممكن
-    // تتغيّر من غير ما ده يبقى كسر عقد. القراية منه بتبني اعتماد على شكل
-    // محدش وعد بيه.
-    parse: (_) => unit,
+    // **الجسم بقى يتقرا.** بعد BE-A2 الـendpoint بيرد
+    // بـ`UserBookingResource` — نفس اللي `GET /user/bookings/{uuid}`
+    // بيرجّعه — فـ`BookingUiModel.fromJson` بتفهمه من غير أي تعديل، وشاشة
+    // التأكيد بقت تقول الميعاد بدل «هتلاقيه في حجوزاتي».
+    parse: (envelope) =>
+        BookingUiModel.fromJson(JsonParse.mapValue(envelope.data)),
   );
 }

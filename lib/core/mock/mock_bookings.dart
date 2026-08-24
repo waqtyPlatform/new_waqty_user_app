@@ -82,6 +82,59 @@ class MockBookings {
     );
   }
 
+  /// **حجز اتعمل توّه** — جسم الـ201 اللي حجز الاستحقاق بيرجّعه (BE-A2).
+  ///
+  /// ⚠ **بيتبني من اللي العميلة اختارته فعلاً، مش من fixture ثابت.** شاشة
+  /// التأكيد بقت بتقول الميعاد بالنص، وfixture ثابت كان هيقول ميعاد غير
+  /// اللي اتحجز توّه — في وش اللي بتجرّب الفلو.
+  static BookingUiModel justBooked({
+    required DateTime startAt,
+    required int durationMinutes,
+    required String serviceUuid,
+    required String serviceName,
+    required String providerUuid,
+    required String providerName,
+    required String branchUuid,
+    required String branchName,
+  }) {
+    final seed = startAt.millisecondsSinceEpoch.toRadixString(32).toUpperCase();
+
+    final booking = BookingUiModel(
+      uuid: ulid(seed),
+      providerUuid: providerUuid,
+      providerName: providerName,
+      branchUuid: branchUuid,
+      branchName: branchName,
+      imagePath: '',
+      status: BookingStatus.confirmed,
+      canCancel: true,
+      items: <BookingItemUiModel>[
+        BookingItemUiModel(
+          uuid: ulid('$seed-I'),
+          visitUuid: 'v1',
+          serviceUuid: serviceUuid,
+          serviceName: serviceName,
+          employeeName: 'أي أخصائي متاح',
+          startAt: startAt,
+          endAt: startAt.add(Duration(minutes: durationMinutes)),
+          // **صفر مش سهو** — الجلسة مدفوعة مع الباقة، والمتابعة المجانية
+          // مجانية. سعر هنا بيقرا رسوم زيادة على حاجة اتدفعت خلاص.
+          price: 0,
+        ),
+      ],
+    );
+
+    // بيتسجّل عشان `byUuid` تلاقيه — الحجز الحقيقي بيبقى على السيرفر
+    // والتفاصيل بتجيبه، والموك محتاج نفس الاستمرارية.
+    _justBooked[booking.uuid] = booking;
+    return booking;
+  }
+
+  /// اللي اتحجز في الجلسة الشغّالة — بيعيش في الذاكرة زي
+  /// [_dismissedNotices]، ومابيتخزّنش.
+  static final Map<String, BookingUiModel> _justBooked =
+      <String, BookingUiModel>{};
+
   /// الحجوزات القادمة — **حسب السيناريو الشغال**.
   ///
   /// السيناريو بيضيّق العيّنة على الحالة اللي بنعرضها بدل ما يخفيها جوه
@@ -941,6 +994,15 @@ class MockBookings {
       booking.withPolicies(MockPolicies.current);
 
   static BookingUiModel byUuid(String uuid) {
+    // **اللي اتحجز في الجلسة دي الأول.**
+    //
+    // من غير السطر ده، «شوف الحجز» بعد حجز جلسة كان بيودّي على **حجز
+    // تاني خالص** — الاحتياطي في آخر الدالة بيرجّع `all.first` لما الـuuid
+    // مش موجود. الحجز اتعمل توّه فمالوش fixture، والزرار بيبقى بيكدب في
+    // وش اللي بتجرّب الفلو من أوله لآخره.
+    final justBooked = _justBooked[uuid];
+    if (justBooked != null) return justBooked;
+
     for (final booking in <BookingUiModel>[...upcoming, ...past, ...notices]) {
       if (booking.uuid == uuid) return _stamped(booking);
     }

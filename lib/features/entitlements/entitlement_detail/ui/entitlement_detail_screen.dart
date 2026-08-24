@@ -70,9 +70,10 @@ class EntitlementDetailScreen extends StatelessWidget {
       package: entitlement,
     );
 
-    if (!context.mounted || !booked) return;
+    if (!context.mounted || booked == null) return;
     await EntitlementBookingSheet.showConfirmation(
       context,
+      booking: booked,
       kind: EntitlementBookingKind.package,
     );
 
@@ -169,8 +170,8 @@ class EntitlementDetailScreen extends StatelessWidget {
       followUp: entitlement,
     );
 
-    if (!context.mounted || !booked) return;
-    await EntitlementBookingSheet.showConfirmation(context);
+    if (!context.mounted || booked == null) return;
+    await EntitlementBookingSheet.showConfirmation(context, booking: booked);
 
     if (!context.mounted) return;
     Navigator.of(context).pop();

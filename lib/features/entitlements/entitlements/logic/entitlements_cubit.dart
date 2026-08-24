@@ -5,6 +5,7 @@ import 'package:waqty_user_application/core/models/follow_up_entitlement_ui_mode
 import 'package:waqty_user_application/core/models/package_entitlement_ui_model.dart';
 import 'package:waqty_user_application/features/entitlements/entitlements/data/repo/entitlements_repo.dart';
 import 'package:waqty_user_application/features/entitlements/entitlements/logic/entitlements_state.dart';
+import 'package:waqty_user_application/core/models/booking_ui_model.dart';
 
 /// **اللي العميلة مالكاه** — باقات اشترتها من الفرع ومتابعات استحقّتها.
 ///
@@ -77,10 +78,7 @@ class EntitlementsCubit extends Cubit<EntitlementsState> {
 
     var failure = '';
 
-    packagesResult.fold(
-      (f) => failure = f.message,
-      (data) => packages = data,
-    );
+    packagesResult.fold((f) => failure = f.message, (data) => packages = data);
     followUpsResult.fold(
       (f) => failure = failure.isEmpty ? f.message : failure,
       (data) => followUps = data,
@@ -147,7 +145,7 @@ class EntitlementsCubit extends Cubit<EntitlementsState> {
   /// النوعين بيشتركوا في نفس دورة الحياة: قفل الزرار، ونجاح من غير جسم
   /// (BE-A2)، وإعادة تحميل لأن الاستحقاق اتغيّر — الفرق بس أنهي endpoint.
   Future<void> _book(
-    Future<Either<Failure, Unit>> Function() call,
+    Future<Either<Failure, BookingUiModel>> Function() call,
   ) async {
     bookingError = '';
     emit(const EntitlementBookingSubmitting());
@@ -160,8 +158,8 @@ class EntitlementsCubit extends Cubit<EntitlementsState> {
         bookingError = failure.message;
         emit(EntitlementBookingFailed(failure.message));
       },
-      (_) async {
-        emit(const EntitlementBookingSucceeded());
+      (booking) async {
+        emit(EntitlementBookingSucceeded(booking));
         // الاستحقاق اتغيّر (جلسة اتحجزت) فلازم نعيد التحميل — من غير كده
         // العدّاد بيفضل على قيمته القديمة لحد ما التبويب يتقفل ويتفتح.
         await load();

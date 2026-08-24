@@ -1,9 +1,12 @@
 import 'package:dartz/dartz.dart';
 import 'package:waqty_user_application/core/exceptions/failure.dart';
 import 'package:waqty_user_application/core/mock/mock_config.dart';
+import 'package:waqty_user_application/core/mock/mock_bookings.dart';
 import 'package:waqty_user_application/core/mock/mock_entitlements.dart';
 import 'package:waqty_user_application/core/mock/mock_scenario.dart';
 import 'package:waqty_user_application/core/mock/mock_source.dart';
+import 'package:waqty_user_application/core/models/booking_ui_model.dart';
+import 'package:waqty_user_application/core/models/entitlement_owner_ui_model.dart';
 import 'package:waqty_user_application/core/models/follow_up_entitlement_ui_model.dart';
 import 'package:waqty_user_application/core/models/package_entitlement_ui_model.dart';
 import 'package:waqty_user_application/features/entitlements/entitlements/data/services/entitlements_service.dart';
@@ -11,8 +14,10 @@ import 'package:waqty_user_application/features/entitlements/entitlements/data/s
 class EntitlementsMockService implements EntitlementsService {
   const EntitlementsMockService();
 
-  static Either<Failure, T> _lift<T>(Either<String, T> result) =>
-      result.fold((message) => Left(ServerFailure(message: message)), Right.new);
+  static Either<Failure, T> _lift<T>(Either<String, T> result) => result.fold(
+    (message) => Left(ServerFailure(message: message)),
+    Right.new,
+  );
 
   @override
   Future<Either<Failure, List<PackageEntitlementUiModel>>> packages() async =>
@@ -23,25 +28,80 @@ class EntitlementsMockService implements EntitlementsService {
       _lift(await MockSource.fetchList(MockEntitlements.followUps));
 
   @override
-  Future<Either<Failure, Unit>> bookPackageSession({
+  Future<Either<Failure, BookingUiModel>> bookPackageSession({
     required String uuid,
     required String bookingDate,
     required String startTime,
     String? serviceUuid,
     String? notes,
-  }) => _book();
+  }) {
+    final package = MockEntitlements.packages
+        .where((p) => p.uuid == uuid)
+        .firstOrNull;
+
+    return _book(
+      startAt: _startAt(bookingDate, startTime),
+      serviceUuid: serviceUuid ?? package?.slotServiceUuid ?? '',
+      serviceName: switch (package) {
+        SessionPackageEntitlement(:final serviceName) => serviceName,
+        UsagePackageEntitlement(:final allowedServices) =>
+          allowedServices.isEmpty ? 'جلسة' : allowedServices.first.name,
+        null => 'جلسة',
+      },
+      durationMinutes: switch (package) {
+        SessionPackageEntitlement(:final durationMinutes) => durationMinutes,
+        UsagePackageEntitlement(:final allowedServices) =>
+          allowedServices.isEmpty ? 45 : allowedServices.first.durationMinutes,
+        null => 45,
+      },
+      owner: package?.owner ?? EntitlementOwnerUiModel.unknown,
+    );
+  }
 
   @override
-  Future<Either<Failure, Unit>> bookFollowUp({
+  Future<Either<Failure, BookingUiModel>> bookFollowUp({
     required String uuid,
     required String bookingDate,
     required String startTime,
     String? employeeUuid,
     String? notes,
-  }) => _book();
+  }) {
+    final followUp = MockEntitlements.followUps
+        .where((f) => f.uuid == uuid)
+        .firstOrNull;
+
+    return _book(
+      startAt: _startAt(bookingDate, startTime),
+      serviceUuid: followUp?.serviceUuid ?? '',
+      serviceName: followUp == null
+          ? 'متابعة'
+          : 'متابعة ${followUp.serviceName}',
+      durationMinutes: followUp?.durationMinutes ?? 15,
+      owner: followUp?.owner ?? EntitlementOwnerUiModel.unknown,
+    );
+  }
+
+  /// `Y-m-d` + `HH:mm` — نفس اللي الكيوبت بيبعته للسيرفر.
+  static DateTime _startAt(String bookingDate, String startTime) {
+    final parts = startTime.split(':');
+    final day = DateTime.parse(bookingDate);
+    return DateTime(
+      day.year,
+      day.month,
+      day.day,
+      int.tryParse(parts.first) ?? 0,
+      parts.length > 1 ? int.tryParse(parts[1]) ?? 0 : 0,
+    );
+  }
 
   /// النوعين بيشتركوا في نفس حالات الفشل — الفرق على السيرفر مش هنا.
-  Future<Either<Failure, Unit>> _book() async {
+  Future<Either<Failure, BookingUiModel>> _book({
+    required DateTime startAt,
+    required String serviceUuid,
+    required String serviceName,
+    required int durationMinutes,
+    required EntitlementOwnerUiModel owner,
+  }) async {
     await Future.delayed(MockConfig.effectiveDelay);
 
     if (MockConfig.isErrorForced) {
@@ -64,6 +124,17 @@ class EntitlementsMockService implements EntitlementsService {
       );
     }
 
-    return const Right(unit);
+    return Right(
+      MockBookings.justBooked(
+        startAt: startAt,
+        durationMinutes: durationMinutes,
+        serviceUuid: serviceUuid,
+        serviceName: serviceName,
+        providerUuid: owner.providerUuid,
+        providerName: owner.providerName,
+        branchUuid: owner.branchUuid,
+        branchName: owner.branchName,
+      ),
+    );
   }
 }

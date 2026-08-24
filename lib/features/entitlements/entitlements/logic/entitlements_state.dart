@@ -1,3 +1,5 @@
+import 'package:waqty_user_application/core/models/booking_ui_model.dart';
+
 /// التبويب المعروض — باقات ولا متابعات.
 enum EntitlementTab { packages, followUps }
 
@@ -88,7 +90,17 @@ class EntitlementBookingSubmitting extends EntitlementsState {
 /// الشاشة بتقفل الشيت وتروح «حجوزاتي» وتعمل refresh — ده صادق وبيكلّف سطر،
 /// والبديل بيبني اعتماد على شكل محدش وعد بيه.
 class EntitlementBookingSucceeded extends EntitlementsState {
-  const EntitlementBookingSucceeded();
+  const EntitlementBookingSucceeded(this.booking);
+
+  final BookingUiModel booking;
+
+  @override
+  bool operator ==(Object other) =>
+      other is EntitlementBookingSucceeded &&
+      other.booking.uuid == booking.uuid;
+
+  @override
+  int get hashCode => booking.uuid.hashCode;
 }
 
 /// الحجز فشل — الشيت **بيفضل مفتوح** بالرسالة دي فوق زرار التأكيد.

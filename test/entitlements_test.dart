@@ -28,6 +28,8 @@ import 'package:waqty_user_application/features/entitlements/entitlement_detail/
 import 'package:waqty_user_application/features/entitlements/entitlements/ui/widgets/follow_up_card_widget.dart';
 import 'package:waqty_user_application/features/entitlements/entitlements/ui/widgets/package_session_card_widget.dart';
 import 'package:waqty_user_application/features/entitlements/entitlements/ui/widgets/package_usage_card_widget.dart';
+import 'package:waqty_user_application/core/mock/mock_bookings.dart';
+import 'package:waqty_user_application/core/models/booking_ui_model.dart';
 
 /// **الباقات والمتابعات.**
 ///
@@ -541,6 +543,38 @@ void main() {
   });
 
   group('نص التأكيد بيطابق اللي اتحجز', () {
+    BookingUiModel booked({DateTime? at}) => MockBookings.justBooked(
+      startAt: at ?? DateTime.now().add(const Duration(days: 1, hours: 3)),
+      durationMinutes: 45,
+      serviceUuid: 'srv-1',
+      serviceName: 'قص شعر رجالي',
+      providerUuid: 'prv-1',
+      providerName: 'صالون كابتن',
+      branchUuid: 'brn-1',
+      branchName: 'فرع المعادي',
+    );
+
+    Future<void> open(
+      WidgetTester tester,
+      EntitlementBookingKind kind,
+      BookingUiModel booking,
+    ) async {
+      await pump(
+        tester,
+        (context) => AppButtonWidget(
+          label: 'افتح',
+          onPressed: () => EntitlementBookingSheet.showConfirmation(
+            context,
+            booking: booking,
+            kind: kind,
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('افتح'));
+      await tester.pumpAndSettle();
+    }
+
     /// ⚠ **اتكتب بعد ما التأكيد قال «ميعاد المتابعة» على حجز باقة.**
     ///
     /// النص كان ثابت للمتابعات، فأول حجز جلسة باقة قال للعميلة إنها
@@ -550,23 +584,36 @@ void main() {
       EntitlementBookingKind.followUp: 'ميعاد المتابعة',
     }.entries) {
       testWidgets('${entry.key.name} → ${entry.value}', (tester) async {
-        await pump(
-          tester,
-          (context) => AppButtonWidget(
-            label: 'افتح',
-            onPressed: () => EntitlementBookingSheet.showConfirmation(
-              context,
-              kind: entry.key,
-            ),
-          ),
-        );
-
-        await tester.tap(find.text('افتح'));
-        await tester.pumpAndSettle();
+        await open(tester, entry.key, booked());
 
         expect(find.textContaining(entry.value), findsOneWidget);
       });
     }
+
+    /// **ده اللي BE-A2 اتعمل عشانه.**
+    ///
+    /// قبله الورقة كانت بتقول «هتلاقيه في حجوزاتي» وبس، لأن الـendpoint
+    /// كان بيرد بموديل خام مالوش عقد. اللي لسه حاجزة عايزة تتأكد إن
+    /// الميعاد اللي في دماغها هو اللي اتسجّل.
+    testWidgets('بيقول الميعاد نفسه مش «هتلاقيه في حجوزاتي»', (tester) async {
+      final booking = booked(at: DateTime(2026, 9, 15, 16, 30));
+      await open(tester, EntitlementBookingKind.package, booking);
+
+      expect(
+        find.textContaining(AppFormat.relativeDateTime(booking.startAt)),
+        findsOneWidget,
+      );
+      expect(find.textContaining('فرع المعادي'), findsOneWidget);
+      expect(find.textContaining('هتلاقي'), findsNothing);
+    });
+
+    /// وطريق للحجز نفسه — التنقّل المباشر اللي مكانش ممكن قبل BE-A2.
+    testWidgets('بيدّي طريق للحجز', (tester) async {
+      await open(tester, EntitlementBookingKind.followUp, booked());
+
+      expect(find.text('شوف الحجز'), findsOneWidget);
+      expect(find.text('تمام'), findsOneWidget);
+    });
   });
 
   group('مفيش أسعار على استحقاق مدفوع', () {
