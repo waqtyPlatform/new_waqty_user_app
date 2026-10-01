@@ -16,6 +16,16 @@ class LoginCubit extends Cubit<LoginState> {
   TextEditingController loginCountryCodeController = TextEditingController();
   TextEditingController loginPhoneController = TextEditingController();
   TextEditingController loginPasswordController = TextEditingController();
+  String loginMethod = 'phone';
+
+  bool get isPhoneLogin => loginMethod == 'phone';
+
+  void changeLoginMethod(String value) {
+    if (loginMethod == value) return;
+    loginMethod = value;
+    loginPhoneController.clear();
+    emit(OnChangeSelectedFieldState());
+  }
 
   int selectedFieldNumber = 0;
   changeSelectedField(int value) {
@@ -32,33 +42,34 @@ class LoginCubit extends Cubit<LoginState> {
 
   Future<void> login() async {
     emit(OnLoginLoadingState());
-    final result = await _loginRepo
-        .login(
-          LoginRequestModel(
-            login:
-                (loginCountryCodeController.text.isEmpty
-                    ? '+20'
-                    : loginCountryCodeController.text) +
-                loginPhoneController.text.trim(),
-            password: loginPasswordController.text,
-          ),
-        )
-        .catchError((error) {
-          emit(OnLoginCatchErrorState());
-        });
+    try {
+      final result = await _loginRepo.login(
+        LoginRequestModel(
+          login: isPhoneLogin
+              ? (loginCountryCodeController.text.isEmpty
+                        ? '+20'
+                        : loginCountryCodeController.text) +
+                    loginPhoneController.text.trim()
+              : loginPhoneController.text.trim(),
+          password: loginPasswordController.text,
+        ),
+      );
 
-    result.fold(
-      (failure) {
-        emit(OnLoginErrorState(failure.message));
-      },
-      (loginResponse) async {
-        if (loginResponse.data != null) {
-          await cashUserData(loginResponse);
-        }
+      result.fold(
+        (failure) {
+          emit(OnLoginErrorState(failure.message));
+        },
+        (loginResponse) async {
+          if (loginResponse.data != null) {
+            await cashUserData(loginResponse);
+          }
 
-        emit(OnLoginSuccessState(loginResponse));
-      },
-    );
+          emit(OnLoginSuccessState(loginResponse));
+        },
+      );
+    } catch (_) {
+      emit(OnLoginCatchErrorState());
+    }
   }
 
   Future<void> cashUserData(LoginResponseModel response) async {

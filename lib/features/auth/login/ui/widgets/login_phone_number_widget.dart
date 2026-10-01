@@ -19,15 +19,20 @@ class LoginPhoneNumberWidget extends StatelessWidget {
         return current is OnChangeSelectedFieldState;
       },
       builder: (context, state) {
+        final cubit = LoginCubit.get(context);
         return AppTextFormField(
-          hintText: context.tr('login.enterPhoneText'),
+          hintText: context.tr(
+            cubit.isPhoneLogin
+                ? 'login.enterPhoneText'
+                : 'login.enterEmailText',
+          ),
           hintStyle: TextStyles.font16greyColor4002Weight500,
           contentPadding: EdgeInsets.symmetric(
             vertical: 17.h,
             horizontal: 14.w,
           ),
           textStyle: TextStyles.font16greyColor900Weight400,
-          controller: LoginCubit.get(context).loginPhoneController,
+          controller: cubit.loginPhoneController,
           enabledBorder: OutlineInputBorder(
             borderSide: BorderSide(
               color: AppColors.greyColor900.withValues(alpha: 0.10),
@@ -36,27 +41,28 @@ class LoginPhoneNumberWidget extends StatelessWidget {
             borderRadius: BorderRadius.circular(18.r),
           ),
 
-          prefixIcon: SizedBox(
-            width: 115,
-            child: CountryCodePicker(
-              onChanged: (CountryCode code) {
-                LoginCubit.get(context).loginCountryCodeController.text = code
-                    .toString();
-              },
-              initialSelection: 'Eg',
-              favorite: const ['Eg'],
-              flagWidth: 20,
-              showFlag: true,
-              showCountryOnly: true,
-              showOnlyCountryWhenClosed: false,
-              alignLeft: true,
-              textStyle: TextStyle(color: AppColors.greyColor4002),
-              flagDecoration: BoxDecoration(
-                shape: BoxShape.rectangle,
-                borderRadius: BorderRadius.circular(2.r),
-              ),
-            ),
-          ),
+          prefixIcon: cubit.isPhoneLogin
+              ? SizedBox(
+                  width: 115,
+                  child: CountryCodePicker(
+                    onChanged: (CountryCode code) {
+                      cubit.loginCountryCodeController.text = code.toString();
+                    },
+                    initialSelection: 'Eg',
+                    favorite: const ['Eg'],
+                    flagWidth: 20,
+                    showFlag: true,
+                    showCountryOnly: true,
+                    showOnlyCountryWhenClosed: false,
+                    alignLeft: true,
+                    textStyle: TextStyle(color: AppColors.greyColor4002),
+                    flagDecoration: BoxDecoration(
+                      shape: BoxShape.rectangle,
+                      borderRadius: BorderRadius.circular(2.r),
+                    ),
+                  ),
+                )
+              : null,
           focusedBorder: OutlineInputBorder(
             borderSide: BorderSide(color: AppColors.greenColor500, width: 1.5),
             borderRadius: BorderRadius.circular(18.r),
@@ -71,18 +77,24 @@ class LoginPhoneNumberWidget extends StatelessWidget {
           ),
           validator: (String? value) {
             if (value == null || value.isEmpty) {
-              return context.tr('login.enterPhoneText2');
+              return context.tr(
+                cubit.isPhoneLogin
+                    ? 'login.enterPhoneText2'
+                    : 'login.enterEmailText2',
+              );
             }
             return null;
           },
           backgroundColor: AppColors.whiteColor,
           onTap: () {
-            LoginCubit.get(context).changeSelectedField(1);
+            cubit.changeSelectedField(1);
           },
           onTapOutside: () {
-            LoginCubit.get(context).changeSelectedField(0);
+            cubit.changeSelectedField(0);
           },
-          keyboardType: TextInputType.phone,
+          keyboardType: cubit.isPhoneLogin
+              ? TextInputType.phone
+              : TextInputType.emailAddress,
         );
       },
     );

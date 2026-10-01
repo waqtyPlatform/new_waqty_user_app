@@ -2,6 +2,7 @@ import 'dart:ui' as ui;
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:waqty_user_application/config/routes/routes.dart';
@@ -11,6 +12,7 @@ import 'package:waqty_user_application/core/utils/extentions.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
 import 'package:waqty_user_application/core/utils/styles.dart';
 import 'package:waqty_user_application/features/auth/login/logic/login_cubit.dart';
+import 'package:waqty_user_application/features/auth/login/logic/login_state.dart';
 import 'package:waqty_user_application/features/auth/login/ui/widgets/login_button_widget.dart';
 import 'package:waqty_user_application/features/auth/login/ui/widgets/login_password_widget.dart';
 import 'package:waqty_user_application/features/auth/login/ui/widgets/login_phone_number_widget.dart';
@@ -77,9 +79,25 @@ class LoginScreen extends StatelessWidget {
                           style: TextStyles.font14greyColor4002Weight400
                               .copyWith(fontSize: 16.sp, height: 1.65),
                         ),
-                        verticalSpace(14),
+                        verticalSpace(24),
 
-                        _LoginFieldLabel(text: context.tr("login.phoneText")),
+                        const _LoginMethodSelector(),
+                        verticalSpace(18),
+                        BlocBuilder<LoginCubit, LoginState>(
+                          buildWhen: (previous, current) {
+                            return current is OnChangeSelectedFieldState;
+                          },
+                          builder: (context, state) {
+                            final cubit = LoginCubit.get(context);
+                            return _LoginFieldLabel(
+                              text: context.tr(
+                                cubit.isPhoneLogin
+                                    ? 'login.phoneText'
+                                    : 'login.emailText',
+                              ),
+                            );
+                          },
+                        ),
                         LoginPhoneNumberWidget(),
                         verticalSpace(14),
 
@@ -104,7 +122,7 @@ class LoginScreen extends StatelessWidget {
                           ),
                         ),
 
-                        verticalSpace(210),
+                        verticalSpace(172),
                         LoginButtonWidget(),
                         verticalSpace(14),
                         const _LoginFooter(),
@@ -116,6 +134,89 @@ class LoginScreen extends StatelessWidget {
               ),
             );
           },
+        ),
+      ),
+    );
+  }
+}
+
+class _LoginMethodSelector extends StatelessWidget {
+  const _LoginMethodSelector();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<LoginCubit, LoginState>(
+      buildWhen: (previous, current) {
+        return current is OnChangeSelectedFieldState;
+      },
+      builder: (context, state) {
+        final cubit = LoginCubit.get(context);
+        return Container(
+          padding: EdgeInsets.all(4.w),
+          decoration: BoxDecoration(
+            color: AppColors.greyColor900.withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(999.r),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: _LoginMethodOption(
+                  text: context.tr('login.phoneOption'),
+                  selected: cubit.isPhoneLogin,
+                  onTap: () => cubit.changeLoginMethod('phone'),
+                ),
+              ),
+              Expanded(
+                child: _LoginMethodOption(
+                  text: context.tr('login.emailOption'),
+                  selected: !cubit.isPhoneLogin,
+                  onTap: () => cubit.changeLoginMethod('email'),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _LoginMethodOption extends StatelessWidget {
+  const _LoginMethodOption({
+    required this.text,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String text;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 42.h,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: selected ? AppColors.whiteColor : Colors.transparent,
+          borderRadius: BorderRadius.circular(999.r),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: AppColors.greyColor900.withValues(alpha: 0.10),
+                    blurRadius: 10.r,
+                    offset: Offset(0, 4.h),
+                  ),
+                ]
+              : null,
+        ),
+        child: Text(
+          text,
+          style: TextStyles.font14greyColor900Weight600.copyWith(
+            color: selected ? AppColors.greyColor900 : AppColors.greyColor500,
+          ),
         ),
       ),
     );

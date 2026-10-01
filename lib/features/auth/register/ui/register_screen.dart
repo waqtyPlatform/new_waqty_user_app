@@ -89,8 +89,6 @@ class RegisterScreen extends StatelessWidget {
 
                 _RegisterFieldLabel(text: context.tr('register.phoneText')),
                 RegisterPhoneNumberWidget(),
-                verticalSpace(8),
-                _RegisterHelperRow(text: context.tr('register.phoneHelper')),
                 verticalSpace(14),
 
                 _RegisterFieldLabel(text: context.tr('register.emailText')),
@@ -136,33 +134,6 @@ class _RegisterFieldLabel extends StatelessWidget {
         textAlign: TextAlign.start,
         style: TextStyles.font12greyColor500W600,
       ),
-    );
-  }
-}
-
-class _RegisterHelperRow extends StatelessWidget {
-  const _RegisterHelperRow({required this.text});
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final isArabic = context.locale.languageCode == 'ar';
-    final children = <Widget>[
-      Text(
-        text,
-        style: TextStyles.font12greenColor500W600.copyWith(height: 1.2),
-      ),
-      horizontalSpace(6),
-      Icon(Icons.check_circle, color: AppColors.greenColor500, size: 15.sp),
-    ];
-
-    return Row(
-      textDirection: isArabic ? ui.TextDirection.ltr : ui.TextDirection.rtl,
-      mainAxisAlignment: isArabic
-          ? MainAxisAlignment.end
-          : MainAxisAlignment.start,
-      children: children,
     );
   }
 }
