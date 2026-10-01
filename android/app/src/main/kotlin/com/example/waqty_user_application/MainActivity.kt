@@ -1,4 +1,4 @@
-package com.example.waqty_user_application
+package com.waqtyuser.app
 
 
 
