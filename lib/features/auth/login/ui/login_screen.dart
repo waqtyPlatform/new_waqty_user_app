@@ -122,7 +122,7 @@ class LoginScreen extends StatelessWidget {
                           ),
                         ),
 
-                        verticalSpace(172),
+                        verticalSpace(132),
                         LoginButtonWidget(),
                         verticalSpace(14),
                         const _LoginFooter(),
