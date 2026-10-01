@@ -75,26 +75,46 @@ class _UrgentAlertCard extends StatelessWidget {
             children: [
               const Expanded(child: _AlertContent()),
               SizedBox(width: 10.w),
-              const _AlertTimer(),
+              _AlertTimer(isArabic: isArabic),
             ],
           ),
           const Spacer(),
           Row(
-            children: [
-              Expanded(
-                child: _DarkPill(
-                  label: context.tr('onboardingNotifications.skipTraffic'),
-                  backgroundColor: AppColors.greyColor700,
-                ),
-              ),
-              SizedBox(width: 8.w),
-              Expanded(
-                child: _DarkPill(
-                  label: context.tr('onboardingNotifications.bookNow'),
-                  backgroundColor: AppColors.greenColor500,
-                ),
-              ),
-            ],
+            children: isArabic
+                ? [
+                    Expanded(
+                      child: _DarkPill(
+                        label: context.tr('onboardingNotifications.bookNow'),
+                        backgroundColor: AppColors.greenColor500,
+                      ),
+                    ),
+                    SizedBox(width: 8.w),
+                    Expanded(
+                      child: _DarkPill(
+                        label: context.tr(
+                          'onboardingNotifications.skipTraffic',
+                        ),
+                        backgroundColor: AppColors.greyColor700,
+                      ),
+                    ),
+                  ]
+                : [
+                    Expanded(
+                      child: _DarkPill(
+                        label: context.tr(
+                          'onboardingNotifications.skipTraffic',
+                        ),
+                        backgroundColor: AppColors.greyColor700,
+                      ),
+                    ),
+                    SizedBox(width: 8.w),
+                    Expanded(
+                      child: _DarkPill(
+                        label: context.tr('onboardingNotifications.bookNow'),
+                        backgroundColor: AppColors.greenColor500,
+                      ),
+                    ),
+                  ],
           ),
         ],
       ),
@@ -110,30 +130,34 @@ class _AlertContent extends StatelessWidget {
     final isArabic = isArabicLocale(context);
 
     return Column(
-      crossAxisAlignment: isArabic
-          ? CrossAxisAlignment.end
-          : CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _AlertSourceRow(isArabic: isArabic),
         SizedBox(height: 8.h),
-        Text(
-          context.tr('onboardingNotifications.alertTitle'),
-          textAlign: isArabic ? TextAlign.right : TextAlign.left,
-          style: TextStyles.font24greyColor900Weight600.copyWith(
-            color: AppColors.whiteColor,
-            fontSize: 21.sp,
-            height: 1.2,
+        SizedBox(
+          width: double.infinity,
+          child: Text(
+            context.tr('onboardingNotifications.alertTitle'),
+            textAlign: isArabic ? TextAlign.right : TextAlign.left,
+            style: TextStyles.font24greyColor900Weight600.copyWith(
+              color: AppColors.whiteColor,
+              fontSize: 21.sp,
+              height: 1.2,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
         ),
         SizedBox(height: 4.h),
-        Text(
-          context.tr('onboardingNotifications.alertMeta'),
-          textAlign: isArabic ? TextAlign.right : TextAlign.left,
-          style: TextStyles.font12greyColor3003Weight400,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+        SizedBox(
+          width: double.infinity,
+          child: Text(
+            context.tr('onboardingNotifications.alertMeta'),
+            textAlign: isArabic ? TextAlign.right : TextAlign.left,
+            style: TextStyles.font12greyColor3003Weight400,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
       ],
     );
@@ -147,16 +171,12 @@ class _AlertSourceRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final sourceText = Flexible(
-      child: Text(
-        context.tr('onboardingNotifications.appMessage'),
-        textAlign: isArabic ? TextAlign.right : TextAlign.left,
-        style: TextStyles.font12greyColor3003Weight400.copyWith(
-          fontSize: 11.sp,
-        ),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
+    final sourceText = Text(
+      context.tr('onboardingNotifications.appMessage'),
+      textAlign: isArabic ? TextAlign.right : TextAlign.left,
+      style: TextStyles.font12greyColor3003Weight400.copyWith(fontSize: 11.sp),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
     );
     final sourceIcon = Container(
       width: 22.w,
@@ -173,47 +193,49 @@ class _AlertSourceRow extends StatelessWidget {
       ),
     );
 
-    return Row(
-      mainAxisAlignment: isArabic
-          ? MainAxisAlignment.end
-          : MainAxisAlignment.start,
-      children: [
-        sourceIcon,
-        SizedBox(width: 8.w),
-        sourceText,
-      ],
+    return Align(
+      alignment: isArabic ? Alignment.centerRight : Alignment.centerLeft,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: isArabic
+            ? [sourceIcon, SizedBox(width: 8.w), sourceText]
+            : [sourceIcon, SizedBox(width: 8.w), sourceText],
+      ),
     );
   }
 }
 
 class _AlertTimer extends StatelessWidget {
-  const _AlertTimer();
+  final bool isArabic;
+
+  const _AlertTimer({required this.isArabic});
 
   @override
   Widget build(BuildContext context) {
+    final timerText = Text(
+      '4:32',
+      style: TextStyles.font20greyColor900W600.copyWith(
+        color: AppColors.whiteColor,
+        fontSize: 20.sp,
+      ),
+    );
+    final timerDot = Container(
+      width: 8.w,
+      height: 8.w,
+      decoration: BoxDecoration(
+        color: AppColors.warningColor50,
+        border: Border.all(
+          color: AppColors.warningColor50.withValues(alpha: 0.28),
+          width: 3.w,
+        ),
+        shape: BoxShape.circle,
+      ),
+    );
+
     return Row(
-      children: [
-        Text(
-          '4:32',
-          style: TextStyles.font20greyColor900W600.copyWith(
-            color: AppColors.whiteColor,
-            fontSize: 20.sp,
-          ),
-        ),
-        SizedBox(width: 6.w),
-        Container(
-          width: 8.w,
-          height: 8.w,
-          decoration: BoxDecoration(
-            color: AppColors.warningColor50,
-            border: Border.all(
-              color: AppColors.warningColor50.withValues(alpha: 0.28),
-              width: 3.w,
-            ),
-            shape: BoxShape.circle,
-          ),
-        ),
-      ],
+      children: isArabic
+          ? [timerDot, SizedBox(width: 6.w), timerText]
+          : [timerText, SizedBox(width: 6.w), timerDot],
     );
   }
 }
@@ -277,22 +299,28 @@ class _NotificationInfoTile extends StatelessWidget {
             ? CrossAxisAlignment.end
             : CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            textAlign: isArabic ? TextAlign.right : TextAlign.left,
-            style: TextStyles.font12greyColor900Weight400.copyWith(
-              fontWeight: FontWeight.w600,
+          SizedBox(
+            width: double.infinity,
+            child: Text(
+              title,
+              textAlign: isArabic ? TextAlign.right : TextAlign.left,
+              style: TextStyles.font12greyColor900Weight400.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
           SizedBox(height: 2.h),
-          Text(
-            meta,
-            textAlign: isArabic ? TextAlign.right : TextAlign.left,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyles.font12greyColor500W400,
+          SizedBox(
+            width: double.infinity,
+            child: Text(
+              meta,
+              textAlign: isArabic ? TextAlign.right : TextAlign.left,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyles.font12greyColor500W400,
+            ),
           ),
         ],
       ),

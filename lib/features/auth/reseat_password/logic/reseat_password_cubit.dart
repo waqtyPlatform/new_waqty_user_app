@@ -36,26 +36,26 @@ class ReseatPasswordCubit extends Cubit<ReseatPasswordState> {
   Future<void> resetPassword(String email, String otp) async {
     emit(ResetPasswordLoadingState());
 
-    final result = await _reseatPasswordRepo
-        .resetPassword(
-          ResetPasswordRequestModel(
-            email: email,
-            otp: otp,
-            newPassword: reseatNewPasswordController.text,
-            newPasswordConfirmation: reseatConfirmNewPasswordController.text,
-          ),
-        )
-        .catchError((error) {
-          emit(ResetPasswordCatchErrorState());
-        });
+    try {
+      final result = await _reseatPasswordRepo.resetPassword(
+        ResetPasswordRequestModel(
+          email: email,
+          otp: otp,
+          newPassword: reseatNewPasswordController.text,
+          newPasswordConfirmation: reseatConfirmNewPasswordController.text,
+        ),
+      );
 
-    result.fold((failure) {
-      if (failure.message.isNotEmpty) {
-        emit(ResetPasswordErrorState(message: failure.message));
-      } else {
-        emit(ResetPasswordCatchErrorState());
-      }
-    }, (response) => emit(ResetPasswordSuccessState(response: response)));
+      result.fold((failure) {
+        if (failure.message.isNotEmpty) {
+          emit(ResetPasswordErrorState(message: failure.message));
+        } else {
+          emit(ResetPasswordCatchErrorState());
+        }
+      }, (response) => emit(ResetPasswordSuccessState(response: response)));
+    } catch (_) {
+      emit(ResetPasswordCatchErrorState());
+    }
   }
 
   static ReseatPasswordCubit get(context) => BlocProvider.of(context);

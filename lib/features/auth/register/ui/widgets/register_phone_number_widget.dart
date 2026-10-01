@@ -23,14 +23,17 @@ class RegisterPhoneNumberWidget extends StatelessWidget {
           hintText: context.tr('register.enterPhoneText'),
           hintStyle: TextStyles.font16greyColor4002Weight500,
           contentPadding: EdgeInsets.symmetric(
-            vertical: 11.h,
-            horizontal: 12.w,
+            vertical: 17.h,
+            horizontal: 14.w,
           ),
           textStyle: TextStyles.font16greyColor900Weight400,
           controller: RegisterCubit.get(context).registerPhoneController,
           enabledBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: AppColors.greyColor1001, width: 1),
-            borderRadius: BorderRadius.circular(10.r),
+            borderSide: BorderSide(
+              color: AppColors.greyColor900.withValues(alpha: 0.10),
+              width: 1,
+            ),
+            borderRadius: BorderRadius.circular(18.r),
           ),
 
           prefixIcon: SizedBox(
@@ -55,16 +58,16 @@ class RegisterPhoneNumberWidget extends StatelessWidget {
             ),
           ),
           focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: AppColors.greenColor500, width: 1),
-            borderRadius: BorderRadius.circular(10.r),
+            borderSide: BorderSide(color: AppColors.greenColor500, width: 1.5),
+            borderRadius: BorderRadius.circular(18.r),
           ),
           errorBorder: OutlineInputBorder(
             borderSide: BorderSide(color: AppColors.errorColor100, width: 1),
-            borderRadius: BorderRadius.circular(10.r),
+            borderRadius: BorderRadius.circular(18.r),
           ),
           focusedErrorBorder: OutlineInputBorder(
             borderSide: BorderSide(color: AppColors.errorColor100, width: 1),
-            borderRadius: BorderRadius.circular(10.r),
+            borderRadius: BorderRadius.circular(18.r),
           ),
           validator: (String? value) {
             if (value == null || value.isEmpty) {
@@ -72,9 +75,7 @@ class RegisterPhoneNumberWidget extends StatelessWidget {
             }
             return null;
           },
-          backgroundColor: RegisterCubit.get(context).selectedFieldNumber == 2
-              ? AppColors.greenColor505
-              : AppColors.whiteColor,
+          backgroundColor: AppColors.whiteColor,
           onTap: () {
             RegisterCubit.get(context).changeSelectedField(2);
           },

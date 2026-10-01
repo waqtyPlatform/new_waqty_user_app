@@ -20,6 +20,7 @@ import 'package:waqty_user_application/features/onboarding/appointments/ui/onboa
 import 'package:waqty_user_application/features/onboarding/balance/ui/onboarding_balance_screen.dart';
 import 'package:waqty_user_application/features/onboarding/booking/ui/onboarding_booking_screen.dart';
 import 'package:waqty_user_application/features/onboarding/notifications/ui/onboarding_notifications_screen.dart';
+import 'package:waqty_user_application/features/onboarding/start/ui/onboarding_start_screen.dart';
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/logic/service_provider_details_cubit.dart';
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/service_provider_details_screen.dart';
 
@@ -50,6 +51,8 @@ class RouteGenerator {
         return MaterialPageRoute(
           builder: (_) => const OnboardingBalanceScreen(),
         );
+      case Routes.onboardingStartScreen:
+        return MaterialPageRoute(builder: (_) => const OnboardingStartScreen());
       case Routes.loginScreen:
         return MaterialPageRoute(
           builder: (_) => BlocProvider(
@@ -69,7 +72,10 @@ class RouteGenerator {
         return MaterialPageRoute(
           builder: (_) => BlocProvider(
             create: (context) => ForgetVerifyCodeCubit(getIt(), getIt()),
-            child: ForgetVerifyCodeScreen(email: args['email']),
+            child: ForgetVerifyCodeScreen(
+              email: args['email'],
+              method: args['method'] ?? 'email',
+            ),
           ),
         );
       case Routes.registerVerifyCodeScreen:

@@ -1,16 +1,13 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/config/routes/routes.dart';
-import 'package:waqty_user_application/core/services/check_network.dart';
 import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
 import 'package:waqty_user_application/core/utils/app_constant.dart';
 import 'package:waqty_user_application/core/utils/extentions.dart';
 import 'package:waqty_user_application/core/utils/styles.dart';
 import 'package:waqty_user_application/core/widgets/button_widget.dart';
 import 'package:waqty_user_application/features/auth/forget_verify_code/logic/forget_verify_code_cubit.dart';
-import 'package:waqty_user_application/features/auth/forget_verify_code/logic/forget_verify_code_state.dart';
 
 class ForgetVerifyButtonWidget extends StatelessWidget {
   final String email;
@@ -18,48 +15,16 @@ class ForgetVerifyButtonWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<ForgetVerifyCodeCubit, ForgetVerifyCodeState>(
-      buildWhen: (previous, current) {
-        return current is VerifyCodeLoadingState ||
-            current is VerifyCodeSuccessState ||
-            current is VerifyCodeErrorState ||
-            current is VerifyCodeCatchErrorState;
-      },
-      listener: (context, state) {
-        if (state is VerifyCodeSuccessState) {
-          AppConstant.toast(state.response.message, true, context);
-          context.pushNamed(
-            Routes.reseatPasswordScreen,
-            arguments: {
-              'email': email,
-              'code': ForgetVerifyCodeCubit.get(
-                context,
-              ).verifyCodeController.text,
-            },
-          ); // Assuming home screen is the destination
-        } else if (state is VerifyCodeErrorState) {
-          AppConstant.toast(state.message, false, context);
-        } else if (state is VerifyCodeCatchErrorState) {
-          AppConstant.toast(
-            context.tr('verifyCode.errorMessage'),
-            false,
-            context,
-          );
-        }
-      },
-      builder: (context, state) {
-        return ButtonWidget(
-          isLoading: state is VerifyCodeLoadingState,
-          borderRadius: 12,
-          buttonHeight: 50.h,
-          buttonText: context.tr('verifyCode.confirmCodeText'),
-          backGroundColor: AppColors.greenColor500,
-          borderColor: AppColors.greenColor500,
-          textStyle: TextStyles.font16whiteColorWeight600,
-          onPressed: () {
-            validateVerifyCode(context);
-          },
-        );
+    return ButtonWidget(
+      isLoading: false,
+      borderRadius: 999,
+      buttonHeight: 52.h,
+      buttonText: context.tr('verifyCode.confirmCodeText'),
+      backGroundColor: AppColors.greyColor900,
+      borderColor: AppColors.greyColor900,
+      textStyle: TextStyles.font16whiteColorWeight600,
+      onPressed: () {
+        validateVerifyCode(context);
       },
     );
   }
@@ -73,11 +38,10 @@ class ForgetVerifyButtonWidget extends StatelessWidget {
     if (ForgetVerifyCodeCubit.get(
       context,
     ).forgetVerifyCodeKey.currentState!.validate()) {
-      if (MyConnectivity.isOnline()) {
-        ForgetVerifyCodeCubit.get(context).verifyCode(email);
-      } else {
-        AppConstant.toast(context.tr('verifyCode.noInternet'), false, context);
-      }
+      context.pushNamed(
+        Routes.reseatPasswordScreen,
+        arguments: {'email': email, 'code': code},
+      );
     }
   }
 }

@@ -42,11 +42,11 @@ class RegisterVerifyButtonWidget extends StatelessWidget {
       builder: (context, state) {
         return ButtonWidget(
           isLoading: state is VerifyCodeLoadingState,
-          borderRadius: 12,
-          buttonHeight: 50.h,
+          borderRadius: 999,
+          buttonHeight: 52.h,
           buttonText: context.tr('registerVerifyCode.confirmCodeText'),
-          backGroundColor: AppColors.greenColor500,
-          borderColor: AppColors.greenColor500,
+          backGroundColor: AppColors.greyColor900,
+          borderColor: AppColors.greyColor900,
           textStyle: TextStyles.font16whiteColorWeight600,
           onPressed: () {
             validateVerifyCode(context);

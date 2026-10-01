@@ -11,6 +11,9 @@ class ForgetPasswordCubit extends Cubit<ForgetPasswordState> {
 
   GlobalKey<FormState> forgetPasswordKey = GlobalKey();
   TextEditingController forgetPasswordEmailController = TextEditingController();
+  String recoveryMethod = 'email';
+
+  bool get isEmailRecovery => recoveryMethod == 'email';
 
   int selectedFieldNumber = 0;
   changeSelectedField(int value) {
@@ -18,21 +21,31 @@ class ForgetPasswordCubit extends Cubit<ForgetPasswordState> {
     emit(OnChangeSelectedFieldState());
   }
 
+  void changeRecoveryMethod(String value) {
+    if (recoveryMethod == value) return;
+    recoveryMethod = value;
+    forgetPasswordEmailController.clear();
+    emit(OnChangeSelectedFieldState());
+  }
+
   Future<void> forgetPassword() async {
     emit(ForgetPasswordLoadingState());
 
-    final result = await _forgetPasswordRepo
-        .forgetPassword(
-          ForgetPasswordRequestModel(email: forgetPasswordEmailController.text),
-        )
-        .catchError((error) {
-          emit(ForgetPasswordCatchErrorState());
-        });
+    try {
+      final result = await _forgetPasswordRepo.forgetPassword(
+        ForgetPasswordRequestModel(
+          key: recoveryMethod,
+          value: forgetPasswordEmailController.text,
+        ),
+      );
 
-    result.fold(
-      (failure) => emit(ForgetPasswordErrorState(message: failure.message)),
-      (response) => emit(ForgetPasswordSuccessState(response: response)),
-    );
+      result.fold(
+        (failure) => emit(ForgetPasswordErrorState(message: failure.message)),
+        (response) => emit(ForgetPasswordSuccessState(response: response)),
+      );
+    } catch (_) {
+      emit(ForgetPasswordCatchErrorState());
+    }
   }
 
   static ForgetPasswordCubit get(context) => BlocProvider.of(context);

@@ -23,8 +23,8 @@ class RegisterPasswordWidget extends StatelessWidget {
           hintText: context.tr('register.enterPasswordText'),
           hintStyle: TextStyles.font16greyColor4002Weight500,
           contentPadding: EdgeInsets.symmetric(
-            vertical: 11.h,
-            horizontal: 12.w,
+            vertical: 17.h,
+            horizontal: 14.w,
           ),
 
           textStyle: TextStyles.font16greyColor900Weight400,
@@ -44,20 +44,23 @@ class RegisterPasswordWidget extends StatelessWidget {
             },
           ),
           enabledBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: AppColors.greyColor1001, width: 1),
-            borderRadius: BorderRadius.circular(10.r),
+            borderSide: BorderSide(
+              color: AppColors.greyColor900.withValues(alpha: 0.10),
+              width: 1,
+            ),
+            borderRadius: BorderRadius.circular(18.r),
           ),
           focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: AppColors.greenColor500, width: 1),
-            borderRadius: BorderRadius.circular(10.r),
+            borderSide: BorderSide(color: AppColors.greenColor500, width: 1.5),
+            borderRadius: BorderRadius.circular(18.r),
           ),
           errorBorder: OutlineInputBorder(
             borderSide: BorderSide(color: AppColors.errorColor100, width: 1),
-            borderRadius: BorderRadius.circular(10.r),
+            borderRadius: BorderRadius.circular(18.r),
           ),
           focusedErrorBorder: OutlineInputBorder(
             borderSide: BorderSide(color: AppColors.errorColor100, width: 1),
-            borderRadius: BorderRadius.circular(10.r),
+            borderRadius: BorderRadius.circular(18.r),
           ),
           validator: (String? value) {
             if (value == null || value.isEmpty) {
@@ -65,9 +68,7 @@ class RegisterPasswordWidget extends StatelessWidget {
             }
             return null;
           },
-          backgroundColor: RegisterCubit.get(context).selectedFieldNumber == 6
-              ? AppColors.greenColor505
-              : AppColors.whiteColor,
+          backgroundColor: AppColors.whiteColor,
           onTap: () {
             RegisterCubit.get(context).changeSelectedField(6);
           },

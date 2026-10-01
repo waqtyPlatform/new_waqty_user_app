@@ -25,7 +25,7 @@ class OnboardingBalanceBody extends StatelessWidget {
               OnboardingBalancePackageCard(),
               OnboardingBalanceCopySection(),
               OnboardingBottomActions(
-                nextRoute: Routes.registerScreen,
+                nextRoute: Routes.onboardingStartScreen,
                 bottom: 26,
               ),
             ],

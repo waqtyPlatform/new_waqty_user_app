@@ -23,8 +23,8 @@ class ReseatConfirmNewPasswordWidget extends StatelessWidget {
           hintText: context.tr('reseatPassword.enterConfirmNewPasswordText'),
           hintStyle: TextStyles.font16greyColor4002Weight500,
           contentPadding: EdgeInsets.symmetric(
-            vertical: 11.h,
-            horizontal: 12.w,
+            vertical: 15.h,
+            horizontal: 16.w,
           ),
 
           textStyle: TextStyles.font16greyColor900Weight400,
@@ -36,34 +36,39 @@ class ReseatConfirmNewPasswordWidget extends StatelessWidget {
             context,
           ).isConfirmNewPasswordVisible,
 
-          suffixIcon: IconButton(
-            icon: Icon(
-              ReseatPasswordCubit.get(context).isConfirmNewPasswordVisible
-                  ? Icons.visibility
-                  : Icons.visibility_off,
-              color: AppColors.greyColor3003,
-            ),
-            onPressed: () {
+          suffixIcon: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () {
               ReseatPasswordCubit.get(
                 context,
               ).changeConfirmNewPasswordLoginState();
             },
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 12.w),
+              child: Icon(
+                ReseatPasswordCubit.get(context).isConfirmNewPasswordVisible
+                    ? Icons.visibility
+                    : Icons.visibility_off,
+                color: AppColors.greyColor3003,
+                size: 18.sp,
+              ),
+            ),
           ),
           enabledBorder: OutlineInputBorder(
             borderSide: BorderSide(color: AppColors.greyColor1001, width: 1),
-            borderRadius: BorderRadius.circular(10.r),
+            borderRadius: BorderRadius.circular(14.r),
           ),
           focusedBorder: OutlineInputBorder(
             borderSide: BorderSide(color: AppColors.greenColor500, width: 1),
-            borderRadius: BorderRadius.circular(10.r),
+            borderRadius: BorderRadius.circular(14.r),
           ),
           errorBorder: OutlineInputBorder(
             borderSide: BorderSide(color: AppColors.errorColor100, width: 1),
-            borderRadius: BorderRadius.circular(10.r),
+            borderRadius: BorderRadius.circular(14.r),
           ),
           focusedErrorBorder: OutlineInputBorder(
             borderSide: BorderSide(color: AppColors.errorColor100, width: 1),
-            borderRadius: BorderRadius.circular(10.r),
+            borderRadius: BorderRadius.circular(14.r),
           ),
 
           validator: (String? value) {
@@ -81,7 +86,7 @@ class ReseatConfirmNewPasswordWidget extends StatelessWidget {
 
           backgroundColor:
               ReseatPasswordCubit.get(context).selectedFieldNumber == 2
-              ? AppColors.greenColor505
+              ? AppColors.whiteColor
               : AppColors.whiteColor,
           onTap: () {
             ReseatPasswordCubit.get(context).changeSelectedField(2);

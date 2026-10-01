@@ -15,44 +15,39 @@ class ForgetCodeTextFieldWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final pinTheme = PinTheme(
+      width: 72.w,
+      height: 56.h,
+      textStyle: TextStyles.font20greyColor900W600,
+      decoration: BoxDecoration(
+        color: AppColors.whiteColor,
+        border: Border.all(
+          color: AppColors.greyColor900.withValues(alpha: 0.10),
+          width: 1,
+        ),
+        borderRadius: BorderRadius.circular(18.r),
+      ),
+    );
+
     return Pinput(
       length: 4,
-      enableSuggestions: true,
+      autofocus: true,
+      enableSuggestions: false,
       showCursor: true,
       keyboardType: TextInputType.number,
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       controller: ForgetVerifyCodeCubit.get(context).verifyCodeController,
       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
       pinputAutovalidateMode: PinputAutovalidateMode.disabled,
-      defaultPinTheme: PinTheme(
-        width: 70.w,
-        height: 50.h,
-        textStyle: TextStyles.font16greyColor900Weight400,
-        decoration: BoxDecoration(
-          color: AppColors.whiteColor,
-          border: Border.all(color: AppColors.greyColor1001, width: 1.3),
-          borderRadius: BorderRadius.circular(10.r),
-        ),
+      defaultPinTheme: pinTheme,
+      focusedPinTheme: pinTheme.copyDecorationWith(
+        border: Border.all(color: AppColors.greenColor500, width: 1.5),
+        borderRadius: BorderRadius.circular(18.r),
       ),
-      focusedPinTheme: PinTheme(
-        width: 70.w,
-        height: 50.h,
-        textStyle: TextStyles.font16greyColor900Weight400,
-        decoration: BoxDecoration(
-          color: AppColors.greenColor505,
-          border: Border.all(color: AppColors.greenColor500, width: 1.3),
-          borderRadius: BorderRadius.circular(10.r),
-        ),
-      ),
-      submittedPinTheme: PinTheme(
-        width: 70.w,
-        height: 50.h,
-        textStyle: TextStyles.font16greyColor900Weight400,
-        decoration: BoxDecoration(
-          color: AppColors.whiteColor,
-          border: Border.all(color: AppColors.greyColor1001, width: 1.3),
-          borderRadius: BorderRadius.circular(10.r),
-        ),
+      submittedPinTheme: pinTheme,
+      errorPinTheme: pinTheme.copyDecorationWith(
+        border: Border.all(color: AppColors.errorColor100, width: 1),
+        borderRadius: BorderRadius.circular(18.r),
       ),
       onCompleted: (String? value) {
         if (MyConnectivity.isOnline()) {

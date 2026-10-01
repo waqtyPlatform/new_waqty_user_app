@@ -47,33 +47,34 @@ class RegisterGenderWidget extends StatelessWidget {
           hintStyle: TextStyles.font16greyColor4002Weight500,
           textStyle: TextStyles.font16greyColor900Weight400,
           items: genderItems,
-          backgroundColor: cubit.selectedFieldNumber == 4
-              ? AppColors.greenColor505
-              : AppColors.whiteColor,
+          backgroundColor: AppColors.whiteColor,
           contentPadding: EdgeInsets.symmetric(
-            vertical: 11.h,
-            horizontal: 12.w,
+            vertical: 17.h,
+            horizontal: 14.w,
           ),
           enabledBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: AppColors.greyColor1001, width: 1),
-            borderRadius: BorderRadius.circular(10.r),
+            borderSide: BorderSide(
+              color: AppColors.greyColor900.withValues(alpha: 0.10),
+              width: 1,
+            ),
+            borderRadius: BorderRadius.circular(18.r),
           ),
           focusedBorder: OutlineInputBorder(
             borderSide: BorderSide(
               color: cubit.selectedFieldNumber == 4
                   ? AppColors.greenColor500
-                  : AppColors.greyColor1001,
-              width: 1,
+                  : AppColors.greyColor900.withValues(alpha: 0.10),
+              width: cubit.selectedFieldNumber == 4 ? 1.5 : 1,
             ),
-            borderRadius: BorderRadius.circular(10.r),
+            borderRadius: BorderRadius.circular(18.r),
           ),
           errorBorder: OutlineInputBorder(
             borderSide: BorderSide(color: AppColors.errorColor100, width: 1),
-            borderRadius: BorderRadius.circular(10.r),
+            borderRadius: BorderRadius.circular(18.r),
           ),
           focusedErrorBorder: OutlineInputBorder(
             borderSide: BorderSide(color: AppColors.errorColor100, width: 1),
-            borderRadius: BorderRadius.circular(10.r),
+            borderRadius: BorderRadius.circular(18.r),
           ),
           onChanged: (item) {
             RegisterCubit.get(context).changeGender((item as GenderItem));

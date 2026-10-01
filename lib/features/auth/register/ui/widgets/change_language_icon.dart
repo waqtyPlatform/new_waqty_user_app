@@ -18,60 +18,19 @@ class ChangeLanguageIconWidget extends StatelessWidget {
         }
       },
       child: Container(
-        width: 64.w,
         height: 32.h,
+        padding: EdgeInsets.symmetric(horizontal: 13.w),
         decoration: BoxDecoration(
-          color: AppColors.greenColor500,
+          color: const Color(0xffF1F0EB),
           borderRadius: BorderRadius.circular(20.r),
         ),
-        child: Stack(
-          children: [
-            AnimatedAlign(
-              duration: const Duration(microseconds: 600),
-              curve: Curves.easeInOut,
-              alignment: context.locale == const Locale('en', 'US')
-                  ? Alignment.centerLeft
-                  : Alignment.centerRight,
-              child: Container(
-                width: 28.w,
-                height: 32.h,
-                margin: EdgeInsets.symmetric(horizontal: 3.w),
-
-                decoration: BoxDecoration(
-                  color: AppColors.whiteColor,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-            Row(
-              children: [
-                Expanded(
-                  child: Center(
-                    child: Text(
-                      context.locale == const Locale('en', 'US') ? 'EN' : 'ع',
-                      style: TextStyles.font14Weight700.copyWith(
-                        color: context.locale == const Locale('en', 'US')
-                            ? AppColors.greenColor500
-                            : AppColors.greenColor500,
-                      ),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: Center(
-                    child: Text(
-                      context.locale == const Locale('en', 'US') ? 'ع' : 'EN',
-                      style: TextStyles.font14Weight700.copyWith(
-                        color: context.locale == const Locale('en', 'US')
-                            ? AppColors.whiteColor
-                            : AppColors.whiteColor,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
+        alignment: Alignment.center,
+        child: Text(
+          context.locale == const Locale('en', 'US') ? 'ع' : 'EN',
+          style: TextStyles.font14Weight700.copyWith(
+            color: AppColors.greenColor500,
+            fontSize: 12.sp,
+          ),
         ),
       ),
     );

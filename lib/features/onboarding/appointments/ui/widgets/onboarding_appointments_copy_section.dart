@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'dart:ui' as ui;
 import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
 import 'package:waqty_user_application/core/utils/styles.dart';
 import 'package:waqty_user_application/features/onboarding/shared/widgets/onboarding_shared_widgets.dart';
@@ -22,29 +23,55 @@ class OnboardingAppointmentsCopySection extends StatelessWidget {
             : CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Text(
-                context.tr('onboardingAppointments.category'),
-                style: TextStyles.font12greyColor500W600,
-              ),
-              SizedBox(width: 8.w),
-              Container(
-                width: 22.w,
-                height: 1.h,
-                color: AppColors.greenColor600.withValues(alpha: 0.4),
-              ),
-              SizedBox(width: 8.w),
-              Text(
-                '\u200E01 / 05',
-                style: TextStyles.font12greenColor500W600.copyWith(
-                  color: AppColors.greenColor600,
-                  fontSize: 11.sp,
-                  letterSpacing: 1.1,
-                  height: 1.5,
-                ),
-              ),
-            ],
+            mainAxisAlignment: isArabic
+                ? MainAxisAlignment.end
+                : MainAxisAlignment.start,
+            textDirection: ui.TextDirection.ltr,
+            children: isArabic
+                ? [
+                    Text(
+                      context.tr('onboardingAppointments.category'),
+                      style: TextStyles.font12greyColor500W600,
+                    ),
+                    SizedBox(width: 8.w),
+                    Container(
+                      width: 22.w,
+                      height: 1.h,
+                      color: AppColors.greenColor600.withValues(alpha: 0.4),
+                    ),
+                    SizedBox(width: 8.w),
+                    Text(
+                      '\u200E01 / 05',
+                      style: TextStyles.font12greenColor500W600.copyWith(
+                        color: AppColors.greenColor600,
+                        fontSize: 11.sp,
+                        letterSpacing: 1.1,
+                        height: 1.5,
+                      ),
+                    ),
+                  ]
+                : [
+                    Text(
+                      '\u200E01 / 05',
+                      style: TextStyles.font12greenColor500W600.copyWith(
+                        color: AppColors.greenColor600,
+                        fontSize: 11.sp,
+                        letterSpacing: 1.1,
+                        height: 1.5,
+                      ),
+                    ),
+                    SizedBox(width: 8.w),
+                    Container(
+                      width: 22.w,
+                      height: 1.h,
+                      color: AppColors.greenColor600.withValues(alpha: 0.4),
+                    ),
+                    SizedBox(width: 8.w),
+                    Text(
+                      context.tr('onboardingAppointments.category'),
+                      style: TextStyles.font12greyColor500W600,
+                    ),
+                  ],
           ),
           SizedBox(height: 12.h),
           Text(

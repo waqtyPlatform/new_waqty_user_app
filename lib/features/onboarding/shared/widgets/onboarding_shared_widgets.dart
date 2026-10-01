@@ -203,13 +203,31 @@ class OnboardingBottomActions extends StatelessWidget {
         style: TextStyles.font16whiteColorWeight400.copyWith(height: 1.3),
       ),
     );
-    final guestLink = Text(
-      context.tr('onboardingAppointments.browseAsGuest'),
-      style: TextStyles.font14greenColor500Weight600.copyWith(fontSize: 16.sp),
+    final guestLink = GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => context.pushNamed(Routes.buttonNavigationBarScreen),
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: 6.h),
+        child: Text(
+          context.tr('onboardingAppointments.browseAsGuest'),
+          style: TextStyles.font14greenColor500Weight600.copyWith(
+            fontSize: 16.sp,
+          ),
+        ),
+      ),
     );
-    final loginLink = Text(
-      context.tr('onboardingAppointments.login'),
-      style: TextStyles.font14greenColor500Weight600.copyWith(fontSize: 16.sp),
+    final loginLink = GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => context.pushNamed(Routes.loginScreen),
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: 6.h),
+        child: Text(
+          context.tr('onboardingAppointments.login'),
+          style: TextStyles.font14greenColor500Weight600.copyWith(
+            fontSize: 16.sp,
+          ),
+        ),
+      ),
     );
     final separator = Text(
       '·',

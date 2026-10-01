@@ -2,7 +2,6 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/intl.dart';
 import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
 import 'package:waqty_user_application/core/utils/styles.dart';
 import 'package:waqty_user_application/core/widgets/app_text_field.dart';
@@ -24,35 +23,36 @@ class RegisterBirthDateWidget extends StatelessWidget {
           hintText: context.tr('register.enterBirthDateText'),
           hintStyle: TextStyles.font16greyColor4002Weight500,
           contentPadding: EdgeInsets.symmetric(
-            vertical: 11.h,
-            horizontal: 12.w,
+            vertical: 17.h,
+            horizontal: 14.w,
           ),
           textStyle: TextStyles.font16greyColor900Weight400,
           controller: RegisterCubit.get(context).registerBirthDateController,
           enabledBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: AppColors.greyColor1001, width: 1),
-            borderRadius: BorderRadius.circular(10.r),
+            borderSide: BorderSide(
+              color: AppColors.greyColor900.withValues(alpha: 0.10),
+              width: 1,
+            ),
+            borderRadius: BorderRadius.circular(18.r),
           ),
           focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: AppColors.greenColor500, width: 1),
-            borderRadius: BorderRadius.circular(10.r),
+            borderSide: BorderSide(color: AppColors.greenColor500, width: 1.5),
+            borderRadius: BorderRadius.circular(18.r),
           ),
           errorBorder: OutlineInputBorder(
             borderSide: BorderSide(color: AppColors.errorColor100, width: 1),
-            borderRadius: BorderRadius.circular(10.r),
+            borderRadius: BorderRadius.circular(18.r),
           ),
           focusedErrorBorder: OutlineInputBorder(
             borderSide: BorderSide(color: AppColors.errorColor100, width: 1),
-            borderRadius: BorderRadius.circular(10.r),
+            borderRadius: BorderRadius.circular(18.r),
           ),
           suffixIcon: Icon(
             Icons.calendar_today_outlined,
             color: AppColors.greyColor4002,
             size: 20.sp,
           ),
-          backgroundColor: RegisterCubit.get(context).selectedFieldNumber == 5
-              ? AppColors.greenColor505
-              : AppColors.whiteColor,
+          backgroundColor: AppColors.whiteColor,
           onTap: () {
             RegisterCubit.get(context).changeSelectedField(5);
             _selectDate(context);
@@ -70,6 +70,7 @@ class RegisterBirthDateWidget extends StatelessWidget {
   }
 
   Future<void> _selectDate(BuildContext context) async {
+    final cubit = RegisterCubit.get(context);
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: DateTime(1900, 5, 20),
@@ -90,7 +91,7 @@ class RegisterBirthDateWidget extends StatelessWidget {
     );
     if (picked != null) {
       final formattedDate = DateFormat('yyyy-MM-dd').format(picked);
-      RegisterCubit.get(context).changeBirthDate(formattedDate);
+      cubit.changeBirthDate(formattedDate);
     }
   }
 }

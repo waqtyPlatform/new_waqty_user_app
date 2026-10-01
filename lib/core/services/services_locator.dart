@@ -1,5 +1,4 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:http/http.dart' as http;
 
 import 'package:get_it/get_it.dart';
 import 'package:waqty_user_application/features/auth/forget_password/data/repo/forget_password_repo.dart';
@@ -22,8 +21,7 @@ import 'package:waqty_user_application/features/service_provider_details/service
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/data/services/service_provider_details_service.dart';
 
 import '../api/api_consumer.dart';
-import '../api/app_interceptor.dart';
-import '../api/http_consumer.dart';
+import '../api/disconnected_api_consumer.dart';
 
 final getIt = GetIt.instance;
 
@@ -105,10 +103,7 @@ class ServicesLocator {
 
     ///core
 
-    getIt.registerLazySingleton<AppInterceptor>(() => AppInterceptor());
-
-    getIt.registerLazySingleton<ApiConsumer>(() => HttpConsumer(getIt()));
-    getIt.registerLazySingleton(() => http.Client());
+    getIt.registerLazySingleton<ApiConsumer>(() => DisconnectedApiConsumer());
 
     ///shared secure
     FlutterSecureStorage secureStorage = FlutterSecureStorage();

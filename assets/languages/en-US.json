@@ -6,7 +6,7 @@
   },
   "register": {
     "title": "Create a New Account",
-    "description": "Register your details and start using Waqti to manage and book your appointments بسهولة.",
+    "description": "One minute and you can book across your city.",
     "nameText": "Full Name",
     "enterNameText": "Enter your name",
     "enterNameText2": "Please enter your name",
@@ -19,7 +19,7 @@
     "passwordText": "Password",
     "enterPasswordText": "Enter your password",
     "enterPasswordText2": "Please enter your password",
-    "registerNowText": "Register Now",
+    "registerNowText": "Create account",
     "haveAccountText": "Already have an account? ",
     "loginText": "Log In",
     "accptedWithText": "By registering, you agree to the ",
@@ -32,36 +32,46 @@
     "femaleText": "Female",
     "birthDateText": "Birth Date",
     "enterBirthDateText": "Select your birth date",
+    "phoneHelper": "Valid Egyptian number — 11 digits starting with 01",
     "errorMessage": "Something went wrong"
   },
   "login": {
-    "title": "Welcome Back! 👋",
-    "description": "Log in to access your bookings and manage your time easily.",
+    "title": "Welcome to Waqty",
+    "description": "Log in with your phone number — your whole city in your pocket.",
     "phoneText": "Phone Number",
     "enterPhoneText": "Enter your phone number",
     "enterPhoneText2": "Please enter your phone number",
     "passwordText": "Password",
     "enterPasswordText": "Enter your password",
     "enterPasswordText2": "Please enter your password",
-    "forgetPasswordText": "Forgot your password?",
+    "forgetPasswordText": "Forgot password?",
     "loginNowText": "Log In",
     "continueWithText": "Or continue with",
     "loginWithGoogleText": "Sign in with Google",
     "loginWithAppleText": "Sign in with Apple",
-    "noAccountText": "Don't have an account? ",
-    "registerNowText": "Register Now"
+    "noAccountText": "Don't have an account yet?",
+    "registerNowText": "Create account",
+    "guestContinueText": "Or continue as guest — sign up when you book",
+    "termsText": "By logging in, you agree to the terms and privacy policy. Booking is free and payment is in person."
   },
   "forgetPassword": {
     "title": "Forgot Password",
-    "description": "Please enter the email address associated with your account. A verification code will be sent to your email to reset your password.",
+    "description": "Choose how to receive the code, then enter your details to reset your password.",
+    "emailOption": "Email",
+    "phoneOption": "Phone number",
     "emailText": "Email Address",
+    "phoneText": "Phone Number",
     "enterEmailText": "Enter your email address",
     "enterEmailText2": "Please enter your email address",
+    "enterPhoneText": "Enter your phone number",
+    "enterPhoneText2": "Please enter your phone number",
     "sendCodeText": "Send Code"
   },
   "verifyCode": {
     "title": "Enter Verification Code",
-    "description": "Please enter the verification code sent to your email to complete the password reset process.",
+    "description": "Enter the verification code to complete resetting your password.",
+    "descriptionEmail": "We sent the verification code to your email. Enter it to complete resetting your password.",
+    "descriptionPhone": "We sent the verification code to your phone number. Enter it to complete resetting your password.",
     "confirmCodeText": "Confirm Code",
     "codeError": "Please enter the 4-digit code",
     "successMessage": "Code verified successfully",
@@ -72,14 +82,14 @@
     "noInternet": "Please check your internet connection"
   },
   "registerVerifyCode": {
-    "title": "Enter Verification Code",
-    "description": "Please enter the verification code sent to your email to verify your account.",
+    "title": "Enter WhatsApp Code",
+    "description": "We sent the verification code on WhatsApp. Enter it to activate your account.",
     "confirmCodeText": "Confirm Code",
     "codeError": "Please enter the 4-digit code",
     "successMessage": "Account verified successfully",
     "errorMessage": "Something went wrong",
     "resendIn": "You can resend the code in ",
-    "resend": "Resend Code",
+    "resend": "Resend on WhatsApp",
     "seconds": " seconds",
     "noInternet": "Please check your internet connection"
   },
@@ -173,5 +183,17 @@
     "category": "Packages and balance",
     "title": "Your packages and balance on your number.",
     "description": "Bought a package at a place? It appears here automatically once you sign up with your number, so nothing is lost without you knowing."
+  },
+  "onboardingStart": {
+    "category": "Start",
+    "title": "Start however you want.",
+    "description": "Three things will not change, whatever you choose.",
+    "benefit1Title": "Your confirmed visits only",
+    "benefit1Subtitle": "No in-app rating outside the app",
+    "benefit2Title": "Pay as you prefer",
+    "benefit2Subtitle": "At the place or online — no extra fees hidden from you",
+    "benefit3Title": "Works on your account",
+    "benefit3Subtitle": "Your place confirms your visit only",
+    "createAccount": "Create account"
   }
 }

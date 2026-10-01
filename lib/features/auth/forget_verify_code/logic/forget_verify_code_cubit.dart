@@ -51,46 +51,51 @@ class ForgetVerifyCodeCubit extends Cubit<ForgetVerifyCodeState> {
     });
   }
 
-  void resendCode(String email) {
+  void resendCode(String email, {String method = 'email'}) {
     if (canResend) {
       startResendTimer();
-      resendCodeFromServer(email);
+      resendCodeFromServer(email, method: method);
     }
   }
 
-  Future<void> resendCodeFromServer(String email) async {
+  Future<void> resendCodeFromServer(
+    String email, {
+    String method = 'email',
+  }) async {
     emit(ResendCodeLoadingState());
 
-    final result = await _forgetPasswordRepo
-        .forgetPassword(ForgetPasswordRequestModel(email: email))
-        .catchError((error) {
-          emit(ResendCodeCatchErrorState());
-        });
+    try {
+      final result = await _forgetPasswordRepo.forgetPassword(
+        ForgetPasswordRequestModel(key: method, value: email),
+      );
 
-    result.fold(
-      (failure) => emit(ResendCodeErrorState(message: failure.message)),
-      (response) => emit(ResendCodeSuccessState(response: response)),
-    );
+      result.fold(
+        (failure) => emit(ResendCodeErrorState(message: failure.message)),
+        (response) => emit(ResendCodeSuccessState(response: response)),
+      );
+    } catch (_) {
+      emit(ResendCodeCatchErrorState());
+    }
   }
 
   Future<void> verifyCode(String email) async {
     emit(VerifyCodeLoadingState());
 
-    final result = await _forgetVerifyCodeRepo
-        .verifyCode(
-          VerifyCodeRequestModel(email: email, otp: verifyCodeController.text),
-        )
-        .catchError((error) {
-          emit(VerifyCodeCatchErrorState());
-        });
+    try {
+      final result = await _forgetVerifyCodeRepo.verifyCode(
+        VerifyCodeRequestModel(email: email, otp: verifyCodeController.text),
+      );
 
-    result.fold((failure) {
-      if (failure.message.isNotEmpty) {
-        emit(VerifyCodeErrorState(message: failure.message));
-      } else {
-        emit(VerifyCodeCatchErrorState());
-      }
-    }, (response) => emit(VerifyCodeSuccessState(response: response)));
+      result.fold((failure) {
+        if (failure.message.isNotEmpty) {
+          emit(VerifyCodeErrorState(message: failure.message));
+        } else {
+          emit(VerifyCodeCatchErrorState());
+        }
+      }, (response) => emit(VerifyCodeSuccessState(response: response)));
+    } catch (_) {
+      emit(VerifyCodeCatchErrorState());
+    }
   }
 
   @override

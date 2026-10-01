@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -22,29 +24,55 @@ class OnboardingBookingCopySection extends StatelessWidget {
             : CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Text(
-                context.tr('onboardingBooking.category'),
-                style: TextStyles.font12greyColor500W600,
-              ),
-              SizedBox(width: 8.w),
-              Container(
-                width: 22.w,
-                height: 1.h,
-                color: AppColors.greenColor600.withValues(alpha: 0.4),
-              ),
-              SizedBox(width: 8.w),
-              Text(
-                '\u200E02 / 05',
-                style: TextStyles.font12greenColor500W600.copyWith(
-                  color: AppColors.greenColor600,
-                  fontSize: 11.sp,
-                  letterSpacing: 1.1,
-                  height: 1.5,
-                ),
-              ),
-            ],
+            mainAxisAlignment: isArabic
+                ? MainAxisAlignment.end
+                : MainAxisAlignment.start,
+            textDirection: ui.TextDirection.ltr,
+            children: isArabic
+                ? [
+                    Text(
+                      context.tr('onboardingBooking.category'),
+                      style: TextStyles.font12greyColor500W600,
+                    ),
+                    SizedBox(width: 8.w),
+                    Container(
+                      width: 22.w,
+                      height: 1.h,
+                      color: AppColors.greenColor600.withValues(alpha: 0.4),
+                    ),
+                    SizedBox(width: 8.w),
+                    Text(
+                      '\u200E02 / 05',
+                      style: TextStyles.font12greenColor500W600.copyWith(
+                        color: AppColors.greenColor600,
+                        fontSize: 11.sp,
+                        letterSpacing: 1.1,
+                        height: 1.5,
+                      ),
+                    ),
+                  ]
+                : [
+                    Text(
+                      '\u200E02 / 05',
+                      style: TextStyles.font12greenColor500W600.copyWith(
+                        color: AppColors.greenColor600,
+                        fontSize: 11.sp,
+                        letterSpacing: 1.1,
+                        height: 1.5,
+                      ),
+                    ),
+                    SizedBox(width: 8.w),
+                    Container(
+                      width: 22.w,
+                      height: 1.h,
+                      color: AppColors.greenColor600.withValues(alpha: 0.4),
+                    ),
+                    SizedBox(width: 8.w),
+                    Text(
+                      context.tr('onboardingBooking.category'),
+                      style: TextStyles.font12greyColor500W600,
+                    ),
+                  ],
           ),
           SizedBox(height: 12.h),
           SizedBox(
