@@ -7,4 +7,8 @@ class Routes {
   static const buttonNavigationBarScreen = "/ButtonNavigationBarScreen";
   static const serviceProviderDetailsScreen = "/ServiceProviderDetailsScreen";
   static const registerVerifyCodeScreen = "/RegisterVerifyCodeScreen";
+  static const onboardingAppointmentsScreen = "/OnboardingAppointmentsScreen";
+  static const onboardingBookingScreen = "/OnboardingBookingScreen";
+  static const onboardingNotificationsScreen = "/OnboardingNotificationsScreen";
+  static const onboardingBalanceScreen = "/OnboardingBalanceScreen";
 }

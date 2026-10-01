@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 class AppColors {
   static const Color whiteColor = Colors.white;
   static const Color blackColor = Colors.black;
+  static const Color pageColor = Color(0xffFAFAF8);
+  static const Color sunkenColor = Color(0xffF5F5F5);
 
   ///green
 
@@ -13,6 +15,7 @@ class AppColors {
   static const Color greenColor300 = Color(0xff00CC77);
   static const Color greenColor400 = Color(0xff00B166);
   static const Color greenColor500 = Color(0xff009354);
+  static const Color greenColor600 = Color(0xff00693C);
 
   ///grey
   static const Color greyColor0 = Color(0xffF8F9FB);
@@ -31,6 +34,8 @@ class AppColors {
   static const Color greyColor700 = Color(0xff272835);
   static const Color greyColor800 = Color(0xff1A1B25);
   static const Color greyColor900 = Color(0xff0D0D12);
+  static const Color splashGradientStart = Color(0xff171820);
+  static const Color splashGradientEnd = Color(0xff0D1712);
 
   ///blue
   static const Color blueColor0 = Color(0xffEFFBFF);
@@ -68,8 +73,4 @@ class AppColors {
   static const Color errorColor100 = Color(0xffDF1C41);
   static const Color errorColor200 = Color(0xff95122B);
   static const Color errorColor300 = Color(0xff710E21);
-
-
-
-
 }

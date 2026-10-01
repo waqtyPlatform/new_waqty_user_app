@@ -1,5 +1,9 @@
 {
   "appName": "Waqty",
+  "splash": {
+    "title": "وقتي",
+    "tagline": "وقتك لك. كل مواعيدك في مكان واحد"
+  },
   "register": {
     "title": "إنشاء حساب جديد",
     "description": "قم بتسجيل بياناتك وابدأ استخدام وقتي لإدارة وحجز مواعيدك بسهولة.",
@@ -116,5 +120,72 @@
     "NearbyLocationText": "الاماكن القريبة",
     "RemindMeText": "تذكرني",
     "ServicesText": "الخدمات : "
+  },
+  "onboardingAppointments": {
+    "skip": "تخطّي",
+    "category": "المواعيد",
+    "nextAppointment": "موعدك القادم",
+    "confirmed": "مؤكّد",
+    "appointmentTime": "اليوم · 4:00 م",
+    "appointmentMeta": "يبدأ بعد 2:14:05 · 45 دقيقة · 1.2 كم",
+    "directions": "الاتجاهات",
+    "priceMeta": "450 ج.م · في المكان أو أونلاين",
+    "reminder": "نذكّرك قبله بساعة",
+    "title": "كل مواعيدك في مكان واحد.",
+    "description": "كل ما يُحجز بموعد — في جدول واحد على رقمك. تحجز، وتنتظر دورك، وتستعمل باقاتك من هنا.",
+    "next": "التالي",
+    "browseAsGuest": "تصفّح كزائر",
+    "login": "تسجيل الدخول",
+    "haveAccount": "لديك حساب؟"
+  },
+  "onboardingBooking": {
+    "availableToday": "المتاح اليوم",
+    "chooseTime": "اختر الوقت",
+    "reviewConfirm": "راجع وأكّد",
+    "confirm": "أكّد",
+    "yourChoice": "اختيارك",
+    "choiceMeta": "اليوم · 4:30 م · 450 ج.م",
+    "freeCancel": "إلغاء مجاني حتى 12:30 م · الدفع في المكان أو أونلاين",
+    "sentToPlace": "وصل حجزك إلى المكان",
+    "reservedMessage": "خلال 42 ثانية — موعدك محجوز لك",
+    "category": "الحجز",
+    "title": "احجز دون مكالمات.",
+    "description": "ترى المواعيد المتاحة كما يراها المكان نفسه، تؤكّد في دقيقة، ويصل الحجز في لحظته."
+  },
+  "onboardingNotifications": {
+    "appMessage": "وقتي · إشعار وواتساب",
+    "alertTitle": "موعدك بعد 5 دقائق",
+    "alertMeta": "اليوم · 6:00 م · 45 دقيقة · دورك 1 من 6",
+    "skipTraffic": "ليس الآن",
+    "bookNow": "عرض الموعد",
+    "remindTime": "3:00 م",
+    "remindTitle": "موعدك بعد ساعة",
+    "remindMeta": "العنوان والإتجاهات في الرسالة",
+    "excuseTime": "أمس",
+    "excuseTitle": "اعتذر المكان عن موعدك",
+    "excuseMeta": "اختر بديلاً خلال 15 دقيقة — أو استرجع المبلغ",
+    "category": "الإشعارات",
+    "title": "تحكّم في كل الإشعارات",
+    "description": "تفتح أو تقفل إشعارات التطبيق كلها من مكان واحد. بعد كده تختار هل عايز صوت للتنبيهات ولا لأ، ورسائل واتساب هتوصلك في كل الحالات.",
+    "enableNotifications": "فعّل الإشعارات",
+    "laterWhatsapp": "ليس الآن — واتساب يكفي"
+  },
+  "onboardingBalance": {
+    "packageBadge": "باقة 8 جلسات",
+    "validUntil": "سارية حتى 30 يونيو",
+    "availableCount": "3",
+    "sessionsAvailable": "جلسات متاحة الآن",
+    "packageMeta": "اشتريتها في المكان — تظهر على رقمك",
+    "usageMeta": "4 مستهلكة · محجوزة · متاحة",
+    "autoLinked": "ظهرت تلقائيًا بعد تأكيد رقمك",
+    "walletBalance": "رصيد المحفظة",
+    "walletAmount": "320 ج.م",
+    "walletMeta": "يُستعمل عند الحجز أو يُسترجع",
+    "points": "النقاط",
+    "pointsAmount": "1,240",
+    "pointsMeta": "مع كل زيارة مؤكدة",
+    "category": "الباقات والرصيد",
+    "title": "باقاتك ورصيدك على رقمك.",
+    "description": "اشتريت باقة في المكان؟ تظهر هنا تلقائيًا بمجرد تسجيلك برقمك — ولا يضيع شيء دون علمك."
   }
 }

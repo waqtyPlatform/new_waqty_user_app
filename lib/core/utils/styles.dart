@@ -172,6 +172,28 @@ class TextStyles {
     fontFamily: 'IBMPlexSansArabic',
   );
 
+  static TextStyle font16greyColor500Weight400 = TextStyle(
+    fontSize: 16.sp,
+    color: AppColors.greyColor500,
+    fontWeight: FontWeight.w400,
+    fontFamily: 'IBMPlexSansArabic',
+  );
+
+  static TextStyle font16whiteColorWeight400 = TextStyle(
+    fontSize: 16.sp,
+    color: AppColors.whiteColor,
+    fontWeight: FontWeight.w400,
+    fontFamily: 'IBMPlexSansArabic',
+  );
+
+  static TextStyle font32greyColor900Weight600 = TextStyle(
+    fontSize: 32.sp,
+    color: AppColors.greyColor900,
+    fontWeight: FontWeight.w600,
+    fontFamily: 'IBMPlexSansArabic',
+    height: 1.12,
+  );
+
   static TextStyle font18greyColor900Weight600 = TextStyle(
     fontSize: 18.sp,
     color: AppColors.greyColor900,

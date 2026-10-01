@@ -1,5 +1,4 @@
 import 'package:waqty_user_application/core/services/check_network.dart';
-import 'package:waqty_user_application/core/services/local_notification_service.dart';
 import 'package:waqty_user_application/config/routes/routes.dart';
 import 'package:waqty_user_application/core/utils/constant_keys.dart';
 import 'package:waqty_user_application/my_app.dart';
@@ -60,7 +59,7 @@ Future<void> main() async {
       path: 'assets/languages',
       fallbackLocale: const Locale('ar', 'EG'),
       child: MyApp(
-        navigateWidget: Routes.registerScreen,
+        navigateWidget: Routes.onboardingAppointmentsScreen,
         // isLoggedInUser
         //     ? (userType == 'client'
         //           ? Routes.buttonNavigationBarScreen

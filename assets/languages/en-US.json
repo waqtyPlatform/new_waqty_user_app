@@ -1,5 +1,9 @@
 {
   "appName": "Waqty",
+  "splash": {
+    "title": "Waqty",
+    "tagline": "Your time is yours. All your appointments in one place"
+  },
   "register": {
     "title": "Create a New Account",
     "description": "Register your details and start using Waqti to manage and book your appointments بسهولة.",
@@ -102,5 +106,72 @@
     "title": "Password Changed Successfully",
     "description": "Your password has been successfully updated. You can now log in using your new password.",
     "buttonText": "Log in Now"
+  },
+  "onboardingAppointments": {
+    "skip": "Skip",
+    "category": "Appointments",
+    "nextAppointment": "Your next appointment",
+    "confirmed": "Confirmed",
+    "appointmentTime": "Today · 4:00 PM",
+    "appointmentMeta": "Starts in 2:14:05 · 45 min · 1.2 km",
+    "directions": "Directions",
+    "priceMeta": "EGP 450 · In person or online",
+    "reminder": "Reminder one hour before",
+    "title": "All your appointments in one place.",
+    "description": "Everything booked by appointment in one schedule on your number. Book, wait your turn, and use your packages from here.",
+    "next": "Next",
+    "browseAsGuest": "Browse as guest",
+    "login": "Log in",
+    "haveAccount": "Have an account?"
+  },
+  "onboardingBooking": {
+    "availableToday": "Available today",
+    "chooseTime": "Choose time",
+    "reviewConfirm": "Review and confirm",
+    "confirm": "Confirm",
+    "yourChoice": "Your choice",
+    "choiceMeta": "Today · 4:30 PM · EGP 450",
+    "freeCancel": "Free cancellation until 12:30 PM · Pay in person or online",
+    "sentToPlace": "Your booking reached the place",
+    "reservedMessage": "In 42 seconds — your appointment is reserved",
+    "category": "Booking",
+    "title": "Book without calls.",
+    "description": "See the available times exactly as the place sees them, confirm in a minute, and your booking arrives instantly."
+  },
+  "onboardingNotifications": {
+    "appMessage": "Waqty · notification and WhatsApp",
+    "alertTitle": "Your appointment is in 5 minutes",
+    "alertMeta": "Today · 6:00 PM · 45 min · Turn 1 of 6",
+    "skipTraffic": "Not now",
+    "bookNow": "View appointment",
+    "remindTime": "3:00 PM",
+    "remindTitle": "Your appointment is in one hour",
+    "remindMeta": "Address and directions are in the message",
+    "excuseTime": "Yesterday",
+    "excuseTitle": "The place apologized for your appointment",
+    "excuseMeta": "Choose another slot within 15 minutes or get a refund",
+    "category": "Notifications",
+    "title": "Control all notifications",
+    "description": "Turn all app notifications on or off from one place. Next, choose whether alerts should play a sound. WhatsApp messages will arrive either way.",
+    "enableNotifications": "Enable notifications",
+    "laterWhatsapp": "Not now — WhatsApp is enough"
+  },
+  "onboardingBalance": {
+    "packageBadge": "8-session package",
+    "validUntil": "Valid until Jun 30",
+    "availableCount": "3",
+    "sessionsAvailable": "sessions available now",
+    "packageMeta": "Bought at the place — linked to your number",
+    "usageMeta": "4 used · reserved · available",
+    "autoLinked": "Auto-linked after confirming your number",
+    "walletBalance": "Wallet balance",
+    "walletAmount": "EGP 320",
+    "walletMeta": "Used when booking or refunded",
+    "points": "Points",
+    "pointsAmount": "1,240",
+    "pointsMeta": "With every confirmed visit",
+    "category": "Packages and balance",
+    "title": "Your packages and balance on your number.",
+    "description": "Bought a package at a place? It appears here automatically once you sign up with your number, so nothing is lost without you knowing."
   }
 }

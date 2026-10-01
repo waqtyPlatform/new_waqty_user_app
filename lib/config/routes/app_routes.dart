@@ -16,6 +16,10 @@ import 'package:waqty_user_application/features/auth/reseat_password/logic/resea
 import 'package:waqty_user_application/features/auth/reseat_password/ui/reseat_password_screen.dart';
 import 'package:waqty_user_application/features/home/button_navigation_bar/logic/button_navigation_bar_cubit.dart';
 import 'package:waqty_user_application/features/home/button_navigation_bar/ui/button_navigation_bar_screen.dart';
+import 'package:waqty_user_application/features/onboarding/appointments/ui/onboarding_appointments_screen.dart';
+import 'package:waqty_user_application/features/onboarding/balance/ui/onboarding_balance_screen.dart';
+import 'package:waqty_user_application/features/onboarding/booking/ui/onboarding_booking_screen.dart';
+import 'package:waqty_user_application/features/onboarding/notifications/ui/onboarding_notifications_screen.dart';
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/logic/service_provider_details_cubit.dart';
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/service_provider_details_screen.dart';
 
@@ -29,6 +33,22 @@ class RouteGenerator {
             create: (context) => RegisterCubit(getIt()),
             child: RegisterScreen(),
           ),
+        );
+      case Routes.onboardingAppointmentsScreen:
+        return MaterialPageRoute(
+          builder: (_) => const OnboardingAppointmentsScreen(),
+        );
+      case Routes.onboardingBookingScreen:
+        return MaterialPageRoute(
+          builder: (_) => const OnboardingBookingScreen(),
+        );
+      case Routes.onboardingNotificationsScreen:
+        return MaterialPageRoute(
+          builder: (_) => const OnboardingNotificationsScreen(),
+        );
+      case Routes.onboardingBalanceScreen:
+        return MaterialPageRoute(
+          builder: (_) => const OnboardingBalanceScreen(),
         );
       case Routes.loginScreen:
         return MaterialPageRoute(

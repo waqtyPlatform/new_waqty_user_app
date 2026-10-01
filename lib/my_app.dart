@@ -7,9 +7,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'config/routes/app_routes.dart';
 import 'config/themes/app_white_theme.dart';
 import 'core/utils/app_colors_white_theme.dart';
-import 'core/utils/app_constant.dart';
-
-import 'core/services/biometric_service.dart';
+import 'features/splash/ui/splash_screen.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -23,9 +21,6 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
-  bool _isAuthenticated = false;
-  final BiometricService _biometricService = BiometricService();
-
   @override
   void initState() {
     super.initState();
@@ -33,17 +28,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
 
     _listenToNetwork();
-    _authenticate();
-  }
-
-  /// authenticate using biometric
-  Future<void> _authenticate() async {
-    bool success = await _biometricService.authenticate();
-    if (success) {
-      setState(() {
-        _isAuthenticated = true;
-      });
-    }
   }
 
   void _listenToNetwork() {
@@ -57,19 +41,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   void _showOfflineDialog() {
     if (navigatorKey.currentContext == null) return;
     OfflineAlertDialog.getDialog();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) async {
-    if (state == AppLifecycleState.paused ||
-        state == AppLifecycleState.resumed) {
-      if (_isAuthenticated) {
-        setState(() {
-          _isAuthenticated = false;
-        });
-        await _authenticate();
-      }
-    }
   }
 
   @override
@@ -87,48 +58,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       builder: (context, snapshot) {
         // getIt<AppConstant>().setLanguage(context.locale.languageCode);
 
-        if (!_isAuthenticated) {
-          return MaterialApp(
-            debugShowCheckedModeBanner: false,
-            home: Scaffold(
-              backgroundColor: AppColors.whiteColor,
-              body: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.lock_outline,
-                      size: 80.w,
-                      color: AppColors.greyColor900,
-                    ),
-                    SizedBox(height: 16.h),
-                    Text(
-                      'App Locked',
-                      style: TextStyle(
-                        fontSize: 20.sp,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.greyColor900,
-                      ),
-                    ),
-                    SizedBox(height: 32.h),
-                    ElevatedButton.icon(
-                      onPressed: _authenticate,
-                      icon: const Icon(Icons.fingerprint),
-                      label: const Text('Unlock'),
-                      style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 24.w,
-                          vertical: 12.h,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        }
-
         return Container(
           color: AppColors.whiteColor,
           child: MaterialApp(
@@ -139,7 +68,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             navigatorKey: navigatorKey,
             title: "appName".tr(),
             theme: themeData(),
-            initialRoute: widget.navigateWidget,
+            home: SplashScreen(nextRoute: widget.navigateWidget),
             onGenerateRoute: RouteGenerator.generateRoute,
           ),
         );

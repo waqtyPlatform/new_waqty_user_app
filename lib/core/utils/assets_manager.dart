@@ -1,17 +1,21 @@
 class ImageAsset {
   ///test
 
-  static const String t1 = 'assets/test/te1.png';
-  static const String t2 = 'assets/test/te2.png';
-  static const String t3 = 'assets/test/te3.png';
-  static const String t4 = 'assets/test/te4.png';
-  static const String t5 = 'assets/test/te5.png';
-
+  static const String t1 = splashLogo;
+  static const String t2 = splashLogo;
+  static const String t3 = splashLogo;
+  static const String t4 = splashLogo;
+  static const String t5 = splashLogo;
 
   ///  ///images
 
-  static const String logoImage = 'assets/images/waty_logo_image.png';
-  static const String doneImage = 'assets/images/done_image.png';
+  static const String splashLogo = 'assets/images/splash_logo.png';
+  static const String waqtySymbolGreen = 'assets/figma/waqty_symbol_green.svg';
+  static const String greenAmbientGlow = 'assets/figma/green_ambient_glow.svg';
+  static const String chevronDown = 'assets/figma/chevron_down.svg';
+  static const String scheduleIcon = 'assets/figma/schedule.svg';
+  static const String logoImage = splashLogo;
+  static const String doneImage = splashLogo;
 
   ///icons
   ///
@@ -25,11 +29,12 @@ class ImageAsset {
   static const String accountIcon = 'assets/icons/account_icon.svg';
 
   static const String selectedHomeIcon = 'assets/icons/selected_home_icon.svg';
-  static const String selectedExploreIcon = 'assets/icons/selected_explore_icon.svg';
-  static const String selectedBookingIcon = 'assets/icons/selected_booking_icon.svg';
-  static const String selectedAccountIcon = 'assets/icons/selected_account_icon.svg';
+  static const String selectedExploreIcon =
+      'assets/icons/selected_explore_icon.svg';
+  static const String selectedBookingIcon =
+      'assets/icons/selected_booking_icon.svg';
+  static const String selectedAccountIcon =
+      'assets/icons/selected_account_icon.svg';
   static const String notificationIcon = 'assets/icons/notification_icon.svg';
   static const String filterIcon = 'assets/icons/filter_icon.svg';
-
-
 }
