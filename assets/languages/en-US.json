@@ -33,6 +33,11 @@
     "birthDateText": "Birth Date",
     "enterBirthDateText": "Select your birth date",
     "phoneHelper": "Valid Egyptian number — 11 digits starting with 01",
+    "enterEmailOrPhoneText": "Enter your email address or phone number",
+    "chooseCodeMethodTitle": "Receive verification code",
+    "chooseCodeMethodDescription": "Choose where you want to receive your account activation code.",
+    "emailCodeOption": "Send code to email",
+    "whatsappCodeOption": "Send code on WhatsApp",
     "errorMessage": "Something went wrong"
   },
   "login": {
@@ -83,7 +88,11 @@
   },
   "registerVerifyCode": {
     "title": "Enter WhatsApp Code",
+    "titleEmail": "Enter Email Code",
+    "titlePhone": "Enter WhatsApp Code",
     "description": "We sent the verification code on WhatsApp. Enter it to activate your account.",
+    "descriptionEmail": "We sent the verification code to your email. Enter it to activate your account.",
+    "descriptionPhone": "We sent the verification code on WhatsApp. Enter it to activate your account.",
     "confirmCodeText": "Confirm Code",
     "codeError": "Please enter the 4-digit code",
     "successMessage": "Account verified successfully",

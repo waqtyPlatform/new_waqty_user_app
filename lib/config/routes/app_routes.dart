@@ -85,8 +85,11 @@ class RouteGenerator {
               getIt(),
               args['email'],
               args['isSndCodeFrommServer'],
-            )..sendInitialCode(args['email']),
-            child: RegisterVerifyCodeScreen(email: args['email']),
+            ),
+            child: RegisterVerifyCodeScreen(
+              email: args['email'],
+              method: args['method'] ?? 'email',
+            ),
           ),
         );
       case Routes.reseatPasswordScreen:

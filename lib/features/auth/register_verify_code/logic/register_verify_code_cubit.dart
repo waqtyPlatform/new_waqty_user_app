@@ -77,46 +77,48 @@ class RegisterVerifyCodeCubit extends Cubit<RegisterVerifyCodeState> {
   /// Send/Resend verification OTP via the dedicated endpoint
   Future<void> resendCodeFromServer(String email) async {
     emit(ResendCodeLoadingState());
-    final result = await _registerVerifyCodeRepo
-        .resendVerificationCode(ResendVerificationRequestModel(email: email))
-        .catchError((error) {
-          emit(ResendCodeCatchErrorState());
-        });
+    try {
+      final result = await _registerVerifyCodeRepo.resendVerificationCode(
+        ResendVerificationRequestModel(email: email),
+      );
 
-    result.fold(
-      (failure) => emit(ResendCodeErrorState(message: failure.message)),
-      (response) => emit(ResendCodeSuccessState(response: response)),
-    );
+      result.fold(
+        (failure) => emit(ResendCodeErrorState(message: failure.message)),
+        (response) => emit(ResendCodeSuccessState(response: response)),
+      );
+    } catch (_) {
+      emit(ResendCodeCatchErrorState());
+    }
   }
 
   /// Verify the OTP code entered by the user
   Future<void> verifyCode(String email) async {
     emit(VerifyCodeLoadingState());
 
-    final result = await _registerVerifyCodeRepo
-        .verifyCode(
-          RegisterVerifyCodeRequestModel(
-            email: email,
-            otp: verifyCodeController.text,
-          ),
-        )
-        .catchError((error) {
-          emit(VerifyCodeCatchErrorState());
-        });
+    try {
+      final result = await _registerVerifyCodeRepo.verifyCode(
+        RegisterVerifyCodeRequestModel(
+          email: email,
+          otp: verifyCodeController.text,
+        ),
+      );
 
-    result.fold(
-      (failure) {
-        if (failure.message.isNotEmpty) {
-          emit(VerifyCodeErrorState(message: failure.message));
-        } else {
-          emit(VerifyCodeCatchErrorState());
-        }
-      },
-      (response) async {
-        await cashUserData(response);
-        emit(VerifyCodeSuccessState(response: response));
-      },
-    );
+      result.fold(
+        (failure) {
+          if (failure.message.isNotEmpty) {
+            emit(VerifyCodeErrorState(message: failure.message));
+          } else {
+            emit(VerifyCodeCatchErrorState());
+          }
+        },
+        (response) async {
+          await cashUserData(response);
+          emit(VerifyCodeSuccessState(response: response));
+        },
+      );
+    } catch (_) {
+      emit(VerifyCodeCatchErrorState());
+    }
   }
 
   Future<void> cashUserData(RegisterVerifyCodeResponseModel response) async {

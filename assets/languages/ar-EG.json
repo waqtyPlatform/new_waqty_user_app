@@ -33,6 +33,11 @@
     "birthDateText": "تاريخ الميلاد",
     "enterBirthDateText": "اختر تاريخ ميلادك",
     "phoneHelper": "رقم مصري صحيح — 11 رقمًا يبدأ بـ01",
+    "enterEmailOrPhoneText": "أدخل البريد الإلكتروني أو رقم الهاتف",
+    "chooseCodeMethodTitle": "استلام رمز التحقق",
+    "chooseCodeMethodDescription": "اختر المكان الذي تريد استلام كود تفعيل الحساب عليه.",
+    "emailCodeOption": "إرسال الكود على البريد الإلكتروني",
+    "whatsappCodeOption": "إرسال الكود على واتساب",
     "errorMessage": "حدث خطأ ما"
   },
   "login": {
@@ -83,7 +88,11 @@
   },
   "registerVerifyCode": {
     "title": "أدخل رمز واتساب",
+    "titleEmail": "أدخل رمز البريد الإلكتروني",
+    "titlePhone": "أدخل رمز واتساب",
     "description": "أرسلنا كود التحقق على واتساب. أدخله لتفعيل حسابك.",
+    "descriptionEmail": "أرسلنا كود التحقق على بريدك الإلكتروني. أدخله لتفعيل حسابك.",
+    "descriptionPhone": "أرسلنا كود التحقق على واتساب. أدخله لتفعيل حسابك.",
     "confirmCodeText": "تأكيد الرمز",
     "codeError": "يرجى إدخال الرمز المكون من 4 أرقام",
     "successMessage": "تم التحقق من الحساب بنجاح",

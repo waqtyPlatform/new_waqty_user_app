@@ -70,9 +70,6 @@ class RegisterPhoneNumberWidget extends StatelessWidget {
             borderRadius: BorderRadius.circular(18.r),
           ),
           validator: (String? value) {
-            if (value == null || value.isEmpty) {
-              return context.tr('register.enterPhoneText2');
-            }
             return null;
           },
           backgroundColor: AppColors.whiteColor,

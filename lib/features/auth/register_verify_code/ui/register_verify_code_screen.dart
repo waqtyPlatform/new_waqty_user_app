@@ -13,7 +13,12 @@ import 'package:waqty_user_application/features/auth/register_verify_code/ui/wid
 
 class RegisterVerifyCodeScreen extends StatelessWidget {
   final String email;
-  const RegisterVerifyCodeScreen({required this.email, super.key});
+  final String method;
+  const RegisterVerifyCodeScreen({
+    required this.email,
+    this.method = 'email',
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +49,11 @@ class RegisterVerifyCodeScreen extends StatelessWidget {
 
                 verticalSpace(18),
                 Text(
-                  context.tr('registerVerifyCode.title'),
+                  context.tr(
+                    method == 'phone'
+                        ? 'registerVerifyCode.titlePhone'
+                        : 'registerVerifyCode.titleEmail',
+                  ),
                   textAlign: TextAlign.start,
                   style: TextStyles.font24greyColor900Weight600.copyWith(
                     fontSize: 24.sp,
@@ -53,7 +62,11 @@ class RegisterVerifyCodeScreen extends StatelessWidget {
                 ),
                 verticalSpace(6),
                 Text(
-                  context.tr('registerVerifyCode.description'),
+                  context.tr(
+                    method == 'phone'
+                        ? 'registerVerifyCode.descriptionPhone'
+                        : 'registerVerifyCode.descriptionEmail',
+                  ),
                   textAlign: TextAlign.start,
                   style: TextStyles.font14greyColor4002Weight400.copyWith(
                     fontSize: 16.sp,
@@ -92,13 +105,20 @@ class _VerifyBackButton extends StatelessWidget {
         width: 40.w,
         height: 40.w,
         decoration: BoxDecoration(
-          color: const Color(0xffF1F0EB),
+          color: AppColors.whiteColor,
           borderRadius: BorderRadius.circular(999.r),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.greyColor900.withValues(alpha: 0.10),
+              blurRadius: 12.r,
+              offset: Offset(0, 4.h),
+            ),
+          ],
         ),
         child: Icon(
-          Icons.arrow_back_ios_new_rounded,
+          Icons.arrow_back,
           color: AppColors.greyColor900,
-          size: 18.sp,
+          size: 17.sp,
         ),
       ),
     );
