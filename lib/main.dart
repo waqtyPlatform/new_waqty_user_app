@@ -59,12 +59,11 @@ Future<void> main() async {
       path: 'assets/languages',
       fallbackLocale: const Locale('ar', 'EG'),
       child: MyApp(
-        navigateWidget: Routes.onboardingAppointmentsScreen,
-        // isLoggedInUser
-        //     ? (userType == 'client'
-        //           ? Routes.buttonNavigationBarScreen
-        //           : Routes.sponsorButtonNavigationBarSceen)
-        //     : Routes.onBoardingScreen,
+        navigateWidget: isLoggedInUser
+            ? Routes.buttonNavigationBarScreen
+            : (isOnBoarding
+                  ? Routes.onboardingAppointmentsScreen
+                  : Routes.loginScreen),
       ),
     ),
   );

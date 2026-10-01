@@ -8,7 +8,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:waqty_user_application/config/routes/routes.dart';
 import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
 import 'package:waqty_user_application/core/utils/assets_manager.dart';
-import 'package:waqty_user_application/core/utils/extentions.dart';
 import 'package:waqty_user_application/core/utils/styles.dart';
 import 'package:waqty_user_application/features/onboarding/shared/widgets/onboarding_shared_widgets.dart';
 
@@ -328,7 +327,8 @@ class _StartBottomActions extends StatelessWidget {
       child: Column(
         children: [
           GestureDetector(
-            onTap: () => context.pushNamed(Routes.registerScreen),
+            onTap: () =>
+                completeOnboardingAndNavigate(context, Routes.registerScreen),
             child: Container(
               height: 56.h,
               padding: EdgeInsets.symmetric(horizontal: 6.w),
@@ -358,7 +358,10 @@ class _StartBottomActions extends StatelessWidget {
           ),
           SizedBox(height: 10.h),
           GestureDetector(
-            onTap: () => context.pushNamed(Routes.buttonNavigationBarScreen),
+            onTap: () => completeOnboardingAndNavigate(
+              context,
+              Routes.buttonNavigationBarScreen,
+            ),
             child: Container(
               height: 56.h,
               alignment: Alignment.center,
@@ -384,7 +387,8 @@ class _StartBottomActions extends StatelessWidget {
           ),
           SizedBox(height: 17.h),
           GestureDetector(
-            onTap: () => context.pushNamed(Routes.loginScreen),
+            onTap: () =>
+                completeOnboardingAndNavigate(context, Routes.loginScreen),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               textDirection: ui.TextDirection.ltr,

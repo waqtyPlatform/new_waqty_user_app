@@ -6,8 +6,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:waqty_user_application/config/routes/routes.dart';
+import 'package:waqty_user_application/core/services/cache_helper.dart';
 import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
 import 'package:waqty_user_application/core/utils/assets_manager.dart';
+import 'package:waqty_user_application/core/utils/constant_keys.dart';
 import 'package:waqty_user_application/core/utils/extentions.dart';
 import 'package:waqty_user_application/core/utils/styles.dart';
 
@@ -51,7 +53,8 @@ class OnboardingHeaderBar extends StatelessWidget {
       style: TextStyles.font16greyColor900Weight400.copyWith(height: 1.3),
     );
     final skip = GestureDetector(
-      onTap: () => context.pushNamed(Routes.registerScreen),
+      onTap: () =>
+          completeOnboardingAndNavigate(context, Routes.registerScreen),
       child: Container(
         height: 34.h,
         padding: EdgeInsetsDirectional.only(start: 12.w, end: 14.w),
@@ -205,7 +208,10 @@ class OnboardingBottomActions extends StatelessWidget {
     );
     final guestLink = GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: () => context.pushNamed(Routes.buttonNavigationBarScreen),
+      onTap: () => completeOnboardingAndNavigate(
+        context,
+        Routes.buttonNavigationBarScreen,
+      ),
       child: Padding(
         padding: EdgeInsets.symmetric(vertical: 6.h),
         child: Text(
@@ -218,7 +224,7 @@ class OnboardingBottomActions extends StatelessWidget {
     );
     final loginLink = GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: () => context.pushNamed(Routes.loginScreen),
+      onTap: () => completeOnboardingAndNavigate(context, Routes.loginScreen),
       child: Padding(
         padding: EdgeInsets.symmetric(vertical: 6.h),
         child: Text(
@@ -307,4 +313,13 @@ class OnboardingBottomActions extends StatelessWidget {
 
 bool isArabicLocale(BuildContext context) {
   return context.locale.languageCode == 'ar';
+}
+
+Future<void> completeOnboardingAndNavigate(
+  BuildContext context,
+  String routeName,
+) async {
+  await CacheHelper.setData(ConstantKeys.saveIsShowIsBoardingToShared, false);
+  if (!context.mounted) return;
+  context.pushNamedAndRemoveUntil(routeName, predicate: (_) => false);
 }
