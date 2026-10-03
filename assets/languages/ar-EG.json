@@ -37,6 +37,8 @@
     "chooseCodeMethodDescription": "اختر المكان الذي تريد استلام كود تفعيل الحساب عليه.",
     "emailCodeOption": "إرسال الكود على البريد الإلكتروني",
     "whatsappCodeOption": "إرسال الكود على واتساب",
+    "registerWithGoogleText": "إنشاء حساب باستخدام جوجل",
+    "registerWithAppleText": "إنشاء حساب باستخدام Apple",
     "errorMessage": "حدث خطأ ما"
   },
   "login": {

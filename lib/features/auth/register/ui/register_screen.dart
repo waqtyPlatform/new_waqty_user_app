@@ -19,6 +19,7 @@ import 'package:waqty_user_application/features/auth/register/ui/widgets/registe
 import 'package:waqty_user_application/features/auth/register/ui/widgets/register_name_widget.dart';
 import 'package:waqty_user_application/features/auth/register/ui/widgets/register_password_widget.dart';
 import 'package:waqty_user_application/features/auth/register/ui/widgets/register_phone_number_widget.dart';
+import 'package:waqty_user_application/features/auth/shared/widgets/social_auth_buttons.dart';
 
 class RegisterScreen extends StatelessWidget {
   const RegisterScreen({super.key});
@@ -108,6 +109,11 @@ class RegisterScreen extends StatelessWidget {
                 verticalSpace(44),
 
                 RegisterButtonWidget(),
+                verticalSpace(18),
+                const SocialAuthButtons(
+                  googleSemanticLabelKey: 'register.registerWithGoogleText',
+                  appleSemanticLabelKey: 'register.registerWithAppleText',
+                ),
                 verticalSpace(16),
                 const _RegisterLoginFooter(),
                 verticalSpace(24),

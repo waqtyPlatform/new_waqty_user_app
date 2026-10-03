@@ -1,6 +1,8 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'package:get_it/get_it.dart';
+import 'package:waqty_user_application/core/services/firebase_notification_service.dart';
+import 'package:waqty_user_application/core/services/local_notification_service.dart';
 import 'package:waqty_user_application/features/auth/forget_password/data/repo/forget_password_repo.dart';
 import 'package:waqty_user_application/features/auth/forget_password/data/services/forget_password_service.dart';
 import 'package:waqty_user_application/features/auth/forget_verify_code/data/repo/forget_verify_code_repo.dart';
@@ -108,5 +110,11 @@ class ServicesLocator {
     ///shared secure
     FlutterSecureStorage secureStorage = FlutterSecureStorage();
     getIt.registerLazySingleton(() => secureStorage);
+    getIt.registerLazySingleton<LocalNotificationService>(
+      () => LocalNotificationService(),
+    );
+    getIt.registerLazySingleton<FirebaseNotificationService>(
+      () => FirebaseNotificationService(),
+    );
   }
 }

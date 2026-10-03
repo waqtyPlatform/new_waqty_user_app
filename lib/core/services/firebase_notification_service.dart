@@ -1,243 +1,125 @@
-// import 'dart:convert';
-// import 'dart:io';
-//
-// import 'package:firebase_messaging/firebase_messaging.dart';
-// import 'package:flutter/material.dart';
-// import 'package:egk_app/config/routes/routes.dart';
-// import 'package:egk_app/core/services/cache_helper.dart';
-// import 'package:egk_app/core/services/local_notification_service.dart';
-// import 'package:egk_app/core/utils/constant_keys.dart';
-//  import 'package:egk_app/my_app.dart';
-//
-// ///init pusher before
-// class FirebaseNotificationService {
-//   static final _firebaseMessage = FirebaseMessaging.instance;
-//
-//   static Future<void> init() async {
-//     try {
-//       await _firebaseMessage.requestPermission(
-//         alert: true,
-//         announcement: false,
-//         badge: true,
-//         carPlay: false,
-//         criticalAlert: false,
-//         provisional: false,
-//         sound: true,
-//       );
-//       await getDeviceToken();
-//
-//       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-//         print(' on message  onMessage getInitialMessage onMessage onMessage');
-//         debugPrint("message message Tap on Tap on Tap on Tap onMessage   ${message.data}");
-//         // MyOrdersAdminCubit.get(context).getOrders();
-//
-//         if (!Platform.isIOS) {
-//           LocalNotificationService.showNotification(
-//             title: message.notification!.title.toString(),
-//             body: message.notification!.body.toString(),
-//             payload: message.data.map(
-//               (key, value) => MapEntry(key.toString(), value.toString()),
-//             ),
-//           );
-//         }
-//       });
-//
-//
-//       _firebaseMessage.getInitialMessage().then((RemoteMessage? message) async {
-//         ///when open app get the
-//         print(
-//           "message message getInitialMessage getInitialMessage${message?.data}",
-//         );
-//         // int userType = await CacheHelper.getInt(
-//         //   ConstantKeys.saveUserTypoToShared,
-//         // )??1;
-//
-//         ///
-//         // if (message != null) {
-//         //   String? userType = await CacheHelper.getSecuredString(
-//         //     ConstantKeys.saveUserTypeToShared,
-//         //   );
-//         //   if (userType != null && navigatorKey.currentContext != null) {
-//         //     if (userType == 'client') {
-//         //       if (message.data['subject_type'] == 'chatroom') {
-//         //         Navigator.pushNamed(
-//         //           navigatorKey.currentContext!,
-//         //           Routes.chatDetailsScreen,
-//         //           arguments: {
-//         //             'id':
-//         //             int.tryParse(message.data['subject_id'].toString()) ??
-//         //                 0,
-//         //             'isRoom': true,
-//         //             'isNotification': true,
-//         //           },
-//         //         );
-//         //       } else if (message.data['subject_type'] == 'chatdirect') {
-//         //         Navigator.pushNamed(
-//         //           navigatorKey.currentContext!,
-//         //           Routes.chatDetailsScreen,
-//         //           arguments: {
-//         //             'id':
-//         //             int.tryParse(message.data['subject_id'].toString()) ??
-//         //                 0,
-//         //             'isRoom': false,
-//         //             'isNotification': true,
-//         //           },
-//         //         );
-//         //       } else if (message.data['subject_type'] == 'Booking') {
-//         //         Navigator.pushNamed(
-//         //           navigatorKey.currentContext!,
-//         //           Routes.userMyBookingScreen,
-//         //         );
-//         //       }
-//         //     }
-//         //     else {
-//         //       if (message.data['subject_type'] == 'chatroom') {
-//         //         // Navigator.pushNamed(
-//         //         //   navigatorKey.currentContext!,
-//         //         //   Routes.sponsorButtonNavigationBarSceen,
-//         //         // );
-//         //         print('--------chatroom--------');
-//         //         Navigator.pushNamed(
-//         //           navigatorKey.currentContext!,
-//         //           Routes.chatDetailsScreen,
-//         //           arguments: {
-//         //             'id':
-//         //             int.tryParse(message.data['subject_id'].toString()) ??
-//         //                 0,
-//         //             'isRoom': true,
-//         //             'isNotification': true,
-//         //           },
-//         //         );
-//         //       }
-//         //       else if (message.data['subject_type'] == 'chatdirect') {
-//         //         // Navigator.pushNamed(
-//         //         //   navigatorKey.currentContext!,
-//         //         //   Routes.sponsorButtonNavigationBarSceen,
-//         //         // );
-//         //         Navigator.pushNamed(
-//         //           navigatorKey.currentContext!,
-//         //           Routes.chatDetailsScreen,
-//         //           arguments: {
-//         //             'id':
-//         //             int.tryParse(message.data['subject_id'].toString()) ??
-//         //                 0,
-//         //             'isRoom': false,
-//         //             'isNotification': true,
-//         //           },
-//         //         );
-//         //       } else if (message.data['subject_type'] == 'Booking') {
-//         //         Navigator.pushNamed(
-//         //           navigatorKey.currentContext!,
-//         //           Routes.sponsorMyBookingScreen,
-//         //           arguments: {'isPending': true},
-//         //         );
-//         //       }
-//         //     }
-//         //   }
-//         // }
-//       });
-//
-//       ///done edit wait for test
-//       ///
-//       FirebaseMessaging.onMessageOpenedApp.listen((message) async {
-//         ///on tap form back ground or foground on ios
-//         ///
-//         debugPrint(
-//           "getInitialMessage Tap on Tap on Tap on Tap onMessageOpenedApp  ${message.data}",
-//         );
-//
-//         // if (message != null) {
-//         //   String? userType = await CacheHelper.getSecuredString(
-//         //     ConstantKeys.saveUserTypeToShared,
-//         //   );
-//         //   if (userType != null && navigatorKey.currentContext != null) {
-//         //     if (userType == 'client') {
-//         //       if (message.data['subject_type'] == 'chatroom') {
-//         //         Navigator.pushNamed(
-//         //           navigatorKey.currentContext!,
-//         //           Routes.chatDetailsScreen,
-//         //           arguments: {
-//         //             'id':
-//         //                 int.tryParse(message.data['subject_id'].toString()) ??
-//         //                 0,
-//         //             'isRoom': true,
-//         //             'isNotification': true,
-//         //           },
-//         //         );
-//         //       } else if (message.data['subject_type'] == 'chatdirect') {
-//         //         Navigator.pushNamed(
-//         //           navigatorKey.currentContext!,
-//         //           Routes.chatDetailsScreen,
-//         //           arguments: {
-//         //             'id':
-//         //                 int.tryParse(message.data['subject_id'].toString()) ??
-//         //                 0,
-//         //             'isRoom': false,
-//         //             'isNotification': true,
-//         //           },
-//         //         );
-//         //       } else if (message.data['subject_type'] == 'Booking') {
-//         //         Navigator.pushNamed(
-//         //           navigatorKey.currentContext!,
-//         //           Routes.userMyBookingScreen,
-//         //         );
-//         //       }
-//         //     }
-//         //     else {
-//         //       if (message.data['subject_type'] == 'chatroom') {
-//         //         // Navigator.pushNamed(
-//         //         //   navigatorKey.currentContext!,
-//         //         //   Routes.sponsorButtonNavigationBarSceen,
-//         //         // );
-//         //         print('--------chatroom--------');
-//         //         Navigator.pushNamed(
-//         //           navigatorKey.currentContext!,
-//         //           Routes.chatDetailsScreen,
-//         //           arguments: {
-//         //             'id':
-//         //                 int.tryParse(message.data['subject_id'].toString()) ??
-//         //                 0,
-//         //             'isRoom': true,
-//         //             'isNotification': true,
-//         //           },
-//         //         );
-//         //       }
-//         //       else if (message.data['subject_type'] == 'chatdirect') {
-//         //         // Navigator.pushNamed(
-//         //         //   navigatorKey.currentContext!,
-//         //         //   Routes.sponsorButtonNavigationBarSceen,
-//         //         // );
-//         //         Navigator.pushNamed(
-//         //           navigatorKey.currentContext!,
-//         //           Routes.chatDetailsScreen,
-//         //           arguments: {
-//         //             'id':
-//         //                 int.tryParse(message.data['subject_id'].toString()) ??
-//         //                 0,
-//         //             'isRoom': false,
-//         //             'isNotification': true,
-//         //           },
-//         //         );
-//         //       } else if (message.data['subject_type'] == 'Booking') {
-//         //         Navigator.pushNamed(
-//         //           navigatorKey.currentContext!,
-//         //           Routes.sponsorMyBookingScreen,
-//         //           arguments: {'isPending': true},
-//         //         );
-//         //       }
-//         //     }
-//         //   }
-//         // }
-//       });
-//     } catch (e) {
-//       print('error$e');
-//     }
-//   }
-//
-//   static Future<String> getDeviceToken() async {
-//     String? token = await _firebaseMessage.getToken();
-//     if (token == null) return "";
-//     print("token $token");
-//     return token;
-//   }
-// }
+import 'dart:async';
+
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
+import 'package:waqty_user_application/core/services/local_notification_service.dart';
+import 'package:waqty_user_application/firebase_options.dart';
+
+@pragma('vm:entry-point')
+Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  if (!_isSupportedNotificationPlatform) return;
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await LocalNotificationService.initializedNotification();
+  await FirebaseNotificationService.showRemoteMessage(message);
+}
+
+class FirebaseNotificationService {
+  StreamSubscription<String>? _tokenRefreshSubscription;
+  StreamSubscription<RemoteMessage>? _foregroundMessageSubscription;
+  StreamSubscription<RemoteMessage>? _openedMessageSubscription;
+  bool _initialized = false;
+
+  Future<void> initialize() async {
+    if (_initialized || !_isSupportedNotificationPlatform) return;
+    _initialized = true;
+
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+    await LocalNotificationService.initializedNotification();
+    await _requestPermission();
+    await _setForegroundPresentationOptions();
+
+    _foregroundMessageSubscription = FirebaseMessaging.onMessage.listen(
+      _handleForegroundMessage,
+    );
+    _openedMessageSubscription = FirebaseMessaging.onMessageOpenedApp.listen(
+      _handleOpenedMessage,
+    );
+
+    _tokenRefreshSubscription = FirebaseMessaging.instance.onTokenRefresh
+        .listen((_) {});
+  }
+
+  Future<String?> getCurrentFcmToken() async {
+    try {
+      final token = await FirebaseMessaging.instance.getToken().timeout(
+        const Duration(seconds: 5),
+      );
+      if (token == null || token.length > 255) return null;
+      return token;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Future<void> showRemoteMessage(RemoteMessage message) async {
+    if (!_shouldShowLocalRemoteMessage) return;
+
+    final title =
+        message.notification?.title ??
+        message.data['title']?.toString() ??
+        message.data['notification_title']?.toString() ??
+        '';
+    final body =
+        message.notification?.body ??
+        message.data['body']?.toString() ??
+        message.data['notification_body']?.toString() ??
+        '';
+
+    await LocalNotificationService.showNotification(
+      title: title,
+      body: body,
+      payload: message.data,
+    );
+  }
+
+  Future<void> _requestPermission() async {
+    try {
+      await FirebaseMessaging.instance
+          .requestPermission(alert: true, badge: true, sound: true)
+          .timeout(const Duration(seconds: 5));
+    } catch (_) {}
+  }
+
+  Future<void> _setForegroundPresentationOptions() async {
+    if (defaultTargetPlatform != TargetPlatform.iOS) return;
+    try {
+      await FirebaseMessaging.instance
+          .setForegroundNotificationPresentationOptions(
+            alert: true,
+            badge: true,
+            sound: true,
+          );
+    } catch (_) {}
+  }
+
+  Future<void> _handleForegroundMessage(RemoteMessage message) async {
+    if (defaultTargetPlatform == TargetPlatform.iOS &&
+        message.notification != null) {
+      return;
+    }
+    await showRemoteMessage(message);
+  }
+
+  Future<void> _handleOpenedMessage(RemoteMessage message) async {
+    // Notification tap navigation will be handled later by notification types.
+  }
+
+  void dispose() {
+    _tokenRefreshSubscription?.cancel();
+    _foregroundMessageSubscription?.cancel();
+    _openedMessageSubscription?.cancel();
+  }
+}
+
+bool get _isSupportedNotificationPlatform {
+  if (kIsWeb) return false;
+  return defaultTargetPlatform == TargetPlatform.android ||
+      defaultTargetPlatform == TargetPlatform.iOS;
+}
+
+bool get _shouldShowLocalRemoteMessage {
+  if (kIsWeb) return false;
+  return defaultTargetPlatform == TargetPlatform.android ||
+      defaultTargetPlatform == TargetPlatform.iOS;
+}

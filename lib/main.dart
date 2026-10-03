@@ -1,7 +1,12 @@
 import 'package:waqty_user_application/core/services/check_network.dart';
 import 'package:waqty_user_application/config/routes/routes.dart';
+import 'package:waqty_user_application/core/services/firebase_notification_service.dart';
+import 'package:waqty_user_application/core/services/local_notification_service.dart';
 import 'package:waqty_user_application/core/utils/constant_keys.dart';
+import 'package:waqty_user_application/firebase_options.dart';
 import 'package:waqty_user_application/my_app.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/services.dart';
@@ -11,14 +16,15 @@ import 'core/services/services_locator.dart';
 import 'core/utils/app_constant.dart';
 import 'observer.dart';
 
-// @pragma('vm:entry-point')
-// Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-//   print("Handling a background message: ${message.data}");
-//   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-// }
-
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  if (!kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS)) {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  }
 
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
@@ -29,7 +35,8 @@ Future<void> main() async {
   await ServicesLocator.init();
   await CacheHelper.init();
   await MyConnectivity.initialise();
-  // await LocalNotificationService.initializedNotification();
+  await getIt<LocalNotificationService>().initialize();
+  await getIt<FirebaseNotificationService>().initialize();
   // PusherService.initPusher();
 
   Bloc.observer = Observer();
@@ -41,16 +48,6 @@ Future<void> main() async {
   } catch (e) {
     isLoggedInUser = false;
   }
-  // try {
-  // await Firebase.initializeApp(
-  //   options: DefaultFirebaseOptions.currentPlatform,
-  // );
-  // FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-
-  // await FirebaseNotificationService.init();
-  // } catch (e) {
-  //   print('Firebase initialization error: $e');
-  // }
   runApp(
     EasyLocalization(
       supportedLocales: const [Locale('ar', 'EG'), Locale('en', 'US')],

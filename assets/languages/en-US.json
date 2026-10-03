@@ -37,6 +37,8 @@
     "chooseCodeMethodDescription": "Choose where you want to receive your account activation code.",
     "emailCodeOption": "Send code to email",
     "whatsappCodeOption": "Send code on WhatsApp",
+    "registerWithGoogleText": "Create account with Google",
+    "registerWithAppleText": "Create account with Apple",
     "errorMessage": "Something went wrong"
   },
   "login": {

@@ -1,0 +1,90 @@
+{
+  "project_info": {
+    "project_number": "982037073726",
+    "project_id": "waqty-39eb1",
+    "storage_bucket": "waqty-39eb1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:982037073726:android:bce37fb73005497d13e66f",
+        "android_client_info": {
+          "package_name": "com.waqtyservices.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "982037073726-hehb11unpu32jdf3dhuh7072jf4vlnv3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBrks_yHBA6QnH0YMXvGtVEWR4g9frHEDA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "982037073726-hehb11unpu32jdf3dhuh7072jf4vlnv3.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "982037073726-9sade1durcl5m04r2tcksmlu4fur371e.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.waqtyservices.app"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:982037073726:android:be4cd7ee58ae53e913e66f",
+        "android_client_info": {
+          "package_name": "com.waqtyuser.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "982037073726-218rcpsl9rv5i5098pc2fmqa0kn8me2p.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.waqtyuser.app",
+            "certificate_hash": "3f2af428ecd2377fa5d82f9c7cde6957fc72e17d"
+          }
+        },
+        {
+          "client_id": "982037073726-hehb11unpu32jdf3dhuh7072jf4vlnv3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBrks_yHBA6QnH0YMXvGtVEWR4g9frHEDA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "982037073726-hehb11unpu32jdf3dhuh7072jf4vlnv3.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "982037073726-9sade1durcl5m04r2tcksmlu4fur371e.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.waqtyservices.app"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

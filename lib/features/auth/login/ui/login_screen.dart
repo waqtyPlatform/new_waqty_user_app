@@ -17,6 +17,7 @@ import 'package:waqty_user_application/features/auth/login/ui/widgets/login_butt
 import 'package:waqty_user_application/features/auth/login/ui/widgets/login_password_widget.dart';
 import 'package:waqty_user_application/features/auth/login/ui/widgets/login_phone_number_widget.dart';
 import 'package:waqty_user_application/features/auth/register/ui/widgets/change_language_icon.dart';
+import 'package:waqty_user_application/features/auth/shared/widgets/social_auth_buttons.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -122,9 +123,14 @@ class LoginScreen extends StatelessWidget {
                           ),
                         ),
 
-                        verticalSpace(132),
+                        verticalSpace(78),
                         LoginButtonWidget(),
-                        verticalSpace(14),
+                        verticalSpace(18),
+                        const SocialAuthButtons(
+                          googleSemanticLabelKey: 'login.loginWithGoogleText',
+                          appleSemanticLabelKey: 'login.loginWithAppleText',
+                        ),
+                        verticalSpace(18),
                         const _LoginFooter(),
                         verticalSpace(26),
                       ],
