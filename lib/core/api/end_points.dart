@@ -1,5 +1,5 @@
 class EndPoints {
-  static const String baseUrl = "https://waqty.alemtayaz.shop/public";
+  static const String baseUrl = "https://waqty.rawaealqiyada.com/public/api";
   // static const String _imageBaseUrl = "public/";
 
   // static String getImageFromApi(String imageUrl) {

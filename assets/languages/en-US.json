@@ -65,6 +65,10 @@
     "guestContinueText": "Or continue as guest — sign up when you book",
     "termsText": "By logging in, you agree to the terms and privacy policy. Booking is free and payment is in person."
   },
+  "socialAuth": {
+    "success": "Signed in successfully",
+    "error": "Could not sign in. Please try again"
+  },
   "forgetPassword": {
     "title": "Forgot Password",
     "description": "Choose how to receive the code, then enter your details to reset your password.",

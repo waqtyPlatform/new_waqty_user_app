@@ -1,7 +1,11 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get_it/get_it.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:waqty_user_application/core/services/apple_login_service.dart';
 import 'package:waqty_user_application/core/services/firebase_notification_service.dart';
+import 'package:waqty_user_application/core/services/google_login_service.dart';
 import 'package:waqty_user_application/core/services/local_notification_service.dart';
 import 'package:waqty_user_application/features/auth/forget_password/data/repo/forget_password_repo.dart';
 import 'package:waqty_user_application/features/auth/forget_password/data/services/forget_password_service.dart';
@@ -110,6 +114,14 @@ class ServicesLocator {
     ///shared secure
     FlutterSecureStorage secureStorage = FlutterSecureStorage();
     getIt.registerLazySingleton(() => secureStorage);
+    getIt.registerLazySingleton<FirebaseAuth>(() => FirebaseAuth.instance);
+    getIt.registerLazySingleton<GoogleSignIn>(() => GoogleSignIn());
+    getIt.registerLazySingleton<GoogleLoginService>(
+      () => GoogleLoginService(getIt(), getIt()),
+    );
+    getIt.registerLazySingleton<AppleLoginService>(
+      () => AppleLoginService(getIt()),
+    );
     getIt.registerLazySingleton<LocalNotificationService>(
       () => LocalNotificationService(),
     );
