@@ -1,6 +1,5 @@
 import 'package:waqty_user_application/core/api/end_points.dart';
 
 class ReseatPasswordApiEndPoints {
-  static final resetPassword =
-      '${EndPoints.baseUrl}/api/user/auth/reset-password';
+  static final resetPassword = '${EndPoints.baseUrl}/user/auth/reset-password';
 }

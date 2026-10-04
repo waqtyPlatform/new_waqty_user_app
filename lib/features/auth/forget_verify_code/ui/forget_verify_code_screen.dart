@@ -14,9 +14,13 @@ import 'package:waqty_user_application/features/auth/forget_verify_code/ui/widge
 class ForgetVerifyCodeScreen extends StatelessWidget {
   final String email;
   final String method;
+  final String channel;
+  final String sentTo;
   const ForgetVerifyCodeScreen({
     required this.email,
     this.method = 'email',
+    this.channel = 'email',
+    this.sentTo = '',
     super.key,
   });
 
@@ -58,11 +62,7 @@ class ForgetVerifyCodeScreen extends StatelessWidget {
                 ),
                 verticalSpace(6),
                 Text(
-                  context.tr(
-                    method == 'phone'
-                        ? 'verifyCode.descriptionPhone'
-                        : 'verifyCode.descriptionEmail',
-                  ),
+                  _descriptionText(context),
                   textAlign: TextAlign.start,
                   style: TextStyles.font14greyColor4002Weight400.copyWith(
                     fontSize: 16.sp,
@@ -74,7 +74,7 @@ class ForgetVerifyCodeScreen extends StatelessWidget {
                 ForgetCodeTextFieldWidget(email: email),
 
                 verticalSpace(24),
-                ResendCodeWidget(email: email, method: method),
+                ResendCodeWidget(email: email, channel: channel),
                 verticalSpace(40),
                 ForgetVerifyButtonWidget(email: email),
                 verticalSpace(24),
@@ -84,6 +84,16 @@ class ForgetVerifyCodeScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _descriptionText(BuildContext context) {
+    final description = context.tr(
+      channel == 'whatsapp'
+          ? 'verifyCode.descriptionPhone'
+          : 'verifyCode.descriptionEmail',
+    );
+    if (sentTo.isEmpty) return description;
+    return '$description\n$sentTo';
   }
 }
 

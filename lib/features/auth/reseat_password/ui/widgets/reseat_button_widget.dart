@@ -1,14 +1,18 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:waqty_user_application/config/routes/routes.dart';
+import 'package:waqty_user_application/core/services/check_network.dart';
 import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
+import 'package:waqty_user_application/core/utils/app_constant.dart';
 import 'package:waqty_user_application/core/utils/assets_manager.dart';
-import 'package:waqty_user_application/core/utils/extentions.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
 import 'package:waqty_user_application/core/utils/styles.dart';
 import 'package:waqty_user_application/core/widgets/button_widget.dart';
 import 'package:waqty_user_application/features/auth/reseat_password/logic/reseat_password_cubit.dart';
+import 'package:waqty_user_application/features/auth/reseat_password/logic/reseat_password_state.dart';
 
 class ReseatButtonWidget extends StatelessWidget {
   final String email;
@@ -21,23 +25,44 @@ class ReseatButtonWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ButtonWidget(
-      isLoading: false,
-      borderRadius: 999,
-      buttonHeight: 52.h,
-      buttonText: context.tr('reseatPassword.newPasswordText2'),
-      backGroundColor: AppColors.greyColor900,
-      borderColor: AppColors.greyColor900,
-      textStyle: TextStyles.font16whiteColorWeight600,
-      onPressed: () {
-        validateResetPassword(context);
+    return BlocConsumer<ReseatPasswordCubit, ReseatPasswordState>(
+      listener: (context, state) {
+        if (state is ResetPasswordSuccessState) {
+          showDialogChangePasswordDone(context);
+        } else if (state is ResetPasswordErrorState) {
+          AppConstant.toast(state.message, false, context);
+        } else if (state is ResetPasswordCatchErrorState) {
+          AppConstant.toast(
+            context.tr('register.errorMessage'),
+            false,
+            context,
+          );
+        }
+      },
+      builder: (context, state) {
+        return ButtonWidget(
+          isLoading: state is ResetPasswordLoadingState,
+          borderRadius: 999,
+          buttonHeight: 52.h,
+          buttonText: context.tr('reseatPassword.newPasswordText2'),
+          backGroundColor: AppColors.greyColor900,
+          borderColor: AppColors.greyColor900,
+          textStyle: TextStyles.font16whiteColorWeight600,
+          onPressed: () {
+            validateResetPassword(context);
+          },
+        );
       },
     );
   }
 
   void validateResetPassword(BuildContext context) {
     if (ReseatPasswordCubit.get(context).reseatKey.currentState!.validate()) {
-      showDialogChangePasswordDone(context);
+      if (MyConnectivity.isOnline()) {
+        ReseatPasswordCubit.get(context).resetPassword(email, code);
+      } else {
+        AppConstant.toast(context.tr('register.noInternet'), false, context);
+      }
     }
   }
 
@@ -93,10 +118,11 @@ class ReseatButtonWidget extends StatelessWidget {
                   borderColor: AppColors.greyColor900,
                   textStyle: TextStyles.font16whiteColorWeight600,
                   onPressed: () {
-                    context.pop();
-                    context.pop();
-                    context.pop();
-                    context.pop();
+                    Navigator.pushNamedAndRemoveUntil(
+                      context,
+                      Routes.loginScreen,
+                      (route) => false,
+                    );
                   },
                 ),
               ],

@@ -9,11 +9,11 @@ import 'package:waqty_user_application/features/auth/forget_verify_code/logic/fo
 
 class ResendCodeWidget extends StatelessWidget {
   final String email;
-  final String method;
+  final String channel;
   const ResendCodeWidget({
     super.key,
     required this.email,
-    this.method = 'email',
+    this.channel = 'email',
   });
 
   @override
@@ -37,7 +37,7 @@ class ResendCodeWidget extends StatelessWidget {
               GestureDetector(
                 onTap: () {
                   if (MyConnectivity.isOnline()) {
-                    cubit.resendCode(email, method: method);
+                    cubit.resendCode(email, channel: channel);
                   } else {
                     AppConstant.toast(
                       context.tr('verifyCode.noInternet'),

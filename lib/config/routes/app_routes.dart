@@ -78,6 +78,8 @@ class RouteGenerator {
             child: ForgetVerifyCodeScreen(
               email: args['email'],
               method: args['method'] ?? 'email',
+              channel: args['channel'] ?? 'email',
+              sentTo: args['sent_to'] ?? '',
             ),
           ),
         );

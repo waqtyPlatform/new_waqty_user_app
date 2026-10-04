@@ -15,6 +15,8 @@ class ForgetPasswordCubit extends Cubit<ForgetPasswordState> {
 
   bool get isEmailRecovery => recoveryMethod == 'email';
 
+  String get selectedChannel => isEmailRecovery ? 'email' : 'whatsapp';
+
   int selectedFieldNumber = 0;
   changeSelectedField(int value) {
     selectedFieldNumber = value;
@@ -34,8 +36,8 @@ class ForgetPasswordCubit extends Cubit<ForgetPasswordState> {
     try {
       final result = await _forgetPasswordRepo.forgetPassword(
         ForgetPasswordRequestModel(
-          key: recoveryMethod,
-          value: forgetPasswordEmailController.text,
+          email: forgetPasswordEmailController.text.trim(),
+          channel: selectedChannel,
         ),
       );
 

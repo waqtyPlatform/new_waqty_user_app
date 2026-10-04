@@ -1,8 +1,8 @@
 class ForgetPasswordRequestModel {
-  final String key;
-  final String value;
+  final String email;
+  final String channel;
 
-  ForgetPasswordRequestModel({required this.key, required this.value});
+  ForgetPasswordRequestModel({required this.email, required this.channel});
 
-  Map<String, dynamic> toJson() => {key: value};
+  Map<String, dynamic> toJson() => {"email": email, "channel": channel};
 }

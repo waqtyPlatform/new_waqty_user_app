@@ -51,22 +51,22 @@ class ForgetVerifyCodeCubit extends Cubit<ForgetVerifyCodeState> {
     });
   }
 
-  void resendCode(String email, {String method = 'email'}) {
+  void resendCode(String email, {String channel = 'email'}) {
     if (canResend) {
       startResendTimer();
-      resendCodeFromServer(email, method: method);
+      resendCodeFromServer(email, channel: channel);
     }
   }
 
   Future<void> resendCodeFromServer(
     String email, {
-    String method = 'email',
+    String channel = 'email',
   }) async {
     emit(ResendCodeLoadingState());
 
     try {
       final result = await _forgetPasswordRepo.forgetPassword(
-        ForgetPasswordRequestModel(key: method, value: email),
+        ForgetPasswordRequestModel(email: email, channel: channel),
       );
 
       result.fold(

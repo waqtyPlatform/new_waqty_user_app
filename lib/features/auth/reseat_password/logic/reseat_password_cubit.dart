@@ -46,13 +46,18 @@ class ReseatPasswordCubit extends Cubit<ReseatPasswordState> {
         ),
       );
 
-      result.fold((failure) {
-        if (failure.message.isNotEmpty) {
-          emit(ResetPasswordErrorState(message: failure.message));
-        } else {
-          emit(ResetPasswordCatchErrorState());
-        }
-      }, (response) => emit(ResetPasswordSuccessState(response: response)));
+      await result.fold<Future<void>>(
+        (failure) async {
+          if (failure.message.isNotEmpty) {
+            emit(ResetPasswordErrorState(message: failure.message));
+          } else {
+            emit(ResetPasswordCatchErrorState());
+          }
+        },
+        (response) async {
+          emit(ResetPasswordSuccessState(response: response));
+        },
+      );
     } catch (_) {
       emit(ResetPasswordCatchErrorState());
     }
