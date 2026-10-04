@@ -320,6 +320,9 @@ Future<void> completeOnboardingAndNavigate(
   String routeName,
 ) async {
   await CacheHelper.setData(ConstantKeys.saveIsShowIsBoardingToShared, false);
+  if (routeName == Routes.buttonNavigationBarScreen) {
+    await CacheHelper.removeSecureData(ConstantKeys.saveTokenToShared);
+  }
   if (!context.mounted) return;
   context.pushNamedAndRemoveUntil(routeName, predicate: (_) => false);
 }

@@ -12,4 +12,5 @@ class Routes {
   static const onboardingNotificationsScreen = "/OnboardingNotificationsScreen";
   static const onboardingBalanceScreen = "/OnboardingBalanceScreen";
   static const onboardingStartScreen = "/OnboardingStartScreen";
+  static const languageScreen = "/LanguageScreen";
 }

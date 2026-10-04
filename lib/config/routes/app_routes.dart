@@ -1,7 +1,10 @@
 import 'package:waqty_user_application/config/routes/routes.dart';
 import 'package:waqty_user_application/core/services/services_locator.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:waqty_user_application/features/account/language/logic/language_cubit.dart';
+import 'package:waqty_user_application/features/account/language/ui/language_screen.dart';
 import 'package:waqty_user_application/features/auth/forget_password/logic/forget_password_cubit.dart';
 import 'package:waqty_user_application/features/auth/forget_password/ui/forget_password_screen.dart';
 import 'package:waqty_user_application/features/auth/forget_verify_code/logic/forget_verify_code_cubit.dart';
@@ -56,6 +59,14 @@ class RouteGenerator {
         );
       case Routes.onboardingStartScreen:
         return MaterialPageRoute(builder: (_) => const OnboardingStartScreen());
+      case Routes.languageScreen:
+        return MaterialPageRoute(
+          builder: (context) => BlocProvider(
+            create: (_) =>
+                LanguageCubit(initialLanguageCode: context.locale.languageCode),
+            child: const LanguageScreen(),
+          ),
+        );
       case Routes.loginScreen:
         return MaterialPageRoute(
           builder: (_) => BlocProvider(

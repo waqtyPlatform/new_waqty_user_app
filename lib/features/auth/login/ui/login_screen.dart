@@ -6,8 +6,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:waqty_user_application/config/routes/routes.dart';
+import 'package:waqty_user_application/core/services/cache_helper.dart';
 import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
 import 'package:waqty_user_application/core/utils/assets_manager.dart';
+import 'package:waqty_user_application/core/utils/constant_keys.dart';
 import 'package:waqty_user_application/core/utils/extentions.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
 import 'package:waqty_user_application/core/utils/styles.dart';
@@ -281,10 +283,28 @@ class _LoginFooter extends StatelessWidget {
           textDirection: isArabic ? ui.TextDirection.ltr : ui.TextDirection.rtl,
         ),
         verticalSpace(16),
-        Text(
-          context.tr('login.guestContinueText'),
-          textAlign: TextAlign.center,
-          style: TextStyles.font12greyColor500W600,
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () async {
+            await CacheHelper.removeSecureData(ConstantKeys.saveTokenToShared);
+            await CacheHelper.setData(
+              ConstantKeys.saveIsShowIsBoardingToShared,
+              false,
+            );
+            if (!context.mounted) return;
+            context.pushNamedAndRemoveUntil(
+              Routes.buttonNavigationBarScreen,
+              predicate: (_) => false,
+            );
+          },
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: 6.h),
+            child: Text(
+              context.tr('login.guestContinueText'),
+              textAlign: TextAlign.center,
+              style: TextStyles.font12greyColor500W600,
+            ),
+          ),
         ),
         verticalSpace(12),
         Text(
