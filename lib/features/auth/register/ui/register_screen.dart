@@ -110,9 +110,11 @@ class RegisterScreen extends StatelessWidget {
 
                 RegisterButtonWidget(),
                 verticalSpace(18),
-                const SocialAuthButtons(
+                SocialAuthButtons(
                   googleSemanticLabelKey: 'register.registerWithGoogleText',
                   appleSemanticLabelKey: 'register.registerWithAppleText',
+                  onGoogleTap: () =>
+                      RegisterCubit.get(context).fillRegisterWithGoogle(),
                 ),
                 verticalSpace(16),
                 const _RegisterLoginFooter(),

@@ -19,11 +19,18 @@ class ResendVerificationResponseModel {
 }
 
 class ResendVerificationDataModel {
-  final String message;
+  final String otpChannel;
+  final String otpSentTo;
 
-  ResendVerificationDataModel({required this.message});
+  ResendVerificationDataModel({
+    required this.otpChannel,
+    required this.otpSentTo,
+  });
 
   factory ResendVerificationDataModel.fromJson(Map<String, dynamic> json) {
-    return ResendVerificationDataModel(message: json['message'] ?? '');
+    return ResendVerificationDataModel(
+      otpChannel: json['otp_channel'] ?? 'email',
+      otpSentTo: json['otp_sent_to'] ?? '',
+    );
   }
 }

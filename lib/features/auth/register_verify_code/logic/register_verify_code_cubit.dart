@@ -13,12 +13,18 @@ import 'package:waqty_user_application/features/auth/register_verify_code/logic/
 class RegisterVerifyCodeCubit extends Cubit<RegisterVerifyCodeState> {
   final bool isSndCodeFrommServer;
   final String email;
+  String otpChannel;
+  String verifyEndpoint;
+  final bool canChooseOtpChannel;
   final RegisterVerifyCodeRepo _registerVerifyCodeRepo;
 
   RegisterVerifyCodeCubit(
     this._registerVerifyCodeRepo,
     this.email,
     this.isSndCodeFrommServer,
+    this.otpChannel,
+    this.verifyEndpoint,
+    this.canChooseOtpChannel,
   ) : super(InitialState()) {
     ///if the user come from login screen not from register screen send code from server
     if (isSndCodeFrommServer) {
@@ -62,29 +68,38 @@ class RegisterVerifyCodeCubit extends Cubit<RegisterVerifyCodeState> {
   }
 
   /// Called when user taps "Resend Code"
-  void resendCode(String email) {
+  void resendCode(String email, {String? selectedOtpChannel}) {
     if (canResend) {
       startResendTimer();
-      resendCodeFromServer(email);
+      resendCodeFromServer(email, otpChannel: selectedOtpChannel ?? otpChannel);
     }
   }
 
   /// Called when screen opens to send the initial verification code
   Future<void> sendInitialCode(String email) async {
-    await resendCodeFromServer(email);
+    await resendCodeFromServer(email, otpChannel: otpChannel);
   }
 
   /// Send/Resend verification OTP via the dedicated endpoint
-  Future<void> resendCodeFromServer(String email) async {
+  Future<void> resendCodeFromServer(
+    String email, {
+    required String otpChannel,
+  }) async {
     emit(ResendCodeLoadingState());
     try {
       final result = await _registerVerifyCodeRepo.resendVerificationCode(
-        ResendVerificationRequestModel(email: email),
+        ResendVerificationRequestModel(email: email, otpChannel: otpChannel),
       );
 
       result.fold(
         (failure) => emit(ResendCodeErrorState(message: failure.message)),
-        (response) => emit(ResendCodeSuccessState(response: response)),
+        (response) {
+          otpChannel = response.data.otpChannel;
+          verifyEndpoint = otpChannel == 'whatsapp'
+              ? '/api/user/auth/verify-phone-signup'
+              : '/api/user/auth/verify-email';
+          emit(ResendCodeSuccessState(response: response));
+        },
       );
     } catch (_) {
       emit(ResendCodeCatchErrorState());
@@ -100,6 +115,7 @@ class RegisterVerifyCodeCubit extends Cubit<RegisterVerifyCodeState> {
         RegisterVerifyCodeRequestModel(
           email: email,
           otp: verifyCodeController.text,
+          verifyEndpoint: verifyEndpoint,
         ),
       );
 

@@ -22,12 +22,16 @@ class VerifyCodeDataModel {
   final String tokenType;
   final int expiresIn;
   final VerifyCodeUserModel user;
+  final bool profileComplete;
+  final List<String> missingProfileFields;
 
   VerifyCodeDataModel({
     required this.token,
     required this.tokenType,
     required this.expiresIn,
     required this.user,
+    required this.profileComplete,
+    required this.missingProfileFields,
   });
 
   factory VerifyCodeDataModel.fromJson(Map<String, dynamic> json) =>
@@ -36,6 +40,12 @@ class VerifyCodeDataModel {
         tokenType: json['token_type'] ?? '',
         expiresIn: json['expires_in'] ?? 0,
         user: VerifyCodeUserModel.fromJson(json['user']),
+        profileComplete: json['profile_complete'] ?? true,
+        missingProfileFields:
+            (json['missing_profile_fields'] as List?)
+                ?.map((field) => field.toString())
+                .toList() ??
+            const [],
       );
 }
 

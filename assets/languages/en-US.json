@@ -108,7 +108,7 @@
     "successMessage": "Account verified successfully",
     "errorMessage": "Something went wrong",
     "resendIn": "You can resend the code in ",
-    "resend": "Resend on WhatsApp",
+    "resend": "Resend code",
     "seconds": " seconds",
     "noInternet": "Please check your internet connection"
   },

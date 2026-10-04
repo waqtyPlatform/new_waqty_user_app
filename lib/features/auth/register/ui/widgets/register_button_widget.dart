@@ -1,7 +1,9 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:waqty_user_application/config/routes/routes.dart';
+import 'package:waqty_user_application/core/services/check_network.dart';
 import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
 import 'package:waqty_user_application/core/utils/app_constant.dart';
 import 'package:waqty_user_application/core/utils/extentions.dart';
@@ -9,22 +11,62 @@ import 'package:waqty_user_application/core/utils/spacing.dart';
 import 'package:waqty_user_application/core/utils/styles.dart';
 import 'package:waqty_user_application/core/widgets/button_widget.dart';
 import 'package:waqty_user_application/features/auth/register/logic/register_cubit.dart';
+import 'package:waqty_user_application/features/auth/register/logic/register_state.dart';
 
 class RegisterButtonWidget extends StatelessWidget {
   const RegisterButtonWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return ButtonWidget(
-      isLoading: false,
-      borderRadius: 999,
-      buttonHeight: 52.h,
-      buttonText: context.tr('register.registerNowText'),
-      backGroundColor: AppColors.greyColor900,
-      borderColor: AppColors.greyColor900,
-      textStyle: TextStyles.font16whiteColorWeight600,
-      onPressed: () {
-        validateRegister(context);
+    return BlocConsumer<RegisterCubit, RegisterState>(
+      buildWhen: (previous, current) {
+        return current is OnRegisterLoadingState ||
+            current is OnRegisterSuccessState ||
+            current is OnRegisterErrorState ||
+            current is OnRegisterCatchErrorState;
+      },
+      listener: (context, state) {
+        if (state is OnRegisterSuccessState) {
+          AppConstant.toast(state.registerResponseModel.message, true, context);
+          _openVerifyCode(
+            context: context,
+            login: state.registerResponseModel.data.login,
+            method: state.registerResponseModel.data.otpChannel == 'whatsapp'
+                ? 'phone'
+                : 'email',
+            otpChannel: state.registerResponseModel.data.otpChannel,
+            verifyEndpoint: state.registerResponseModel.data.verifyEndpoint,
+            canChooseOtpChannel:
+                RegisterCubit.get(
+                  context,
+                ).registerEmailController.text.trim().isNotEmpty &&
+                RegisterCubit.get(
+                  context,
+                ).registerPhoneController.text.trim().isNotEmpty,
+          );
+        } else if (state is OnRegisterErrorState) {
+          AppConstant.toast(state.message, false, context);
+        } else if (state is OnRegisterCatchErrorState) {
+          AppConstant.toast(
+            context.tr('register.errorMessage'),
+            false,
+            context,
+          );
+        }
+      },
+      builder: (context, state) {
+        return ButtonWidget(
+          isLoading: state is OnRegisterLoadingState,
+          borderRadius: 999,
+          buttonHeight: 52.h,
+          buttonText: context.tr('register.registerNowText'),
+          backGroundColor: AppColors.greyColor900,
+          borderColor: AppColors.greyColor900,
+          textStyle: TextStyles.font16whiteColorWeight600,
+          onPressed: () {
+            validateRegister(context);
+          },
+        );
       },
     );
   }
@@ -56,24 +98,37 @@ class RegisterButtonWidget extends StatelessWidget {
         return;
       }
 
-      _openVerifyCode(
-        context: context,
-        value: email.isNotEmpty ? email : '$countryCode$phone',
-        method: email.isNotEmpty ? 'email' : 'phone',
+      _submitRegister(
+        context,
+        otpChannel: phone.isNotEmpty && email.isEmpty ? 'whatsapp' : 'email',
       );
+    }
+  }
+
+  void _submitRegister(BuildContext context, {required String otpChannel}) {
+    if (MyConnectivity.isOnline()) {
+      RegisterCubit.get(context).register(otpChannel: otpChannel);
+    } else {
+      AppConstant.toast(context.tr('register.noInternet'), false, context);
     }
   }
 
   void _openVerifyCode({
     required BuildContext context,
-    required String value,
+    required String login,
     required String method,
+    required String otpChannel,
+    required String verifyEndpoint,
+    required bool canChooseOtpChannel,
   }) {
     context.pushNamed(
       Routes.registerVerifyCodeScreen,
       arguments: {
-        'email': value,
+        'email': login,
         'method': method,
+        'otp_channel': otpChannel,
+        'verify_endpoint': verifyEndpoint,
+        'can_choose_otp_channel': canChooseOtpChannel,
         'isSndCodeFrommServer': false,
       },
     );
@@ -124,11 +179,7 @@ class RegisterButtonWidget extends StatelessWidget {
                 icon: Icons.email_outlined,
                 onTap: () {
                   Navigator.pop(dialogContext);
-                  _openVerifyCode(
-                    context: context,
-                    value: email,
-                    method: 'email',
-                  );
+                  _submitRegister(context, otpChannel: 'email');
                 },
               ),
               verticalSpace(12),
@@ -138,11 +189,7 @@ class RegisterButtonWidget extends StatelessWidget {
                 icon: Icons.phone_outlined,
                 onTap: () {
                   Navigator.pop(dialogContext);
-                  _openVerifyCode(
-                    context: context,
-                    value: phone,
-                    method: 'phone',
-                  );
+                  _submitRegister(context, otpChannel: 'whatsapp');
                 },
               ),
             ],

@@ -1,4 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:waqty_user_application/core/services/cache_helper.dart';
 import 'package:waqty_user_application/core/utils/constant_keys.dart';
 import 'package:flutter/material.dart';
 import 'package:http_interceptor/http_interceptor.dart';
@@ -14,6 +15,14 @@ class AppInterceptor extends InterceptorContract {
         (context != null && context.locale == const Locale('en', 'US'))
         ? 'en'
         : 'ar';
+    final token = await CacheHelper.getSecuredString(
+      ConstantKeys.saveTokenToShared,
+    );
+    if (token.isNotEmpty &&
+        !request.headers.containsKey(ConstantKeys.appAuthorization)) {
+      request.headers[ConstantKeys.appAuthorization] =
+          '${ConstantKeys.appBearer} $token';
+    }
     debugPrint(request.toString());
     return request;
   }

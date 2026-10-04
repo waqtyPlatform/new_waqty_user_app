@@ -126,9 +126,11 @@ class LoginScreen extends StatelessWidget {
                         verticalSpace(78),
                         LoginButtonWidget(),
                         verticalSpace(18),
-                        const SocialAuthButtons(
+                        SocialAuthButtons(
                           googleSemanticLabelKey: 'login.loginWithGoogleText',
                           appleSemanticLabelKey: 'login.loginWithAppleText',
+                          onGoogleTap: () =>
+                              LoginCubit.get(context).loginWithGoogle(),
                         ),
                         verticalSpace(18),
                         const _LoginFooter(),

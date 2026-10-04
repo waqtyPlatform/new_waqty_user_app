@@ -17,10 +17,14 @@ import 'package:waqty_user_application/core/utils/styles.dart';
 class SocialAuthButtons extends StatefulWidget {
   final String googleSemanticLabelKey;
   final String appleSemanticLabelKey;
+  final Future<void> Function()? onGoogleTap;
+  final Future<void> Function()? onAppleTap;
 
   const SocialAuthButtons({
     required this.googleSemanticLabelKey,
     required this.appleSemanticLabelKey,
+    this.onGoogleTap,
+    this.onAppleTap,
     super.key,
   });
 
@@ -38,6 +42,14 @@ class _SocialAuthButtonsState extends State<SocialAuthButtons> {
     setState(() => _loadingProvider = provider);
 
     try {
+      final overrideTap = provider == _SocialProvider.google
+          ? widget.onGoogleTap
+          : widget.onAppleTap;
+      if (overrideTap != null) {
+        await overrideTap();
+        return;
+      }
+
       final credential = provider == _SocialProvider.google
           ? await getIt<GoogleLoginService>().signIn()
           : await getIt<AppleLoginService>().signIn();

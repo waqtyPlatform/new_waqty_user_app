@@ -15,9 +15,37 @@ class OnLoginSuccessState extends LoginState {
   OnLoginSuccessState(this.loginResponseModel);
 }
 
+class OnGoogleLoginLoadingState extends LoginState {}
+
+class OnGoogleLoginSuccessState extends LoginState {
+  final LoginResponseModel loginResponseModel;
+  OnGoogleLoginSuccessState(this.loginResponseModel);
+}
+
+class OnGoogleLoginErrorState extends LoginState {
+  final String error;
+  OnGoogleLoginErrorState(this.error);
+}
+
+class OnGoogleLoginCatchErrorState extends LoginState {}
+
+class OnAppleLoginLoadingState extends LoginState {}
+
+class OnAppleLoginSuccessState extends LoginState {
+  final LoginResponseModel loginResponseModel;
+  OnAppleLoginSuccessState(this.loginResponseModel);
+}
+
+class OnAppleLoginErrorState extends LoginState {
+  final String error;
+  OnAppleLoginErrorState(this.error);
+}
+
 class OnLoginErrorState extends LoginState {
   final String error;
   OnLoginErrorState(this.error);
 }
 
 class OnLoginCatchErrorState extends LoginState {}
+
+class OnAppleLoginCatchErrorState extends LoginState {}

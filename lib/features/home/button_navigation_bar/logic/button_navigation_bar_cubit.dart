@@ -6,9 +6,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:waqty_user_application/core/services/services_locator.dart';
 import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
 import 'package:waqty_user_application/core/utils/assets_manager.dart';
-import 'package:waqty_user_application/features/explore_near_people/explore_near_people/logic/explore_near_people_cubit.dart';
-import 'package:waqty_user_application/features/explore_near_people/explore_near_people/ui/explore_near_people_screen.dart';
 import 'package:waqty_user_application/features/home/button_navigation_bar/logic/button_navigation_bar_state.dart';
+import 'package:waqty_user_application/features/home/button_navigation_bar/ui/account_logout_screen.dart';
 import 'package:waqty_user_application/features/home/home/logic/home_cubit.dart';
 import 'package:waqty_user_application/features/home/home/ui/home_screen.dart';
 
@@ -54,7 +53,7 @@ class ButtonNavigationBarCubit extends Cubit<ButtonNavigationBarState> {
       //   child: SenderProfileScreen(),
       // );
       case 4:
-        return SizedBox();
+        return AccountLogoutScreen();
       // return BlocProvider(
       //   create: (_) => SenderProfileCubit(getIt(),getIt())..getProfileData(),
       //   child: SenderProfileScreen(),

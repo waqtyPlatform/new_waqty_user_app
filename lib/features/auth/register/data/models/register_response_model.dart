@@ -18,14 +18,31 @@ class RegisterResponseModel {
 }
 
 class RegisterDataModel {
-  final String message;
-  final String email;
+  final String? email;
+  final String login;
+  final bool phoneVerificationRequired;
+  final String otpChannel;
+  final String otpSentTo;
+  final String verifyEndpoint;
 
-  RegisterDataModel({required this.message, required this.email});
+  RegisterDataModel({
+    required this.email,
+    required this.login,
+    required this.phoneVerificationRequired,
+    required this.otpChannel,
+    required this.otpSentTo,
+    required this.verifyEndpoint,
+  });
 
   factory RegisterDataModel.fromJson(Map<String, dynamic> json) =>
       RegisterDataModel(
-        message: json['message'] ?? '',
-        email: json['email'] ?? '',
+        email: json['email']?.toString(),
+        login: json['login']?.toString() ?? json['email']?.toString() ?? '',
+        phoneVerificationRequired: json['phone_verification_required'] ?? false,
+        otpChannel: json['otp_channel'] ?? 'email',
+        otpSentTo: json['otp_sent_to'] ?? '',
+        verifyEndpoint:
+            json['verify_endpoint']?.toString() ??
+            '/api/user/auth/verify-email',
       );
 }

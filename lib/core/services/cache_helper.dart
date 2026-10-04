@@ -18,21 +18,14 @@ class CacheHelper {
   /// Saves a [value] with a [key] in the SharedPreferences.
   static setData(String key, value) async {
     debugPrint("SharedPrefHelper : setData with key : $key and value : $value");
-    switch (value.runtimeType) {
-      case String:
-        await _sharedPreferences.setString(key, value);
-        break;
-      case int:
-        await _sharedPreferences.setInt(key, value);
-        break;
-      case bool:
-        await _sharedPreferences.setBool(key, value);
-        break;
-      case double:
-        await _sharedPreferences.setDouble(key, value);
-        break;
-      default:
-        return null;
+    if (value is String) {
+      await _sharedPreferences.setString(key, value);
+    } else if (value is int) {
+      await _sharedPreferences.setInt(key, value);
+    } else if (value is bool) {
+      await _sharedPreferences.setBool(key, value);
+    } else if (value is double) {
+      await _sharedPreferences.setDouble(key, value);
     }
   }
 
@@ -75,8 +68,7 @@ class CacheHelper {
 
   /// Saves a [value] with a [key] in the FlutterSecureStorage.
   static setSecuredString(String key, String value) async {
-    debugPrint(
-        "FlutterSecureStorage : setSecuredString with key : $key and value : $value");
+    debugPrint("FlutterSecureStorage : setSecuredString with key : $key");
     await _secureStorage.write(key: key, value: value);
   }
 

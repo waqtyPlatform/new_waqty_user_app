@@ -1,18 +1,11 @@
 class ConstantKeys {
   /// shared
   static const saveTokenToShared = "TOKEN";
+  static const saveDeviceIdToShared = "DEVICE_ID";
   static const saveNameToShared = "NAME";
   static const saveUserTypeToShared = "USER_TYPE";
   static const saveIsShowIsBoardingToShared = "IS_BOARDING";
   static const saveIsFirstRunToShared = "IS_FIRST_RUN";
-
-
-
-
-
-
-
-
 
   ///sender setting
   static const saveEmailToShared = "EMAIL";
@@ -28,7 +21,6 @@ class ConstantKeys {
   // static const saveAdminToShared = "ADMIN";
   // static const savePosToShared = "POS";
   // static const saveSalesToShared = "SALES";
-
 
   ///system setting
   static const saveLogoToShared = "SHOP_LOGO";
@@ -47,8 +39,6 @@ class ConstantKeys {
   static const saveMainColorToShared = "MAIN_COLOR";
   static const saveSecondColorToShared = "SECOND_COLOR";
   static const saveBaseURLToShared = "BASE_URL";
-
-
 
   ///
   // static const saveIsOnBoardingToShared = "ON_BOARDING";

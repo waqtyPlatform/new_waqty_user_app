@@ -14,9 +14,13 @@ import 'package:waqty_user_application/features/auth/register_verify_code/ui/wid
 class RegisterVerifyCodeScreen extends StatelessWidget {
   final String email;
   final String method;
+  final String otpChannel;
+  final String verifyEndpoint;
   const RegisterVerifyCodeScreen({
     required this.email,
     this.method = 'email',
+    this.otpChannel = 'email',
+    this.verifyEndpoint = '/api/user/auth/verify-email',
     super.key,
   });
 

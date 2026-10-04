@@ -3,6 +3,9 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get_it/get_it.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:http/http.dart' as http;
+import 'package:waqty_user_application/core/api/app_interceptor.dart';
+import 'package:waqty_user_application/core/api/http_consumer.dart';
 import 'package:waqty_user_application/core/services/apple_login_service.dart';
 import 'package:waqty_user_application/core/services/firebase_notification_service.dart';
 import 'package:waqty_user_application/core/services/google_login_service.dart';
@@ -27,7 +30,6 @@ import 'package:waqty_user_application/features/service_provider_details/service
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/data/services/service_provider_details_service.dart';
 
 import '../api/api_consumer.dart';
-import '../api/disconnected_api_consumer.dart';
 
 final getIt = GetIt.instance;
 
@@ -109,7 +111,8 @@ class ServicesLocator {
 
     ///core
 
-    getIt.registerLazySingleton<ApiConsumer>(() => DisconnectedApiConsumer());
+    getIt.registerLazySingleton<AppInterceptor>(() => AppInterceptor());
+    getIt.registerLazySingleton<ApiConsumer>(() => HttpConsumer(http.Client()));
 
     ///shared secure
     FlutterSecureStorage secureStorage = FlutterSecureStorage();

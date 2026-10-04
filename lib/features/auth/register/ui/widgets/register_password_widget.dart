@@ -66,6 +66,9 @@ class RegisterPasswordWidget extends StatelessWidget {
             if (value == null || value.isEmpty) {
               return context.tr('register.enterPasswordText2');
             }
+            if (value.length < 8) {
+              return context.tr('register.enterPasswordText2');
+            }
             return null;
           },
           backgroundColor: AppColors.whiteColor,

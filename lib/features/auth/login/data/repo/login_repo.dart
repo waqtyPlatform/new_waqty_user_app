@@ -20,4 +20,23 @@ class LoginRepo {
       return Left(ServerFailure(message: failure.serverFailure.message));
     }
   }
+
+  Future<Either<Failure, LoginResponseModel>> loginWithGoogle({
+    required String idToken,
+    String? fcmToken,
+    required String platform,
+    required String deviceId,
+  }) async {
+    try {
+      final response = await _loginService.loginWithGoogle(
+        idToken: idToken,
+        fcmToken: fcmToken,
+        platform: platform,
+        deviceId: deviceId,
+      );
+      return Right(response);
+    } on ServerException catch (failure) {
+      return Left(ServerFailure(message: failure.serverFailure.message));
+    }
+  }
 }

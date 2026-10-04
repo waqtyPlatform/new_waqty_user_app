@@ -31,7 +31,10 @@ class RouteGenerator {
       case Routes.registerScreen:
         return MaterialPageRoute(
           builder: (_) => BlocProvider(
-            create: (context) => RegisterCubit(getIt()),
+            create: (context) => RegisterCubit(getIt())
+              ..fillFromSocialUser(
+                args is Map<String, dynamic> ? args['social_user'] : null,
+              ),
             child: RegisterScreen(),
           ),
         );
@@ -85,10 +88,16 @@ class RouteGenerator {
               getIt(),
               args['email'],
               args['isSndCodeFrommServer'],
+              args['otp_channel'] ?? 'email',
+              args['verify_endpoint'] ?? '/api/user/auth/verify-email',
+              args['can_choose_otp_channel'] ?? false,
             ),
             child: RegisterVerifyCodeScreen(
               email: args['email'],
               method: args['method'] ?? 'email',
+              otpChannel: args['otp_channel'] ?? 'email',
+              verifyEndpoint:
+                  args['verify_endpoint'] ?? '/api/user/auth/verify-email',
             ),
           ),
         );
