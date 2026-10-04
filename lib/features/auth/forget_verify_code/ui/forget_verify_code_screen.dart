@@ -6,6 +6,7 @@ import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
 import 'package:waqty_user_application/core/utils/assets_manager.dart';
 import 'package:waqty_user_application/core/utils/spacing.dart';
 import 'package:waqty_user_application/core/utils/styles.dart';
+import 'package:waqty_user_application/core/widgets/waqty_back_button.dart';
 import 'package:waqty_user_application/features/auth/forget_verify_code/logic/forget_verify_code_cubit.dart';
 import 'package:waqty_user_application/features/auth/forget_verify_code/ui/widgets/forget_code_text_field_widget.dart';
 import 'package:waqty_user_application/features/auth/forget_verify_code/ui/widgets/forget_verify_button_widget.dart';
@@ -41,7 +42,7 @@ class ForgetVerifyCodeScreen extends StatelessWidget {
                 verticalSpace(24),
                 Row(
                   children: [
-                    _VerifyBackButton(),
+                    const WaqtyBackButton(),
                     const Spacer(),
                     SvgPicture.asset(
                       ImageAsset.waqtySymbolGreen,
@@ -94,39 +95,5 @@ class ForgetVerifyCodeScreen extends StatelessWidget {
     );
     if (sentTo.isEmpty) return description;
     return '$description\n$sentTo';
-  }
-}
-
-class _VerifyBackButton extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () {
-        if (Navigator.canPop(context)) {
-          Navigator.pop(context);
-        }
-      },
-      child: Container(
-        width: 40.w,
-        height: 40.w,
-        decoration: BoxDecoration(
-          color: AppColors.whiteColor,
-          borderRadius: BorderRadius.circular(999.r),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.greyColor900.withValues(alpha: 0.10),
-              blurRadius: 12.r,
-              offset: Offset(0, 4.h),
-            ),
-          ],
-        ),
-        child: Icon(
-          Icons.arrow_back,
-          color: AppColors.greyColor900,
-          size: 17.sp,
-        ),
-      ),
-    );
   }
 }

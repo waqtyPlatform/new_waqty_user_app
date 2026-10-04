@@ -3,8 +3,16 @@ import 'package:waqty_user_application/core/services/services_locator.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:waqty_user_application/features/account/change_phone/logic/change_phone_cubit.dart';
+import 'package:waqty_user_application/features/account/change_phone/ui/change_phone_screen.dart';
+import 'package:waqty_user_application/features/account/confirm_phone/logic/confirm_phone_cubit.dart';
+import 'package:waqty_user_application/features/account/confirm_phone/ui/confirm_phone_screen.dart';
 import 'package:waqty_user_application/features/account/language/logic/language_cubit.dart';
 import 'package:waqty_user_application/features/account/language/ui/language_screen.dart';
+import 'package:waqty_user_application/features/account/packages_following/logic/packages_following_cubit.dart';
+import 'package:waqty_user_application/features/account/packages_following/ui/packages_following_screen.dart';
+import 'package:waqty_user_application/features/account/profile/logic/profile_cubit.dart';
+import 'package:waqty_user_application/features/account/profile/ui/profile_screen.dart';
 import 'package:waqty_user_application/features/auth/forget_password/logic/forget_password_cubit.dart';
 import 'package:waqty_user_application/features/auth/forget_password/ui/forget_password_screen.dart';
 import 'package:waqty_user_application/features/auth/forget_verify_code/logic/forget_verify_code_cubit.dart';
@@ -65,6 +73,34 @@ class RouteGenerator {
             create: (_) =>
                 LanguageCubit(initialLanguageCode: context.locale.languageCode),
             child: const LanguageScreen(),
+          ),
+        );
+      case Routes.profileScreen:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => ProfileCubit(),
+            child: const ProfileScreen(),
+          ),
+        );
+      case Routes.changePhoneScreen:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => ChangePhoneCubit(),
+            child: const ChangePhoneScreen(),
+          ),
+        );
+      case Routes.confirmPhoneScreen:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => ConfirmPhoneCubit()..startResendTimer(),
+            child: const ConfirmPhoneScreen(),
+          ),
+        );
+      case Routes.packagesFollowingScreen:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => PackagesFollowingCubit(),
+            child: const PackagesFollowingScreen(),
           ),
         );
       case Routes.loginScreen:
