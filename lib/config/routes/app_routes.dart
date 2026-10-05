@@ -7,8 +7,11 @@ import 'package:waqty_user_application/features/account/change_phone/logic/chang
 import 'package:waqty_user_application/features/account/change_phone/ui/change_phone_screen.dart';
 import 'package:waqty_user_application/features/account/confirm_phone/logic/confirm_phone_cubit.dart';
 import 'package:waqty_user_application/features/account/confirm_phone/ui/confirm_phone_screen.dart';
+import 'package:waqty_user_application/features/account/help/ui/help_screen.dart';
 import 'package:waqty_user_application/features/account/language/logic/language_cubit.dart';
 import 'package:waqty_user_application/features/account/language/ui/language_screen.dart';
+import 'package:waqty_user_application/features/account/legal/logic/legal_cubit.dart';
+import 'package:waqty_user_application/features/account/legal/ui/legal_screen.dart';
 import 'package:waqty_user_application/features/account/packages_following/logic/packages_following_cubit.dart';
 import 'package:waqty_user_application/features/account/packages_following/ui/packages_following_screen.dart';
 import 'package:waqty_user_application/features/account/profile/logic/profile_cubit.dart';
@@ -101,6 +104,15 @@ class RouteGenerator {
           builder: (_) => BlocProvider(
             create: (_) => PackagesFollowingCubit(),
             child: const PackagesFollowingScreen(),
+          ),
+        );
+      case Routes.helpScreen:
+        return MaterialPageRoute(builder: (_) => const HelpScreen());
+      case Routes.legalScreen:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => LegalCubit(),
+            child: const LegalScreen(),
           ),
         );
       case Routes.loginScreen:

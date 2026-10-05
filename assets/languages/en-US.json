@@ -305,6 +305,57 @@
     "teethFollowMeta": "Free · linked to a specialist · until Sep 15",
     "teethFollowNote": "The specialist you followed up with has left, and this follow-up is linked to her. Booking it is not available from the app, but the branch can arrange it for you."
   },
+  "help": {
+    "title": "Help",
+    "searchHint": "Search help",
+    "bookingProblemTitle": "Problem with a specific booking?",
+    "bookingProblemBody": "Open it from “My bookings” and message us there. We see its details right away and will not ask for the booking number.",
+    "goToBookings": "Go to my bookings",
+    "onboardingTitle": "Replay the starter guide",
+    "onboardingSubtitle": "A short tour of home, provider pages, and booking",
+    "faqTitle": "Frequently asked questions",
+    "fullList": "Full list",
+    "faqCancelQuestion": "How do I cancel a booking?",
+    "faqCancelAnswer": "From “My bookings”, open the booking, then tap “Cancel”. It is free up to 4 hours before the appointment, then 25% is charged.",
+    "faqPackageQuestion": "Is my package on my number or device?",
+    "faqPaymentQuestion": "Do I pay cash or by card?",
+    "faqMissedQuestion": "I missed my appointment — what happens?",
+    "faqWaitlistQuestion": "How do I leave the waitlist?",
+    "contactTitle": "Contact us",
+    "messageTitle": "Send a message",
+    "messageSubtitle": "We reply within two hours during working times",
+    "callTitle": "Call us",
+    "callSubtitle": "10 AM to 10 PM · every day"
+  },
+  "legal": {
+    "title": "Terms and privacy",
+    "updatedAt": "Last updated: August 2026",
+    "privacyTab": "Privacy",
+    "termsTab": "Terms",
+    "supportTitle": "Have a question about your data?",
+    "supportSubtitle": "We reply quickly.",
+    "supportButton": "Contact support",
+    "privacy": {
+      "summaryTitle": "The summary in three lines",
+      "summaryBody": "We use your data for bookings only. We do not sell or share it, and your number is only visible to the place you booked with.",
+      "sectionOneTitle": "What we collect",
+      "sectionOneBody": "Your name, number, bookings, and selected city. Not your constant location or contacts.",
+      "sectionTwoTitle": "Who sees it",
+      "sectionTwoBody": "The place you book with sees your name and number to receive you. Reviews appear with your first name only.",
+      "sectionThreeTitle": "Your data rights",
+      "sectionThreeBody": "You can request a copy or deletion from inside the app, and we handle it within 30 days."
+    },
+    "terms": {
+      "summaryTitle": "The summary in three lines",
+      "summaryBody": "Book with accurate details and respect the place’s appointment time. Cancellation and payment follow each service policy before confirmation.",
+      "sectionOneTitle": "Bookings and cancellation",
+      "sectionOneBody": "You can edit or cancel a booking in the app according to the service time and the place policy shown to you.",
+      "sectionTwoTitle": "Payment and packages",
+      "sectionTwoBody": "Payment is in person or online when available. Packages appear on your number and only move after confirming a number change.",
+      "sectionThreeTitle": "App usage",
+      "sectionThreeBody": "Use the app for your personal bookings only, and tell us right away if something is wrong or inaccurate."
+    }
+  },
   "onboardingAppointments": {
     "skip": "Skip",
     "category": "Appointments",

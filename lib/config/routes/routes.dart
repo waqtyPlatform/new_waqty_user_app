@@ -17,4 +17,6 @@ class Routes {
   static const changePhoneScreen = "/ChangePhoneScreen";
   static const confirmPhoneScreen = "/ConfirmPhoneScreen";
   static const packagesFollowingScreen = "/PackagesFollowingScreen";
+  static const helpScreen = "/HelpScreen";
+  static const legalScreen = "/LegalScreen";
 }

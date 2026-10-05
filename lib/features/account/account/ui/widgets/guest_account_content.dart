@@ -32,10 +32,12 @@ class GuestAccountContent extends StatelessWidget {
               title: context.tr('account.supportTitleGuest'),
               subtitle: context.tr('account.supportSubtitleGuest'),
               icon: Icons.info_outline_rounded,
+              onTap: () => context.pushNamed(Routes.helpScreen),
             ),
             AccountMenuItemModel(
               title: context.tr('account.termsPrivacyTitle'),
               icon: Icons.description_outlined,
+              onTap: () => context.pushNamed(Routes.legalScreen),
             ),
           ],
         ),

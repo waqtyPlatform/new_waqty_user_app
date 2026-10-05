@@ -96,6 +96,7 @@ class AccountUserContent extends StatelessWidget {
         title: context.tr('account.helpTitle'),
         subtitle: context.tr('account.helpSubtitle'),
         icon: Icons.help_outline_rounded,
+        onTap: () => context.pushNamed(Routes.helpScreen),
       ),
       AccountMenuItemModel(
         title: context.tr('account.inviteFriendsTitle'),
@@ -105,6 +106,7 @@ class AccountUserContent extends StatelessWidget {
       AccountMenuItemModel(
         title: context.tr('account.termsPrivacyTitle'),
         icon: Icons.info_outline_rounded,
+        onTap: () => context.pushNamed(Routes.legalScreen),
       ),
     ];
   }
