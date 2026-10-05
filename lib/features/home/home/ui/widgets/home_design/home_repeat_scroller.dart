@@ -60,9 +60,11 @@ class _RepeatCard extends StatelessWidget {
                     child: const _PhotoBox(size: 58),
                   ),
                 ),
-                Positioned.fill(
-                  left: 12.w,
-                  right: 70.w,
+                PositionedDirectional(
+                  start: 70.w,
+                  end: 12.w,
+                  top: 0,
+                  bottom: 0,
                   child: Align(
                     alignment: Alignment.center,
                     child: Column(

@@ -31,9 +31,11 @@ class HomeHeader extends StatelessWidget {
                 ),
               ),
             ),
-            Positioned.fill(
-              left: 96.w,
-              right: 58.w,
+            PositionedDirectional(
+              start: 58.w,
+              end: 96.w,
+              top: 0,
+              bottom: 0,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -77,25 +79,18 @@ class HomeHeader extends StatelessWidget {
             ),
             Align(
               alignment: AlignmentDirectional.centerEnd,
-              child: SizedBox(
-                width: 88.w,
-                child: Stack(
-                  children: [
-                    Align(
-                      alignment: AlignmentDirectional.centerEnd,
-                      child: _HeaderCircleButton(
-                        icon: Icons.notifications_none_rounded,
-                        showBadge: true,
-                      ),
-                    ),
-                    Align(
-                      alignment: AlignmentDirectional.centerStart,
-                      child: const _HeaderCircleButton(
-                        icon: Icons.favorite_border_rounded,
-                      ),
-                    ),
-                  ],
-                ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _HeaderCircleButton(
+                    icon: Icons.notifications_none_rounded,
+                    showBadge: true,
+                  ),
+                  SizedBox(width: 8.w),
+                  const _HeaderCircleButton(
+                    icon: Icons.favorite_border_rounded,
+                  ),
+                ],
               ),
             ),
           ],

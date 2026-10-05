@@ -24,9 +24,11 @@ class HomeSuggestPlaceCard extends StatelessWidget {
                 ),
               ),
             ),
-            Positioned.fill(
-              left: 100.w,
-              right: 0,
+            PositionedDirectional(
+              start: 0,
+              end: 100.w,
+              top: 0,
+              bottom: 0,
               child: _TextBlock(
                 titleKey: 'home.suggestTitle',
                 subtitleKey: 'home.suggestSubtitle',

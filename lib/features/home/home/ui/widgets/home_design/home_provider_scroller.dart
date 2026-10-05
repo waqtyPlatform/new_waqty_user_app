@@ -109,10 +109,9 @@ class _AvailableProviderCard extends StatelessWidget {
             child: Stack(
               children: [
                 const _PhotoBox(width: double.infinity, height: 140),
-                Positioned(
+                PositionedDirectional(
                   top: 8.h,
-                  left: 12.w,
-                  right: null,
+                  start: 12.w,
                   child: Container(
                     height: 36.h,
                     padding: EdgeInsets.symmetric(horizontal: 10.w),
@@ -138,10 +137,9 @@ class _AvailableProviderCard extends StatelessWidget {
                   ),
                 ),
                 if (provider.fast)
-                  Positioned(
+                  PositionedDirectional(
                     bottom: 12.h,
-                    left: null,
-                    right: 12.w,
+                    end: 12.w,
                     child: Container(
                       height: 34.h,
                       padding: EdgeInsets.symmetric(horizontal: 12.w),
@@ -267,10 +265,9 @@ class _ProviderCard extends StatelessWidget {
             child: Stack(
               children: [
                 const _PhotoBox(width: double.infinity, height: 140),
-                Positioned(
+                PositionedDirectional(
                   top: 12.h,
-                  left: 12.w,
-                  right: null,
+                  start: 12.w,
                   child: Container(
                     height: 34.h,
                     constraints: BoxConstraints(maxWidth: 118.w),

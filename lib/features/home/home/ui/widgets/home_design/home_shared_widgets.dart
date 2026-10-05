@@ -257,9 +257,11 @@ class _DotLabel extends StatelessWidget {
               decoration: BoxDecoration(color: color, shape: BoxShape.circle),
             ),
           ),
-          Positioned.fill(
-            left: 0,
-            right: 12.w,
+          PositionedDirectional(
+            start: 12.w,
+            end: 0,
+            top: 0,
+            bottom: 0,
             child: Align(
               alignment: AlignmentDirectional.centerStart,
               child: Text(

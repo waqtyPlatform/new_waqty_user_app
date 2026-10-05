@@ -74,10 +74,9 @@ class _OfferCard extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          Positioned(
+          PositionedDirectional(
             top: -34.h,
-            left: -24.w,
-            right: null,
+            start: -24.w,
             child: Container(
               width: 140.w,
               height: 140.w,
@@ -149,20 +148,21 @@ class _OfferCard extends StatelessWidget {
                   ),
                   child: Stack(
                     children: [
-                      Positioned(
+                      PositionedDirectional(
                         top: 0,
                         bottom: 0,
-                        left: 12.w,
-                        right: null,
+                        start: 12.w,
                         child: Icon(
                           Icons.local_offer_outlined,
                           size: 16.sp,
                           color: AppColors.greenColor50,
                         ),
                       ),
-                      Positioned.fill(
-                        left: 38.w,
-                        right: 12.w,
+                      PositionedDirectional(
+                        start: 38.w,
+                        end: 12.w,
+                        top: 0,
+                        bottom: 0,
                         child: Align(
                           alignment: AlignmentDirectional.centerStart,
                           child: Text(

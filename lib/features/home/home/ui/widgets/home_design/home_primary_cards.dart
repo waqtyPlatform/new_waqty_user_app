@@ -32,9 +32,11 @@ class HomeAppointmentCard extends StatelessWidget {
                     alignment: AlignmentDirectional.centerStart,
                     child: _TimeTile(),
                   ),
-                  Positioned.fill(
-                    left: 0,
-                    right: 96.w,
+                  PositionedDirectional(
+                    start: 96.w,
+                    end: 0,
+                    top: 0,
+                    bottom: 0,
                     child: _TextBlock(
                       titleKey: 'home.nextService',
                       subtitleKey: 'home.nextProvider',
@@ -57,9 +59,11 @@ class HomeAppointmentCard extends StatelessWidget {
                       dark: true,
                     ),
                   ),
-                  Positioned.fill(
-                    left: 52.w,
-                    right: 0,
+                  PositionedDirectional(
+                    start: 0,
+                    end: 52.w,
+                    top: 0,
+                    bottom: 0,
                     child: _PillButton(
                       label: context.tr('home.appointmentDetails'),
                       color: AppColors.whiteColor,
@@ -102,9 +106,11 @@ class HomeRatingCard extends StatelessWidget {
                 ),
               ),
             ),
-            Positioned.fill(
-              left: 166.w,
-              right: 0,
+            PositionedDirectional(
+              start: 0,
+              end: 166.w,
+              top: 0,
+              bottom: 0,
               child: _TextBlock(
                 titleKey: 'home.rateLastVisit',
                 subtitleKey: 'home.lastVisitMeta',
@@ -144,9 +150,11 @@ class HomeWaitlistCard extends StatelessWidget {
                     alignment: AlignmentDirectional.centerStart,
                     child: const _PhotoBox(size: 52),
                   ),
-                  Positioned.fill(
-                    left: 0,
-                    right: 64.w,
+                  PositionedDirectional(
+                    start: 64.w,
+                    end: 0,
+                    top: 0,
+                    bottom: 0,
                     child: _TextBlock(
                       titleKey: 'home.waitlistTitle',
                       subtitleKey: 'home.waitlistMeta',
@@ -172,9 +180,11 @@ class HomeWaitlistCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Positioned.fill(
-                    left: 112.w,
-                    right: 0,
+                  PositionedDirectional(
+                    start: 0,
+                    end: 112.w,
+                    top: 0,
+                    bottom: 0,
                     child: _PillButton(
                       label: context.tr('home.bookSlot'),
                       color: AppColors.greyColor900,

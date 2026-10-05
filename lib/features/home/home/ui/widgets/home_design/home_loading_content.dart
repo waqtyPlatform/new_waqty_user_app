@@ -52,9 +52,11 @@ class _LoadingHeader extends StatelessWidget {
               alignment: AlignmentDirectional.centerStart,
               child: const _SkeletonCircle(size: 44),
             ),
-            Positioned.fill(
-              left: 96.w,
-              right: 58.w,
+            PositionedDirectional(
+              start: 58.w,
+              end: 96.w,
+              top: 0,
+              bottom: 0,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -200,9 +202,11 @@ class _LoadingAppointmentCard extends StatelessWidget {
                     alignment: AlignmentDirectional.centerEnd,
                     child: _SkeletonBox(width: 82.w, height: 82.h, radius: 18),
                   ),
-                  Positioned.fill(
-                    left: 96.w,
-                    right: 0,
+                  PositionedDirectional(
+                    start: 96.w,
+                    end: 0,
+                    top: 0,
+                    bottom: 0,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       mainAxisAlignment: MainAxisAlignment.center,

@@ -65,9 +65,11 @@ class _OfflineAppointmentCard extends StatelessWidget {
                     alignment: AlignmentDirectional.centerStart,
                     child: _TimeTile(),
                   ),
-                  Positioned.fill(
-                    left: 0,
-                    right: 96.w,
+                  PositionedDirectional(
+                    start: 96.w,
+                    end: 0,
+                    top: 0,
+                    bottom: 0,
                     child: _TextBlock(
                       titleKey: 'home.nextService',
                       subtitleKey: 'home.nextProvider',
@@ -90,9 +92,11 @@ class _OfflineAppointmentCard extends StatelessWidget {
                       dark: true,
                     ),
                   ),
-                  Positioned.fill(
-                    left: 52.w,
-                    right: 0,
+                  PositionedDirectional(
+                    start: 0,
+                    end: 52.w,
+                    top: 0,
+                    bottom: 0,
                     child: _PillButton(
                       label: context.tr('home.appointmentDetails'),
                       color: AppColors.whiteColor,
@@ -140,9 +144,11 @@ class _OfflineErrorCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Positioned.fill(
-                    left: 52.w,
-                    right: 0,
+                  PositionedDirectional(
+                    start: 52.w,
+                    end: 0,
+                    top: 0,
+                    bottom: 0,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [

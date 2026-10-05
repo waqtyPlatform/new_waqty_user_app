@@ -71,9 +71,11 @@ class _SectionTitleRow extends StatelessWidget {
                 style: TextStyles.font12greenColor500W600,
               ),
             ),
-            Positioned.fill(
-              left: 56.w,
-              right: icon == null ? 0 : 56.w,
+            PositionedDirectional(
+              start: icon == null ? 0 : 46.w,
+              end: 56.w,
+              top: 0,
+              bottom: 0,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 mainAxisAlignment: MainAxisAlignment.center,
