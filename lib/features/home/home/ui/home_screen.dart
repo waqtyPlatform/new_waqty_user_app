@@ -1,78 +1,80 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:waqty_user_application/config/routes/routes.dart';
 import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
-import 'package:waqty_user_application/core/utils/assets_manager.dart';
-import 'package:waqty_user_application/core/utils/extentions.dart';
-import 'package:waqty_user_application/core/utils/spacing.dart';
-import 'package:waqty_user_application/core/utils/styles.dart';
-import 'package:waqty_user_application/features/home/home/ui/widgets/category_items_widget.dart';
-import 'package:waqty_user_application/features/home/home/ui/widgets/near_by_location_widget.dart';
-import 'package:waqty_user_application/features/home/home/ui/widgets/popular_people_widget.dart';
-import 'package:waqty_user_application/features/home/home/ui/widgets/top_home_widget.dart';
-import 'package:waqty_user_application/features/home/home/ui/widgets/upcoming_appointment_widget.dart';
+import 'package:waqty_user_application/features/home/home/ui/widgets/home_design_widgets.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final isArabic = context.locale.languageCode == 'ar';
     return Scaffold(
-      backgroundColor: AppColors.whiteColor,
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      backgroundColor: AppColors.pageColor,
+      body: SafeArea(
+        child: ListView(
+          padding: EdgeInsets.only(bottom: 116.h),
           children: [
-            TopHomeWidget(),
-            verticalSpace(24),
-
-            verticalSpace(24),
-            CategoryItemsWidget(),
-            verticalSpace(24),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24.w),
-              child: Row(
-                children: [
-                  Text(
-                    'home.UpcomingAppointmentsText'.tr(),
-                    style: TextStyles.font18greyColor900Weight600,
-                  ),
-                  Spacer(),
-                  Text(
-                    'home.SeeAllText'.tr(),
-                    style: TextStyles.font14greenColor500Weight600,
-                  ),
-                ],
-              ),
+            HomeHeader(isArabic: isArabic),
+            HomeSearchBar(isArabic: isArabic),
+            HomeCategoriesRow(isArabic: isArabic),
+            HomeAppointmentCard(isArabic: isArabic),
+            HomeRatingCard(isArabic: isArabic),
+            HomeWaitlistCard(isArabic: isArabic),
+            HomeSectionHeader(
+              isArabic: isArabic,
+              titleKey: 'home.availableTodayTitle',
+              subtitleKey: 'home.availableTodaySubtitle',
             ),
-            verticalSpace(16),
-            UpcomingAppointmentWidget(),
-            verticalSpace(24),
-            PopularPeopleWidget(),
-            verticalSpace(32),
-
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24.w),
-              child: Row(
-                children: [
-                  Text(
-                    'home.NearbyLocationText'.tr(),
-                    style: TextStyles.font18greyColor900Weight600,
-                  ),
-                  Spacer(),
-                  Text(
-                    'home.SeeAllText'.tr(),
-                    style: TextStyles.font14greenColor500Weight600,
-                  ),
-                ],
-              ),
+            HomeProviderScroller(isArabic: isArabic, wide: true),
+            HomeSectionHeader(
+              isArabic: isArabic,
+              titleKey: 'home.nearOffersTitle',
+              subtitleKey: 'home.nearOffersSubtitle',
             ),
-            verticalSpace(16),
-            NearByLocationWidget(),
-
-            verticalSpace(200),
+            HomeOfferScroller(isArabic: isArabic),
+            HomeSectionHeader(
+              isArabic: isArabic,
+              titleKey: 'home.repeatBookingTitle',
+              subtitleKey: 'home.repeatBookingSubtitle',
+            ),
+            HomeRepeatScroller(isArabic: isArabic),
+            HomeSectionHeader(
+              isArabic: isArabic,
+              titleKey: 'home.topRatedTitle',
+              subtitleKey: 'home.topRatedSubtitle',
+            ),
+            HomeProviderScroller(isArabic: isArabic),
+            HomeCategorySection(
+              isArabic: isArabic,
+              titleKey: 'home.menBarberTitle',
+              subtitleKey: 'home.menBarberSubtitle',
+              icon: Icons.content_cut_rounded,
+            ),
+            HomeProviderScroller(isArabic: isArabic),
+            HomeCategorySection(
+              isArabic: isArabic,
+              titleKey: 'home.womenHairTitle',
+              subtitleKey: 'home.womenHairSubtitle',
+              icon: Icons.brush_outlined,
+            ),
+            HomeProviderScroller(isArabic: isArabic),
+            HomeCategorySection(
+              isArabic: isArabic,
+              titleKey: 'home.skinClinicsTitle',
+              subtitleKey: 'home.skinClinicsSubtitle',
+              icon: Icons.spa_outlined,
+            ),
+            HomeProviderScroller(isArabic: isArabic),
+            HomeCategorySection(
+              isArabic: isArabic,
+              titleKey: 'home.dentalClinicsTitle',
+              subtitleKey: 'home.dentalClinicsSubtitle',
+              icon: Icons.medical_services_outlined,
+            ),
+            HomeProviderScroller(isArabic: isArabic),
+            HomeSuggestPlaceCard(isArabic: isArabic),
           ],
         ),
       ),
