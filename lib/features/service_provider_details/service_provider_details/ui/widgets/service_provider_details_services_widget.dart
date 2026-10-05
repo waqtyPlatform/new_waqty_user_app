@@ -15,10 +15,7 @@ class ServiceProviderDetailsServicesWidget extends StatelessWidget {
       children: [
         Row(
           children: [
-            Text(
-              'Our Services',
-              style: TextStyles.font18greyColor900Weight600,
-            ),
+            Text('Our Services', style: TextStyles.font18greyColor900Weight600),
             Spacer(),
             Text(
               'home.SeeAllText'.tr(),
@@ -28,26 +25,17 @@ class ServiceProviderDetailsServicesWidget extends StatelessWidget {
         ),
         verticalSpace(16),
         Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: 16.w,
-            vertical: 21.h,
-          ),
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 21.h),
           decoration: BoxDecoration(
             color: AppColors.whiteColor,
             borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: AppColors.greyColor50,width: 1),
+            border: Border.all(color: AppColors.greyColor50, width: 1),
           ),
           child: Row(
             children: [
-              Text(
-                'Hair Cut',
-                style: TextStyles.font14greyColor900Weight400,
-              ),
+              Text('Hair Cut', style: TextStyles.font14greyColor900Weight400),
               Spacer(),
-              Text(
-                '11 types',
-                style: TextStyles.font14greyColor900Weight600,
-              ),
+              Text('11 types', style: TextStyles.font14greyColor900Weight600),
               horizontalSpace(8),
               Icon(
                 Icons.arrow_forward_ios_rounded,
@@ -59,26 +47,17 @@ class ServiceProviderDetailsServicesWidget extends StatelessWidget {
         ),
         verticalSpace(16),
         Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: 16.w,
-            vertical: 21.h,
-          ),
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 21.h),
           decoration: BoxDecoration(
             color: AppColors.whiteColor,
             borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: AppColors.greyColor50,width: 1),
+            border: Border.all(color: AppColors.greyColor50, width: 1),
           ),
           child: Row(
             children: [
-              Text(
-                'Hair Cut',
-                style: TextStyles.font14greyColor900Weight400,
-              ),
+              Text('Hair Cut', style: TextStyles.font14greyColor900Weight400),
               Spacer(),
-              Text(
-                '11 types',
-                style: TextStyles.font14greyColor900Weight600,
-              ),
+              Text('11 types', style: TextStyles.font14greyColor900Weight600),
               horizontalSpace(8),
               Icon(
                 Icons.arrow_forward_ios_rounded,
@@ -90,26 +69,17 @@ class ServiceProviderDetailsServicesWidget extends StatelessWidget {
         ),
         verticalSpace(16),
         Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: 16.w,
-            vertical: 21.h,
-          ),
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 21.h),
           decoration: BoxDecoration(
             color: AppColors.whiteColor,
             borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: AppColors.greyColor50,width: 1),
+            border: Border.all(color: AppColors.greyColor50, width: 1),
           ),
           child: Row(
             children: [
-              Text(
-                'Hair Cut',
-                style: TextStyles.font14greyColor900Weight400,
-              ),
+              Text('Hair Cut', style: TextStyles.font14greyColor900Weight400),
               Spacer(),
-              Text(
-                '11 types',
-                style: TextStyles.font14greyColor900Weight600,
-              ),
+              Text('11 types', style: TextStyles.font14greyColor900Weight600),
               horizontalSpace(8),
               Icon(
                 Icons.arrow_forward_ios_rounded,
@@ -121,26 +91,17 @@ class ServiceProviderDetailsServicesWidget extends StatelessWidget {
         ),
         verticalSpace(16),
         Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: 16.w,
-            vertical: 21.h,
-          ),
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 21.h),
           decoration: BoxDecoration(
             color: AppColors.whiteColor,
             borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: AppColors.greyColor50,width: 1),
+            border: Border.all(color: AppColors.greyColor50, width: 1),
           ),
           child: Row(
             children: [
-              Text(
-                'Hair Cut',
-                style: TextStyles.font14greyColor900Weight400,
-              ),
+              Text('Hair Cut', style: TextStyles.font14greyColor900Weight400),
               Spacer(),
-              Text(
-                '11 types',
-                style: TextStyles.font14greyColor900Weight600,
-              ),
+              Text('11 types', style: TextStyles.font14greyColor900Weight600),
               horizontalSpace(8),
               Icon(
                 Icons.arrow_forward_ios_rounded,

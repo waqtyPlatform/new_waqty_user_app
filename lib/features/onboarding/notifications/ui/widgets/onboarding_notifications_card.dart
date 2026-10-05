@@ -44,8 +44,6 @@ class _UrgentAlertCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = isArabicLocale(context);
-
     return Container(
       height: 168.h,
       padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 12.h),
@@ -65,9 +63,7 @@ class _UrgentAlertCard extends StatelessWidget {
         ],
       ),
       child: Column(
-        crossAxisAlignment: isArabic
-            ? CrossAxisAlignment.end
-            : CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -75,46 +71,26 @@ class _UrgentAlertCard extends StatelessWidget {
             children: [
               const Expanded(child: _AlertContent()),
               SizedBox(width: 10.w),
-              _AlertTimer(isArabic: isArabic),
+              _AlertTimer(),
             ],
           ),
           const Spacer(),
           Row(
-            children: isArabic
-                ? [
-                    Expanded(
-                      child: _DarkPill(
-                        label: context.tr('onboardingNotifications.bookNow'),
-                        backgroundColor: AppColors.greenColor500,
-                      ),
-                    ),
-                    SizedBox(width: 8.w),
-                    Expanded(
-                      child: _DarkPill(
-                        label: context.tr(
-                          'onboardingNotifications.skipTraffic',
-                        ),
-                        backgroundColor: AppColors.greyColor700,
-                      ),
-                    ),
-                  ]
-                : [
-                    Expanded(
-                      child: _DarkPill(
-                        label: context.tr(
-                          'onboardingNotifications.skipTraffic',
-                        ),
-                        backgroundColor: AppColors.greyColor700,
-                      ),
-                    ),
-                    SizedBox(width: 8.w),
-                    Expanded(
-                      child: _DarkPill(
-                        label: context.tr('onboardingNotifications.bookNow'),
-                        backgroundColor: AppColors.greenColor500,
-                      ),
-                    ),
-                  ],
+            children: [
+              Expanded(
+                child: _DarkPill(
+                  label: context.tr('onboardingNotifications.bookNow'),
+                  backgroundColor: AppColors.greenColor500,
+                ),
+              ),
+              SizedBox(width: 8.w),
+              Expanded(
+                child: _DarkPill(
+                  label: context.tr('onboardingNotifications.skipTraffic'),
+                  backgroundColor: AppColors.greyColor700,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -127,18 +103,16 @@ class _AlertContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = isArabicLocale(context);
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _AlertSourceRow(isArabic: isArabic),
+        _AlertSourceRow(),
         SizedBox(height: 8.h),
         SizedBox(
           width: double.infinity,
           child: Text(
             context.tr('onboardingNotifications.alertTitle'),
-            textAlign: isArabic ? TextAlign.right : TextAlign.left,
+            textAlign: TextAlign.start,
             style: TextStyles.font24greyColor900Weight600.copyWith(
               color: AppColors.whiteColor,
               fontSize: 21.sp,
@@ -153,7 +127,7 @@ class _AlertContent extends StatelessWidget {
           width: double.infinity,
           child: Text(
             context.tr('onboardingNotifications.alertMeta'),
-            textAlign: isArabic ? TextAlign.right : TextAlign.left,
+            textAlign: TextAlign.start,
             style: TextStyles.font12greyColor3003Weight400,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -165,15 +139,13 @@ class _AlertContent extends StatelessWidget {
 }
 
 class _AlertSourceRow extends StatelessWidget {
-  final bool isArabic;
-
-  const _AlertSourceRow({required this.isArabic});
+  const _AlertSourceRow();
 
   @override
   Widget build(BuildContext context) {
     final sourceText = Text(
       context.tr('onboardingNotifications.appMessage'),
-      textAlign: isArabic ? TextAlign.right : TextAlign.left,
+      textAlign: TextAlign.start,
       style: TextStyles.font12greyColor3003Weight400.copyWith(fontSize: 11.sp),
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
@@ -194,21 +166,21 @@ class _AlertSourceRow extends StatelessWidget {
     );
 
     return Align(
-      alignment: isArabic ? Alignment.centerRight : Alignment.centerLeft,
+      alignment: AlignmentDirectional.centerStart,
       child: Row(
         mainAxisSize: MainAxisSize.min,
-        children: isArabic
-            ? [sourceIcon, SizedBox(width: 8.w), sourceText]
-            : [sourceIcon, SizedBox(width: 8.w), sourceText],
+        children: [
+          sourceIcon,
+          SizedBox(width: 8.w),
+          sourceText,
+        ],
       ),
     );
   }
 }
 
 class _AlertTimer extends StatelessWidget {
-  final bool isArabic;
-
-  const _AlertTimer({required this.isArabic});
+  const _AlertTimer();
 
   @override
   Widget build(BuildContext context) {
@@ -233,9 +205,11 @@ class _AlertTimer extends StatelessWidget {
     );
 
     return Row(
-      children: isArabic
-          ? [timerDot, SizedBox(width: 6.w), timerText]
-          : [timerText, SizedBox(width: 6.w), timerDot],
+      children: [
+        timerDot,
+        SizedBox(width: 6.w),
+        timerText,
+      ],
     );
   }
 }
@@ -280,14 +254,13 @@ class _NotificationInfoTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = isArabicLocale(context);
     final timeWidget = SizedBox(
       width: 54.w,
       child: Text(
         time,
-        textAlign: isArabic ? TextAlign.left : TextAlign.right,
+        textAlign: TextAlign.end,
         style: TextStyles.font12greyColor3003Weight400.copyWith(
-          fontSize: isArabic ? 12.sp : 11.sp,
+          fontSize: 12.sp,
         ),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
@@ -295,15 +268,13 @@ class _NotificationInfoTile extends StatelessWidget {
     );
     final copyWidget = Expanded(
       child: Column(
-        crossAxisAlignment: isArabic
-            ? CrossAxisAlignment.end
-            : CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
             width: double.infinity,
             child: Text(
               title,
-              textAlign: isArabic ? TextAlign.right : TextAlign.left,
+              textAlign: TextAlign.start,
               style: TextStyles.font12greyColor900Weight400.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -316,7 +287,7 @@ class _NotificationInfoTile extends StatelessWidget {
             width: double.infinity,
             child: Text(
               meta,
-              textAlign: isArabic ? TextAlign.right : TextAlign.left,
+              textAlign: TextAlign.start,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyles.font12greyColor500W400,

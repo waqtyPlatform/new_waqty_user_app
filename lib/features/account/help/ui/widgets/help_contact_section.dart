@@ -9,15 +9,14 @@ class HelpContactSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = context.locale.languageCode == 'ar';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Align(
-          alignment: isArabic ? Alignment.centerRight : Alignment.centerLeft,
+          alignment: AlignmentDirectional.centerStart,
           child: Text(
             context.tr('help.contactTitle'),
-            textAlign: isArabic ? TextAlign.right : TextAlign.left,
+            textAlign: TextAlign.start,
             style: TextStyles.font20greyColor900W600.copyWith(height: 1.3),
           ),
         ),
@@ -45,18 +44,8 @@ class HelpContactSection extends StatelessWidget {
               height: 148.h,
               child: Stack(
                 children: [
-                  Positioned(
-                    left: isArabic ? 0 : null,
-                    right: isArabic ? null : 0,
-                    top: 0,
-                    child: messageCard,
-                  ),
-                  Positioned(
-                    right: isArabic ? 0 : null,
-                    left: isArabic ? null : 0,
-                    top: 0,
-                    child: callCard,
-                  ),
+                  Positioned(left: 0, right: null, top: 0, child: messageCard),
+                  Positioned(right: 0, left: null, top: 0, child: callCard),
                 ],
               ),
             );
@@ -86,7 +75,6 @@ class _ContactCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = context.locale.languageCode == 'ar';
     return Container(
       width: width,
       height: 148.h,
@@ -113,7 +101,7 @@ class _ContactCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Align(
-            alignment: isArabic ? Alignment.centerRight : Alignment.centerLeft,
+            alignment: AlignmentDirectional.centerStart,
             child: Container(
               width: 40.w,
               height: 40.w,
@@ -129,7 +117,7 @@ class _ContactCard extends StatelessWidget {
             width: double.infinity,
             child: Text(
               context.tr(titleKey),
-              textAlign: isArabic ? TextAlign.right : TextAlign.left,
+              textAlign: TextAlign.start,
               style: TextStyles.font16greyColor900Weight600.copyWith(
                 height: 1.3,
               ),
@@ -142,7 +130,7 @@ class _ContactCard extends StatelessWidget {
               context.tr(subtitleKey),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              textAlign: isArabic ? TextAlign.right : TextAlign.left,
+              textAlign: TextAlign.start,
               style: TextStyles.font12greyColor500W400.copyWith(height: 1.65),
             ),
           ),

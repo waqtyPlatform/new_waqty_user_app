@@ -37,17 +37,14 @@ class LanguageOptionCard extends StatelessWidget {
   }
 
   List<Widget> get _children {
-    final isArabicOption = option.languageCode == 'ar';
     final marker = _RadioMarker(selected: selected);
     final content = Expanded(
       child: Column(
-        crossAxisAlignment: isArabicOption
-            ? CrossAxisAlignment.end
-            : CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             option.title,
-            textAlign: isArabicOption ? TextAlign.right : TextAlign.left,
+            textAlign: TextAlign.right,
             style:
                 (selected
                         ? TextStyles.font16greyColor900Weight600
@@ -57,7 +54,7 @@ class LanguageOptionCard extends StatelessWidget {
           SizedBox(height: 2.h),
           Text(
             option.subtitle,
-            textAlign: isArabicOption ? TextAlign.right : TextAlign.left,
+            textAlign: TextAlign.right,
             style: TextStyles.font12greyColor500W400,
           ),
         ],
@@ -67,22 +64,12 @@ class LanguageOptionCard extends StatelessWidget {
       width: 62.w,
       child: Text(
         option.label,
-        textAlign: isArabicOption ? TextAlign.left : TextAlign.right,
+        textAlign: TextAlign.left,
         style: TextStyles.font12greyColor500W600.copyWith(
           fontFamily: 'IBMPlexSansArabic',
         ),
       ),
     );
-
-    if (isArabicOption) {
-      return [
-        marker,
-        SizedBox(width: 12.w),
-        label,
-        SizedBox(width: 12.w),
-        content,
-      ];
-    }
 
     return [
       marker,

@@ -53,12 +53,8 @@ class _BookingStepsContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = isArabicLocale(context);
-
     return Column(
-      crossAxisAlignment: isArabic
-          ? CrossAxisAlignment.end
-          : CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _SectionHeader(
           leftText: context.tr('onboardingBooking.availableToday'),
@@ -81,7 +77,7 @@ class _BookingStepsContent extends StatelessWidget {
           width: double.infinity,
           child: Text(
             context.tr('onboardingBooking.reviewConfirm'),
-            textAlign: isArabic ? TextAlign.right : TextAlign.left,
+            textAlign: TextAlign.start,
             style: TextStyles.font12greyColor900Weight400,
           ),
         ),
@@ -92,7 +88,7 @@ class _BookingStepsContent extends StatelessWidget {
           width: double.infinity,
           child: Text(
             context.tr('onboardingBooking.freeCancel'),
-            textAlign: isArabic ? TextAlign.right : TextAlign.left,
+            textAlign: TextAlign.start,
             style: TextStyles.font12greyColor4002Weight400,
           ),
         ),
@@ -122,7 +118,7 @@ class _BookingStepsContent extends StatelessWidget {
             Flexible(
               child: Text(
                 context.tr('onboardingBooking.reservedMessage'),
-                textAlign: isArabic ? TextAlign.right : TextAlign.left,
+                textAlign: TextAlign.start,
                 style: TextStyles.font14greenColor500Weight400.copyWith(
                   color: AppColors.greenColor600,
                   fontSize: 16.sp,
@@ -258,19 +254,16 @@ class _ConfirmDetails extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = isArabicLocale(context);
     return SizedBox(
       width: double.infinity,
       child: Column(
-        crossAxisAlignment: isArabic
-            ? CrossAxisAlignment.end
-            : CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
             width: double.infinity,
             child: Text(
               context.tr('onboardingBooking.yourChoice'),
-              textAlign: isArabic ? TextAlign.right : TextAlign.left,
+              textAlign: TextAlign.start,
               style: TextStyles.font12greyColor3003Weight400,
             ),
           ),
@@ -279,7 +272,7 @@ class _ConfirmDetails extends StatelessWidget {
             width: double.infinity,
             child: Text(
               context.tr('onboardingBooking.choiceMeta'),
-              textAlign: isArabic ? TextAlign.right : TextAlign.left,
+              textAlign: TextAlign.start,
               style: TextStyles.font12whiteColorWeight600,
             ),
           ),

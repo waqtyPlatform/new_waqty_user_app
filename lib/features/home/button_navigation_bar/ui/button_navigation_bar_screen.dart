@@ -21,13 +21,18 @@ class ButtonNavigationBarScreen extends StatelessWidget {
           backgroundColor: AppColors.pageColor,
           body: ButtonNavigationBarCubit.get(context).buttonBarBody(),
           extendBody: true,
-          bottomNavigationBar: SafeArea(
-            minimum: EdgeInsets.fromLTRB(20.w, 0, 20.w, 18.h),
-            child: _WaqtyBottomNav(
-              currentIndex: ButtonNavigationBarCubit.get(context).currentIndex,
-              onTap: (index) {
-                ButtonNavigationBarCubit.get(context).changeIndex(index);
-              },
+          bottomNavigationBar: Material(
+            type: MaterialType.transparency,
+            child: SafeArea(
+              minimum: EdgeInsets.fromLTRB(20.w, 0, 20.w, 18.h),
+              child: _WaqtyBottomNav(
+                currentIndex: ButtonNavigationBarCubit.get(
+                  context,
+                ).currentIndex,
+                onTap: (index) {
+                  ButtonNavigationBarCubit.get(context).changeIndex(index);
+                },
+              ),
             ),
           ),
         );
@@ -44,7 +49,6 @@ class _WaqtyBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = context.locale.languageCode.toLowerCase().startsWith('ar');
     final items = [
       _NavItemData(
         icon: Icons.home_outlined,
@@ -73,22 +77,24 @@ class _WaqtyBottomNav extends StatelessWidget {
       height: 66.h,
       padding: EdgeInsets.all(6.w),
       decoration: BoxDecoration(
-        color: AppColors.whiteColor.withValues(alpha: 0.90),
+        color: AppColors.whiteColor.withValues(alpha: 0.96),
         borderRadius: BorderRadius.circular(999.r),
+        border: Border.all(
+          color: AppColors.greyColor200.withValues(alpha: 0.78),
+        ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.greyColor900.withValues(alpha: 0.17),
-            blurRadius: 20.r,
-            offset: Offset(0, 18.h),
+            color: AppColors.greyColor900.withValues(alpha: 0.13),
+            blurRadius: 22.r,
+            offset: Offset(0, 12.h),
           ),
           BoxShadow(
-            color: AppColors.greyColor900.withValues(alpha: 0.03),
-            blurRadius: 1.r,
+            color: AppColors.greyColor900.withValues(alpha: 0.04),
+            blurRadius: 2.r,
           ),
         ],
       ),
       child: Row(
-        textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
         children: List.generate(items.length, (index) {
           return Expanded(
             flex: currentIndex == index ? 2 : 1,
@@ -117,51 +123,59 @@ class _WaqtyBottomNavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = context.locale.languageCode.toLowerCase().startsWith('ar');
-
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      child: Container(
-        height: 54.h,
-        padding: EdgeInsets.symmetric(horizontal: selected ? 12.w : 0),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: selected ? AppColors.greyColor900 : Colors.transparent,
-          borderRadius: BorderRadius.circular(999.r),
-        ),
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: selected ? 0 : 4.w),
         child: Stack(
           clipBehavior: Clip.none,
           alignment: Alignment.center,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
-              children: [
-                Icon(
-                  selected ? item.activeIcon : item.icon,
-                  size: 22.sp,
-                  color: selected
-                      ? AppColors.whiteColor
-                      : AppColors.greyColor500,
-                ),
-                if (selected) ...[
-                  SizedBox(width: 8.w),
-                  Text(
-                    item.label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyles.font12whiteColorWeight600,
+            Container(
+              height: 54.h,
+              padding: EdgeInsets.symmetric(horizontal: selected ? 12.w : 0),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: selected ? AppColors.greyColor900 : Colors.transparent,
+                borderRadius: BorderRadius.circular(999.r),
+                boxShadow: selected
+                    ? [
+                        BoxShadow(
+                          color: AppColors.greyColor900.withValues(alpha: 0.18),
+                          blurRadius: 16.r,
+                          offset: Offset(0, 8.h),
+                        ),
+                      ]
+                    : null,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    selected ? item.activeIcon : item.icon,
+                    size: 22.sp,
+                    color: selected
+                        ? AppColors.whiteColor
+                        : AppColors.greyColor500,
                   ),
+                  if (selected) ...[
+                    SizedBox(width: 8.w),
+                    Text(
+                      item.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyles.font12whiteColorWeight600,
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
             if (item.badge != null && !selected)
-              Positioned(
+              PositionedDirectional(
                 top: 7.h,
-                right: isArabic ? 16.w : null,
-                left: isArabic ? null : 16.w,
+                start: 16.w,
                 child: Container(
                   height: 16.w,
                   width: 16.w,

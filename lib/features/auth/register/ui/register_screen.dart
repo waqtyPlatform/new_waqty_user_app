@@ -42,7 +42,6 @@ class RegisterScreen extends StatelessWidget {
               children: [
                 verticalSpace(24),
                 Row(
-                  textDirection: ui.TextDirection.ltr,
                   children: isEnglish
                       ? [
                           SvgPicture.asset(

@@ -12,7 +12,6 @@ class ChangePhoneWarning extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = accountIsArabic(context);
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
       decoration: BoxDecoration(
@@ -21,7 +20,6 @@ class ChangePhoneWarning extends StatelessWidget {
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
-        textDirection: isArabic ? ui.TextDirection.rtl : ui.TextDirection.ltr,
         children: [
           Icon(
             Icons.info_outline_rounded,
@@ -32,7 +30,7 @@ class ChangePhoneWarning extends StatelessWidget {
           Expanded(
             child: Text(
               context.tr('changePhone.warning'),
-              textAlign: isArabic ? TextAlign.right : TextAlign.left,
+              textAlign: TextAlign.start,
               style: TextStyles.font12greyColor500W400.copyWith(
                 height: 1.65,
                 color: AppColors.warningColor200,

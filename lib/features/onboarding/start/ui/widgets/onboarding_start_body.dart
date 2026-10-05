@@ -44,60 +44,38 @@ class _StartCopySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = isArabicLocale(context);
-
     return Positioned(
       left: 28.w,
       right: 28.w,
       top: 150.h,
       child: Column(
-        crossAxisAlignment: isArabic
-            ? CrossAxisAlignment.end
-            : CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: isArabic
-                ? MainAxisAlignment.end
-                : MainAxisAlignment.start,
-            textDirection: ui.TextDirection.ltr,
-            children: isArabic
-                ? [
-                    Text(
-                      context.tr('onboardingStart.category'),
-                      style: TextStyles.font12greyColor500W600,
-                    ),
-                    SizedBox(width: 8.w),
-                    Container(
-                      width: 22.w,
-                      height: 1.h,
-                      color: AppColors.greenColor600.withValues(alpha: 0.4),
-                    ),
-                    SizedBox(width: 8.w),
-                    Text('\u200E05 / 05', style: _stepStyle()),
-                  ]
-                : [
-                    Text('\u200E05 / 05', style: _stepStyle()),
-                    SizedBox(width: 8.w),
-                    Container(
-                      width: 22.w,
-                      height: 1.h,
-                      color: AppColors.greenColor600.withValues(alpha: 0.4),
-                    ),
-                    SizedBox(width: 8.w),
-                    Text(
-                      context.tr('onboardingStart.category'),
-                      style: TextStyles.font12greyColor500W600,
-                    ),
-                  ],
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Text(
+                context.tr('onboardingStart.category'),
+                style: TextStyles.font12greyColor500W600,
+              ),
+              SizedBox(width: 8.w),
+              Container(
+                width: 22.w,
+                height: 1.h,
+                color: AppColors.greenColor600.withValues(alpha: 0.4),
+              ),
+              SizedBox(width: 8.w),
+              Text('\u200E05 / 05', style: _stepStyle()),
+            ],
           ),
           SizedBox(height: 12.h),
           SizedBox(
             width: double.infinity,
             child: Text(
               context.tr('onboardingStart.title'),
-              textAlign: isArabic ? TextAlign.right : TextAlign.left,
+              textAlign: TextAlign.start,
               style: TextStyles.font32greyColor900Weight600.copyWith(
-                fontSize: isArabic ? 30.sp : 29.sp,
+                fontSize: 30.sp,
                 height: 1.18,
               ),
             ),
@@ -107,7 +85,7 @@ class _StartCopySection extends StatelessWidget {
             width: double.infinity,
             child: Text(
               context.tr('onboardingStart.description'),
-              textAlign: isArabic ? TextAlign.right : TextAlign.left,
+              textAlign: TextAlign.start,
               style: TextStyles.font16greyColor500Weight400.copyWith(
                 fontSize: 14.sp,
                 height: 1.4,
@@ -134,8 +112,6 @@ class _StartBenefitsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = isArabicLocale(context);
-
     return Positioned(
       left: 32.w,
       right: 32.w,
@@ -162,21 +138,18 @@ class _StartBenefitsCard extends StatelessWidget {
               title: context.tr('onboardingStart.benefit1Title'),
               subtitle: context.tr('onboardingStart.benefit1Subtitle'),
               icon: Icons.star_rounded,
-              isArabic: isArabic,
             ),
-            _BenefitDivider(isArabic: isArabic),
+            _BenefitDivider(),
             _BenefitRow(
               title: context.tr('onboardingStart.benefit2Title'),
               subtitle: context.tr('onboardingStart.benefit2Subtitle'),
               icon: Icons.payments_outlined,
-              isArabic: isArabic,
             ),
-            _BenefitDivider(isArabic: isArabic),
+            _BenefitDivider(),
             _BenefitRow(
               title: context.tr('onboardingStart.benefit3Title'),
               subtitle: context.tr('onboardingStart.benefit3Subtitle'),
               icon: Icons.location_on_outlined,
-              isArabic: isArabic,
             ),
           ],
         ),
@@ -189,13 +162,11 @@ class _BenefitRow extends StatelessWidget {
   final String title;
   final String subtitle;
   final IconData icon;
-  final bool isArabic;
 
   const _BenefitRow({
     required this.title,
     required this.subtitle,
     required this.icon,
-    required this.isArabic,
   });
 
   @override
@@ -211,15 +182,13 @@ class _BenefitRow extends StatelessWidget {
     );
     final copy = Expanded(
       child: Column(
-        crossAxisAlignment: isArabic
-            ? CrossAxisAlignment.end
-            : CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
             width: double.infinity,
             child: Text(
               title,
-              textAlign: isArabic ? TextAlign.right : TextAlign.left,
+              textAlign: TextAlign.start,
               style: TextStyles.font12greyColor900Weight400.copyWith(
                 fontWeight: FontWeight.w600,
                 height: 1.25,
@@ -233,7 +202,7 @@ class _BenefitRow extends StatelessWidget {
             width: double.infinity,
             child: Text(
               subtitle,
-              textAlign: isArabic ? TextAlign.right : TextAlign.left,
+              textAlign: TextAlign.start,
               style: TextStyles.font12greyColor500W400.copyWith(
                 fontSize: 11.sp,
                 height: 1.25,
@@ -249,27 +218,23 @@ class _BenefitRow extends StatelessWidget {
     return SizedBox(
       height: 54.h,
       child: Row(
-        textDirection: ui.TextDirection.ltr,
-        children: isArabic
-            ? [copy, SizedBox(width: 14.w), iconBox]
-            : [iconBox, SizedBox(width: 14.w), copy],
+        children: [
+          copy,
+          SizedBox(width: 14.w),
+          iconBox,
+        ],
       ),
     );
   }
 }
 
 class _BenefitDivider extends StatelessWidget {
-  final bool isArabic;
-
-  const _BenefitDivider({required this.isArabic});
+  const _BenefitDivider();
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsetsDirectional.only(
-        start: isArabic ? 0 : 48.w,
-        end: isArabic ? 48.w : 0,
-      ),
+      padding: EdgeInsetsDirectional.only(start: 0, end: 48.w),
       child: Divider(
         height: 12.h,
         thickness: 1.h,
@@ -284,8 +249,7 @@ class _StartBottomActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = isArabicLocale(context);
-    final arrowAngle = isArabic ? math.pi / 2 : -math.pi / 2;
+    final arrowAngle = math.pi / 2;
     final arrowIcon = Container(
       width: 44.w,
       height: 44.w,
@@ -348,11 +312,8 @@ class _StartBottomActions extends StatelessWidget {
                 ],
               ),
               child: Row(
-                textDirection: ui.TextDirection.ltr,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: isArabic
-                    ? [arrowIcon, createText]
-                    : [createText, arrowIcon],
+                children: [arrowIcon, createText],
               ),
             ),
           ),
@@ -391,10 +352,11 @@ class _StartBottomActions extends StatelessWidget {
                 completeOnboardingAndNavigate(context, Routes.loginScreen),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              textDirection: ui.TextDirection.ltr,
-              children: isArabic
-                  ? [login, SizedBox(width: 6.w), haveAccount]
-                  : [haveAccount, SizedBox(width: 6.w), login],
+              children: [
+                login,
+                SizedBox(width: 6.w),
+                haveAccount,
+              ],
             ),
           ),
         ],

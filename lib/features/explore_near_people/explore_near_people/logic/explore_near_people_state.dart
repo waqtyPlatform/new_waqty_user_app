@@ -1,5 +1,3 @@
+abstract class ExploreNearPeopleState {}
 
-abstract class ExploreNearPeopleState{}
 class InitialState extends ExploreNearPeopleState {}
-
-

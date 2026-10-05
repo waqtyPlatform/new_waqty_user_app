@@ -9,11 +9,10 @@ class AccountTopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = context.locale.languageCode.toLowerCase().startsWith('ar');
     final title = Expanded(
       child: Text(
         context.tr('account.title'),
-        textAlign: isArabic ? TextAlign.right : TextAlign.left,
+        textAlign: TextAlign.start,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: TextStyles.font24greyColor900Weight600.copyWith(height: 1.3),
@@ -50,10 +49,11 @@ class AccountTopBar extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.fromLTRB(20.w, 6.h, 20.w, 8.h),
       child: Row(
-        textDirection: TextDirection.ltr,
-        children: isArabic
-            ? [notesButton, SizedBox(width: 12.w), title]
-            : [title, SizedBox(width: 12.w), notesButton],
+        children: [
+          notesButton,
+          SizedBox(width: 12.w),
+          title,
+        ],
       ),
     );
   }

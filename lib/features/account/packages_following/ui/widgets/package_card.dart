@@ -51,20 +51,17 @@ class _PackageHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = accountIsArabic(context);
     final details = SizedBox(
       width: 196.w,
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: isArabic
-            ? CrossAxisAlignment.end
-            : CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
             width: double.infinity,
             child: Text(
               context.tr(package.titleKey),
-              textAlign: isArabic ? TextAlign.right : TextAlign.left,
+              textAlign: TextAlign.start,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyles.font16greyColor900Weight600.copyWith(
@@ -77,7 +74,7 @@ class _PackageHeader extends StatelessWidget {
             width: double.infinity,
             child: Text(
               context.tr(package.providerKey),
-              textAlign: isArabic ? TextAlign.right : TextAlign.left,
+              textAlign: TextAlign.start,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyles.font12greyColor500W400,
@@ -90,21 +87,13 @@ class _PackageHeader extends StatelessWidget {
     return SizedBox(
       height: 46.h,
       child: Stack(
-        children: isArabic
-            ? [
-                Align(
-                  alignment: Alignment.topLeft,
-                  child: _StatusPill(package: package),
-                ),
-                Positioned(top: 0, right: 0, width: 196.w, child: details),
-              ]
-            : [
-                Positioned(top: 0, left: 0, width: 196.w, child: details),
-                Align(
-                  alignment: Alignment.topRight,
-                  child: _StatusPill(package: package),
-                ),
-              ],
+        children: [
+          Align(
+            alignment: Alignment.topLeft,
+            child: _StatusPill(package: package),
+          ),
+          Positioned(top: 0, right: 0, width: 196.w, child: details),
+        ],
       ),
     );
   }
@@ -118,7 +107,6 @@ class _StatusPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = _statusColors(package.status);
-    final isArabic = accountIsArabic(context);
     return Container(
       height: 26.h,
       padding: EdgeInsets.symmetric(horizontal: 10.w),
@@ -128,41 +116,23 @@ class _StatusPill extends StatelessWidget {
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
-        children: isArabic
-            ? [
-                Container(
-                  width: 6.w,
-                  height: 6.w,
-                  decoration: BoxDecoration(
-                    color: colors.dot,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                SizedBox(width: 6.w),
-                Text(
-                  context.tr(package.statusKey),
-                  style: TextStyles.font12greyColor500W600.copyWith(
-                    color: colors.foreground,
-                  ),
-                ),
-              ]
-            : [
-                Text(
-                  context.tr(package.statusKey),
-                  style: TextStyles.font12greyColor500W600.copyWith(
-                    color: colors.foreground,
-                  ),
-                ),
-                SizedBox(width: 6.w),
-                Container(
-                  width: 6.w,
-                  height: 6.w,
-                  decoration: BoxDecoration(
-                    color: colors.dot,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ],
+        children: [
+          Container(
+            width: 6.w,
+            height: 6.w,
+            decoration: BoxDecoration(
+              color: colors.dot,
+              shape: BoxShape.circle,
+            ),
+          ),
+          SizedBox(width: 6.w),
+          Text(
+            context.tr(package.statusKey),
+            style: TextStyles.font12greyColor500W600.copyWith(
+              color: colors.foreground,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -175,58 +145,31 @@ class _PackageCounter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = accountIsArabic(context);
     return Row(
-      mainAxisAlignment: isArabic
-          ? MainAxisAlignment.end
-          : MainAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.end,
-      textDirection: TextDirection.ltr,
-      children: isArabic
-          ? [
-              Flexible(
-                child: Padding(
-                  padding: EdgeInsets.only(bottom: 4.h),
-                  child: Text(
-                    context.tr(package.availableLabelKey),
-                    textAlign: TextAlign.right,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyles.font12greyColor500W400,
-                  ),
-                ),
-              ),
-              SizedBox(width: 6.w),
-              Text(
-                package.availableValue,
-                style: TextStyles.font32greyColor900Weight600.copyWith(
-                  color: _counterColor(package.status),
-                  height: 1.1,
-                ),
-              ),
-            ]
-          : [
-              Text(
-                package.availableValue,
-                style: TextStyles.font32greyColor900Weight600.copyWith(
-                  color: _counterColor(package.status),
-                  height: 1.1,
-                ),
-              ),
-              SizedBox(width: 6.w),
-              Flexible(
-                child: Padding(
-                  padding: EdgeInsets.only(bottom: 4.h),
-                  child: Text(
-                    context.tr(package.availableLabelKey),
-                    textAlign: TextAlign.left,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyles.font12greyColor500W400,
-                  ),
-                ),
-              ),
-            ],
+      children: [
+        Flexible(
+          child: Padding(
+            padding: EdgeInsets.only(bottom: 4.h),
+            child: Text(
+              context.tr(package.availableLabelKey),
+              textAlign: TextAlign.right,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyles.font12greyColor500W400,
+            ),
+          ),
+        ),
+        SizedBox(width: 6.w),
+        Text(
+          package.availableValue,
+          style: TextStyles.font32greyColor900Weight600.copyWith(
+            color: _counterColor(package.status),
+            height: 1.1,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -241,7 +184,6 @@ class _PackageProgress extends StatelessWidget {
     return SizedBox(
       height: 8.h,
       child: Row(
-        textDirection: TextDirection.ltr,
         children: segments
             .map(
               (segment) => Expanded(
@@ -268,18 +210,15 @@ class _PackageLegend extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = accountIsArabic(context);
-    final displayedSegments = isArabic ? segments.reversed : segments;
+    final displayedSegments = segments.reversed;
     return Wrap(
-      alignment: isArabic ? WrapAlignment.end : WrapAlignment.start,
+      alignment: WrapAlignment.end,
       runSpacing: 6.h,
       spacing: 14.w,
-      textDirection: TextDirection.ltr,
       children: displayedSegments
           .map(
             (segment) => Row(
               mainAxisSize: MainAxisSize.min,
-              textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
               children: [
                 Container(
                   width: 8.w,
@@ -309,7 +248,6 @@ class _PackageFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = accountIsArabic(context);
     return Container(
       padding: EdgeInsets.only(top: 12.h),
       decoration: BoxDecoration(
@@ -320,22 +258,11 @@ class _PackageFooter extends StatelessWidget {
         ),
       ),
       child: Row(
-        textDirection: TextDirection.ltr,
-        children: isArabic
-            ? [
-                _DetailsLink(isArabic: isArabic),
-                SizedBox(width: 10.w),
-                Expanded(
-                  child: _MetaText(metaKey: metaKey, isArabic: isArabic),
-                ),
-              ]
-            : [
-                Expanded(
-                  child: _MetaText(metaKey: metaKey, isArabic: isArabic),
-                ),
-                SizedBox(width: 10.w),
-                _DetailsLink(isArabic: isArabic),
-              ],
+        children: [
+          _DetailsLink(),
+          SizedBox(width: 10.w),
+          Expanded(child: _MetaText(metaKey: metaKey)),
+        ],
       ),
     );
   }
@@ -343,15 +270,14 @@ class _PackageFooter extends StatelessWidget {
 
 class _MetaText extends StatelessWidget {
   final String metaKey;
-  final bool isArabic;
 
-  const _MetaText({required this.metaKey, required this.isArabic});
+  const _MetaText({required this.metaKey});
 
   @override
   Widget build(BuildContext context) {
     return Text(
       context.tr(metaKey),
-      textAlign: isArabic ? TextAlign.right : TextAlign.left,
+      textAlign: TextAlign.start,
       maxLines: 2,
       overflow: TextOverflow.ellipsis,
       style: TextStyles.font12greyColor500W400,
@@ -360,15 +286,12 @@ class _MetaText extends StatelessWidget {
 }
 
 class _DetailsLink extends StatelessWidget {
-  final bool isArabic;
-
-  const _DetailsLink({required this.isArabic});
+  const _DetailsLink();
 
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
-      textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
       children: [
         Text(
           context.tr('packagesFollowing.details'),
@@ -378,10 +301,9 @@ class _DetailsLink extends StatelessWidget {
         ),
         SizedBox(width: 2.w),
         Icon(
-          isArabic ? Icons.chevron_left_rounded : Icons.chevron_right_rounded,
+          Icons.chevron_left_rounded,
           color: AppColors.greenColor600,
           size: 16.sp,
-          textDirection: TextDirection.ltr,
         ),
       ],
     );
@@ -395,7 +317,6 @@ class _PackageNote extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = accountIsArabic(context);
     return Container(
       width: double.infinity,
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
@@ -405,7 +326,7 @@ class _PackageNote extends StatelessWidget {
       ),
       child: Text(
         context.tr(noteKey),
-        textAlign: isArabic ? TextAlign.right : TextAlign.left,
+        textAlign: TextAlign.start,
         style: TextStyles.font12greyColor500W400.copyWith(
           color: AppColors.warningColor200,
           height: 1.65,

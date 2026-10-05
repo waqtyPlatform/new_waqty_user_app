@@ -7,9 +7,8 @@ import 'package:waqty_user_application/features/service_provider_details/service
 class ServiceProviderDetailsCubit extends Cubit<ServiceProviderDetailsState> {
   final ServiceProviderDetailsRepo _serviceProviderDetailsRepo;
 
-  ServiceProviderDetailsCubit(this._serviceProviderDetailsRepo) : super(InitialState());
-
-
+  ServiceProviderDetailsCubit(this._serviceProviderDetailsRepo)
+    : super(InitialState());
 
   static ServiceProviderDetailsCubit get(context) => BlocProvider.of(context);
 }

@@ -9,25 +9,24 @@ class HelpHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = context.locale.languageCode == 'ar';
     return SizedBox(
       height: 44.h,
       child: Stack(
         children: [
           Align(
-            alignment: isArabic ? Alignment.centerRight : Alignment.centerLeft,
+            alignment: AlignmentDirectional.centerStart,
             child: const WaqtyBackButton(),
           ),
           Positioned(
             top: 8.h,
-            right: isArabic ? 56.w : null,
-            left: isArabic ? null : 56.w,
+            right: 56.w,
+            left: null,
             width: 230.w,
             child: Text(
               context.tr('help.title'),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              textAlign: isArabic ? TextAlign.right : TextAlign.left,
+              textAlign: TextAlign.start,
               style: TextStyles.font20greyColor900W600.copyWith(height: 1.3),
             ),
           ),

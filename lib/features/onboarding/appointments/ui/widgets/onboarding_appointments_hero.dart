@@ -12,8 +12,6 @@ class OnboardingAppointmentsHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = isArabicLocale(context);
-
     return Positioned(
       left: 20.w,
       right: 20.w,
@@ -38,15 +36,15 @@ class OnboardingAppointmentsHero extends StatelessWidget {
             leadingInset: 54,
             trailingInset: -4,
             top: 0,
-            angle: isArabic ? -0.087 : 0.087,
-            text: isArabic ? 'الجمعة 18 · 1:00 م' : 'Friday 18 · 1:00 PM',
+            angle: -0.087,
+            text: 'الجمعة 18 · 1:00 م',
           ),
           _GhostAppointmentCard(
             leadingInset: 28,
             trailingInset: -4,
             top: 48,
-            angle: isArabic ? 0.026 : -0.026,
-            text: isArabic ? 'الخميس 17 · 6:30 م' : 'Thursday 17 · 6:30 PM',
+            angle: 0.026,
+            text: 'الخميس 17 · 6:30 م',
           ),
           Positioned(
             left: 4.w,
@@ -77,8 +75,6 @@ class _GhostAppointmentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = isArabicLocale(context);
-
     return PositionedDirectional(
       start: leadingInset.w,
       end: trailingInset.w,
@@ -102,10 +98,10 @@ class _GhostAppointmentCard extends StatelessWidget {
               ),
             ],
           ),
-          alignment: isArabic ? Alignment.topRight : Alignment.topLeft,
+          alignment: AlignmentDirectional.topStart,
           child: Text(
             text,
-            textAlign: isArabic ? TextAlign.right : TextAlign.left,
+            textAlign: TextAlign.start,
             style: TextStyles.font12greyColor4002Weight400,
           ),
         ),
@@ -119,7 +115,6 @@ class _MainAppointmentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = isArabicLocale(context);
     final nextAppointment = Text(
       context.tr('onboardingAppointments.nextAppointment'),
       style: TextStyles.font12greyColor3003Weight400,
@@ -154,9 +149,7 @@ class _MainAppointmentCard extends StatelessWidget {
         clipBehavior: Clip.none,
         children: [
           Column(
-            crossAxisAlignment: isArabic
-                ? CrossAxisAlignment.end
-                : CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -167,7 +160,7 @@ class _MainAppointmentCard extends StatelessWidget {
                 width: double.infinity,
                 child: Text(
                   context.tr('onboardingAppointments.appointmentTime'),
-                  textAlign: isArabic ? TextAlign.right : TextAlign.left,
+                  textAlign: TextAlign.start,
                   style: TextStyles.font32greyColor900Weight600.copyWith(
                     color: AppColors.whiteColor,
                     height: 1.15,
@@ -180,7 +173,7 @@ class _MainAppointmentCard extends StatelessWidget {
                 width: double.infinity,
                 child: Text(
                   context.tr('onboardingAppointments.appointmentMeta'),
-                  textAlign: isArabic ? TextAlign.right : TextAlign.left,
+                  textAlign: TextAlign.start,
                   style: TextStyles.font12greyColor3003Weight400,
                 ),
               ),

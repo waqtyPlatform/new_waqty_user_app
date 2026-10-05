@@ -20,8 +20,7 @@ class SplashLogoMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = isArabicLocale(context);
-    final horizontalTarget = isArabic ? 181.5 : -127.5;
+    const horizontalTarget = 181.5;
     final slideProgress = symbolSlideAnimation.value.dy / -298;
 
     return Positioned(

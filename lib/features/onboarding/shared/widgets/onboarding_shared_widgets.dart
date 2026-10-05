@@ -38,8 +38,7 @@ class OnboardingHeaderBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = isArabicLocale(context);
-    final skipArrowAngle = isArabic ? math.pi / 2 : -math.pi / 2;
+    final skipArrowAngle = math.pi / 2;
     final skipIcon = Transform.rotate(
       angle: skipArrowAngle,
       child: SvgPicture.asset(
@@ -66,17 +65,20 @@ class OnboardingHeaderBar extends StatelessWidget {
           borderRadius: BorderRadius.circular(999.r),
         ),
         child: Row(
-          children: isArabic
-              ? [skipText, SizedBox(width: 6.w), skipIcon]
-              : [skipText, SizedBox(width: 6.w), skipIcon],
+          children: [
+            skipText,
+            SizedBox(width: 6.w),
+            skipIcon,
+          ],
         ),
       ),
     );
     final actions = Row(
-      textDirection: ui.TextDirection.ltr,
-      children: isArabic
-          ? [skip, SizedBox(width: 8.w), const OnboardingLanguageToggle()]
-          : [const OnboardingLanguageToggle(), SizedBox(width: 8.w), skip],
+      children: [
+        skip,
+        SizedBox(width: 8.w),
+        const OnboardingLanguageToggle(),
+      ],
     );
     final brand = Row(
       children: [
@@ -110,13 +112,9 @@ class OnboardingLanguageToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = isArabicLocale(context);
-
     return GestureDetector(
       onTap: () {
-        context.setLocale(
-          isArabic ? const Locale('en', 'US') : const Locale('ar', 'EG'),
-        );
+        context.setLocale(const Locale('en', 'US'));
       },
       child: Container(
         height: 34.h,
@@ -127,7 +125,7 @@ class OnboardingLanguageToggle extends StatelessWidget {
         ),
         alignment: Alignment.center,
         child: Text(
-          isArabic ? 'EN' : 'ع',
+          'EN',
           style: TextStyles.font12greenColor500W600.copyWith(fontSize: 13.sp),
         ),
       ),
@@ -179,8 +177,7 @@ class OnboardingBottomActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = isArabicLocale(context);
-    final nextArrowAngle = isArabic ? math.pi / 2 : -math.pi / 2;
+    final nextArrowAngle = math.pi / 2;
     final nextIcon = Container(
       width: 44.w,
       height: 44.w,
@@ -273,46 +270,28 @@ class OnboardingBottomActions extends StatelessWidget {
                 ],
               ),
               child: Row(
-                textDirection: ui.TextDirection.ltr,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: isArabic
-                    ? [nextIcon, nextText]
-                    : [nextText, nextIcon],
+                children: [nextIcon, nextText],
               ),
             ),
           ),
           SizedBox(height: 26.h),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            textDirection: ui.TextDirection.ltr,
-            children: isArabic
-                ? [
-                    guestLink,
-                    SizedBox(width: 8.w),
-                    separator,
-                    SizedBox(width: 8.w),
-                    loginLink,
-                    SizedBox(width: 8.w),
-                    haveAccount,
-                  ]
-                : [
-                    haveAccount,
-                    SizedBox(width: 8.w),
-                    loginLink,
-                    SizedBox(width: 8.w),
-                    separator,
-                    SizedBox(width: 8.w),
-                    guestLink,
-                  ],
+            children: [
+              guestLink,
+              SizedBox(width: 8.w),
+              separator,
+              SizedBox(width: 8.w),
+              loginLink,
+              SizedBox(width: 8.w),
+              haveAccount,
+            ],
           ),
         ],
       ),
     );
   }
-}
-
-bool isArabicLocale(BuildContext context) {
-  return context.locale.languageCode == 'ar';
 }
 
 Future<void> completeOnboardingAndNavigate(

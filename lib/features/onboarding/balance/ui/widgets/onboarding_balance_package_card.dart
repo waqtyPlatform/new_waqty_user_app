@@ -50,8 +50,6 @@ class _PackageStatusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = isArabicLocale(context);
-
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -74,49 +72,29 @@ class _PackageStatusCard extends StatelessWidget {
             ],
           ),
           child: Column(
-            crossAxisAlignment: isArabic
-                ? CrossAxisAlignment.end
-                : CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
-                textDirection: ui.TextDirection.ltr,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: isArabic
-                    ? [
-                        Text(
-                          context.tr('onboardingBalance.validUntil'),
-                          style: TextStyles.font12greyColor3003Weight400,
-                        ),
-                        _PackageBadge(
-                          label: context.tr('onboardingBalance.packageBadge'),
-                        ),
-                      ]
-                    : [
-                        _PackageBadge(
-                          label: context.tr('onboardingBalance.packageBadge'),
-                        ),
-                        Text(
-                          context.tr('onboardingBalance.validUntil'),
-                          style: TextStyles.font12greyColor3003Weight400,
-                        ),
-                      ],
+                children: [
+                  Text(
+                    context.tr('onboardingBalance.validUntil'),
+                    style: TextStyles.font12greyColor3003Weight400,
+                  ),
+                  _PackageBadge(
+                    label: context.tr('onboardingBalance.packageBadge'),
+                  ),
+                ],
               ),
               SizedBox(height: 22.h),
               Row(
-                textDirection: ui.TextDirection.ltr,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.end,
-                children: isArabic
-                    ? [
-                        Expanded(child: _PackageCopy(isArabic: isArabic)),
-                        SizedBox(width: 10.w),
-                        const _AvailableCount(),
-                      ]
-                    : [
-                        const _AvailableCount(),
-                        SizedBox(width: 10.w),
-                        Expanded(child: _PackageCopy(isArabic: isArabic)),
-                      ],
+                children: [
+                  Expanded(child: _PackageCopy()),
+                  SizedBox(width: 10.w),
+                  const _AvailableCount(),
+                ],
               ),
               SizedBox(height: 18.h),
               const _UsageSegments(),
@@ -125,7 +103,7 @@ class _PackageStatusCard extends StatelessWidget {
                 width: double.infinity,
                 child: Text(
                   context.tr('onboardingBalance.usageMeta'),
-                  textAlign: isArabic ? TextAlign.right : TextAlign.left,
+                  textAlign: TextAlign.start,
                   style: TextStyles.font12greyColor3003Weight400,
                 ),
               ),
@@ -138,7 +116,7 @@ class _PackageStatusCard extends StatelessWidget {
           bottom: -15.h,
           child: Align(
             alignment: Alignment.centerLeft,
-            child: _AutoLinkedPill(isArabic: isArabic),
+            child: _AutoLinkedPill(),
           ),
         ),
       ],
@@ -167,22 +145,18 @@ class _PackageBadge extends StatelessWidget {
 }
 
 class _PackageCopy extends StatelessWidget {
-  final bool isArabic;
-
-  const _PackageCopy({required this.isArabic});
+  const _PackageCopy();
 
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: isArabic
-          ? CrossAxisAlignment.end
-          : CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(
           width: double.infinity,
           child: Text(
             context.tr('onboardingBalance.sessionsAvailable'),
-            textAlign: isArabic ? TextAlign.right : TextAlign.left,
+            textAlign: TextAlign.start,
             style: TextStyles.font18whiteColorWeight600.copyWith(
               fontSize: 19.sp,
               height: 1.25,
@@ -194,7 +168,7 @@ class _PackageCopy extends StatelessWidget {
           width: double.infinity,
           child: Text(
             context.tr('onboardingBalance.packageMeta'),
-            textAlign: isArabic ? TextAlign.right : TextAlign.left,
+            textAlign: TextAlign.start,
             style: TextStyles.font12greyColor3003Weight400,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -256,9 +230,7 @@ class _UsageSegments extends StatelessWidget {
 }
 
 class _AutoLinkedPill extends StatelessWidget {
-  final bool isArabic;
-
-  const _AutoLinkedPill({required this.isArabic});
+  const _AutoLinkedPill();
 
   @override
   Widget build(BuildContext context) {
@@ -280,45 +252,25 @@ class _AutoLinkedPill extends StatelessWidget {
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
-          children: isArabic
-              ? [
-                  Icon(
-                    Icons.check_circle_outline,
-                    color: AppColors.successColor50,
-                    size: 16.w,
-                  ),
-                  SizedBox(width: 8.w),
-                  Flexible(
-                    child: Text(
-                      context.tr('onboardingBalance.autoLinked'),
-                      textAlign: isArabic ? TextAlign.right : TextAlign.left,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyles.font14whiteColorWeight400.copyWith(
-                        fontSize: isArabic ? 14.sp : 13.sp,
-                      ),
-                    ),
-                  ),
-                ]
-              : [
-                  Flexible(
-                    child: Text(
-                      context.tr('onboardingBalance.autoLinked'),
-                      textAlign: isArabic ? TextAlign.right : TextAlign.left,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyles.font14whiteColorWeight400.copyWith(
-                        fontSize: isArabic ? 14.sp : 13.sp,
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 8.w),
-                  Icon(
-                    Icons.check_circle_outline,
-                    color: AppColors.successColor50,
-                    size: 16.w,
-                  ),
-                ],
+          children: [
+            Icon(
+              Icons.check_circle_outline,
+              color: AppColors.successColor50,
+              size: 16.w,
+            ),
+            SizedBox(width: 8.w),
+            Flexible(
+              child: Text(
+                context.tr('onboardingBalance.autoLinked'),
+                textAlign: TextAlign.start,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyles.font14whiteColorWeight400.copyWith(
+                  fontSize: 14.sp,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -338,8 +290,6 @@ class _BalanceInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = isArabicLocale(context);
-
     return Container(
       height: 110.h,
       padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
@@ -358,15 +308,13 @@ class _BalanceInfoCard extends StatelessWidget {
         ],
       ),
       child: Column(
-        crossAxisAlignment: isArabic
-            ? CrossAxisAlignment.end
-            : CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
             width: double.infinity,
             child: Text(
               title,
-              textAlign: isArabic ? TextAlign.right : TextAlign.left,
+              textAlign: TextAlign.start,
               style: TextStyles.font12greyColor3003Weight400,
             ),
           ),
@@ -375,7 +323,7 @@ class _BalanceInfoCard extends StatelessWidget {
             width: double.infinity,
             child: Text(
               value,
-              textAlign: isArabic ? TextAlign.right : TextAlign.left,
+              textAlign: TextAlign.start,
               style: TextStyles.font20greyColor900W600.copyWith(
                 fontSize: 19.sp,
                 height: 1.2,
@@ -388,7 +336,7 @@ class _BalanceInfoCard extends StatelessWidget {
               width: double.infinity,
               child: Text(
                 subtitle,
-                textAlign: isArabic ? TextAlign.right : TextAlign.left,
+                textAlign: TextAlign.start,
                 style: TextStyles.font12greyColor500W400.copyWith(
                   fontSize: 11.sp,
                   height: 1.25,

@@ -9,22 +9,21 @@ class LegalHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = context.locale.languageCode == 'ar';
     return SizedBox(
       height: 58.h,
       child: Stack(
         children: [
           Align(
-            alignment: isArabic ? Alignment.topRight : Alignment.topLeft,
+            alignment: AlignmentDirectional.topStart,
             child: const WaqtyBackButton(),
           ),
           Positioned(
             top: 0,
-            right: isArabic ? 52.w : null,
-            left: isArabic ? null : 52.w,
+            right: 52.w,
+            left: null,
             width: 242.w,
             child: Align(
-              alignment: isArabic ? Alignment.topRight : Alignment.topLeft,
+              alignment: AlignmentDirectional.topStart,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -34,7 +33,7 @@ class LegalHeader extends StatelessWidget {
                       context.tr('legal.title'),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      textAlign: isArabic ? TextAlign.right : TextAlign.left,
+                      textAlign: TextAlign.start,
                       style: TextStyles.font20greyColor900W600.copyWith(
                         height: 1.3,
                       ),
@@ -47,7 +46,7 @@ class LegalHeader extends StatelessWidget {
                       context.tr('legal.updatedAt'),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      textAlign: isArabic ? TextAlign.right : TextAlign.left,
+                      textAlign: TextAlign.start,
                       style: TextStyles.font12greyColor500W400,
                     ),
                   ),

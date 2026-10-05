@@ -12,7 +12,6 @@ class AccountLogoutButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = context.locale.languageCode.toLowerCase().startsWith('ar');
     final logoutText = Text(
       context.tr('account.logoutButton'),
       style: TextStyles.font16greyColor900Weight600,
@@ -49,9 +48,11 @@ class AccountLogoutButton extends StatelessWidget {
                     )
                   : Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: isArabic
-                          ? [logoutIcon, SizedBox(width: 8.w), logoutText]
-                          : [logoutText, SizedBox(width: 8.w), logoutIcon],
+                      children: [
+                        logoutIcon,
+                        SizedBox(width: 8.w),
+                        logoutText,
+                      ],
                     ),
             ),
           ),

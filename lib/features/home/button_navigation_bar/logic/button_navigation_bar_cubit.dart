@@ -6,6 +6,7 @@ import 'package:waqty_user_application/core/services/services_locator.dart';
 import 'package:waqty_user_application/features/home/button_navigation_bar/logic/button_navigation_bar_state.dart';
 import 'package:waqty_user_application/features/account/account/logic/account_cubit.dart';
 import 'package:waqty_user_application/features/account/account/ui/account_screen.dart';
+import 'package:waqty_user_application/features/home/explore/ui/explore_screen.dart';
 import 'package:waqty_user_application/features/home/home/logic/home_cubit.dart';
 import 'package:waqty_user_application/features/home/home/ui/home_screen.dart';
 
@@ -27,11 +28,7 @@ class ButtonNavigationBarCubit extends Cubit<ButtonNavigationBarState> {
         );
 
       case 1:
-        return SizedBox();
-      // return BlocProvider(
-      //   create: (_) => ExploreNearPeopleCubit(getIt()),
-      //   child: ExploreNearPeopleScreen(),
-      // );
+        return const ExploreScreen();
 
       case 2:
         return BlocProvider(

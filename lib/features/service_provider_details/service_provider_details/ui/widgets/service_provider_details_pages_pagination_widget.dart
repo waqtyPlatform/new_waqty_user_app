@@ -14,10 +14,7 @@ class ServiceProviderDetailsPagesPaginationWidget extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: 12.w,
-              vertical: 4.h,
-            ),
+            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
             decoration: BoxDecoration(
               color: AppColors.greenColor505,
               borderRadius: BorderRadius.circular(16.r),
@@ -25,16 +22,12 @@ class ServiceProviderDetailsPagesPaginationWidget extends StatelessWidget {
             child: Text(
               'About',
               maxLines: 1,
-              style:
-              TextStyles.font14greenColor500Weight500,
+              style: TextStyles.font14greenColor500Weight500,
             ),
           ),
           horizontalSpace(8),
           Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: 12.w,
-              vertical: 6.h,
-            ),
+            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
             decoration: BoxDecoration(
               color: AppColors.greyColor25,
               borderRadius: BorderRadius.circular(16.r),
@@ -47,10 +40,7 @@ class ServiceProviderDetailsPagesPaginationWidget extends StatelessWidget {
           ),
           horizontalSpace(8),
           Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: 12.w,
-              vertical: 6.h,
-            ),
+            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
             decoration: BoxDecoration(
               color: AppColors.greyColor25,
               borderRadius: BorderRadius.circular(16.r),
@@ -63,10 +53,7 @@ class ServiceProviderDetailsPagesPaginationWidget extends StatelessWidget {
           ),
           horizontalSpace(8),
           Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: 12.w,
-              vertical: 6.h,
-            ),
+            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
             decoration: BoxDecoration(
               color: AppColors.greyColor25,
               borderRadius: BorderRadius.circular(16.r),

@@ -9,7 +9,6 @@ class LanguageInfoNote extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = context.locale.languageCode == 'ar';
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
       decoration: BoxDecoration(
@@ -28,7 +27,7 @@ class LanguageInfoNote extends StatelessWidget {
           Expanded(
             child: Text(
               context.tr('language.note'),
-              textAlign: isArabic ? TextAlign.right : TextAlign.left,
+              textAlign: TextAlign.start,
               style: TextStyles.font12greyColor500W400.copyWith(height: 1.65),
             ),
           ),

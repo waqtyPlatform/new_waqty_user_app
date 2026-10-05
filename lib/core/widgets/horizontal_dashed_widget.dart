@@ -6,8 +6,11 @@ class HorizontalDashedWidget extends StatelessWidget {
   final double width;
   final double space;
 
-  const HorizontalDashedWidget(
-      {required this.width, required this.space, super.key});
+  const HorizontalDashedWidget({
+    required this.width,
+    required this.space,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +47,10 @@ class DashedLinePainter extends CustomPainter {
 
     while (currentX < endX) {
       canvas.drawLine(
-          Offset(currentX, 0.0), Offset(currentX + dashWidth, 0.0), paint);
+        Offset(currentX, 0.0),
+        Offset(currentX + dashWidth, 0.0),
+        paint,
+      );
       currentX += dashWidth + dashSpace;
     }
   }

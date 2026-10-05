@@ -9,7 +9,6 @@ class HelpOnboardingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = context.locale.languageCode == 'ar';
     return SizedBox(
       height: 84.h,
       child: Container(
@@ -35,9 +34,7 @@ class HelpOnboardingCard extends StatelessWidget {
         child: Stack(
           children: [
             Align(
-              alignment: isArabic
-                  ? Alignment.centerRight
-                  : Alignment.centerLeft,
+              alignment: AlignmentDirectional.centerStart,
               child: Container(
                 width: 42.w,
                 height: 42.w,
@@ -53,13 +50,11 @@ class HelpOnboardingCard extends StatelessWidget {
               ),
             ),
             Positioned.fill(
-              left: isArabic ? 34.w : 54.w,
-              right: isArabic ? 54.w : 34.w,
+              left: 34.w,
+              right: 54.w,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: isArabic
-                    ? CrossAxisAlignment.end
-                    : CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SizedBox(
                     width: double.infinity,
@@ -67,7 +62,7 @@ class HelpOnboardingCard extends StatelessWidget {
                       context.tr('help.onboardingTitle'),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      textAlign: isArabic ? TextAlign.right : TextAlign.left,
+                      textAlign: TextAlign.start,
                       style: TextStyles.font16greyColor900Weight600,
                     ),
                   ),
@@ -78,7 +73,7 @@ class HelpOnboardingCard extends StatelessWidget {
                       context.tr('help.onboardingSubtitle'),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      textAlign: isArabic ? TextAlign.right : TextAlign.left,
+                      textAlign: TextAlign.start,
                       style: TextStyles.font12greyColor500W400.copyWith(
                         height: 1.35,
                       ),
@@ -88,13 +83,9 @@ class HelpOnboardingCard extends StatelessWidget {
               ),
             ),
             Align(
-              alignment: isArabic
-                  ? Alignment.centerLeft
-                  : Alignment.centerRight,
-              child: Icon(
-                isArabic
-                    ? Icons.keyboard_arrow_left_rounded
-                    : Icons.keyboard_arrow_right_rounded,
+              alignment: AlignmentDirectional.centerEnd,
+              child: const Icon(
+                Icons.keyboard_arrow_left_rounded,
                 color: AppColors.greyColor500,
                 size: 22,
               ),

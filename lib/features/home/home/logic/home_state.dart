@@ -1,5 +1,3 @@
+abstract class HomeState {}
 
-abstract class HomeState{}
 class InitialState extends HomeState {}
-
-

@@ -11,11 +11,10 @@ class PackagesFollowingHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = accountIsArabic(context);
     final title = Expanded(
       child: Text(
         context.tr('packagesFollowing.title'),
-        textAlign: isArabic ? TextAlign.right : TextAlign.left,
+        textAlign: TextAlign.start,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: TextStyles.font20greyColor900W600.copyWith(height: 1.3),
@@ -27,22 +26,13 @@ class PackagesFollowingHeader extends StatelessWidget {
       child: SizedBox(
         height: 44.h,
         child: Row(
-          textDirection: TextDirection.ltr,
-          children: isArabic
-              ? [
-                  const _AddPackageButton(),
-                  SizedBox(width: 12.w),
-                  title,
-                  SizedBox(width: 12.w),
-                  const WaqtyBackButton(),
-                ]
-              : [
-                  const WaqtyBackButton(),
-                  SizedBox(width: 12.w),
-                  title,
-                  SizedBox(width: 12.w),
-                  const _AddPackageButton(),
-                ],
+          children: [
+            const _AddPackageButton(),
+            SizedBox(width: 12.w),
+            title,
+            SizedBox(width: 12.w),
+            const WaqtyBackButton(),
+          ],
         ),
       ),
     );

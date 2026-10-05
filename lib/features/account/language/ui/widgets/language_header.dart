@@ -9,7 +9,6 @@ class LanguageHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = context.locale.languageCode == 'ar';
     return Padding(
       padding: EdgeInsets.fromLTRB(20.w, 6.h, 20.w, 12.h),
       child: SizedBox(
@@ -17,26 +16,24 @@ class LanguageHeader extends StatelessWidget {
         child: Stack(
           children: [
             Align(
-              alignment: isArabic ? Alignment.topRight : Alignment.topLeft,
+              alignment: AlignmentDirectional.topStart,
               child: const WaqtyBackButton(),
             ),
             Positioned(
               top: 0,
-              right: isArabic ? 56.w : null,
-              left: isArabic ? null : 56.w,
+              right: 56.w,
+              left: null,
               width: 230.w,
               child: Align(
-                alignment: isArabic ? Alignment.topRight : Alignment.topLeft,
+                alignment: AlignmentDirectional.topStart,
                 child: Column(
-                  crossAxisAlignment: isArabic
-                      ? CrossAxisAlignment.end
-                      : CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SizedBox(
                       width: double.infinity,
                       child: Text(
                         context.tr('language.title'),
-                        textAlign: isArabic ? TextAlign.right : TextAlign.left,
+                        textAlign: TextAlign.start,
                         style: TextStyles.font20greyColor900W600.copyWith(
                           height: 1.3,
                         ),
@@ -47,7 +44,7 @@ class LanguageHeader extends StatelessWidget {
                       width: double.infinity,
                       child: Text(
                         context.tr('language.subtitle'),
-                        textAlign: isArabic ? TextAlign.right : TextAlign.left,
+                        textAlign: TextAlign.start,
                         style: TextStyles.font12greyColor500W400,
                       ),
                     ),

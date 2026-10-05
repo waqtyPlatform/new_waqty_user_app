@@ -10,17 +10,11 @@ class ServiceProviderDetailsWorkingHoursWidget extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Working Hours',
-          style: TextStyles.font16greyColor900Weight600,
-        ),
+        Text('Working Hours', style: TextStyles.font16greyColor900Weight600),
         verticalSpace(8),
         Row(
           children: [
-            Text(
-              'Monday',
-              style: TextStyles.font14greyColor500W400,
-            ),
+            Text('Monday', style: TextStyles.font14greyColor500W400),
             Spacer(),
             Text(
               '08.00 AM - 21.00 PM',
@@ -31,10 +25,7 @@ class ServiceProviderDetailsWorkingHoursWidget extends StatelessWidget {
         verticalSpace(8),
         Row(
           children: [
-            Text(
-              'Monday',
-              style: TextStyles.font14greyColor500W400,
-            ),
+            Text('Monday', style: TextStyles.font14greyColor500W400),
             Spacer(),
             Text(
               '08.00 AM - 21.00 PM',
@@ -42,7 +33,6 @@ class ServiceProviderDetailsWorkingHoursWidget extends StatelessWidget {
             ),
           ],
         ),
-
       ],
     );
   }

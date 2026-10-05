@@ -17,7 +17,6 @@ class PackagesFollowingTabs extends StatelessWidget {
     return BlocBuilder<PackagesFollowingCubit, PackagesFollowingState>(
       builder: (context, state) {
         final cubit = PackagesFollowingCubit.get(context);
-        final isArabic = accountIsArabic(context);
         return Padding(
           padding: EdgeInsets.fromLTRB(20.w, 4.h, 20.w, 0),
           child: Container(
@@ -33,12 +32,11 @@ class PackagesFollowingTabs extends StatelessWidget {
                 final tabWidth = (constraints.maxWidth - gap) / 2;
                 final selectedLeft = _selectedLeft(
                   cubit.selectedTab,
-                  isArabic,
                   tabWidth,
                   gap,
                 );
-                final leftTab = _physicalLeftTab(isArabic);
-                final rightTab = _physicalRightTab(isArabic);
+                final leftTab = PackagesFollowingTab.following;
+                final rightTab = PackagesFollowingTab.packages;
 
                 return Stack(
                   children: [
@@ -99,27 +97,10 @@ class PackagesFollowingTabs extends StatelessWidget {
   }
 }
 
-double _selectedLeft(
-  PackagesFollowingTab tab,
-  bool isArabic,
-  double tabWidth,
-  double gap,
-) {
+double _selectedLeft(PackagesFollowingTab tab, double tabWidth, double gap) {
   final isPackages = tab == PackagesFollowingTab.packages;
-  final selectedIsRight = isArabic ? isPackages : !isPackages;
+  final selectedIsRight = isPackages;
   return selectedIsRight ? tabWidth + gap : 0;
-}
-
-PackagesFollowingTab _physicalLeftTab(bool isArabic) {
-  return isArabic
-      ? PackagesFollowingTab.following
-      : PackagesFollowingTab.packages;
-}
-
-PackagesFollowingTab _physicalRightTab(bool isArabic) {
-  return isArabic
-      ? PackagesFollowingTab.packages
-      : PackagesFollowingTab.following;
 }
 
 String _tabTitleKey(PackagesFollowingTab tab) {

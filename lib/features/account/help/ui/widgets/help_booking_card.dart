@@ -9,7 +9,6 @@ class HelpBookingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = context.locale.languageCode == 'ar';
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
@@ -25,15 +24,13 @@ class HelpBookingCard extends StatelessWidget {
         ],
       ),
       child: Column(
-        crossAxisAlignment: isArabic
-            ? CrossAxisAlignment.end
-            : CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
             width: double.infinity,
             child: Text(
               context.tr('help.bookingProblemTitle'),
-              textAlign: isArabic ? TextAlign.right : TextAlign.left,
+              textAlign: TextAlign.start,
               style: TextStyles.font16whiteColorWeight600.copyWith(height: 1.3),
             ),
           ),
@@ -42,7 +39,7 @@ class HelpBookingCard extends StatelessWidget {
             width: double.infinity,
             child: Text(
               context.tr('help.bookingProblemBody'),
-              textAlign: isArabic ? TextAlign.right : TextAlign.left,
+              textAlign: TextAlign.start,
               style: TextStyles.font12whiteColorWeight600.copyWith(
                 color: AppColors.whiteColor.withValues(alpha: 0.65),
                 fontWeight: FontWeight.w400,
@@ -52,7 +49,7 @@ class HelpBookingCard extends StatelessWidget {
           ),
           SizedBox(height: 12.h),
           Align(
-            alignment: isArabic ? Alignment.centerRight : Alignment.centerLeft,
+            alignment: AlignmentDirectional.centerStart,
             child: Container(
               height: 42.h,
               padding: EdgeInsets.symmetric(horizontal: 18.w),

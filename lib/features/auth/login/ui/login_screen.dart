@@ -47,7 +47,6 @@ class LoginScreen extends StatelessWidget {
                       children: [
                         verticalSpace(24),
                         Row(
-                          textDirection: ui.TextDirection.ltr,
                           children: isEnglish
                               ? [
                                   SvgPicture.asset(
@@ -256,8 +255,6 @@ class _LoginFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = context.locale.languageCode == 'ar';
-
     return Column(
       children: [
         Text.rich(
@@ -280,7 +277,6 @@ class _LoginFooter extends StatelessWidget {
             ],
           ),
           textAlign: TextAlign.center,
-          textDirection: isArabic ? ui.TextDirection.ltr : ui.TextDirection.rtl,
         ),
         verticalSpace(16),
         GestureDetector(

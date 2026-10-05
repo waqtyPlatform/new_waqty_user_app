@@ -11,15 +11,13 @@ class AccountSectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = context.locale.languageCode.toLowerCase().startsWith('ar');
-
     return Padding(
       padding: EdgeInsets.fromLTRB(20.w, 22.h, 20.w, 10.h),
       child: Align(
-        alignment: isArabic ? Alignment.centerRight : Alignment.centerLeft,
+        alignment: AlignmentDirectional.centerStart,
         child: Text(
           title,
-          textAlign: isArabic ? TextAlign.right : TextAlign.left,
+          textAlign: TextAlign.start,
           style: TextStyles.font20greyColor900W600.copyWith(
             color: AppColors.greyColor900,
             height: 1.3,

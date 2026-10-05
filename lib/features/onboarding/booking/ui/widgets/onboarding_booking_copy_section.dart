@@ -12,74 +12,44 @@ class OnboardingBookingCopySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = isArabicLocale(context);
-
     return Positioned(
       left: 24.w,
       right: 24.w,
       top: 526.h,
       child: Column(
-        crossAxisAlignment: isArabic
-            ? CrossAxisAlignment.end
-            : CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: isArabic
-                ? MainAxisAlignment.end
-                : MainAxisAlignment.start,
-            textDirection: ui.TextDirection.ltr,
-            children: isArabic
-                ? [
-                    Text(
-                      context.tr('onboardingBooking.category'),
-                      style: TextStyles.font12greyColor500W600,
-                    ),
-                    SizedBox(width: 8.w),
-                    Container(
-                      width: 22.w,
-                      height: 1.h,
-                      color: AppColors.greenColor600.withValues(alpha: 0.4),
-                    ),
-                    SizedBox(width: 8.w),
-                    Text(
-                      '\u200E02 / 05',
-                      style: TextStyles.font12greenColor500W600.copyWith(
-                        color: AppColors.greenColor600,
-                        fontSize: 11.sp,
-                        letterSpacing: 1.1,
-                        height: 1.5,
-                      ),
-                    ),
-                  ]
-                : [
-                    Text(
-                      '\u200E02 / 05',
-                      style: TextStyles.font12greenColor500W600.copyWith(
-                        color: AppColors.greenColor600,
-                        fontSize: 11.sp,
-                        letterSpacing: 1.1,
-                        height: 1.5,
-                      ),
-                    ),
-                    SizedBox(width: 8.w),
-                    Container(
-                      width: 22.w,
-                      height: 1.h,
-                      color: AppColors.greenColor600.withValues(alpha: 0.4),
-                    ),
-                    SizedBox(width: 8.w),
-                    Text(
-                      context.tr('onboardingBooking.category'),
-                      style: TextStyles.font12greyColor500W600,
-                    ),
-                  ],
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Text(
+                context.tr('onboardingBooking.category'),
+                style: TextStyles.font12greyColor500W600,
+              ),
+              SizedBox(width: 8.w),
+              Container(
+                width: 22.w,
+                height: 1.h,
+                color: AppColors.greenColor600.withValues(alpha: 0.4),
+              ),
+              SizedBox(width: 8.w),
+              Text(
+                '\u200E02 / 05',
+                style: TextStyles.font12greenColor500W600.copyWith(
+                  color: AppColors.greenColor600,
+                  fontSize: 11.sp,
+                  letterSpacing: 1.1,
+                  height: 1.5,
+                ),
+              ),
+            ],
           ),
           SizedBox(height: 12.h),
           SizedBox(
             width: double.infinity,
             child: Text(
               context.tr('onboardingBooking.title'),
-              textAlign: isArabic ? TextAlign.right : TextAlign.left,
+              textAlign: TextAlign.start,
               style: TextStyles.font32greyColor900Weight600.copyWith(
                 letterSpacing: -0.8,
               ),
@@ -90,7 +60,7 @@ class OnboardingBookingCopySection extends StatelessWidget {
             width: double.infinity,
             child: Text(
               context.tr('onboardingBooking.description'),
-              textAlign: isArabic ? TextAlign.right : TextAlign.left,
+              textAlign: TextAlign.start,
               style: TextStyles.font16greyColor500Weight400.copyWith(
                 height: 1.65,
               ),

@@ -46,14 +46,11 @@ class AccountMenuTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = context.locale.languageCode.toLowerCase().startsWith('ar');
-    final textAlign = isArabic ? TextAlign.right : TextAlign.left;
     const crossAxisAlignment = CrossAxisAlignment.start;
     final arrow = Icon(
-      isArabic ? Icons.chevron_left_rounded : Icons.chevron_right_rounded,
+      Icons.chevron_left_rounded,
       color: AppColors.greyColor3003,
       size: 18.sp,
-      textDirection: TextDirection.ltr,
     );
     final iconBox = Container(
       width: 40.w,
@@ -71,7 +68,7 @@ class AccountMenuTile extends StatelessWidget {
         children: [
           Text(
             item.title,
-            textAlign: textAlign,
+            textAlign: TextAlign.start,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyles.font16greyColor900Weight600.copyWith(height: 1.3),
@@ -80,7 +77,7 @@ class AccountMenuTile extends StatelessWidget {
             SizedBox(height: 2.h),
             Text(
               item.subtitle!,
-              textAlign: textAlign,
+              textAlign: TextAlign.start,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyles.font12greyColor500W400,
@@ -96,28 +93,16 @@ class AccountMenuTile extends StatelessWidget {
       child: ConstrainedBox(
         constraints: BoxConstraints(minHeight: 60.h),
         child: Row(
-          textDirection: TextDirection.ltr,
-          children: isArabic
-              ? [
-                  arrow,
-                  if (item.trailing != null) ...[
-                    item.trailing!,
-                    SizedBox(width: 8.w),
-                  ],
-                  textContent,
-                  SizedBox(width: 12.w),
-                  iconBox,
-                ]
-              : [
-                  iconBox,
-                  SizedBox(width: 12.w),
-                  textContent,
-                  if (item.trailing != null) ...[
-                    SizedBox(width: 8.w),
-                    item.trailing!,
-                  ],
-                  arrow,
-                ],
+          children: [
+            arrow,
+            if (item.trailing != null) ...[
+              item.trailing!,
+              SizedBox(width: 8.w),
+            ],
+            textContent,
+            SizedBox(width: 12.w),
+            iconBox,
+          ],
         ),
       ),
     );

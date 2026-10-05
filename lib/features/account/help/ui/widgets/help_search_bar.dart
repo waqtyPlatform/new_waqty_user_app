@@ -9,7 +9,6 @@ class HelpSearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = context.locale.languageCode == 'ar';
     return Container(
       height: 54.h,
       padding: EdgeInsets.symmetric(horizontal: 8.w),
@@ -34,7 +33,7 @@ class HelpSearchBar extends StatelessWidget {
       child: Stack(
         children: [
           Align(
-            alignment: isArabic ? Alignment.centerRight : Alignment.centerLeft,
+            alignment: AlignmentDirectional.centerStart,
             child: Container(
               width: 38.w,
               height: 38.w,
@@ -50,15 +49,13 @@ class HelpSearchBar extends StatelessWidget {
             ),
           ),
           Positioned.fill(
-            left: isArabic ? 0 : 50.w,
-            right: isArabic ? 50.w : 0,
+            left: 0,
+            right: 50.w,
             child: Align(
-              alignment: isArabic
-                  ? Alignment.centerRight
-                  : Alignment.centerLeft,
+              alignment: AlignmentDirectional.centerStart,
               child: Text(
                 context.tr('help.searchHint'),
-                textAlign: isArabic ? TextAlign.right : TextAlign.left,
+                textAlign: TextAlign.start,
                 style: TextStyles.font14greyColor500W400,
               ),
             ),

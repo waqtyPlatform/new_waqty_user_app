@@ -30,7 +30,6 @@ class ProfileTextFieldBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = accountIsArabic(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -38,7 +37,7 @@ class ProfileTextFieldBlock extends StatelessWidget {
         AppTextFormField(
           hintText: context.tr(hintKey),
           controller: controller,
-          textAlign: textAlign ?? (isArabic ? TextAlign.right : TextAlign.left),
+          textAlign: textAlign ?? (TextAlign.right),
           keyboardType: keyboardType,
           suffixIcon: suffixIcon,
           onTap: onTap,

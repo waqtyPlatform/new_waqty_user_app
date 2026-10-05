@@ -13,7 +13,6 @@ class ChangePhoneContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cubit = ChangePhoneCubit.get(context);
-    final isArabic = accountIsArabic(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -41,7 +40,7 @@ class ChangePhoneContent extends StatelessWidget {
               SizedBox(height: 6.h),
               Text(
                 context.tr('changePhone.newPhoneHint'),
-                textAlign: isArabic ? TextAlign.right : TextAlign.left,
+                textAlign: TextAlign.start,
                 style: TextStyles.font12greyColor500W400.copyWith(height: 1.65),
               ),
               SizedBox(height: 12.h),

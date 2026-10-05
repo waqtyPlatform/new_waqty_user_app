@@ -12,7 +12,6 @@ class LegalSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = context.locale.languageCode == 'ar';
     final prefix = tab == LegalTab.privacy ? 'legal.privacy' : 'legal.terms';
     return Container(
       width: double.infinity,
@@ -36,7 +35,7 @@ class LegalSummaryCard extends StatelessWidget {
             width: double.infinity,
             child: Text(
               context.tr('$prefix.summaryTitle'),
-              textAlign: isArabic ? TextAlign.right : TextAlign.left,
+              textAlign: TextAlign.start,
               style: TextStyles.font12greenColor500W600.copyWith(
                 color: AppColors.greenColor100,
               ),
@@ -47,7 +46,7 @@ class LegalSummaryCard extends StatelessWidget {
             width: double.infinity,
             child: Text(
               context.tr('$prefix.summaryBody'),
-              textAlign: isArabic ? TextAlign.right : TextAlign.left,
+              textAlign: TextAlign.start,
               style: TextStyles.font16whiteColorWeight600.copyWith(
                 fontWeight: FontWeight.w500,
                 height: 1.65,

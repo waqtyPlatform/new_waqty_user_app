@@ -7,23 +7,24 @@ class CachedNetworkImageWidget extends StatelessWidget {
   final BorderRadius radius;
   final BoxFit? fit;
 
-  const CachedNetworkImageWidget(
-      {required this.imgUrl, required this.radius,  this.fit, super.key});
+  const CachedNetworkImageWidget({
+    required this.imgUrl,
+    required this.radius,
+    this.fit,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
       borderRadius: radius,
       child: CachedNetworkImage(
-        fit: fit??BoxFit.cover,
+        fit: fit ?? BoxFit.cover,
         imageUrl: imgUrl,
         placeholder: (context, url) => loadingWidget(),
         errorWidget: (context, url, error) => Container(
           color: Colors.grey[300],
-          child: const Icon(
-            Icons.broken_image_outlined,
-            color: Colors.grey,
-          ),
+          child: const Icon(Icons.broken_image_outlined, color: Colors.grey),
         ),
       ),
     );

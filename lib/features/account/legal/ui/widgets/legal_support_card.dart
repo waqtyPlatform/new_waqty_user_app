@@ -9,7 +9,6 @@ class LegalSupportCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = context.locale.languageCode == 'ar';
     return Container(
       height: 76.h,
       padding: EdgeInsets.fromLTRB(14.w, 12.h, 12.w, 12.h),
@@ -34,8 +33,8 @@ class LegalSupportCard extends StatelessWidget {
       child: Stack(
         children: [
           Positioned(
-            left: isArabic ? 0 : null,
-            right: isArabic ? null : 0,
+            left: 0,
+            right: null,
             top: 7.h,
             child: Container(
               height: 38.h,
@@ -53,12 +52,10 @@ class LegalSupportCard extends StatelessWidget {
             ),
           ),
           Positioned.fill(
-            left: isArabic ? 106.w : 0,
-            right: isArabic ? 0 : 106.w,
+            left: 106.w,
+            right: 0,
             child: Align(
-              alignment: isArabic
-                  ? Alignment.centerRight
-                  : Alignment.centerLeft,
+              alignment: AlignmentDirectional.centerStart,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -69,7 +66,7 @@ class LegalSupportCard extends StatelessWidget {
                       context.tr('legal.supportTitle'),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      textAlign: isArabic ? TextAlign.right : TextAlign.left,
+                      textAlign: TextAlign.start,
                       style: TextStyles.font16greyColor900Weight600,
                     ),
                   ),
@@ -80,7 +77,7 @@ class LegalSupportCard extends StatelessWidget {
                       context.tr('legal.supportSubtitle'),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      textAlign: isArabic ? TextAlign.right : TextAlign.left,
+                      textAlign: TextAlign.start,
                       style: TextStyles.font12greyColor500W400,
                     ),
                   ),

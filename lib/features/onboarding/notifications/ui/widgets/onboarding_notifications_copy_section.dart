@@ -12,89 +12,56 @@ class OnboardingNotificationsCopySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = isArabicLocale(context);
-
     return Positioned(
       left: 24.w,
       right: 24.w,
       top: 428.h,
       child: Column(
-        crossAxisAlignment: isArabic
-            ? CrossAxisAlignment.end
-            : CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: isArabic
-                ? MainAxisAlignment.end
-                : MainAxisAlignment.start,
-            textDirection: ui.TextDirection.ltr,
-            children: isArabic
-                ? [
-                    Padding(
-                      padding: EdgeInsets.only(top: 4.h),
-                      child: Text(
-                        context.tr('onboardingNotifications.category'),
-                        style: TextStyles.font12greyColor500W600,
-                      ),
-                    ),
-                    SizedBox(width: 8.w),
-                    Container(
-                      width: 22.w,
-                      height: 1.h,
-                      color: AppColors.greenColor600.withValues(alpha: 0.4),
-                    ),
-                    SizedBox(width: 8.w),
-                    Text(
-                      '\u200E03 / 05',
-                      style: TextStyles.font12greenColor500W600.copyWith(
-                        color: AppColors.greenColor600,
-                        fontSize: 11.sp,
-                        letterSpacing: 1.1,
-                        height: 1.5,
-                      ),
-                    ),
-                  ]
-                : [
-                    Text(
-                      '\u200E03 / 05',
-                      style: TextStyles.font12greenColor500W600.copyWith(
-                        color: AppColors.greenColor600,
-                        fontSize: 11.sp,
-                        letterSpacing: 1.1,
-                        height: 1.5,
-                      ),
-                    ),
-                    SizedBox(width: 8.w),
-                    Container(
-                      width: 22.w,
-                      height: 1.h,
-                      color: AppColors.greenColor600.withValues(alpha: 0.4),
-                    ),
-                    SizedBox(width: 8.w),
-                    Padding(
-                      padding: EdgeInsets.only(top: 4.h),
-                      child: Text(
-                        context.tr('onboardingNotifications.category'),
-                        style: TextStyles.font12greyColor500W600,
-                      ),
-                    ),
-                  ],
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.only(top: 4.h),
+                child: Text(
+                  context.tr('onboardingNotifications.category'),
+                  style: TextStyles.font12greyColor500W600,
+                ),
+              ),
+              SizedBox(width: 8.w),
+              Container(
+                width: 22.w,
+                height: 1.h,
+                color: AppColors.greenColor600.withValues(alpha: 0.4),
+              ),
+              SizedBox(width: 8.w),
+              Text(
+                '\u200E03 / 05',
+                style: TextStyles.font12greenColor500W600.copyWith(
+                  color: AppColors.greenColor600,
+                  fontSize: 11.sp,
+                  letterSpacing: 1.1,
+                  height: 1.5,
+                ),
+              ),
+            ],
           ),
           SizedBox(height: 12.h),
           SizedBox(
             width: double.infinity,
             child: Text(
               context.tr('onboardingNotifications.title'),
-              textAlign: isArabic ? TextAlign.right : TextAlign.left,
+              textAlign: TextAlign.start,
               style: TextStyles.font32greyColor900Weight600.copyWith(
-                fontSize: isArabic ? 32.sp : 30.sp,
+                fontSize: 32.sp,
               ),
             ),
           ),
           SizedBox(height: 12.h),
           Text(
             context.tr('onboardingNotifications.description'),
-            textAlign: isArabic ? TextAlign.right : TextAlign.left,
+            textAlign: TextAlign.start,
             style: TextStyles.font16greyColor500Weight400.copyWith(
               height: 1.65,
             ),

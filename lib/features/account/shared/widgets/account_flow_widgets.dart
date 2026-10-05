@@ -6,9 +6,6 @@ import 'package:waqty_user_application/core/utils/extentions.dart';
 import 'package:waqty_user_application/core/utils/styles.dart';
 import 'package:waqty_user_application/core/widgets/waqty_back_button.dart';
 
-bool accountIsArabic(BuildContext context) =>
-    context.locale.languageCode == 'ar';
-
 class AccountFlowHeader extends StatelessWidget {
   final String titleKey;
 
@@ -16,11 +13,10 @@ class AccountFlowHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = accountIsArabic(context);
     final title = Expanded(
       child: Text(
         context.tr(titleKey),
-        textAlign: isArabic ? TextAlign.right : TextAlign.left,
+        textAlign: TextAlign.start,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: TextStyles.font20greyColor900W600.copyWith(height: 1.3),
@@ -34,9 +30,11 @@ class AccountFlowHeader extends StatelessWidget {
         height: 44.h,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
-          children: isArabic
-              ? [backButton, SizedBox(width: 12.w), title]
-              : [backButton, SizedBox(width: 12.w), title],
+          children: [
+            backButton,
+            SizedBox(width: 12.w),
+            title,
+          ],
         ),
       ),
     );
@@ -118,12 +116,11 @@ class AccountFlowLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = accountIsArabic(context);
     return Padding(
       padding: EdgeInsets.only(bottom: 8.h),
       child: Text(
         context.tr(textKey),
-        textAlign: isArabic ? TextAlign.right : TextAlign.left,
+        textAlign: TextAlign.start,
         style: TextStyles.font12greyColor500W600,
       ),
     );
@@ -148,7 +145,6 @@ class AccountReadOnlyField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = accountIsArabic(context);
     return Container(
       constraints: BoxConstraints(minHeight: 56.h),
       padding: EdgeInsets.symmetric(horizontal: 14.w),
@@ -168,8 +164,7 @@ class AccountReadOnlyField extends StatelessWidget {
           Expanded(
             child: Text(
               value,
-              textAlign:
-                  textAlign ?? (isArabic ? TextAlign.right : TextAlign.left),
+              textAlign: textAlign ?? (TextAlign.right),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyles.font16greyColor900Weight400.copyWith(

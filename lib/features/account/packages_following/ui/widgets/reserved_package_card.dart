@@ -13,7 +13,6 @@ class ReservedPackageCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = accountIsArabic(context);
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
@@ -34,9 +33,7 @@ class ReservedPackageCard extends StatelessWidget {
         ],
       ),
       child: Column(
-        crossAxisAlignment: isArabic
-            ? CrossAxisAlignment.end
-            : CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _ReservedHeader(package: package),
           SizedBox(height: 14.h),
@@ -58,7 +55,7 @@ class ReservedPackageCard extends StatelessWidget {
             width: double.infinity,
             child: Text(
               context.tr(package.noteKey),
-              textAlign: isArabic ? TextAlign.right : TextAlign.left,
+              textAlign: TextAlign.start,
               style: TextStyles.font12greyColor500W400.copyWith(height: 1.65),
             ),
           ),
@@ -92,19 +89,16 @@ class _ReservedHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = accountIsArabic(context);
     final details = SizedBox(
       width: 176.w,
       child: Column(
-        crossAxisAlignment: isArabic
-            ? CrossAxisAlignment.end
-            : CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
             width: double.infinity,
             child: Text(
               context.tr(package.titleKey),
-              textAlign: isArabic ? TextAlign.right : TextAlign.left,
+              textAlign: TextAlign.start,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyles.font16greyColor900Weight600.copyWith(
@@ -117,7 +111,7 @@ class _ReservedHeader extends StatelessWidget {
             width: double.infinity,
             child: Text(
               context.tr(package.providerKey),
-              textAlign: isArabic ? TextAlign.right : TextAlign.left,
+              textAlign: TextAlign.start,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyles.font12greyColor500W400,
@@ -159,15 +153,10 @@ class _ReservedHeader extends StatelessWidget {
     return SizedBox(
       height: 46.h,
       child: Stack(
-        children: isArabic
-            ? [
-                Align(alignment: Alignment.topLeft, child: pill),
-                Positioned(top: 0, right: 0, width: 176.w, child: details),
-              ]
-            : [
-                Positioned(top: 0, left: 0, width: 176.w, child: details),
-                Align(alignment: Alignment.topRight, child: pill),
-              ],
+        children: [
+          Align(alignment: Alignment.topLeft, child: pill),
+          Positioned(top: 0, right: 0, width: 176.w, child: details),
+        ],
       ),
     );
   }
@@ -180,31 +169,19 @@ class _ReservedMeta extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = accountIsArabic(context);
     return SizedBox(
       height: 40.h,
       child: Stack(
-        children: isArabic
-            ? [
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: _RemainingText(package: package),
-                ),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: _PriceText(package: package, isArabic: isArabic),
-                ),
-              ]
-            : [
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: _PriceText(package: package, isArabic: isArabic),
-                ),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: _RemainingText(package: package),
-                ),
-              ],
+        children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: _RemainingText(package: package),
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: _PriceText(package: package),
+          ),
+        ],
       ),
     );
   }
@@ -212,9 +189,8 @@ class _ReservedMeta extends StatelessWidget {
 
 class _PriceText extends StatelessWidget {
   final ReservedPackageModel package;
-  final bool isArabic;
 
-  const _PriceText({required this.package, required this.isArabic});
+  const _PriceText({required this.package});
 
   @override
   Widget build(BuildContext context) {
@@ -246,9 +222,7 @@ class _RemainingText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: accountIsArabic(context)
-          ? CrossAxisAlignment.end
-          : CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           context.tr('packagesFollowing.remaining'),

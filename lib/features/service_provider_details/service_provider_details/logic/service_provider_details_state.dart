@@ -1,5 +1,3 @@
+abstract class ServiceProviderDetailsState {}
 
-abstract class ServiceProviderDetailsState{}
 class InitialState extends ServiceProviderDetailsState {}
-
-

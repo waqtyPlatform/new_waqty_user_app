@@ -36,8 +36,6 @@ class AccountHeaderCard extends StatelessWidget {
 class _UserHeaderContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final isArabic = context.locale.languageCode.toLowerCase().startsWith('ar');
-    final textAlign = isArabic ? TextAlign.right : TextAlign.left;
     const crossAxisAlignment = CrossAxisAlignment.start;
 
     final avatar = Container(
@@ -68,10 +66,9 @@ class _UserHeaderContent extends StatelessWidget {
         shape: BoxShape.circle,
       ),
       child: Icon(
-        isArabic ? Icons.chevron_left_rounded : Icons.chevron_right_rounded,
+        Icons.chevron_left_rounded,
         color: AppColors.whiteColor,
         size: 20.sp,
-        textDirection: TextDirection.ltr,
       ),
     );
     final userInfo = Expanded(
@@ -80,7 +77,7 @@ class _UserHeaderContent extends StatelessWidget {
         children: [
           Text(
             context.tr('account.userName'),
-            textAlign: textAlign,
+            textAlign: TextAlign.start,
             style: TextStyles.font20greyColor900W600.copyWith(
               color: AppColors.whiteColor,
               height: 1.3,
@@ -89,29 +86,25 @@ class _UserHeaderContent extends StatelessWidget {
           SizedBox(height: 3.h),
           Text(
             context.tr('account.userPhone'),
-            textAlign: textAlign,
+            textAlign: TextAlign.start,
             style: TextStyles.font12greyColor500W400.copyWith(
               color: AppColors.whiteColor.withValues(alpha: 0.65),
             ),
           ),
           SizedBox(height: 8.h),
           Row(
-            mainAxisAlignment: isArabic
-                ? MainAxisAlignment.end
-                : MainAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              if (!isArabic) ...[
-                Icon(
-                  Icons.check_circle_outline_rounded,
-                  color: const Color(0xff7BE3A8),
-                  size: 14.sp,
-                ),
-                SizedBox(width: 6.w),
-              ],
+              Icon(
+                Icons.check_circle_outline_rounded,
+                color: const Color(0xff7BE3A8),
+                size: 14.sp,
+              ),
+              SizedBox(width: 6.w),
               Flexible(
                 child: Text(
                   context.tr('account.autoPackagesMessage'),
-                  textAlign: textAlign,
+                  textAlign: TextAlign.start,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyles.font12greenColor500W600.copyWith(
@@ -119,14 +112,6 @@ class _UserHeaderContent extends StatelessWidget {
                   ),
                 ),
               ),
-              if (isArabic) ...[
-                SizedBox(width: 6.w),
-                Icon(
-                  Icons.check_circle_outline_rounded,
-                  color: const Color(0xff7BE3A8),
-                  size: 14.sp,
-                ),
-              ],
             ],
           ),
         ],
@@ -136,26 +121,16 @@ class _UserHeaderContent extends StatelessWidget {
     return Column(
       children: [
         Row(
-          textDirection: TextDirection.ltr,
-          children: isArabic
-              ? [
-                  arrow,
-                  SizedBox(width: 14.w),
-                  userInfo,
-                  SizedBox(width: 14.w),
-                  avatar,
-                ]
-              : [
-                  avatar,
-                  SizedBox(width: 14.w),
-                  userInfo,
-                  SizedBox(width: 14.w),
-                  arrow,
-                ],
+          children: [
+            arrow,
+            SizedBox(width: 14.w),
+            userInfo,
+            SizedBox(width: 14.w),
+            avatar,
+          ],
         ),
         SizedBox(height: 16.h),
         Row(
-          textDirection: TextDirection.ltr,
           children: [
             Expanded(
               child: _MetricTile(
@@ -187,8 +162,6 @@ class _UserHeaderContent extends StatelessWidget {
 class _GuestHeaderContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final isArabic = context.locale.languageCode.toLowerCase().startsWith('ar');
-    final textAlign = isArabic ? TextAlign.right : TextAlign.left;
     const crossAxisAlignment = CrossAxisAlignment.start;
     final icon = Container(
       width: 64.w,
@@ -209,7 +182,7 @@ class _GuestHeaderContent extends StatelessWidget {
         children: [
           Text(
             context.tr('account.guestTitle'),
-            textAlign: textAlign,
+            textAlign: TextAlign.start,
             style: TextStyles.font20greyColor900W600.copyWith(
               color: AppColors.whiteColor,
               height: 1.3,
@@ -218,7 +191,7 @@ class _GuestHeaderContent extends StatelessWidget {
           SizedBox(height: 4.h),
           Text(
             context.tr('account.guestSubtitle'),
-            textAlign: textAlign,
+            textAlign: TextAlign.start,
             style: TextStyles.font12greyColor500W400.copyWith(
               color: AppColors.whiteColor.withValues(alpha: 0.65),
               height: 1.65,
@@ -231,10 +204,11 @@ class _GuestHeaderContent extends StatelessWidget {
     return Column(
       children: [
         Row(
-          textDirection: TextDirection.ltr,
-          children: isArabic
-              ? [info, SizedBox(width: 14.w), icon]
-              : [icon, SizedBox(width: 14.w), info],
+          children: [
+            info,
+            SizedBox(width: 14.w),
+            icon,
+          ],
         ),
         SizedBox(height: 16.h),
         Row(
@@ -271,8 +245,6 @@ class _MetricTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = context.locale.languageCode.toLowerCase().startsWith('ar');
-
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
       decoration: BoxDecoration(
@@ -284,7 +256,7 @@ class _MetricTile extends StatelessWidget {
         children: [
           Text(
             title,
-            textAlign: isArabic ? TextAlign.right : TextAlign.left,
+            textAlign: TextAlign.start,
             style: TextStyles.font12greyColor500W400.copyWith(
               color: AppColors.whiteColor.withValues(alpha: 0.70),
             ),
@@ -292,7 +264,7 @@ class _MetricTile extends StatelessWidget {
           SizedBox(height: 2.h),
           Text(
             value,
-            textAlign: isArabic ? TextAlign.right : TextAlign.left,
+            textAlign: TextAlign.start,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyles.font20greyColor900W600.copyWith(

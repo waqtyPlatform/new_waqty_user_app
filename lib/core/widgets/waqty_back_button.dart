@@ -13,8 +13,6 @@ class WaqtyBackButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = context.locale.languageCode == 'ar';
-
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap ?? context.pop,
@@ -39,8 +37,7 @@ class WaqtyBackButton extends StatelessWidget {
           ],
         ),
         child: Icon(
-          isArabic ? Icons.arrow_forward_rounded : Icons.arrow_back_rounded,
-          textDirection: ui.TextDirection.ltr,
+          Icons.arrow_forward_rounded,
           color: AppColors.greyColor900,
           size: 20.sp,
         ),

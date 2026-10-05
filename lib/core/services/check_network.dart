@@ -22,6 +22,7 @@ class MyConnectivity {
   static Future<void> initialise() async {
     final List<ConnectivityResult> result = await (connectivity
         .checkConnectivity());
+    source = result.isEmpty ? ConnectivityResult.none : result.first;
     _checkStatus(result);
     connectivity.onConnectivityChanged.listen((result) async {
       debugPrint("onConnectivity Changed changed");
@@ -29,6 +30,13 @@ class MyConnectivity {
       source = result[0];
       _checkStatus(result);
     });
+  }
+
+  static Future<void> checkNow() async {
+    final List<ConnectivityResult> result = await connectivity
+        .checkConnectivity();
+    source = result.isEmpty ? ConnectivityResult.none : result.first;
+    _checkStatus(result);
   }
 
   static void _checkStatus(List<ConnectivityResult> result) async {

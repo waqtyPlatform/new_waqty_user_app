@@ -13,7 +13,6 @@ class LegalSegmentedTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = context.locale.languageCode == 'ar';
     return Container(
       height: 44.h,
       decoration: BoxDecoration(
@@ -23,13 +22,13 @@ class LegalSegmentedTabs extends StatelessWidget {
       child: Stack(
         children: [
           _LegalTabButton(
-            alignment: isArabic ? Alignment.centerRight : Alignment.centerLeft,
+            alignment: Alignment.centerRight,
             labelKey: 'legal.privacyTab',
             isSelected: selectedTab == LegalTab.privacy,
             onTap: () => LegalCubit.get(context).changeTab(LegalTab.privacy),
           ),
           _LegalTabButton(
-            alignment: isArabic ? Alignment.centerLeft : Alignment.centerRight,
+            alignment: Alignment.centerLeft,
             labelKey: 'legal.termsTab',
             isSelected: selectedTab == LegalTab.terms,
             onTap: () => LegalCubit.get(context).changeTab(LegalTab.terms),

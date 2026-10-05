@@ -46,41 +46,34 @@ class ButtonWidget extends StatelessWidget {
     return GestureDetector(
       onTap: onPressed,
       child: Container(
-          height: buttonHeight ?? 50.h,
-          width: buttonWidth?.w ?? double.maxFinite,
-          alignment: Alignment.center,
-          padding: EdgeInsets.symmetric(
-            horizontal: horizontalPadding?.w ?? 12.w,
-            vertical: verticalPadding?.h ?? 6.h,
+        height: buttonHeight ?? 50.h,
+        width: buttonWidth?.w ?? double.maxFinite,
+        alignment: Alignment.center,
+        padding: EdgeInsets.symmetric(
+          horizontal: horizontalPadding?.w ?? 12.w,
+          vertical: verticalPadding?.h ?? 6.h,
+        ),
+        decoration: BoxDecoration(
+          color: backGroundColor,
+          borderRadius: BorderRadius.circular(borderRadius ?? 20.0),
+          border: Border.all(
+            color: borderColor ?? AppColors.whiteColor,
+            width: borderWidth ?? 0,
           ),
-          decoration: BoxDecoration(
-              color: backGroundColor,
-              borderRadius: BorderRadius.circular(borderRadius ?? 20.0),
-              border: Border.all(
-                  color: borderColor ?? AppColors.whiteColor,
-                  width: borderWidth ?? 0)),
-          child: isLoading == true
-              ? LoadingWidget(color: fourGroundColor ?? AppColors.whiteColor)
-              : (icon == null
-                  ? Text(
-                      buttonText,
-                      style: textStyle,
-                    )
+        ),
+        child: isLoading == true
+            ? LoadingWidget(color: fourGroundColor ?? AppColors.whiteColor)
+            : (icon == null
+                  ? Text(buttonText, style: textStyle)
                   : Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          buttonText,
-                          style: textStyle,
-                        ),
+                        Text(buttonText, style: textStyle),
                         horizontalSpace(5),
-                        Icon(
-                          icon,
-                          color: iconColor,
-                          size: 18.r,
-                        )
+                        Icon(icon, color: iconColor, size: 18.r),
                       ],
-                    ))),
+                    )),
+      ),
       // ),
     );
   }

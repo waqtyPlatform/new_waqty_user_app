@@ -22,28 +22,19 @@ class ServiceProviderDetailsPlaceDataWidget extends StatelessWidget {
               ),
             ),
             Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: 12.w,
-                vertical: 4.h,
-              ),
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
               decoration: BoxDecoration(
                 color: AppColors.successColor0,
                 borderRadius: BorderRadius.circular(16.r),
               ),
-              child: Text(
-                'مفتوح',
-                style: TextStyles.font14successColor100W500,
-              ),
+              child: Text('مفتوح', style: TextStyles.font14successColor100W500),
             ),
           ],
         ),
         verticalSpace(8),
         Row(
           children: [
-            Icon(
-              Icons.location_on,
-              color: AppColors.greenColor500,
-            ),
+            Icon(Icons.location_on, color: AppColors.greenColor500),
             horizontalSpace(8),
             Expanded(
               child: Text(
@@ -57,10 +48,7 @@ class ServiceProviderDetailsPlaceDataWidget extends StatelessWidget {
         verticalSpace(4),
         Row(
           children: [
-            Icon(
-              Icons.star_rounded,
-              color: AppColors.greenColor500,
-            ),
+            Icon(Icons.star_rounded, color: AppColors.greenColor500),
             horizontalSpace(8),
             Expanded(
               child: Text.rich(
@@ -143,10 +131,7 @@ class ServiceProviderDetailsPlaceDataWidget extends StatelessWidget {
                       color: AppColors.greenColor505,
                       borderRadius: BorderRadius.circular(16.r),
                     ),
-                    child: Icon(
-                      Icons.share,
-                      color: AppColors.greenColor500,
-                    ),
+                    child: Icon(Icons.share, color: AppColors.greenColor500),
                   ),
                   verticalSpace(8),
                   Text(

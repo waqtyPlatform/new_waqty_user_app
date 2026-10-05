@@ -61,7 +61,6 @@ class _LegalSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isArabic = context.locale.languageCode == 'ar';
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 12.h),
       child: Column(
@@ -71,7 +70,7 @@ class _LegalSection extends StatelessWidget {
             width: double.infinity,
             child: Text(
               context.tr(titleKey),
-              textAlign: isArabic ? TextAlign.right : TextAlign.left,
+              textAlign: TextAlign.start,
               style: TextStyles.font16greyColor900Weight600,
             ),
           ),
@@ -80,7 +79,7 @@ class _LegalSection extends StatelessWidget {
             width: double.infinity,
             child: Text(
               context.tr(bodyKey),
-              textAlign: isArabic ? TextAlign.right : TextAlign.left,
+              textAlign: TextAlign.start,
               style: TextStyles.font12greyColor500W400.copyWith(height: 1.65),
             ),
           ),
