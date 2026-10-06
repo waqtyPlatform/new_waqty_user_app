@@ -20,23 +20,21 @@ class ExploreScreen extends StatelessWidget {
         state ??
         (isLoading ? ExploreViewState.loading : ExploreViewState.content);
 
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider(
-          create: (_) => ExploreCategoriesCubit(getIt())..loadCategories(),
-        ),
-        BlocProvider(create: (_) => HomeCubit(getIt())),
-      ],
-      child: Builder(
-        builder: (context) => Scaffold(
-          backgroundColor: AppColors.pageColor,
-          body: SafeArea(
-            child: RefreshIndicator(
-              color: AppColors.greyColor900,
-              onRefresh: () => context
-                  .read<ExploreCategoriesCubit>()
-                  .loadCategories(force: true),
-              child: _body(currentState),
+    return BlocProvider(
+      create: (_) => ExploreCategoriesCubit(getIt())..loadCategories(),
+      child: BlocProvider(
+        create: (_) => HomeCubit(getIt()),
+        child: Builder(
+          builder: (context) => Scaffold(
+            backgroundColor: AppColors.pageColor,
+            body: SafeArea(
+              child: RefreshIndicator(
+                color: AppColors.greyColor900,
+                onRefresh: () => context
+                    .read<ExploreCategoriesCubit>()
+                    .loadCategories(force: true),
+                child: _body(currentState),
+              ),
             ),
           ),
         ),

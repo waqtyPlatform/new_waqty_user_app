@@ -26,11 +26,12 @@ class HomeService {
         decoded is Map<String, dynamic>) {
       final data = decoded['data'];
       if (data is List) {
+        print(data);
         return data
             .whereType<Map<String, dynamic>>()
             .map(HomeCategoryModel.fromJson)
             .where(
-              (category) => category.name.isNotEmpty && category.shouldDisplay,
+              (category) =>  category.hasProviders,
             )
             .toList();
       }

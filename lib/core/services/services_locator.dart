@@ -26,6 +26,10 @@ import 'package:waqty_user_application/features/explore_near_people/explore_near
 import 'package:waqty_user_application/features/explore_near_people/explore_near_people/data/services/explore_near_people_service.dart';
 import 'package:waqty_user_application/features/home/home/data/repo/home_repo.dart';
 import 'package:waqty_user_application/features/home/home/data/services/home_service.dart';
+import 'package:waqty_user_application/features/home/subcategories/data/repo/subcategories_repo.dart';
+import 'package:waqty_user_application/features/home/subcategories/data/services/subcategories_service.dart';
+import 'package:waqty_user_application/features/home/providers/data/repo/providers_repo.dart';
+import 'package:waqty_user_application/features/home/providers/data/services/providers_service.dart';
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/data/repo/service_provider_details_repo.dart';
 import 'package:waqty_user_application/features/service_provider_details/service_provider_details/data/services/service_provider_details_service.dart';
 
@@ -83,6 +87,16 @@ class ServicesLocator {
     getIt.registerLazySingleton<HomeRepo>(() => HomeRepo(getIt()));
     getIt.registerLazySingleton<HomeService>(
       () => HomeService(apiConsumer: getIt()),
+    );
+    getIt.registerLazySingleton<SubcategoriesRepo>(
+      () => SubcategoriesRepo(getIt()),
+    );
+    getIt.registerLazySingleton<SubcategoriesService>(
+      () => SubcategoriesService(apiConsumer: getIt()),
+    );
+    getIt.registerLazySingleton<ProvidersRepo>(() => ProvidersRepo(getIt()));
+    getIt.registerLazySingleton<ProvidersService>(
+      () => ProvidersService(apiConsumer: getIt()),
     );
 
     /// Home

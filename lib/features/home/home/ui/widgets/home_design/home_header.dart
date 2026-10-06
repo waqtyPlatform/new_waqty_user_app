@@ -54,8 +54,7 @@ class HomeHeader extends StatelessWidget {
                     buildWhen: (previous, current) =>
                         previous.location != current.location,
                     builder: (context, state) {
-                      final locationLabel =
-                          state.location?.label ?? state.location?.city?.name;
+                      final locationLabel = state.location?.displayLabel;
                       return Align(
                         alignment: AlignmentDirectional.centerStart,
                         child: Row(
@@ -64,6 +63,7 @@ class HomeHeader extends StatelessWidget {
                             Text(
                               locationLabel ?? '',
                               style: TextStyles.font20greyColor900W600.copyWith(
+                                fontSize: 14.sp,
                                 height: 1.1,
                               ),
                             ),

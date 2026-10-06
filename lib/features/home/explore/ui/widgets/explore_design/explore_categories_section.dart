@@ -15,9 +15,20 @@ class ExploreCategoriesSection extends StatelessWidget {
           return HomeCategoriesRow(
             categories: state.categories,
             selectedCategoryId: state.selectedCategoryId,
-            onCategorySelected: context
+          onCategorySelected: context
                 .read<ExploreCategoriesCubit>()
                 .selectCategory,
+            onCategoryTap: (category) {
+              Navigator.of(context).pushNamed(
+                category.hasSubcategories
+                    ? Routes.subcategoriesScreen
+                    : Routes.providersScreen,
+                arguments: {
+                  'category_uuid': category.uuid,
+                  'title': category.name,
+                },
+              );
+            },
             expanded: true,
             showAll: false,
           );

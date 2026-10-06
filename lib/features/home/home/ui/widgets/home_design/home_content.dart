@@ -13,7 +13,19 @@ class HomeContent extends StatelessWidget {
       children: [
         HomeHeader(),
         HomeSearchBar(),
-        HomeCategoriesSection(),
+        HomeCategoriesSection(
+          onCategoryTap: (category) {
+            Navigator.of(context).pushNamed(
+              category.hasSubcategories
+                  ? Routes.subcategoriesScreen
+                  : Routes.providersScreen,
+              arguments: {
+                'category_uuid': category.uuid,
+                'title': category.name,
+              },
+            );
+          },
+        ),
         HomeAppointmentCard(),
         HomeRatingCard(),
         HomeWaitlistCard(),

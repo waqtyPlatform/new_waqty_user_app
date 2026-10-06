@@ -2,8 +2,9 @@ part of '../home_design_widgets.dart';
 
 class HomeCategoriesSection extends StatelessWidget {
   final bool expanded;
+  final ValueChanged<HomeCategoryModel>? onCategoryTap;
 
-  const HomeCategoriesSection({super.key, this.expanded = false});
+  const HomeCategoriesSection({super.key, this.expanded = false, this.onCategoryTap});
 
   @override
   Widget build(BuildContext context) {
@@ -26,6 +27,7 @@ class HomeCategoriesSection extends StatelessWidget {
             categories: state.categories,
             selectedCategoryId: state.selectedCategoryId,
             onCategorySelected: context.read<HomeCubit>().selectCategory,
+            onCategoryTap: onCategoryTap,
             expanded: expanded,
           );
         }
@@ -39,6 +41,7 @@ class HomeCategoriesRow extends StatelessWidget {
   final List<HomeCategoryModel>? categories;
   final String? selectedCategoryId;
   final ValueChanged<String?>? onCategorySelected;
+  final ValueChanged<HomeCategoryModel>? onCategoryTap;
   final bool expanded;
   final bool showAll;
 
@@ -47,6 +50,7 @@ class HomeCategoriesRow extends StatelessWidget {
     this.categories,
     this.selectedCategoryId,
     this.onCategorySelected,
+    this.onCategoryTap,
     this.expanded = false,
     this.showAll = true,
   });
@@ -60,6 +64,7 @@ class HomeCategoriesRow extends StatelessWidget {
           imageUrl: null,
           icon: Icons.map_outlined,
           id: null,
+          category: null,
         ),
       ...?categories?.map(
         (category) => (
@@ -67,6 +72,7 @@ class HomeCategoriesRow extends StatelessWidget {
           imageUrl: category.iconUrl,
           icon: null,
           id: category.uuid,
+          category: category,
         ),
       ),
     ];
@@ -80,6 +86,9 @@ class HomeCategoriesRow extends StatelessWidget {
             selected: showAll && item.id == null,
             expanded: expanded,
             onTap: () => onCategorySelected?.call(item.id),
+            onCategoryTap: item.category == null
+                ? null
+                : () => onCategoryTap?.call(item.category!),
           ),
         )
         .toList();
@@ -126,6 +135,7 @@ class _CategoryTile extends StatelessWidget {
   final bool selected;
   final bool expanded;
   final VoidCallback? onTap;
+  final VoidCallback? onCategoryTap;
 
   const _CategoryTile({
     required this.label,
@@ -134,12 +144,13 @@ class _CategoryTile extends StatelessWidget {
     required this.selected,
     this.expanded = false,
     this.onTap,
+    this.onCategoryTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: onCategoryTap ?? onTap,
       child: Container(
         width: expanded ? double.infinity : 84.w,
         height: expanded ? 116.h : 96.h,

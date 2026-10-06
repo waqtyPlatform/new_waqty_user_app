@@ -30,6 +30,12 @@ import 'package:waqty_user_application/features/auth/reseat_password/logic/resea
 import 'package:waqty_user_application/features/auth/reseat_password/ui/reseat_password_screen.dart';
 import 'package:waqty_user_application/features/home/button_navigation_bar/logic/button_navigation_bar_cubit.dart';
 import 'package:waqty_user_application/features/home/button_navigation_bar/ui/button_navigation_bar_screen.dart';
+import 'package:waqty_user_application/features/home/subcategories/data/repo/subcategories_repo.dart';
+import 'package:waqty_user_application/features/home/subcategories/logic/subcategories_cubit.dart';
+import 'package:waqty_user_application/features/home/subcategories/ui/subcategories_screen.dart';
+import 'package:waqty_user_application/features/home/providers/data/repo/providers_repo.dart';
+import 'package:waqty_user_application/features/home/providers/logic/providers_cubit.dart';
+import 'package:waqty_user_application/features/home/providers/ui/providers_screen.dart';
 import 'package:waqty_user_application/features/onboarding/appointments/ui/onboarding_appointments_screen.dart';
 import 'package:waqty_user_application/features/onboarding/balance/ui/onboarding_balance_screen.dart';
 import 'package:waqty_user_application/features/onboarding/booking/ui/onboarding_booking_screen.dart';
@@ -184,6 +190,49 @@ class RouteGenerator {
           builder: (_) => BlocProvider(
             create: (context) => ServiceProviderDetailsCubit(getIt()),
             child: ServiceProviderDetailsScreen(),
+          ),
+        );
+      case Routes.subcategoriesScreen:
+        final categoryUuid = args is Map<String, dynamic>
+            ? args['category_uuid']?.toString() ?? ''
+            : '';
+        final title = args is Map<String, dynamic>
+            ? args['title']?.toString() ?? ''
+            : '';
+        if (categoryUuid.isEmpty) return null;
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => SubcategoriesCubit(getIt<SubcategoriesRepo>())
+              ..loadSubcategories(categoryUuid: categoryUuid),
+            child: SubcategoriesScreen(
+              title: title,
+              categoryUuid: categoryUuid,
+            ),
+          ),
+        );
+      case Routes.providersScreen:
+        final categoryUuid = args is Map<String, dynamic>
+            ? args['category_uuid']?.toString() ?? ''
+            : '';
+        final subcategoryUuid = args is Map<String, dynamic>
+            ? args['subcategory_uuid']?.toString() ?? ''
+            : '';
+        final title = args is Map<String, dynamic>
+            ? args['title']?.toString() ?? ''
+            : '';
+        if (categoryUuid.isEmpty && subcategoryUuid.isEmpty) return null;
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => ProvidersCubit(
+              getIt<ProvidersRepo>(),
+              categoryUuid: categoryUuid.isEmpty ? null : categoryUuid,
+              subcategoryUuid: subcategoryUuid.isEmpty ? null : subcategoryUuid,
+            )..loadProviders(),
+            child: ProvidersScreen(
+              title: title,
+              categoryUuid: categoryUuid.isEmpty ? null : categoryUuid,
+              subcategoryUuid: subcategoryUuid.isEmpty ? null : subcategoryUuid,
+            ),
           ),
         );
 

@@ -10,6 +10,7 @@ import 'package:waqty_user_application/features/home/home/logic/home_cubit.dart'
 import 'package:waqty_user_application/features/home/home/logic/home_state.dart';
 import 'package:waqty_user_application/features/home/explore/logic/explore_categories_cubit.dart';
 import 'package:waqty_user_application/features/home/explore/logic/explore_categories_state.dart';
+import 'package:waqty_user_application/config/routes/routes.dart';
 
 part 'explore_design/explore_content.dart';
 part 'explore_design/explore_categories_section.dart';

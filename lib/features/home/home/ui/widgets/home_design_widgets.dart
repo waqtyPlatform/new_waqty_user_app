@@ -12,6 +12,7 @@ import 'package:waqty_user_application/core/widgets/cached_network_image.dart';
 import 'package:waqty_user_application/features/home/home/data/models/home_category_model.dart';
 import 'package:waqty_user_application/features/home/home/logic/home_cubit.dart';
 import 'package:waqty_user_application/features/home/home/logic/home_state.dart';
+import 'package:waqty_user_application/config/routes/routes.dart';
 
 part 'home_design/home_header.dart';
 part 'home_design/home_content.dart';
