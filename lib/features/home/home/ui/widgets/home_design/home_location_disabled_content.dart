@@ -2,8 +2,15 @@ part of '../home_design_widgets.dart';
 
 class HomeLocationDisabledContent extends StatelessWidget {
   final bool requestLocation;
+  final VoidCallback? onLocationRequested;
+  final Future<void> Function(Position position)? onCurrentLocationSelected;
 
-  const HomeLocationDisabledContent({super.key, this.requestLocation = true});
+  const HomeLocationDisabledContent({
+    super.key,
+    this.requestLocation = true,
+    this.onLocationRequested,
+    this.onCurrentLocationSelected,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -12,8 +19,12 @@ class HomeLocationDisabledContent extends StatelessWidget {
       children: [
         HomeHeader(),
         HomeSearchBar(),
-        HomeCategoriesRow(),
-        _LocationDisabledCard(requestLocation: requestLocation),
+        const HomeCategoriesRow(),
+        _LocationDisabledCard(
+          requestLocation: requestLocation,
+          onLocationRequested: onLocationRequested,
+          onCurrentLocationSelected: onCurrentLocationSelected,
+        ),
       ],
     );
   }
@@ -21,8 +32,14 @@ class HomeLocationDisabledContent extends StatelessWidget {
 
 class _LocationDisabledCard extends StatelessWidget {
   final bool requestLocation;
+  final VoidCallback? onLocationRequested;
+  final Future<void> Function(Position position)? onCurrentLocationSelected;
 
-  const _LocationDisabledCard({required this.requestLocation});
+  const _LocationDisabledCard({
+    required this.requestLocation,
+    this.onLocationRequested,
+    this.onCurrentLocationSelected,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -82,7 +99,13 @@ class _LocationDisabledCard extends StatelessWidget {
                 behavior: HitTestBehavior.opaque,
                 onTap: requestLocation
                     ? () async {
-                        await YourLocation.requestLocationAccess();
+                        final position =
+                            await YourLocation.requestLocationAccess();
+                        if (position != null) {
+                          await onCurrentLocationSelected?.call(position);
+                        } else {
+                          onLocationRequested?.call();
+                        }
                       }
                     : null,
                 child: _PillButton(

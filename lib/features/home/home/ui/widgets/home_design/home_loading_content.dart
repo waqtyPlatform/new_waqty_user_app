@@ -138,14 +138,37 @@ class _LoadingCategoryScroller extends StatelessWidget {
   }
 }
 
+class _LoadingCategoryGrid extends StatelessWidget {
+  const _LoadingCategoryGrid();
+
+  @override
+  Widget build(BuildContext context) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 20.h),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        crossAxisSpacing: 10.w,
+        mainAxisSpacing: 12.h,
+        childAspectRatio: 1.05,
+      ),
+      itemCount: 6,
+      itemBuilder: (_, __) => const _LoadingCategoryTile(expanded: true),
+    );
+  }
+}
+
 class _LoadingCategoryTile extends StatelessWidget {
-  const _LoadingCategoryTile();
+  final bool expanded;
+
+  const _LoadingCategoryTile({this.expanded = false});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 72.w,
-      height: 72.w,
+      width: expanded ? double.infinity : 72.w,
+      height: expanded ? 116.h : 72.w,
       padding: EdgeInsets.fromLTRB(6.w, 13.h, 6.w, 12.h),
       decoration: BoxDecoration(
         color: const Color(0xFFEFEFEA),

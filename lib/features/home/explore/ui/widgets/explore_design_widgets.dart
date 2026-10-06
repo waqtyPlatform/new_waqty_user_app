@@ -1,11 +1,18 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
 import 'package:waqty_user_application/core/utils/styles.dart';
+import 'package:waqty_user_application/features/home/home/ui/widgets/home_design_widgets.dart';
+import 'package:waqty_user_application/features/home/home/logic/home_cubit.dart';
+import 'package:waqty_user_application/features/home/home/logic/home_state.dart';
+import 'package:waqty_user_application/features/home/explore/logic/explore_categories_cubit.dart';
+import 'package:waqty_user_application/features/home/explore/logic/explore_categories_state.dart';
 
 part 'explore_design/explore_content.dart';
+part 'explore_design/explore_categories_section.dart';
 part 'explore_design/explore_loading_content.dart';
 part 'explore_design/explore_empty_state_content.dart';
 part 'explore_design/explore_header.dart';

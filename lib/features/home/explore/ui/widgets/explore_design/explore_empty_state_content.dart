@@ -55,7 +55,7 @@ class _ExploreStateContent extends StatelessWidget {
       children: [
         const ExploreHeader(),
         const ExploreSearchBar(),
-        const ExploreCategoryChips(),
+        const ExploreCategoriesSection(),
         const ExploreFilterChips(),
         SizedBox(height: 18.h),
         Padding(

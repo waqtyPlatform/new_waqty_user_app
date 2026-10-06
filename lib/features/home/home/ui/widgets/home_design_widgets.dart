@@ -1,11 +1,17 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:waqty_user_application/core/services/check_network.dart';
 import 'package:waqty_user_application/core/services/location_service.dart';
 import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
 import 'package:waqty_user_application/core/utils/styles.dart';
+import 'package:waqty_user_application/core/widgets/cached_network_image.dart';
+import 'package:waqty_user_application/features/home/home/data/models/home_category_model.dart';
+import 'package:waqty_user_application/features/home/home/logic/home_cubit.dart';
+import 'package:waqty_user_application/features/home/home/logic/home_state.dart';
 
 part 'home_design/home_header.dart';
 part 'home_design/home_content.dart';
@@ -21,4 +27,3 @@ part 'home_design/home_offer_scroller.dart';
 part 'home_design/home_repeat_scroller.dart';
 part 'home_design/home_suggest_place_card.dart';
 part 'home_design/home_shared_widgets.dart';
-part 'home_design/home_models.dart';

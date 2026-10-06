@@ -138,12 +138,12 @@
   },
   "buttonNavBar": {
     "homeText": "الرئيسية",
-    "exploreText": "استكشاف",
+    "exploreText": "التصنيفات",
     "bookingText": "الحجوزات",
     "accountText": "حسابي"
   },
   "explore": {
-    "title": "استكشاف",
+    "title": "التصنيفات",
     "subtitle": "14 مكانًا في كوم حمادة",
     "nearest": "الأقرب",
     "topRated": "الأعلى تقييمًا",
@@ -422,8 +422,7 @@
     "headerCity": "كوم حمادة",
     "headerArea": "شارع الجيش · قريب منك",
     "headerGreeting": "أهلًا يا يوسف",
-    "headerLocation": "كوم حمادة",
-    "searchPlaceholder": "ابحث عن مكان أو طبيب أو خدمة",
+     "searchPlaceholder": "ابحث عن مكان أو طبيب أو خدمة",
     "categoryAll": "الكل",
     "categoryBarber": "حلاقة",
     "categoryHair": "كوافير",

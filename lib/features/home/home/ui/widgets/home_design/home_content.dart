@@ -5,12 +5,15 @@ class HomeContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final showDistance = context.select<HomeCubit, bool>(
+      (cubit) => cubit.location?.hasCoordinates == true,
+    );
     return ListView(
       padding: EdgeInsets.only(bottom: 116.h),
       children: [
         HomeHeader(),
         HomeSearchBar(),
-        HomeCategoriesRow(),
+        HomeCategoriesSection(),
         HomeAppointmentCard(),
         HomeRatingCard(),
         HomeWaitlistCard(),
@@ -18,7 +21,7 @@ class HomeContent extends StatelessWidget {
           titleKey: 'home.availableTodayTitle',
           subtitleKey: 'home.availableTodaySubtitle',
         ),
-        HomeProviderScroller(wide: true),
+        HomeProviderScroller(wide: true, showDistance: showDistance),
         HomeSectionHeader(
           titleKey: 'home.nearOffersTitle',
           subtitleKey: 'home.nearOffersSubtitle',
@@ -33,31 +36,31 @@ class HomeContent extends StatelessWidget {
           titleKey: 'home.topRatedTitle',
           subtitleKey: 'home.topRatedSubtitle',
         ),
-        HomeProviderScroller(),
+        HomeProviderScroller(showDistance: showDistance),
         HomeCategorySection(
           titleKey: 'home.menBarberTitle',
           subtitleKey: 'home.menBarberSubtitle',
           icon: Icons.content_cut_rounded,
         ),
-        HomeProviderScroller(),
+        HomeProviderScroller(showDistance: showDistance),
         HomeCategorySection(
           titleKey: 'home.womenHairTitle',
           subtitleKey: 'home.womenHairSubtitle',
           icon: Icons.brush_outlined,
         ),
-        HomeProviderScroller(),
+        HomeProviderScroller(showDistance: showDistance),
         HomeCategorySection(
           titleKey: 'home.skinClinicsTitle',
           subtitleKey: 'home.skinClinicsSubtitle',
           icon: Icons.spa_outlined,
         ),
-        HomeProviderScroller(),
+        HomeProviderScroller(showDistance: showDistance),
         HomeCategorySection(
           titleKey: 'home.dentalClinicsTitle',
           subtitleKey: 'home.dentalClinicsSubtitle',
           icon: Icons.medical_services_outlined,
         ),
-        HomeProviderScroller(),
+        HomeProviderScroller(showDistance: showDistance),
         HomeSuggestPlaceCard(),
       ],
     );

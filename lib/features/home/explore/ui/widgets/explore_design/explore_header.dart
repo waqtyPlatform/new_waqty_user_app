@@ -6,30 +6,35 @@ class ExploreHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final title = context.tr('explore.title');
-    final subtitle = context.tr('explore.subtitle');
     final titleBlock = Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.start,
-            style: TextStyles.font24greyColor900Weight600.copyWith(
-              letterSpacing: 0,
-              height: 1.22,
-            ),
-          ),
-          SizedBox(height: 2.h),
-          Text(
-            subtitle,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.start,
-            style: TextStyles.font12greyColor500W400,
-          ),
-        ],
+      child: BlocBuilder<HomeCubit, HomeState>(
+        buildWhen: (previous, current) => previous.location != current.location,
+        builder: (context, state) {
+          final location = state.location?.label ?? state.location?.city?.name;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.start,
+                style: TextStyles.font24greyColor900Weight600.copyWith(
+                  letterSpacing: 0,
+                  height: 1.22,
+                ),
+              ),
+              SizedBox(height: 2.h),
+              Text(
+                location ?? '',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.start,
+                style: TextStyles.font12greyColor500W400,
+              ),
+            ],
+          );
+        },
       ),
     );
 

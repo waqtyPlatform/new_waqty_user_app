@@ -4,14 +4,8 @@ class _ExploreChipData {
   final String labelKey;
   final IconData icon;
   final bool selected;
-  final Color tint;
 
-  _ExploreChipData(
-    this.labelKey,
-    this.icon,
-    this.selected, {
-    this.tint = AppColors.whiteColor,
-  });
+  _ExploreChipData(this.labelKey, this.icon, this.selected);
 }
 
 class ExplorePlaceData {

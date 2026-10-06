@@ -1,11 +1,53 @@
-import 'package:waqty_user_application/features/auth/login/data/services/login_service.dart';
-import 'package:waqty_user_application/features/auth/register/data/services/register_service.dart';
+import 'package:dartz/dartz.dart';
+import 'package:waqty_user_application/core/exceptions/exceptions.dart';
+import 'package:waqty_user_application/core/exceptions/failure.dart';
+import 'package:waqty_user_application/features/home/home/data/models/home_category_model.dart';
+import 'package:waqty_user_application/features/home/home/data/models/home_location_model.dart';
 import 'package:waqty_user_application/features/home/home/data/services/home_service.dart';
 
 class HomeRepo {
   final HomeService _homeService;
 
   HomeRepo(this._homeService);
+
+  Future<Either<Failure, List<HomeCategoryModel>>> categories() async {
+    try {
+      return Right(await _homeService.categories());
+    } on ServerException catch (failure) {
+      return Left(ServerFailure(message: failure.serverFailure.message));
+    } catch (failure) {
+      return Left(ServerFailure(message: failure.toString()));
+    }
+  }
+
+  Future<Either<Failure, HomeLocationModel>> location() async {
+    try {
+      return Right(await _homeService.location());
+    } on ServerException catch (failure) {
+      return Left(ServerFailure(message: failure.serverFailure.message));
+    } catch (failure) {
+      return Left(ServerFailure(message: failure.toString()));
+    }
+  }
+
+  Future<Either<Failure, HomeLocationModel>> updateLocation({
+    required double latitude,
+    required double longitude,
+  }) async {
+    try {
+      return Right(
+        await _homeService.updateLocation(
+          latitude: latitude,
+          longitude: longitude,
+        ),
+      );
+    } on ServerException catch (failure) {
+      return Left(ServerFailure(message: failure.serverFailure.message));
+    } catch (failure) {
+      return Left(ServerFailure(message: failure.toString()));
+    }
+  }
+
   //
   // Future<Either<Failure, GetMyAddressResponseModel>> myAddress(
   //   String type,

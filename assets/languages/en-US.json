@@ -138,12 +138,12 @@
   },
   "buttonNavBar": {
     "homeText": "Home",
-    "exploreText": "Explore",
+    "exploreText": "Categories",
     "bookingText": "Bookings",
     "accountText": "My account"
   },
   "explore": {
-    "title": "Explore",
+    "title": "Categories",
     "subtitle": "14 places in Kom Hamada",
     "nearest": "Nearest",
     "topRated": "Top rated",
@@ -422,7 +422,7 @@
     "headerCity": "Kom Hamada",
     "headerArea": "El Geish street · near you",
     "headerGreeting": "Hi Yousef",
-    "headerLocation": "Kom Hamada",
+
     "searchPlaceholder": "Search for a place, doctor, or service",
     "categoryAll": "All",
     "categoryBarber": "Barber",

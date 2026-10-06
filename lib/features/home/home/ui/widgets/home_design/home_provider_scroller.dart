@@ -1,9 +1,30 @@
 part of '../home_design_widgets.dart';
 
+class _AvailableProvider {
+  final String titleKey;
+  final String metaKey;
+  final String slotKey;
+  final String rating;
+  final bool fast;
+
+  const _AvailableProvider({
+    required this.titleKey,
+    required this.metaKey,
+    required this.slotKey,
+    required this.rating,
+    required this.fast,
+  });
+}
+
 class HomeProviderScroller extends StatelessWidget {
   final bool wide;
+  final bool showDistance;
 
-  const HomeProviderScroller({super.key, this.wide = false});
+  const HomeProviderScroller({
+    super.key,
+    this.wide = false,
+    this.showDistance = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +55,12 @@ class HomeProviderScroller extends StatelessWidget {
       return _HorizontalList(
         height: 263.h,
         children: providers
-            .map((provider) => _AvailableProviderCard(provider: provider))
+            .map(
+              (provider) => _AvailableProviderCard(
+                provider: provider,
+                showDistance: showDistance,
+              ),
+            )
             .toList(),
       );
     }
@@ -84,6 +110,7 @@ class HomeProviderScroller extends StatelessWidget {
               rank: entry.key + 1,
               width: wide ? 190.w : 190.w,
               height: wide ? 233.h : 244.h,
+              showDistance: showDistance,
             ),
           )
           .toList(),
@@ -93,8 +120,12 @@ class HomeProviderScroller extends StatelessWidget {
 
 class _AvailableProviderCard extends StatelessWidget {
   final _AvailableProvider provider;
+  final bool showDistance;
 
-  const _AvailableProviderCard({required this.provider});
+  const _AvailableProviderCard({
+    required this.provider,
+    required this.showDistance,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -186,7 +217,7 @@ class _AvailableProviderCard extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: Text(
-              context.tr(provider.metaKey),
+              _providerMeta(context, provider.metaKey, showDistance),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.start,
@@ -240,6 +271,7 @@ class _ProviderCard extends StatelessWidget {
   final int rank;
   final double width;
   final double height;
+  final bool showDistance;
 
   const _ProviderCard({
     required this.titleKey,
@@ -250,6 +282,7 @@ class _ProviderCard extends StatelessWidget {
     required this.rank,
     required this.width,
     required this.height,
+    required this.showDistance,
   });
 
   @override
@@ -316,7 +349,7 @@ class _ProviderCard extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: Text(
-              context.tr(metaKey),
+              _providerMeta(context, metaKey, showDistance),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.start,
@@ -378,4 +411,11 @@ class _ProviderCard extends StatelessWidget {
       ),
     );
   }
+}
+
+String _providerMeta(BuildContext context, String key, bool showDistance) {
+  final text = context.tr(key);
+  if (showDistance) return text;
+  final separatorIndex = text.indexOf('·');
+  return separatorIndex == -1 ? text : text.substring(0, separatorIndex).trim();
 }

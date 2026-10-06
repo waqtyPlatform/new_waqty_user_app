@@ -15,6 +15,7 @@ class AppInterceptor extends InterceptorContract {
         (context != null && context.locale == const Locale('en', 'US'))
         ? 'en'
         : 'ar';
+
     final token = await CacheHelper.getSecuredString(
       ConstantKeys.saveTokenToShared,
     );

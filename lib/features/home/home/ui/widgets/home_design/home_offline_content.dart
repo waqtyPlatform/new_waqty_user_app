@@ -10,7 +10,7 @@ class HomeOfflineContent extends StatelessWidget {
       children: [
         HomeHeader(),
         HomeSearchBar(),
-        HomeCategoriesRow(),
+        const HomeCategoriesRow(),
         _OfflineAppointmentCard(),
         _OfflineErrorCard(),
       ],

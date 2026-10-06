@@ -50,29 +50,33 @@ class HomeHeader extends StatelessWidget {
                     ),
                   ),
                   SizedBox(height: 2.h),
-                  Align(
-                    alignment: AlignmentDirectional.centerStart,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          _homeText(
-                            context,
-                            'home.headerLocation',
-                            'كوم حمادة',
-                          ),
-                          style: TextStyles.font20greyColor900W600.copyWith(
-                            height: 1.1,
-                          ),
+                  BlocBuilder<HomeCubit, HomeState>(
+                    buildWhen: (previous, current) =>
+                        previous.location != current.location,
+                    builder: (context, state) {
+                      final locationLabel =
+                          state.location?.label ?? state.location?.city?.name;
+                      return Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              locationLabel ?? '',
+                              style: TextStyles.font20greyColor900W600.copyWith(
+                                height: 1.1,
+                              ),
+                            ),
+                            SizedBox(width: 6.w),
+                            const Icon(
+                              Icons.keyboard_arrow_down_rounded,
+                              color: AppColors.greyColor900,
+                              size: 20,
+                            ),
+                          ],
                         ),
-                        SizedBox(width: 6.w),
-                        const Icon(
-                          Icons.keyboard_arrow_down_rounded,
-                          color: AppColors.greyColor900,
-                          size: 20,
-                        ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
                 ],
               ),

@@ -39,6 +39,9 @@ class ConstantKeys {
   static const saveMainColorToShared = "MAIN_COLOR";
   static const saveSecondColorToShared = "SECOND_COLOR";
   static const saveBaseURLToShared = "BASE_URL";
+  static const homeLastLocationLatitude = "HOME_LAST_LOCATION_LATITUDE";
+  static const homeLastLocationLongitude = "HOME_LAST_LOCATION_LONGITUDE";
+  static const homeLastLocationSyncAt = "HOME_LAST_LOCATION_SYNC_AT";
 
   ///
   // static const saveIsOnBoardingToShared = "ON_BOARDING";
