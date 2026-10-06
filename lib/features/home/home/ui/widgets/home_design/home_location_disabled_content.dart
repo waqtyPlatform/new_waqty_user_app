@@ -19,7 +19,6 @@ class HomeLocationDisabledContent extends StatelessWidget {
       children: [
         HomeHeader(),
         HomeSearchBar(),
-        const HomeCategoriesRow(),
         _LocationDisabledCard(
           requestLocation: requestLocation,
           onLocationRequested: onLocationRequested,
