@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../logic/provider_details_state.dart';
-import 'provider_details_shared.dart';
 import 'provider_details_chevron.dart';
+import 'provider_details_shared.dart';
 
 class ProviderDetailsBookingBar extends StatelessWidget {
   final ProviderDetailsLoaded state;
@@ -16,13 +16,6 @@ class ProviderDetailsBookingBar extends StatelessWidget {
         decoration: BoxDecoration(
           color: pdInk,
           borderRadius: BorderRadius.circular(999),
-          boxShadow: [
-            BoxShadow(
-              color: pdInk.withValues(alpha: .18),
-              blurRadius: 22,
-              offset: const Offset(0, 10),
-            ),
-          ],
         ),
         child: Row(
           children: [
@@ -41,13 +34,12 @@ class ProviderDetailsBookingBar extends StatelessWidget {
                     style: pdText(11, Colors.white60),
                   ),
                   Text(
-                    pd(context, 'money', [state.totalPrice.toString()]),
+                    pd(context, 'money', [_money(state.totalPrice)]),
                     style: pdText(16, Colors.white, FontWeight.w600),
                   ),
                 ],
               ),
             ),
-            const SizedBox(width: 8),
             FilledButton(
               onPressed: state.selectedIds.isEmpty
                   ? null
@@ -56,9 +48,7 @@ class ProviderDetailsBookingBar extends StatelessWidget {
                 backgroundColor: Colors.white,
                 foregroundColor: pdInk,
                 disabledBackgroundColor: Colors.white38,
-                disabledForegroundColor: Colors.white,
                 minimumSize: const Size(0, 54),
-                padding: const EdgeInsets.symmetric(horizontal: 20),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -89,13 +79,13 @@ void showBookingSummary(BuildContext context, ProviderDetailsLoaded state) {
     Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(pd(context, state.branch.label), style: pdText(16)),
+        if (state.branch != null) Text(state.branch!.name, style: pdText(16)),
         for (final service in state.selectedServices)
           ListTile(
             contentPadding: EdgeInsets.zero,
-            title: Text(pd(context, service.label), style: pdText(16)),
+            title: Text(service.name, style: pdText(16)),
             trailing: Text(
-              pd(context, 'money', [service.price.toString()]),
+              pd(context, 'money', [_money(service.price)]),
               style: pdText(14),
             ),
           ),
@@ -108,7 +98,7 @@ void showBookingSummary(BuildContext context, ProviderDetailsLoaded state) {
           style: pdText(14),
         ),
         Text(
-          pd(context, 'money', [state.totalPrice.toString()]),
+          pd(context, 'money', [_money(state.totalPrice)]),
           style: pdText(20),
         ),
         const SizedBox(height: 16),
@@ -117,3 +107,7 @@ void showBookingSummary(BuildContext context, ProviderDetailsLoaded state) {
     ),
   );
 }
+
+String _money(double value) => value == value.roundToDouble()
+    ? value.toInt().toString()
+    : value.toStringAsFixed(2);

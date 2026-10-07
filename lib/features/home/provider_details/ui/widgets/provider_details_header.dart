@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../logic/provider_details_cubit.dart';
 import '../../logic/provider_details_state.dart';
 import 'provider_details_shared.dart';
-import 'provider_details_chevron.dart';
 
 class ProviderDetailsHeader extends StatelessWidget {
   final ProviderDetailsLoaded state;
@@ -25,9 +25,9 @@ class ProviderDetailsHeader extends StatelessWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              state.provider.imageUrl != null
+              state.provider.logoUrl != null
                   ? Image.network(
-                      state.provider.imageUrl!,
+                      state.provider.logoUrl!,
                       fit: BoxFit.cover,
                       errorBuilder: (_, error, stack) => const _Cover(),
                     )
@@ -57,10 +57,7 @@ class ProviderDetailsHeader extends StatelessWidget {
                         _RoundAction(
                           label: pd(context, 'back'),
                           onTap: () => Navigator.maybePop(context),
-                          child: const ProviderDetailsChevron(
-                            back: true,
-                            asset: 'ad532',
-                          ),
+                          child: const Icon(Icons.arrow_back_rounded),
                         ),
                         const Spacer(),
                         _RoundAction(
@@ -79,7 +76,7 @@ class ProviderDetailsHeader extends StatelessWidget {
                                     await Clipboard.setData(
                                       ClipboardData(
                                         text:
-                                            '$name\n${pd(context, state.branch.address)}',
+                                            '$name\n${state.branch?.displayAddress ?? ''}',
                                       ),
                                     );
                                     if (!context.mounted) return;
@@ -138,9 +135,7 @@ class ProviderDetailsHeader extends StatelessWidget {
                               style: pdText(20, pdInk, FontWeight.w600),
                             ),
                             Text(
-                              state.provider.branchName.isEmpty
-                                  ? pd(context, 'locationMeta')
-                                  : state.provider.branchName,
+                              _providerMeta(context, state),
                               style: pdText(12, pdSub),
                             ),
                           ],
@@ -157,7 +152,9 @@ class ProviderDetailsHeader extends StatelessWidget {
                           borderRadius: BorderRadius.circular(30),
                         ),
                         child: Text(
-                          '• ${pd(context, 'openUntil')}',
+                          state.provider.isOpenNow
+                              ? '• ${_openText(context, state)}'
+                              : pd(context, 'closed'),
                           style: pdText(11, pdGreen),
                         ),
                       ),
@@ -169,7 +166,7 @@ class ProviderDetailsHeader extends StatelessWidget {
                     onTap: () => pdSheet(
                       context,
                       pd(context, 'ratedVisits', [
-                        state.provider.reviewsCount.toString(),
+                        state.provider.ratingCount.toString(),
                       ]),
                       Text(pd(context, 'noReviews'), style: pdText(14, pdSub)),
                     ),
@@ -188,13 +185,15 @@ class ProviderDetailsHeader extends StatelessWidget {
                           const PdIcon('3ed57'),
                           const SizedBox(width: 5),
                           Text(
-                            state.provider.rating.toStringAsFixed(1),
+                            state.provider.rating == null
+                                ? pd(context, 'newRating')
+                                : state.provider.rating!.toStringAsFixed(1),
                             style: pdText(),
                           ),
                           const SizedBox(width: 5),
                           Text(
                             pd(context, 'visits', [
-                              state.provider.reviewsCount.toString(),
+                              state.provider.ratingCount.toString(),
                             ]),
                             style: pdText(12, pdSub),
                           ),
@@ -215,7 +214,7 @@ class ProviderDetailsHeader extends StatelessWidget {
                         child: _Contact(
                           'directions',
                           '1c61a',
-                          () => showProviderAddress(context, state),
+                          () => openProviderMap(context, state),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -223,7 +222,7 @@ class ProviderDetailsHeader extends StatelessWidget {
                         child: _Contact(
                           'call',
                           '3e677',
-                          () => pdUnavailable(context),
+                          () => callProvider(context, state),
                         ),
                       ),
                     ],
@@ -299,14 +298,73 @@ class _Contact extends StatelessWidget {
   );
 }
 
-void showProviderAddress(BuildContext context, ProviderDetailsLoaded state) =>
-    pdSheet(
-      context,
-      pd(context, 'directions'),
-      Text(
-        state.provider.address.isEmpty
-            ? pd(context, state.branch.address)
-            : state.provider.address,
-        style: pdText(16),
-      ),
+Future<void> openProviderMap(
+  BuildContext context,
+  ProviderDetailsLoaded state,
+) async {
+  final branch = state.branch;
+  final query = branch?.latitude != null && branch?.longitude != null
+      ? '${branch!.latitude},${branch.longitude}'
+      : branch?.displayAddress.trim() ?? '';
+  if (query.isEmpty) {
+    _showLauncherError(context, 'mapUnavailable');
+    return;
+  }
+  final uri = Uri.https('www.google.com', '/maps/search/', {
+    'api': '1',
+    'query': query,
+  });
+  try {
+    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!launched && context.mounted) {
+      _showLauncherError(context, 'mapUnavailable');
+    }
+  } catch (_) {
+    if (context.mounted) _showLauncherError(context, 'mapUnavailable');
+  }
+}
+
+Future<void> callProvider(
+  BuildContext context,
+  ProviderDetailsLoaded state,
+) async {
+  final phone = state.branch?.phone ?? state.provider.phone;
+  if (phone == null || phone.trim().isEmpty) {
+    _showLauncherError(context, 'phoneUnavailable');
+    return;
+  }
+  try {
+    final launched = await launchUrl(
+      Uri(scheme: 'tel', path: phone.trim()),
+      mode: LaunchMode.externalApplication,
     );
+    if (!launched && context.mounted) {
+      _showLauncherError(context, 'phoneUnavailable');
+    }
+  } catch (_) {
+    if (context.mounted) _showLauncherError(context, 'phoneUnavailable');
+  }
+}
+
+void _showLauncherError(BuildContext context, String key) {
+  ScaffoldMessenger.of(
+    context,
+  ).showSnackBar(SnackBar(content: Text(pd(context, key))));
+}
+
+String _providerMeta(BuildContext context, ProviderDetailsLoaded state) {
+  final parts = <String>[
+    if (state.provider.category?.name.isNotEmpty == true)
+      state.provider.category!.name,
+    if (state.provider.distanceKm != null)
+      '${state.provider.distanceKm!.toStringAsFixed(1)} ${pd(context, 'km')}',
+  ];
+  return parts.isEmpty ? pd(context, 'locationMeta') : parts.join(' · ');
+}
+
+String _openText(BuildContext context, ProviderDetailsLoaded state) {
+  final closesAt = state.branch?.closesAt;
+  if (closesAt == null) return pd(context, 'open');
+  final time = closesAt.length >= 5 ? closesAt.substring(0, 5) : closesAt;
+  return pd(context, 'closesAt', [time]);
+}

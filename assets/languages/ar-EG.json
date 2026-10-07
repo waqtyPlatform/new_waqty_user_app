@@ -718,7 +718,20 @@
     "back": "رجوع",
     "retry": "إعادة المحاولة",
     "loadError": "تعذّر تحميل تفاصيل المكان",
-    "done": "تم"
+    "done": "تم",
+    "km": "كم",
+    "closesAt": "مفتوح حتى {}",
+    "newRating": "جديد",
+    "minutes": "{} دقيقة",
+    "priceRange": "من {} إلى {} ج.م",
+    "availableBranches": "متاحة في {} فروع",
+    "noServices": "لا توجد خدمات متاحة حاليًا.",
+    "reviews": "التقييمات",
+    "anonymous": "مستخدم مجهول",
+    "providerReply": "رد المكان",
+    "addressUnavailable": "العنوان غير متاح",
+    "mapUnavailable": "تعذّر فتح موقع المكان على الخريطة.",
+    "phoneUnavailable": "رقم اتصال المكان غير متاح حاليًا."
   },
   "providerDetails": {
     "about": "عن المكان",

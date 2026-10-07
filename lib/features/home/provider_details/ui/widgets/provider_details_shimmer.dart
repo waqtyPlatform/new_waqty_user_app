@@ -90,7 +90,7 @@ class ProviderDetailsShimmer extends StatelessWidget {
                 child: IconButton(
                   tooltip: pd(context, 'back'),
                   onPressed: () => Navigator.maybePop(context),
-                  icon: const BackButtonIcon(),
+                  icon: const Icon(Icons.arrow_back_rounded),
                 ),
               ),
               const Spacer(),

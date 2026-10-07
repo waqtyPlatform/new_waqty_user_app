@@ -719,7 +719,20 @@
     "back": "Back",
     "retry": "Retry",
     "loadError": "Couldn't load place details",
-    "done": "Done"
+    "done": "Done",
+    "km": "km",
+    "closesAt": "Open until {}",
+    "newRating": "New",
+    "minutes": "{} min",
+    "priceRange": "EGP {}–{}",
+    "availableBranches": "Available at {} branches",
+    "noServices": "No services are currently available.",
+    "reviews": "Reviews",
+    "anonymous": "Anonymous",
+    "providerReply": "Provider reply",
+    "addressUnavailable": "Address unavailable",
+    "mapUnavailable": "Couldn't open this place on the map.",
+    "phoneUnavailable": "This place's phone number is currently unavailable."
   },
   "providerDetails": {
     "about": "About",

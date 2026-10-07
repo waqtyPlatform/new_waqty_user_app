@@ -1,250 +1,117 @@
-import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
-import 'dart:ui' as ui;
-import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:waqty_user_application/core/api/api_consumer.dart';
-import 'package:waqty_user_application/features/home/provider_details/data/models/provider_catalog.dart';
+import 'package:waqty_user_application/core/exceptions/failure.dart';
 import 'package:waqty_user_application/features/home/provider_details/data/models/provider_details_model.dart';
-import 'package:waqty_user_application/features/home/provider_details/data/models/provider_details_preview.dart';
 import 'package:waqty_user_application/features/home/provider_details/data/repo/provider_details_repo.dart';
 import 'package:waqty_user_application/features/home/provider_details/data/services/provider_details_service.dart';
 import 'package:waqty_user_application/features/home/provider_details/logic/provider_details_cubit.dart';
 import 'package:waqty_user_application/features/home/provider_details/logic/provider_details_state.dart';
-import 'package:waqty_user_application/features/home/provider_details/ui/provider_details_screen.dart';
-import 'package:waqty_user_application/features/home/provider_details/ui/widgets/provider_details_shimmer.dart';
 
 class _Api extends Fake implements ApiConsumer {}
 
 class _Repo extends ProviderDetailsRepo {
-  _Repo() : super(ProviderDetailsService(apiConsumer: _Api()));
+  final Either<Failure, ProviderDetailsModel> result;
+  _Repo(this.result) : super(ProviderDetailsService(apiConsumer: _Api()));
   @override
-  Future<ProviderCatalog> loadPreview() async => providerDetailsPreview;
-}
-
-class _PendingRepo extends _Repo {
-  final result = Completer<ProviderCatalog>();
-  @override
-  Future<ProviderCatalog> loadPreview() => result.future;
+  Future<Either<Failure, ProviderDetailsModel>> show(String uuid) async =>
+      result;
 }
 
 const provider = ProviderDetailsModel(
-  uuid: 'preview',
-  name: '',
-  rating: 4.9,
-  reviewsCount: 312,
-);
-final captureKey = GlobalKey();
-final translations = <String, Map<String, dynamic>>{};
-
-class _Translations extends AssetLoader {
-  const _Translations();
-  @override
-  Future<Map<String, dynamic>> load(String path, Locale locale) async =>
-      translations[locale.toString()]!;
-}
-
-Future<void> mount(
-  WidgetTester tester,
-  ProviderDetailsCubit cubit,
-  Locale locale,
-  Size size, {
-  bool loading = false,
-}) async {
-  tester.view.physicalSize = size;
-  tester.view.devicePixelRatio = 1;
-  addTearDown(tester.view.resetPhysicalSize);
-  addTearDown(tester.view.resetDevicePixelRatio);
-  await tester.pumpWidget(
-    EasyLocalization(
-      supportedLocales: const [Locale('ar', 'EG'), Locale('en', 'US')],
-      startLocale: locale,
-      saveLocale: false,
-      path: 'assets/languages',
-      assetLoader: const _Translations(),
-      child: Builder(
-        builder: (context) => MaterialApp(
-          locale: context.locale,
-          supportedLocales: context.supportedLocales,
-          localizationsDelegates: context.localizationDelegates,
-          theme: ThemeData(fontFamily: 'IBMPlexSansArabic', useMaterial3: true),
-          home: BlocProvider.value(
-            value: cubit,
-            child: RepaintBoundary(
-              key: captureKey,
-              child: const ProviderDetailsScreen(provider: provider),
-            ),
-          ),
-        ),
-      ),
+  uuid: 'provider-1',
+  name: 'Provider',
+  rating: null,
+  ratingCount: 0,
+  branches: [
+    ProviderBranchModel(uuid: 'branch-1', name: 'Main branch'),
+    ProviderBranchModel(uuid: 'branch-2', name: 'Second branch'),
+  ],
+  services: [
+    ProviderServiceModel(
+      uuid: 'service-1',
+      name: 'Haircut',
+      price: 100,
+      priceMax: 150,
+      durationMinutes: 30,
+      branchesCount: 2,
     ),
-  );
-  await tester.runAsync(() async {
-    await precacheImage(
-      const AssetImage('assets/figma/provider_details/70959.png'),
-      tester.element(find.byType(MaterialApp)),
-    );
-  });
-  await tester.pump(const Duration(milliseconds: 300));
-  if (!loading) {
-    await cubit.initialize(provider);
-    await tester.pumpAndSettle();
-  }
-}
-
-Future<void> capture(WidgetTester tester, String name) async {
-  if (!const bool.fromEnvironment('CAPTURE_PROVIDER')) return;
-  final boundary =
-      captureKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
-  await tester.runAsync(() async {
-    final img = await boundary.toImage();
-    final data = await img.toByteData(format: ui.ImageByteFormat.png);
-    await Directory('build/provider_details_previews').create(recursive: true);
-    await File(
-      'build/provider_details_previews/$name.png',
-    ).writeAsBytes(data!.buffer.asUint8List());
-    img.dispose();
-  });
-}
+  ],
+  servicesCount: 1,
+);
 
 void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
-  setUpAll(() async {
-    SharedPreferences.setMockInitialValues({});
-    await EasyLocalization.ensureInitialized();
-    for (final locale in ['ar-EG', 'en-US']) {
-      translations[locale.replaceAll('-', '_')] =
-          jsonDecode(
-                await rootBundle.loadString('assets/languages/$locale.json'),
-              )
-              as Map<String, dynamic>;
-    }
-    final loader = FontLoader('IBMPlexSansArabic');
-    loader.addFont(
-      rootBundle.load('assets/fonts/IBMPlexSansArabic-Regular.ttf'),
-    );
-    await loader.load();
-    final icons = FontLoader('MaterialIcons');
-    icons.addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'));
-    await icons.load();
+  test('parses nullable rating, ranges, working hours and reviews', () {
+    final model = ProviderDetailsModel.fromJson({
+      'uuid': 'provider-1',
+      'name': 'Provider',
+      'phone': '+201000000000',
+      'rating': null,
+      'rating_count': 0,
+      'distance_km': null,
+      'is_open_now': true,
+      'branches': [
+        {
+          'uuid': 'branch-1',
+          'name': 'Main',
+          'phone': '+201111111111',
+          'working_hours': [
+            {
+              'day_of_week': 0,
+              'start_time': '09:00:00',
+              'end_time': '23:00:00',
+            },
+          ],
+        },
+      ],
+      'services': [
+        {
+          'uuid': 'service-1',
+          'name': 'Haircut',
+          'price': 100,
+          'price_max': 150,
+          'branches_count': 2,
+        },
+      ],
+      'employees': [],
+      'reviews': [
+        {
+          'uuid': 'review-1',
+          'rating': 5,
+          'comment': 'Great',
+          'user_name': null,
+          'created_at': '2026-10-01T12:00:00Z',
+        },
+      ],
+    });
+    expect(model.rating, isNull);
+    expect(model.distanceKm, isNull);
+    expect(model.phone, '+201000000000');
+    expect(model.branches.single.phone, '+201111111111');
+    expect(model.services.single.priceMax, 150);
+    expect(model.branches.single.workingHours.single.dayOfWeek, 0);
+    expect(model.reviews.single.userName, isNull);
   });
 
-  test('Service totals, independent tabs and branch reset', () async {
-    final cubit = ProviderDetailsCubit(_Repo());
-    await cubit.initialize(provider);
-    var loaded = cubit.state as ProviderDetailsLoaded;
-    expect(loaded.totalPrice, 370);
-    expect(loaded.totalMinutes, 65);
-    cubit.toggleService('hair');
-    loaded = cubit.state as ProviderDetailsLoaded;
-    expect(loaded.totalPrice, 120);
-    cubit.toggleService('color-roots');
-    expect((cubit.state as ProviderDetailsLoaded).totalPrice, 320);
-    cubit.selectSpecialist('ahmed');
-    cubit.selectTab(ProviderDetailsTab.packages);
-    expect((cubit.state as ProviderDetailsLoaded).selectedIds, {
-      'beard',
-      'color-roots',
-    });
+  test('cubit loads API data and keeps selection in state', () async {
+    final cubit = ProviderDetailsCubit(_Repo(const Right(provider)));
+    await cubit.load(provider.uuid);
+    cubit.toggleService('service-1');
+    var state = cubit.state as ProviderDetailsLoaded;
+    expect(state.totalPrice, 100);
+    expect(state.totalMinutes, 30);
     cubit.selectBranch(1);
-    loaded = cubit.state as ProviderDetailsLoaded;
-    expect(loaded.selectedIds, isEmpty);
-    expect(loaded.specialistId, isNull);
-    expect(loaded.branch.packages, isEmpty);
-    expect(loaded.branch.namedStaff, isFalse);
+    state = cubit.state as ProviderDetailsLoaded;
+    expect(state.selectedIds, isEmpty);
     await cubit.close();
   });
 
-  for (final locale in [const Locale('ar', 'EG'), const Locale('en', 'US')]) {
-    testWidgets('Tabs, selection and empty states: ${locale.languageCode}', (
-      tester,
-    ) async {
-      final cubit = ProviderDetailsCubit(_Repo());
-      await mount(tester, cubit, locale, const Size(375, 1000));
-      expect(tester.takeException(), isNull);
-      await capture(tester, '${locale.languageCode}-services');
-      await tester.ensureVisible(find.byKey(const ValueKey('service-hair')));
-      await tester.tap(find.byKey(const ValueKey('service-hair')));
-      await tester.pumpAndSettle();
-      expect((cubit.state as ProviderDetailsLoaded).totalPrice, 120);
-      for (final tab in [
-        ProviderDetailsTab.specialists,
-        ProviderDetailsTab.packages,
-        ProviderDetailsTab.information,
-      ]) {
-        await tester.ensureVisible(find.byKey(ValueKey('tab-${tab.name}')));
-        await tester.tap(find.byKey(ValueKey('tab-${tab.name}')));
-        await tester.pumpAndSettle();
-        expect((cubit.state as ProviderDetailsLoaded).tab, tab);
-        expect(tester.takeException(), isNull);
-        await capture(tester, '${locale.languageCode}-${tab.name}');
-      }
-      cubit.selectBranch(1);
-      cubit.selectTab(ProviderDetailsTab.packages);
-      await tester.pumpAndSettle();
-      expect(
-        find.text(
-          locale.languageCode == 'ar'
-              ? 'هذا المكان لا يقدّم باقات'
-              : 'This place does not offer packages',
-        ),
-        findsOneWidget,
-      );
-      await capture(tester, '${locale.languageCode}-empty-packages');
-      cubit.selectTab(ProviderDetailsTab.specialists);
-      await tester.pumpAndSettle();
-      expect(tester.takeException(), isNull);
-      await capture(tester, '${locale.languageCode}-unnamed');
-      await tester.pumpWidget(const SizedBox());
-      await cubit.close();
-    });
-  }
-  testWidgets('320px width and large text remain within layout', (
-    tester,
-  ) async {
-    final cubit = ProviderDetailsCubit(_Repo());
-    tester.platformDispatcher.textScaleFactorTestValue = 1.3;
-    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
-    await mount(tester, cubit, const Locale('en', 'US'), const Size(320, 700));
-    for (final tab in ProviderDetailsTab.values) {
-      cubit.selectTab(tab);
-      await tester.pumpAndSettle();
-      expect(tester.takeException(), isNull);
-    }
-    await tester.pumpWidget(const SizedBox());
+  test('404 becomes a dedicated not-found state', () async {
+    final cubit = ProviderDetailsCubit(
+      _Repo(const Left(ProviderDetailsNotFoundFailure())),
+    );
+    await cubit.load('hidden-provider');
+    expect(cubit.state, isA<ProviderDetailsNotFound>());
     await cubit.close();
   });
-  testWidgets(
-    'Loading has its own skeleton and completes after unmount safely',
-    (tester) async {
-      final repo = _PendingRepo();
-      final cubit = ProviderDetailsCubit(repo);
-      tester.view.physicalSize = const Size(375, 1000);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-      await mount(
-        tester,
-        cubit,
-        const Locale('ar', 'EG'),
-        const Size(375, 1000),
-        loading: true,
-      );
-      await tester.pump(const Duration(milliseconds: 200));
-      expect(find.byType(ProviderDetailsShimmer), findsOneWidget);
-      expect(tester.takeException(), isNull);
-      await capture(tester, 'shimmer');
-      await tester.pumpWidget(const SizedBox());
-      await cubit.close();
-      repo.result.complete(providerDetailsPreview);
-      await tester.pump();
-      expect(tester.takeException(), isNull);
-    },
-  );
 }

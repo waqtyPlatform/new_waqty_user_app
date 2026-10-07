@@ -42,7 +42,6 @@ import 'package:waqty_user_application/features/onboarding/booking/ui/onboarding
 import 'package:waqty_user_application/features/onboarding/notifications/ui/onboarding_notifications_screen.dart';
 import 'package:waqty_user_application/features/onboarding/start/ui/onboarding_start_screen.dart';
 import 'package:waqty_user_application/features/home/provider_details/logic/provider_details_cubit.dart';
-import 'package:waqty_user_application/features/home/provider_details/data/models/provider_details_model.dart';
 import 'package:waqty_user_application/features/home/provider_details/ui/provider_details_screen.dart';
 
 class RouteGenerator {
@@ -187,14 +186,15 @@ class RouteGenerator {
           ),
         );
       case Routes.providerDetailsScreen:
-        final provider = args is Map<String, dynamic>
-            ? ProviderDetailsModel.fromJson(args)
-            : const ProviderDetailsModel(uuid: '', name: '');
+        final providerUuid = args is Map<String, dynamic>
+            ? (args['provider_uuid'] ?? args['uuid'])?.toString() ?? ''
+            : args?.toString() ?? '';
+        if (providerUuid.isEmpty) return null;
         return MaterialPageRoute(
           builder: (_) => BlocProvider(
             create: (context) =>
-                ProviderDetailsCubit(getIt())..initialize(provider),
-            child: ProviderDetailsScreen(provider: provider),
+                ProviderDetailsCubit(getIt())..load(providerUuid),
+            child: ProviderDetailsScreen(providerUuid: providerUuid),
           ),
         );
       case Routes.subcategoriesScreen:

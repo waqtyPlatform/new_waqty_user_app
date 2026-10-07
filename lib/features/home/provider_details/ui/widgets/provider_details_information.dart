@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../data/models/provider_details_model.dart';
 import '../../logic/provider_details_state.dart';
 import 'provider_details_header.dart';
 import 'provider_details_shared.dart';
@@ -7,187 +8,163 @@ class ProviderDetailsInformation extends StatelessWidget {
   final ProviderDetailsLoaded state;
   const ProviderDetailsInformation({super.key, required this.state});
   @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      PdHeading(pd(context, 'informationTitle'), pd(context, 'infoHint')),
-      PdCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              pd(context, 'hours'),
-              style: pdText(16, pdInk, FontWeight.w600),
-            ),
-            const SizedBox(height: 8),
-            for (final day in ['sat', 'sun', 'mon', 'tue', 'wed', 'thu', 'fri'])
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 7),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        pd(context, day),
-                        style: pdText(12, day == 'fri' ? pdSub : pdInk),
-                      ),
-                    ),
-                    Text(
-                      pd(context, day == 'fri' ? 'closed' : 'hoursValue'),
-                      style: pdText(12, day == 'fri' ? pdSub : pdInk),
-                    ),
-                  ],
-                ),
-              ),
-          ],
-        ),
-      ),
-      const SizedBox(height: 10),
-      InkWell(
-        onTap: () => pdSheet(
-          context,
-          pd(context, 'ratedVisits', [state.provider.reviewsCount.toString()]),
-          Text(pd(context, 'noReviews'), style: pdText(14, pdSub)),
-        ),
-        child: PdCard(
-          child: Row(
+  Widget build(BuildContext context) {
+    final branch = state.branch;
+    final hours = {
+      for (final item
+          in branch?.workingHours ?? const <ProviderWorkingHourModel>[])
+        item.dayOfWeek: item,
+    };
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        PdHeading(pd(context, 'informationTitle'), pd(context, 'infoHint')),
+        PdCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFF6E0),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      state.provider.rating.toStringAsFixed(1),
-                      style: pdText(14, pdInk, FontWeight.w600),
-                    ),
-                    const PdIcon('bc188'),
-                  ],
-                ),
+              Text(
+                pd(context, 'hours'),
+                style: pdText(16, pdInk, FontWeight.w600),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      pd(context, 'ratedVisits', [
-                        state.provider.reviewsCount.toString(),
-                      ]),
-                      style: pdText(14),
-                    ),
-                    Text(pd(context, 'reviewHint'), style: pdText(11, pdSub)),
-                  ],
+              const SizedBox(height: 8),
+              for (final entry in const [
+                (6, 'sat'),
+                (0, 'sun'),
+                (1, 'mon'),
+                (2, 'tue'),
+                (3, 'wed'),
+                (4, 'thu'),
+                (5, 'fri'),
+              ])
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 7),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(pd(context, entry.$2), style: pdText(12)),
+                      ),
+                      Text(
+                        hours[entry.$1] == null
+                            ? pd(context, 'closed')
+                            : '${_time(hours[entry.$1]!.startTime)} – ${_time(hours[entry.$1]!.endTime)}',
+                        style: pdText(
+                          12,
+                          hours[entry.$1] == null ? pdSub : pdInk,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const Icon(Icons.chevron_left, size: 16, color: pdSub),
             ],
           ),
         ),
-      ),
-      const SizedBox(height: 10),
-      PdCard(
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: pdSoft,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Center(child: PdIcon('2fe1b')),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    pd(context, 'payment'),
-                    style: pdText(14, pdInk, FontWeight.w600),
+        const SizedBox(height: 10),
+        InkWell(
+          onTap: () => _showReviews(context),
+          child: PdCard(
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF6E0),
+                    borderRadius: BorderRadius.circular(14),
                   ),
-                  Text(pd(context, 'paymentHint'), style: pdText(11, pdSub)),
+                  child: Center(
+                    child: Text(
+                      state.provider.rating == null
+                          ? pd(context, 'newRating')
+                          : state.provider.rating!.toStringAsFixed(1),
+                      style: pdText(13, pdInk, FontWeight.w600),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        pd(context, 'ratedVisits', [
+                          state.provider.ratingCount.toString(),
+                        ]),
+                        style: pdText(14),
+                      ),
+                      Text(pd(context, 'reviewHint'), style: pdText(11, pdSub)),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.chevron_left, size: 16, color: pdSub),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        if (branch != null && branch.displayAddress.isNotEmpty)
+          InkWell(
+            onTap: () => openProviderMap(context, state),
+            child: PdCard(
+              child: Row(
+                children: [
+                  const PdIcon('95387'),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(branch.displayAddress, style: pdText(14)),
+                  ),
+                  const Icon(Icons.chevron_left, size: 16, color: pdSub),
                 ],
               ),
             ),
-          ],
-        ),
-      ),
-      const SizedBox(height: 10),
-      PdCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              pd(context, 'policies'),
-              style: pdText(16, pdInk, FontWeight.w600),
-            ),
-            for (final policy in [
-              'before',
-              'cancel',
-              'refund',
-              'noShow',
-              'prepare',
-            ])
-              Theme(
-                data: Theme.of(
-                  context,
-                ).copyWith(dividerColor: Colors.transparent),
-                child: ExpansionTile(
-                  key: PageStorageKey('policy-$policy'),
-                  initiallyExpanded: policy == 'cancel',
-                  tilePadding: EdgeInsets.zero,
-                  childrenPadding: const EdgeInsets.only(bottom: 12),
-                  title: Text(pd(context, policy), style: pdText(14)),
-                  children: [
-                    Text(
-                      pd(
-                        context,
-                        policy == 'cancel' ? 'cancelBody' : 'policyPending',
-                      ),
-                      style: pdText(12, pdSub),
-                    ),
-                  ],
-                ),
-              ),
-          ],
-        ),
-      ),
-      const SizedBox(height: 10),
-      InkWell(
-        onTap: () => showProviderAddress(context, state),
-        child: PdCard(
-          child: Row(
+          ),
+      ],
+    );
+  }
+
+  void _showReviews(BuildContext context) => pdSheet(
+    context,
+    pd(context, 'reviews'),
+    state.provider.reviews.isEmpty
+        ? Text(pd(context, 'noReviews'), style: pdText(14, pdSub))
+        : Column(
             children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE8F2FF),
-                  borderRadius: BorderRadius.circular(12),
+              for (final review in state.provider.reviews)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: PdCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                review.userName ?? pd(context, 'anonymous'),
+                                style: pdText(14, pdInk, FontWeight.w600),
+                              ),
+                            ),
+                            Text('★ ${review.rating}', style: pdText(13)),
+                          ],
+                        ),
+                        if (review.serviceName != null)
+                          Text(review.serviceName!, style: pdText(11, pdSub)),
+                        Text(review.comment, style: pdText(14)),
+                        if (review.reply != null) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            pd(context, 'providerReply'),
+                            style: pdText(12, pdGreen),
+                          ),
+                          Text(review.reply!, style: pdText(13, pdSub)),
+                        ],
+                      ],
+                    ),
+                  ),
                 ),
-                child: const Center(child: PdIcon('95387')),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(pd(context, state.branch.address), style: pdText(14)),
-                    Text(pd(context, 'mapHint'), style: pdText(11, pdGreen)),
-                  ],
-                ),
-              ),
-              const Icon(Icons.chevron_left, size: 16, color: pdSub),
             ],
           ),
-        ),
-      ),
-    ],
   );
 }
+
+String _time(String value) => value.length >= 5 ? value.substring(0, 5) : value;
