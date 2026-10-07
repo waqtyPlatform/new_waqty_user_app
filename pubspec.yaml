@@ -92,6 +92,7 @@ flutter:
   assets:
     - assets/images/
     - assets/figma/
+    - assets/figma/provider_details/
     - assets/icons/
     - assets/languages/
   # An image asset can refer to one or more resolution-specific "variants", see

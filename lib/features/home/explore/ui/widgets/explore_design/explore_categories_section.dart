@@ -12,6 +12,9 @@ class ExploreCategoriesSection extends StatelessWidget {
           return const HomeCategoriesShimmer(expanded: true);
         }
         if (state is ExploreCategoriesLoadedState) {
+          if (state.categories.isEmpty) {
+            return _emptyCategoriesCard(context);
+          }
           return HomeCategoriesRow(
             categories: state.categories,
             selectedCategoryId: state.selectedCategoryId,
@@ -33,8 +36,25 @@ class ExploreCategoriesSection extends StatelessWidget {
             showAll: false,
           );
         }
+        if (state is ExploreCategoriesErrorState &&
+            context.read<ExploreCategoriesCubit>().query.isNotEmpty) {
+          return _emptyCategoriesCard(context);
+        }
         return const HomeCategoriesRow(expanded: true, showAll: false);
       },
+    );
+  }
+
+  Widget _emptyCategoriesCard(BuildContext context) {
+    final hasSearch = context.read<ExploreCategoriesCubit>().query.isNotEmpty;
+    return HomeCategoriesEmptyCard(
+      titleKey: hasSearch
+          ? 'home.categoriesNoResultsTitle'
+          : 'home.categoriesComingSoonTitle',
+      subtitleKey: hasSearch
+          ? 'home.categoriesNoResultsSubtitle'
+          : 'home.categoriesComingSoonSubtitle',
+      icon: hasSearch ? Icons.search_off_rounded : Icons.auto_awesome_outlined,
     );
   }
 }

@@ -23,6 +23,9 @@ class HomeCategoriesSection extends StatelessWidget {
           );
         }
         if (state is HomeCategoriesLoadedState) {
+          if (state.categories.isEmpty) {
+            return const HomeCategoriesEmptyCard();
+          }
           return HomeCategoriesRow(
             categories: state.categories,
             selectedCategoryId: state.selectedCategoryId,
@@ -128,6 +131,66 @@ class HomeCategoriesShimmer extends StatelessWidget {
   }
 }
 
+class HomeCategoriesEmptyCard extends StatelessWidget {
+  final String titleKey;
+  final String subtitleKey;
+  final IconData icon;
+
+  const HomeCategoriesEmptyCard({
+    super.key,
+    this.titleKey = 'home.categoriesComingSoonTitle',
+    this.subtitleKey = 'home.categoriesComingSoonSubtitle',
+    this.icon = Icons.auto_awesome_outlined,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 20.h),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
+        decoration: BoxDecoration(
+          color: AppColors.whiteColor,
+          borderRadius: BorderRadius.circular(24.r),
+          border: Border.all(color: AppColors.greyColor100),
+          boxShadow: _tileShadow(),
+        ),
+        child: Column(
+          children: [
+            Container(
+              width: 62.w,
+              height: 62.w,
+              decoration: BoxDecoration(
+                color: AppColors.sunkenColor,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                color: AppColors.greyColor500,
+                size: 28.sp,
+              ),
+            ),
+            SizedBox(height: 14.h),
+            Text(
+              context.tr(titleKey),
+              textAlign: TextAlign.center,
+              style: TextStyles.font18greyColor900Weight600,
+            ),
+            SizedBox(height: 6.h),
+            Text(
+              context.tr(subtitleKey),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: TextStyles.font12greyColor500W400.copyWith(height: 1.6),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _CategoryTile extends StatelessWidget {
   final String label;
   final String? imageUrl;
@@ -195,6 +258,19 @@ class _CategoryTile extends StatelessWidget {
         color: selected ? AppColors.whiteColor : AppColors.greyColor900,
       );
     }
-    return const SizedBox.shrink();
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.greyColor25,
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: AppColors.greyColor100.withValues(alpha: .7),
+        ),
+      ),
+      child: Icon(
+        Icons.image_outlined,
+        size: 18.sp,
+        color: AppColors.greyColor300,
+      ),
+    );
   }
 }

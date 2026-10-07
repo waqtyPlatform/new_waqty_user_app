@@ -5,6 +5,8 @@ import 'subcategories_state.dart';
 class SubcategoriesCubit extends Cubit<SubcategoriesState> {
   final SubcategoriesRepo _repo;
   bool _requestInFlight = false;
+  bool _reloadAfterCurrentRequest = false;
+  String query = '';
 
   SubcategoriesCubit(this._repo) : super(const SubcategoriesInitialState());
 
@@ -14,13 +16,18 @@ class SubcategoriesCubit extends Cubit<SubcategoriesState> {
     String? countryCode,
     bool force = false,
   }) async {
-    if (_requestInFlight || (!force && state.subcategories.isNotEmpty)) return;
+    if (query != null) this.query = query.trim();
+    if (_requestInFlight) {
+      _reloadAfterCurrentRequest = true;
+      return;
+    }
+    if (!force && state.subcategories.isNotEmpty) return;
     _requestInFlight = true;
     emit(SubcategoriesLoadingState(state.subcategories));
     try {
       final result = await _repo.list(
         categoryUuid: categoryUuid,
-        query: query,
+        query: this.query,
         countryCode: countryCode,
       );
       result.fold(
@@ -29,6 +36,18 @@ class SubcategoriesCubit extends Cubit<SubcategoriesState> {
       );
     } finally {
       _requestInFlight = false;
+      if (_reloadAfterCurrentRequest) {
+        _reloadAfterCurrentRequest = false;
+        await loadSubcategories(categoryUuid: categoryUuid, force: true);
+      }
     }
+  }
+
+  Future<void> search({required String categoryUuid, required String value}) {
+    return loadSubcategories(
+      categoryUuid: categoryUuid,
+      query: value,
+      force: true,
+    );
   }
 }

@@ -151,9 +151,9 @@ class _LoadingCategoryGrid extends StatelessWidget {
         crossAxisCount: 3,
         crossAxisSpacing: 10.w,
         mainAxisSpacing: 12.h,
-        childAspectRatio: 1.05,
+        childAspectRatio: .9,
       ),
-      itemCount: 6,
+      itemCount: 12,
       itemBuilder: (_, __) => const _LoadingCategoryTile(expanded: true),
     );
   }

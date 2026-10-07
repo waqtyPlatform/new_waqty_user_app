@@ -54,17 +54,21 @@ class HomeHeader extends StatelessWidget {
                     buildWhen: (previous, current) =>
                         previous.location != current.location,
                     builder: (context, state) {
-                      final locationLabel = state.location?.displayLabel;
+                      final locationLabel = state.location?.displayLabel ??
+                          context.tr('home.currentLocation');
                       return Align(
                         alignment: AlignmentDirectional.centerStart,
                         child: Row(
-                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
-                              locationLabel ?? '',
-                              style: TextStyles.font20greyColor900W600.copyWith(
-                                fontSize: 14.sp,
-                                height: 1.1,
+                            Expanded(
+                              child: Text(
+                                locationLabel ?? '',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyles.font20greyColor900W600.copyWith(
+                                  fontSize: 14.sp,
+                                  height: 1.1,
+                                ),
                               ),
                             ),
                             SizedBox(width: 6.w),

@@ -41,8 +41,9 @@ import 'package:waqty_user_application/features/onboarding/balance/ui/onboarding
 import 'package:waqty_user_application/features/onboarding/booking/ui/onboarding_booking_screen.dart';
 import 'package:waqty_user_application/features/onboarding/notifications/ui/onboarding_notifications_screen.dart';
 import 'package:waqty_user_application/features/onboarding/start/ui/onboarding_start_screen.dart';
-import 'package:waqty_user_application/features/service_provider_details/service_provider_details/logic/service_provider_details_cubit.dart';
-import 'package:waqty_user_application/features/service_provider_details/service_provider_details/ui/service_provider_details_screen.dart';
+import 'package:waqty_user_application/features/home/provider_details/logic/provider_details_cubit.dart';
+import 'package:waqty_user_application/features/home/provider_details/data/models/provider_details_model.dart';
+import 'package:waqty_user_application/features/home/provider_details/ui/provider_details_screen.dart';
 
 class RouteGenerator {
   static Route<dynamic>? generateRoute(RouteSettings settings) {
@@ -185,11 +186,15 @@ class RouteGenerator {
             child: ButtonNavigationBarScreen(),
           ),
         );
-      case Routes.serviceProviderDetailsScreen:
+      case Routes.providerDetailsScreen:
+        final provider = args is Map<String, dynamic>
+            ? ProviderDetailsModel.fromJson(args)
+            : const ProviderDetailsModel(uuid: '', name: '');
         return MaterialPageRoute(
           builder: (_) => BlocProvider(
-            create: (context) => ServiceProviderDetailsCubit(getIt()),
-            child: ServiceProviderDetailsScreen(),
+            create: (context) =>
+                ProviderDetailsCubit(getIt())..initialize(provider),
+            child: ProviderDetailsScreen(provider: provider),
           ),
         );
       case Routes.subcategoriesScreen:
@@ -202,8 +207,9 @@ class RouteGenerator {
         if (categoryUuid.isEmpty) return null;
         return MaterialPageRoute(
           builder: (_) => BlocProvider(
-            create: (_) => SubcategoriesCubit(getIt<SubcategoriesRepo>())
-              ..loadSubcategories(categoryUuid: categoryUuid),
+            create: (_) =>
+                SubcategoriesCubit(getIt<SubcategoriesRepo>())
+                  ..loadSubcategories(categoryUuid: categoryUuid),
             child: SubcategoriesScreen(
               title: title,
               categoryUuid: categoryUuid,

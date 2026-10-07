@@ -19,7 +19,7 @@ class HomeLocationDisabledContent extends StatelessWidget {
       children: [
         HomeHeader(),
         HomeSearchBar(),
-        _LocationDisabledCard(
+        HomeLocationDisabledCard(
           requestLocation: requestLocation,
           onLocationRequested: onLocationRequested,
           onCurrentLocationSelected: onCurrentLocationSelected,
@@ -29,12 +29,12 @@ class HomeLocationDisabledContent extends StatelessWidget {
   }
 }
 
-class _LocationDisabledCard extends StatelessWidget {
+class HomeLocationDisabledCard extends StatelessWidget {
   final bool requestLocation;
   final VoidCallback? onLocationRequested;
   final Future<void> Function(Position position)? onCurrentLocationSelected;
 
-  const _LocationDisabledCard({
+  const HomeLocationDisabledCard({
     required this.requestLocation,
     this.onLocationRequested,
     this.onCurrentLocationSelected,

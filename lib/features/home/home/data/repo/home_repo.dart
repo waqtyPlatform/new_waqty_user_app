@@ -10,9 +10,9 @@ class HomeRepo {
 
   HomeRepo(this._homeService);
 
-  Future<Either<Failure, List<HomeCategoryModel>>> categories() async {
+  Future<Either<Failure, List<HomeCategoryModel>>> categories({String? query}) async {
     try {
-      return Right(await _homeService.categories());
+      return Right(await _homeService.categories(query: query));
     } on ServerException catch (failure) {
       return Left(ServerFailure(message: failure.serverFailure.message));
     } catch (failure) {

@@ -9,10 +9,16 @@ class ExploreCategoriesCubit extends Cubit<ExploreCategoriesState> {
     : super(const ExploreCategoriesInitialState());
 
   bool _requestInFlight = false;
+  bool _reloadAfterCurrentRequest = false;
   String? selectedCategoryId;
+  String query = '';
 
   Future<void> loadCategories({bool force = false}) async {
-    if (_requestInFlight || (!force && state.categories.isNotEmpty)) return;
+    if (_requestInFlight) {
+      _reloadAfterCurrentRequest = true;
+      return;
+    }
+    if (!force && state.categories.isNotEmpty) return;
 
     _requestInFlight = true;
     emit(
@@ -22,7 +28,7 @@ class ExploreCategoriesCubit extends Cubit<ExploreCategoriesState> {
       ),
     );
     try {
-      final result = await _homeRepo.categories();
+      final result = await _homeRepo.categories(query: query);
       result.fold(
         (_) => emit(
           ExploreCategoriesErrorState(
@@ -39,6 +45,10 @@ class ExploreCategoriesCubit extends Cubit<ExploreCategoriesState> {
       );
     } finally {
       _requestInFlight = false;
+      if (_reloadAfterCurrentRequest) {
+        _reloadAfterCurrentRequest = false;
+        await loadCategories(force: true);
+      }
     }
   }
 
@@ -50,5 +60,10 @@ class ExploreCategoriesCubit extends Cubit<ExploreCategoriesState> {
         selectedCategoryId: categoryId,
       ),
     );
+  }
+
+  Future<void> search(String value) async {
+    query = value.trim();
+    await loadCategories(force: true);
   }
 }

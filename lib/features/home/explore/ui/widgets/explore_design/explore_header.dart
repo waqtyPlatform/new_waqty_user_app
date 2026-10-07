@@ -10,7 +10,8 @@ class ExploreHeader extends StatelessWidget {
       child: BlocBuilder<HomeCubit, HomeState>(
         buildWhen: (previous, current) => previous.location != current.location,
         builder: (context, state) {
-          final location = state.location?.displayLabel;
+          final location = state.location?.displayLabel ??
+              context.tr('home.currentLocation');
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

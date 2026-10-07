@@ -16,9 +16,14 @@ class HomeService {
 
   HomeService({required this.apiConsumer});
 
-  Future<List<HomeCategoryModel>> categories() async {
+  Future<List<HomeCategoryModel>> categories({String? query}) async {
+    final uri = Uri.parse(HomeApiEndPoints.categories).replace(
+      queryParameters: query != null && query.trim().isNotEmpty
+          ? {'q': query.trim()}
+          : null,
+    );
     final response = await apiConsumer.get(
-      HomeApiEndPoints.categories,
+      uri.toString(),
       await _authHeaders(),
     );
     final decoded = jsonDecode(response.body);
@@ -26,7 +31,6 @@ class HomeService {
         decoded is Map<String, dynamic>) {
       final data = decoded['data'];
       if (data is List) {
-        print(data);
         return data
             .whereType<Map<String, dynamic>>()
             .map(HomeCategoryModel.fromJson)

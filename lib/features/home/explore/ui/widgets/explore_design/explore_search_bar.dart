@@ -1,7 +1,24 @@
 part of '../explore_design_widgets.dart';
 
-class ExploreSearchBar extends StatelessWidget {
+class ExploreSearchBar extends StatefulWidget {
   const ExploreSearchBar({super.key});
+
+  @override
+  State<ExploreSearchBar> createState() => _ExploreSearchBarState();
+}
+
+class _ExploreSearchBarState extends State<ExploreSearchBar> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submitSearch(BuildContext context, String value) {
+    context.read<ExploreCategoriesCubit>().search(value);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,13 +37,21 @@ class ExploreSearchBar extends StatelessWidget {
       size: 38,
       iconSize: 19,
     );
-    final hint = Expanded(
-      child: Text(
-        hintText,
+    final searchField = Expanded(
+      child: TextField(
+        controller: _controller,
+        textInputAction: TextInputAction.search,
+        onChanged: (value) => context.read<ExploreCategoriesCubit>().search(value),
+        onSubmitted: (value) => _submitSearch(context, value),
+        textAlign: TextAlign.right,
+        textDirection: Directionality.of(context),
         maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        textAlign: TextAlign.start,
-        style: TextStyles.font16greyColor500Weight400.copyWith(height: 1.3),
+        decoration: InputDecoration(
+          border: InputBorder.none,
+          hintText: hintText,
+          hintStyle: TextStyles.font16greyColor500Weight400.copyWith(height: 1.3),
+          contentPadding: EdgeInsets.symmetric(vertical: 14.h),
+        ),
       ),
     );
 
@@ -44,7 +69,7 @@ class ExploreSearchBar extends StatelessWidget {
         child: Row(
           children: [
             searchButton,
-            hint,
+            searchField,
             SizedBox(width: 12.w),
             filterButton,
           ],

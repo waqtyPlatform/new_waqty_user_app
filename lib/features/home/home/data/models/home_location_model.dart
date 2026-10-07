@@ -45,14 +45,25 @@ class HomeLocationModel {
   factory HomeLocationModel.fromJson(Map<String, dynamic> json) {
     final source = json['source']?.toString();
     final city = json['city'];
+    final cityName = _locationName(city);
     return HomeLocationModel(
       needsPrompt: json['needs_prompt'] == true,
       hasCoordinates: json['has_coordinates'] == true,
-      label: _nullableString(json['label']),
+      label: _nullableString(
+        json['label'] ??
+            json['display_name'] ??
+            json['formatted_address'] ??
+            json['address'],
+      ),
       governorate: _locationName(json['governorate']),
-      city: city is Map<String, dynamic>
-          ? HomeLocationCity.fromJson(city)
-          : null,
+      city: cityName == null
+          ? null
+          : HomeLocationCity(
+              uuid: city is Map<String, dynamic>
+                  ? city['uuid']?.toString() ?? ''
+                  : '',
+              name: cityName,
+            ),
       source: switch (source) {
         'device' => HomeLocationSource.device,
         'manual' => HomeLocationSource.manual,
@@ -78,6 +89,10 @@ String? _nullableString(dynamic value) {
 }
 
 String? _locationName(dynamic value) {
-  if (value is Map<String, dynamic>) return _nullableString(value['name']);
+  if (value is Map<String, dynamic>) {
+    return _nullableString(
+      value['name'] ?? value['name_ar'] ?? value['name_en'] ?? value['title'],
+    );
+  }
   return _nullableString(value);
 }

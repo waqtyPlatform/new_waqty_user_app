@@ -7,8 +7,10 @@ class ProvidersCubit extends Cubit<ProvidersState> {
   final String? categoryUuid;
   final String? subcategoryUuid;
   bool _requestInFlight = false;
+  bool _reloadAfterCurrentRequest = false;
   String? sort;
-  String? selectedFilter;
+  bool nearestSelected = false;
+  bool ratingSelected = false;
   double? minRating;
   String query = '';
 
@@ -19,7 +21,11 @@ class ProvidersCubit extends Cubit<ProvidersState> {
   }) : super(const ProvidersInitialState());
 
   Future<void> loadProviders({bool force = false}) async {
-    if (_requestInFlight && !force) return;
+    if (_requestInFlight) {
+      if (force) _reloadAfterCurrentRequest = true;
+      return;
+    }
+    if (!force && state.providers.isNotEmpty) return;
     _requestInFlight = true;
     emit(ProvidersLoadingState(state.providers));
     try {
@@ -36,6 +42,10 @@ class ProvidersCubit extends Cubit<ProvidersState> {
       );
     } finally {
       _requestInFlight = false;
+      if (_reloadAfterCurrentRequest) {
+        _reloadAfterCurrentRequest = false;
+        await loadProviders(force: true);
+      }
     }
   }
 
@@ -44,10 +54,13 @@ class ProvidersCubit extends Cubit<ProvidersState> {
     await loadProviders(force: true);
   }
 
-  Future<void> applyFilter({String? sort, double? minRating, String? filterKey}) async {
-    final isSelected = selectedFilter == filterKey;
-    selectedFilter = isSelected ? null : filterKey;
-    this.sort = isSelected ? null : sort;
+  Future<void> applyFilter({double? minRating, String? filterKey}) async {
+    if (filterKey == 'nearest') {
+      nearestSelected = !nearestSelected;
+    } else if (filterKey == 'rating') {
+      ratingSelected = !ratingSelected;
+    }
+    sort = ratingSelected ? 'rating' : null;
     this.minRating = minRating;
     await loadProviders(force: true);
   }

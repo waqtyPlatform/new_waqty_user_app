@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -17,25 +18,24 @@ class ProvidersFilterBar extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         children: [
           _FilterChip(
-            label: 'فلترة',
+            label: context.tr('home.filter'),
             icon: Icons.tune_rounded,
             selected: true,
             onTap: () => context.read<ProvidersCubit>().loadProviders(force: true),
           ),
           SizedBox(width: 8.w),
           _FilterChip(
-            label: 'الأقرب',
-            selected: cubit.selectedFilter == 'nearest',
+            label: context.tr('explore.nearest'),
+            selected: cubit.nearestSelected,
             onTap: () => context.read<ProvidersCubit>().applyFilter(
               filterKey: 'nearest',
             ),
           ),
           SizedBox(width: 8.w),
           _FilterChip(
-            label: 'الأعلى تقييماً',
-            selected: cubit.selectedFilter == 'rating',
+            label: context.tr('explore.topRated'),
+            selected: cubit.ratingSelected,
             onTap: () => context.read<ProvidersCubit>().applyFilter(
-              sort: 'rating',
               filterKey: 'rating',
             ),
           ),
