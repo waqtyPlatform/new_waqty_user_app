@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:waqty_user_application/core/api/api_consumer.dart';
 import 'package:waqty_user_application/core/exceptions/failure.dart';
 import 'package:waqty_user_application/features/home/provider_details/data/models/provider_details_model.dart';
+import 'package:waqty_user_application/features/home/provider_details/data/models/provider_booking_model.dart';
 import 'package:waqty_user_application/features/home/provider_details/data/repo/provider_details_repo.dart';
 import 'package:waqty_user_application/features/home/provider_details/data/services/provider_details_service.dart';
 import 'package:waqty_user_application/features/home/provider_details/logic/provider_details_cubit.dart';
@@ -16,6 +17,68 @@ class _Repo extends ProviderDetailsRepo {
   @override
   Future<Either<Failure, ProviderDetailsModel>> show(String uuid) async =>
       result;
+
+  @override
+  Future<Either<Failure, List<ProviderServiceModel>>> bookingServices(
+    String providerUuid,
+    String branchUuid,
+  ) async => Right(provider.services);
+}
+
+class _BookingRepo extends _Repo {
+  Map<String, dynamic>? submittedBooking;
+  _BookingRepo() : super(const Right(provider));
+
+  @override
+  Future<Either<Failure, ProviderBookingEmployeesModel>> bookingEmployees(
+    String providerUuid,
+    String branchUuid,
+    String serviceUuid,
+  ) async => const Right(
+    ProviderBookingEmployeesModel(allowAnyEmployee: true, employees: []),
+  );
+
+  @override
+  Future<Either<Failure, List<ProviderBookingDateModel>>> bookingDates({
+    required String providerUuid,
+    required String branchUuid,
+    required String serviceUuid,
+    String? employeeUuid,
+    required String timezone,
+  }) async => Right([
+    ProviderBookingDateModel(
+      date: DateTime(2026, 10, 10),
+      available: true,
+      slotsCount: 1,
+    ),
+  ]);
+
+  @override
+  Future<Either<Failure, ProviderBookingSlotsModel>> bookingSlots({
+    required String providerUuid,
+    required String branchUuid,
+    required String serviceUuid,
+    String? employeeUuid,
+    required DateTime date,
+    required String timezone,
+  }) async => const Right(
+    ProviderBookingSlotsModel(
+      waitlistEnabled: false,
+      slots: [
+        ProviderBookingSlotModel(
+          startsAt: '10:00:00',
+          endsAt: '10:30:00',
+          slotToken: 'signed-slot',
+        ),
+      ],
+    ),
+  );
+
+  @override
+  Future<Either<Failure, void>> createBooking(Map<String, dynamic> body) async {
+    submittedBooking = body;
+    return const Right(null);
+  }
 }
 
 const provider = ProviderDetailsModel(
@@ -45,7 +108,6 @@ void main() {
     final model = ProviderDetailsModel.fromJson({
       'uuid': 'provider-1',
       'name': 'Provider',
-      'phone': '+201000000000',
       'rating': null,
       'rating_count': 0,
       'distance_km': null,
@@ -54,7 +116,6 @@ void main() {
         {
           'uuid': 'branch-1',
           'name': 'Main',
-          'phone': '+201111111111',
           'working_hours': [
             {
               'day_of_week': 0,
@@ -86,8 +147,6 @@ void main() {
     });
     expect(model.rating, isNull);
     expect(model.distanceKm, isNull);
-    expect(model.phone, '+201000000000');
-    expect(model.branches.single.phone, '+201111111111');
     expect(model.services.single.priceMax, 150);
     expect(model.branches.single.workingHours.single.dayOfWeek, 0);
     expect(model.reviews.single.userName, isNull);
@@ -113,5 +172,50 @@ void main() {
     await cubit.load('hidden-provider');
     expect(cubit.state, isA<ProviderDetailsNotFound>());
     await cubit.close();
+  });
+
+  test('parses employee, dates and slot token contracts', () {
+    final employees = ProviderBookingEmployeesModel.fromData([]);
+    final slots = ProviderBookingSlotsModel.fromData({
+      'slots': [
+        {
+          'start_time': '10:00:00',
+          'end_time': '10:30:00',
+          'slot_token': 'signed-slot',
+        },
+      ],
+    });
+    expect(employees.allowAnyEmployee, isTrue);
+    expect(slots.slots.single.slotToken, 'signed-slot');
+    expect(slots.slots.single.startsAt, '10:00:00');
+  });
+
+  test('service booking supports any employee then date and slot', () async {
+    final repo = _BookingRepo();
+    final cubit = ProviderDetailsCubit(repo);
+    await cubit.load(provider.uuid);
+    cubit.toggleService('service-1');
+    await cubit.startServiceBooking();
+    var state = cubit.state as ProviderDetailsLoaded;
+    expect(state.allowAnyEmployee, isTrue);
+    await cubit.chooseEmployee(null);
+    state = cubit.state as ProviderDetailsLoaded;
+    expect(state.bookingDates, hasLength(1));
+    expect(state.specialistId, isNull);
+    await cubit.chooseDate(state.bookingDates.single.date);
+    state = cubit.state as ProviderDetailsLoaded;
+    expect(state.bookingSlots.single.slotToken, 'signed-slot');
+    expect(state.waitlistEnabled, isFalse);
+    cubit.chooseSlot('signed-slot');
+    await cubit.confirmBooking();
+    expect(repo.submittedBooking?['slot_token'], 'signed-slot');
+    expect(repo.submittedBooking?['employee_uuid'], isNull);
+    expect(repo.submittedBooking?['service_uuid'], 'service-1');
+    await cubit.close();
+  });
+
+  test('empty slots enable waitlist fallback', () {
+    final slots = ProviderBookingSlotsModel.fromData({'slots': []});
+    expect(slots.waitlistEnabled, isTrue);
   });
 }

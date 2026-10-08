@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:waqty_user_application/core/utils/app_constant.dart';
 import '../../logic/provider_details_cubit.dart';
 import '../../logic/provider_details_state.dart';
 import 'provider_details_shared.dart';
@@ -161,53 +162,6 @@ class ProviderDetailsHeader extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  InkWell(
-                    borderRadius: BorderRadius.circular(30),
-                    onTap: () => pdSheet(
-                      context,
-                      pd(context, 'ratedVisits', [
-                        state.provider.ratingCount.toString(),
-                      ]),
-                      Text(pd(context, 'noReviews'), style: pdText(14, pdSub)),
-                    ),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: pdPlate,
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const PdIcon('3ed57'),
-                          const SizedBox(width: 5),
-                          Text(
-                            state.provider.rating == null
-                                ? pd(context, 'newRating')
-                                : state.provider.rating!.toStringAsFixed(1),
-                            style: pdText(),
-                          ),
-                          const SizedBox(width: 5),
-                          Text(
-                            pd(context, 'visits', [
-                              state.provider.ratingCount.toString(),
-                            ]),
-                            style: pdText(12, pdSub),
-                          ),
-                          const SizedBox(width: 5),
-                          const Icon(
-                            Icons.chevron_left,
-                            size: 12,
-                            color: pdSub,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
                   Row(
                     children: [
                       Expanded(
@@ -219,10 +173,57 @@ class ProviderDetailsHeader extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Expanded(
-                        child: _Contact(
-                          'call',
-                          '3e677',
-                          () => callProvider(context, state),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(30),
+                          onTap: () => pdSheet(
+                            context,
+                            pd(context, 'ratedVisits', [
+                              state.provider.ratingCount.toString(),
+                            ]),
+                            Text(
+                              pd(context, 'noReviews'),
+                              style: pdText(14, pdSub),
+                            ),
+                          ),
+                          child: Container(
+                            height: 40,
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            decoration: BoxDecoration(
+                              color: pdPlate,
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const PdIcon('3ed57'),
+                                const SizedBox(width: 5),
+                                Text(
+                                  state.provider.rating == null
+                                      ? pd(context, 'newRating')
+                                      : state.provider.rating!.toStringAsFixed(
+                                          1,
+                                        ),
+                                  style: pdText(),
+                                ),
+                                const SizedBox(width: 5),
+                                Flexible(
+                                  child: Text(
+                                    pd(context, 'visits', [
+                                      state.provider.ratingCount.toString(),
+                                    ]),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: pdText(12, pdSub),
+                                  ),
+                                ),
+                                const Icon(
+                                  Icons.chevron_left,
+                                  size: 12,
+                                  color: pdSub,
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
                     ],
@@ -324,32 +325,8 @@ Future<void> openProviderMap(
   }
 }
 
-Future<void> callProvider(
-  BuildContext context,
-  ProviderDetailsLoaded state,
-) async {
-  final phone = state.branch?.phone ?? state.provider.phone;
-  if (phone == null || phone.trim().isEmpty) {
-    _showLauncherError(context, 'phoneUnavailable');
-    return;
-  }
-  try {
-    final launched = await launchUrl(
-      Uri(scheme: 'tel', path: phone.trim()),
-      mode: LaunchMode.externalApplication,
-    );
-    if (!launched && context.mounted) {
-      _showLauncherError(context, 'phoneUnavailable');
-    }
-  } catch (_) {
-    if (context.mounted) _showLauncherError(context, 'phoneUnavailable');
-  }
-}
-
 void _showLauncherError(BuildContext context, String key) {
-  ScaffoldMessenger.of(
-    context,
-  ).showSnackBar(SnackBar(content: Text(pd(context, key))));
+  AppConstant.toast(pd(context, key), false, context);
 }
 
 String _providerMeta(BuildContext context, ProviderDetailsLoaded state) {

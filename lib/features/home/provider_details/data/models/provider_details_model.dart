@@ -1,6 +1,6 @@
 class ProviderDetailsModel {
   final String uuid, name;
-  final String? description, logoUrl, phone;
+  final String? description, logoUrl, coverUrl, currencyCode;
   final ProviderCategoryModel? category;
   final double? rating, distanceKm;
   final int ratingCount, servicesCount;
@@ -9,12 +9,14 @@ class ProviderDetailsModel {
   final List<ProviderServiceModel> services;
   final List<ProviderEmployeeModel> employees;
   final List<ProviderReviewModel> reviews;
+  final List<ProviderPackageModel> packages;
   const ProviderDetailsModel({
     required this.uuid,
     required this.name,
     this.description,
     this.logoUrl,
-    this.phone,
+    this.coverUrl,
+    this.currencyCode,
     this.category,
     this.rating,
     this.distanceKm,
@@ -25,6 +27,7 @@ class ProviderDetailsModel {
     this.services = const [],
     this.employees = const [],
     this.reviews = const [],
+    this.packages = const [],
   });
   factory ProviderDetailsModel.fromJson(Map<String, dynamic> json) =>
       ProviderDetailsModel(
@@ -32,9 +35,8 @@ class ProviderDetailsModel {
         name: _string(json['name']),
         description: _nullableString(json['description']),
         logoUrl: _nullableString(json['logo_url']),
-        phone: _nullableString(
-          json['phone'] ?? json['phone_number'] ?? json['mobile'],
-        ),
+        coverUrl: _nullableString(json['cover_url']),
+        currencyCode: _nullableString(json['currency_code']),
         category: _map(json['category'], ProviderCategoryModel.fromJson),
         rating: _nullableDouble(json['rating']),
         ratingCount: _integer(json['rating_count']),
@@ -45,6 +47,7 @@ class ProviderDetailsModel {
         servicesCount: _integer(json['services_count']),
         employees: _list(json['employees'], ProviderEmployeeModel.fromJson),
         reviews: _list(json['reviews'], ProviderReviewModel.fromJson),
+        packages: _list(json['packages'], ProviderPackageModel.fromJson),
       );
 }
 
@@ -60,7 +63,7 @@ class ProviderCategoryModel {
 
 class ProviderBranchModel {
   final String uuid, name;
-  final String? address, city, closesAt, phone;
+  final String? address, city, closesAt;
   final double? latitude, longitude, distanceKm;
   final bool isOpenNow;
   final List<ProviderWorkingHourModel> workingHours;
@@ -70,7 +73,6 @@ class ProviderBranchModel {
     this.address,
     this.city,
     this.closesAt,
-    this.phone,
     this.latitude,
     this.longitude,
     this.distanceKm,
@@ -84,9 +86,6 @@ class ProviderBranchModel {
         address: _nullableString(json['address']),
         city: _nullableString(json['city']),
         closesAt: _nullableString(json['closes_at']),
-        phone: _nullableString(
-          json['phone'] ?? json['phone_number'] ?? json['mobile'],
-        ),
         latitude: _nullableDouble(json['latitude']),
         longitude: _nullableDouble(json['longitude']),
         distanceKm: _nullableDouble(json['distance_km']),
@@ -120,7 +119,7 @@ class ProviderWorkingHourModel {
 
 class ProviderServiceModel {
   final String uuid, name;
-  final String? description, imageUrl;
+  final String? branchUuid, description, imageUrl, currencyCode;
   final double price, priceMax;
   final int? durationMinutes;
   final ProviderCategoryModel? subcategory;
@@ -130,8 +129,10 @@ class ProviderServiceModel {
     required this.name,
     required this.price,
     required this.priceMax,
+    this.branchUuid,
     this.description,
     this.imageUrl,
+    this.currencyCode,
     this.durationMinutes,
     this.subcategory,
     this.branchesCount = 0,
@@ -141,8 +142,10 @@ class ProviderServiceModel {
     return ProviderServiceModel(
       uuid: _string(json['uuid']),
       name: _string(json['name']),
+      branchUuid: _nullableString(json['branch_uuid']),
       description: _nullableString(json['description']),
       imageUrl: _nullableString(json['image_url']),
+      currencyCode: _nullableString(json['currency_code'] ?? json['currency']),
       price: price,
       priceMax: _nullableDouble(json['price_max']) ?? price,
       durationMinutes: _nullableInt(json['duration_minutes']),
@@ -150,6 +153,54 @@ class ProviderServiceModel {
       branchesCount: _integer(json['branches_count']),
     );
   }
+}
+
+class ProviderPackageModel {
+  final String uuid, name;
+  final String? branchUuid, description, currencyCode;
+  final int sessions, validityDays;
+  final double originalTotal, price;
+  final double? savings, discountPercentage;
+  final DateTime? expiresAt;
+  final ProviderEmployeeModel? employee;
+  final int? sessionDurationMinutes;
+
+  const ProviderPackageModel({
+    required this.uuid,
+    required this.name,
+    required this.originalTotal,
+    required this.price,
+    this.branchUuid,
+    this.description,
+    this.currencyCode,
+    this.sessions = 0,
+    this.validityDays = 0,
+    this.savings,
+    this.discountPercentage,
+    this.expiresAt,
+    this.employee,
+    this.sessionDurationMinutes,
+  });
+
+  factory ProviderPackageModel.fromJson(Map<String, dynamic> json) =>
+      ProviderPackageModel(
+        uuid: _string(json['uuid']),
+        name: _string(json['name']),
+        branchUuid: _nullableString(json['branch_uuid']),
+        description: _nullableString(json['description']),
+        sessions: _integer(json['sessions']),
+        validityDays: _integer(json['validity_days']),
+        originalTotal: _nullableDouble(json['original_total']) ?? 0,
+        price: _nullableDouble(json['price']) ?? 0,
+        currencyCode: _nullableString(
+          json['currency_code'] ?? json['currency'],
+        ),
+        savings: _nullableDouble(json['savings']),
+        discountPercentage: _nullableDouble(json['discount_percentage']),
+        expiresAt: DateTime.tryParse(_string(json['expires_at'])),
+        employee: _map(json['employee'], ProviderEmployeeModel.fromJson),
+        sessionDurationMinutes: _nullableInt(json['session_duration_minutes']),
+      );
 }
 
 class ProviderEmployeeModel {

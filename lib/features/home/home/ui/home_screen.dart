@@ -38,6 +38,9 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _isOffline = widget.isOffline || !MyConnectivity.isOnline();
     _isLocationDisabled = widget.isLocationDisabled;
+    unawaited(context.read<HomeCubit>().loadProfile());
+    unawaited(context.read<HomeCubit>().loadUpcomingBooking());
+    unawaited(context.read<HomeCubit>().loadPendingRatings());
     _connectivitySubscription = MyConnectivity.myStream.listen((status) {
       final isOffline = widget.isOffline || status['result'] != true;
       if (_isOffline != isOffline) {
@@ -93,6 +96,8 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
     if (mounted) setState(() => _isOffline = false);
+    unawaited(homeCubit.loadUpcomingBooking());
+    unawaited(homeCubit.loadPendingRatings());
 
     final isLocationAvailable = await YourLocation.isLocationAvailable();
     if (!isLocationAvailable) {

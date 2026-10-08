@@ -80,11 +80,6 @@ List<BoxShadow> _tileDarkShadow() {
   ];
 }
 
-String _homeText(BuildContext context, String key, String fallback) {
-  final translated = context.tr(key);
-  return translated == key ? fallback : translated;
-}
-
 class _HorizontalList extends StatelessWidget {
   final double height;
   final List<Widget> children;
@@ -112,6 +107,7 @@ class _StatusRow extends StatelessWidget {
   final Color rightColor;
   final Color leftColor;
   final bool dark;
+  final bool compactLeft;
 
   const _StatusRow({
     required this.rightText,
@@ -119,6 +115,7 @@ class _StatusRow extends StatelessWidget {
     required this.rightColor,
     required this.leftColor,
     this.dark = false,
+    this.compactLeft = false,
   });
 
   @override
@@ -139,7 +136,7 @@ class _StatusRow extends StatelessWidget {
               PositionedDirectional(
                 end: 0,
                 top: 0,
-                width: itemWidth,
+                width: compactLeft ? itemWidth * .65 : itemWidth,
                 child: _Badge(
                   label: leftText,
                   background: dark
@@ -161,14 +158,12 @@ class _TextBlock extends StatelessWidget {
   final String subtitleKey;
   final String? thirdKey;
   final bool light;
-  final bool compact;
 
   const _TextBlock({
     required this.titleKey,
     required this.subtitleKey,
     this.thirdKey,
     this.light = false,
-    this.compact = false,
   });
 
   @override
@@ -191,7 +186,7 @@ class _TextBlock extends StatelessWidget {
             height: 1.3,
           ),
         ),
-        SizedBox(height: compact ? 1.h : 3.h),
+        SizedBox(height: 3.h),
         Text(
           context.tr(subtitleKey),
           maxLines: 1,

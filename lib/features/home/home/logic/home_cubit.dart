@@ -6,6 +6,9 @@ import 'package:waqty_user_application/features/home/home/data/repo/home_repo.da
 import 'package:waqty_user_application/features/home/home/logic/home_state.dart';
 import 'package:waqty_user_application/features/home/home/data/models/home_category_model.dart';
 import 'package:waqty_user_application/features/home/home/data/models/home_location_model.dart';
+import 'package:waqty_user_application/features/home/home/data/models/home_profile_model.dart';
+import 'package:waqty_user_application/features/home/home/data/models/upcoming_booking_model.dart';
+import 'package:waqty_user_application/features/home/home/data/models/pending_rating_model.dart';
 
 class HomeCubit extends Cubit<HomeState> {
   final HomeRepo _homeRepo;
@@ -19,6 +22,103 @@ class HomeCubit extends Cubit<HomeState> {
   bool _hasSyncedCurrentSession = false;
   String? selectedCategoryId;
   HomeLocationModel? location;
+  HomeProfileModel? profile;
+  UpcomingBookingModel? upcomingBooking;
+  bool upcomingBookingLoading = false;
+  bool announcingOnWay = false;
+  List<PendingRatingModel> pendingRatings = const [];
+  bool pendingRatingsLoading = false;
+  String? selectedRatingBookingUuid;
+  int selectedRatingValue = 0;
+
+  String get currentUserName => profile?.name.trim() ?? '';
+
+  Future<void> loadProfile() async {
+    final token = (await CacheHelper.getSecuredString(
+      ConstantKeys.saveTokenToShared,
+    )).trim();
+    if (token.isEmpty) return;
+    final result = await _homeRepo.profile();
+    if (isClosed) return;
+    result.fold((_) => emit(HomeProfileErrorState(location: location)), (
+      value,
+    ) {
+      profile = value;
+      emit(HomeProfileLoadedState(location: location));
+    });
+  }
+
+  Future<void> loadUpcomingBooking() async {
+    final token = (await CacheHelper.getSecuredString(
+      ConstantKeys.saveTokenToShared,
+    )).trim();
+    if (token.isEmpty || upcomingBookingLoading) return;
+    upcomingBookingLoading = true;
+    emit(HomeUpcomingBookingLoadingState(location: location));
+    final result = await _homeRepo.upcomingBooking();
+    if (isClosed) return;
+    upcomingBookingLoading = false;
+    result.fold(
+      (_) => emit(HomeUpcomingBookingErrorState(location: location)),
+      (value) {
+        upcomingBooking = value;
+        emit(HomeUpcomingBookingLoadedState(location: location));
+      },
+    );
+  }
+
+  Future<void> loadPendingRatings() async {
+    final token = (await CacheHelper.getSecuredString(
+      ConstantKeys.saveTokenToShared,
+    )).trim();
+    if (token.isEmpty || pendingRatingsLoading) return;
+    pendingRatingsLoading = true;
+    emit(HomePendingRatingsLoadingState(location: location));
+    final result = await _homeRepo.pendingRatings();
+    if (isClosed) return;
+    pendingRatingsLoading = false;
+    result.fold((_) => emit(HomePendingRatingsErrorState(location: location)), (
+      value,
+    ) {
+      pendingRatings = value;
+      if (!value.any((item) => item.bookingUuid == selectedRatingBookingUuid)) {
+        selectedRatingBookingUuid = null;
+        selectedRatingValue = 0;
+      }
+      emit(HomePendingRatingsLoadedState(location: location));
+    });
+  }
+
+  void selectPendingRating(String bookingUuid, int rating) {
+    if (rating < 1 ||
+        rating > 5 ||
+        !pendingRatings.any((item) => item.bookingUuid == bookingUuid)) {
+      return;
+    }
+    selectedRatingBookingUuid = bookingUuid;
+    selectedRatingValue = rating;
+    emit(HomePendingRatingSelectionState(location: location));
+  }
+
+  Future<void> announceOnWay() async {
+    final booking = upcomingBooking;
+    if (booking == null || !booking.canAnnounceOnWay || announcingOnWay) {
+      return;
+    }
+    announcingOnWay = true;
+    emit(HomeOnWayLoadingState(location: location));
+    final result = await _homeRepo.announceOnWay(booking.uuid);
+    if (isClosed) return;
+    announcingOnWay = false;
+    result.fold(
+      (failure) =>
+          emit(HomeOnWayErrorState(failure.message, location: location)),
+      (announcedAt) {
+        upcomingBooking = booking.announcedAt(announcedAt);
+        emit(HomeOnWaySuccessState(location: location));
+      },
+    );
+  }
 
   Future<void> loadCategories({bool force = false}) async {
     if (_categoriesRequestInFlight || (!force && categories.isNotEmpty)) return;

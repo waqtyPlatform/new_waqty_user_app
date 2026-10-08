@@ -43,6 +43,7 @@ import 'package:waqty_user_application/features/onboarding/notifications/ui/onbo
 import 'package:waqty_user_application/features/onboarding/start/ui/onboarding_start_screen.dart';
 import 'package:waqty_user_application/features/home/provider_details/logic/provider_details_cubit.dart';
 import 'package:waqty_user_application/features/home/provider_details/ui/provider_details_screen.dart';
+import 'package:waqty_user_application/features/home/provider_booking/ui/provider_booking_screen.dart';
 
 class RouteGenerator {
   static Route<dynamic>? generateRoute(RouteSettings settings) {
@@ -195,6 +196,18 @@ class RouteGenerator {
             create: (context) =>
                 ProviderDetailsCubit(getIt())..load(providerUuid),
             child: ProviderDetailsScreen(providerUuid: providerUuid),
+          ),
+        );
+      case Routes.providerBookingScreen:
+        if (args is! Map<String, dynamic>) return null;
+        final providerUuid = args['provider_uuid']?.toString() ?? '';
+        final branchUuid = args['branch_uuid']?.toString() ?? '';
+        if (providerUuid.isEmpty || branchUuid.isEmpty) return null;
+        return MaterialPageRoute(
+          builder: (_) => ProviderBookingScreen(
+            providerUuid: providerUuid,
+            branchUuid: branchUuid,
+            providerName: args['provider_name']?.toString() ?? '',
           ),
         );
       case Routes.subcategoriesScreen:

@@ -40,21 +40,31 @@ class HomeHeader extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(
-                    _homeText(context, 'home.headerGreeting', 'أهلًا يا يوسف'),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.start,
-                    style: TextStyles.font14greyColor500W400.copyWith(
-                      fontSize: 15.sp,
-                    ),
+                  BlocBuilder<HomeCubit, HomeState>(
+                    buildWhen: (previous, current) =>
+                        previous.runtimeType != current.runtimeType,
+                    builder: (context, state) {
+                      final name = context.read<HomeCubit>().currentUserName;
+                      return Text(
+                        name.isEmpty
+                            ? context.tr('home.headerGreetingGuest')
+                            : context.tr('home.headerGreeting', args: [name]),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.start,
+                        style: TextStyles.font14greyColor500W400.copyWith(
+                          fontSize: 15.sp,
+                        ),
+                      );
+                    },
                   ),
                   SizedBox(height: 2.h),
                   BlocBuilder<HomeCubit, HomeState>(
                     buildWhen: (previous, current) =>
                         previous.location != current.location,
                     builder: (context, state) {
-                      final locationLabel = state.location?.displayLabel ??
+                      final locationLabel =
+                          state.location?.displayLabel ??
                           context.tr('home.currentLocation');
                       return Align(
                         alignment: AlignmentDirectional.centerStart,
@@ -62,13 +72,11 @@ class HomeHeader extends StatelessWidget {
                           children: [
                             Expanded(
                               child: Text(
-                                locationLabel ?? '',
+                                locationLabel,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: TextStyles.font20greyColor900W600.copyWith(
-                                  fontSize: 14.sp,
-                                  height: 1.1,
-                                ),
+                                style: TextStyles.font20greyColor900W600
+                                    .copyWith(fontSize: 14.sp, height: 1.1),
                               ),
                             ),
                             SizedBox(width: 6.w),

@@ -11,6 +11,55 @@ class HomeInitialState extends HomeState {
   const HomeInitialState({super.location});
 }
 
+class HomeProfileLoadedState extends HomeState {
+  const HomeProfileLoadedState({super.location});
+}
+
+class HomeProfileErrorState extends HomeState {
+  const HomeProfileErrorState({super.location});
+}
+
+class HomeUpcomingBookingLoadingState extends HomeState {
+  const HomeUpcomingBookingLoadingState({super.location});
+}
+
+class HomeUpcomingBookingLoadedState extends HomeState {
+  const HomeUpcomingBookingLoadedState({super.location});
+}
+
+class HomeUpcomingBookingErrorState extends HomeState {
+  const HomeUpcomingBookingErrorState({super.location});
+}
+
+class HomePendingRatingsLoadingState extends HomeState {
+  const HomePendingRatingsLoadingState({super.location});
+}
+
+class HomePendingRatingsLoadedState extends HomeState {
+  const HomePendingRatingsLoadedState({super.location});
+}
+
+class HomePendingRatingsErrorState extends HomeState {
+  const HomePendingRatingsErrorState({super.location});
+}
+
+class HomePendingRatingSelectionState extends HomeState {
+  const HomePendingRatingSelectionState({super.location});
+}
+
+class HomeOnWayLoadingState extends HomeState {
+  const HomeOnWayLoadingState({super.location});
+}
+
+class HomeOnWaySuccessState extends HomeState {
+  const HomeOnWaySuccessState({super.location});
+}
+
+class HomeOnWayErrorState extends HomeState {
+  final String message;
+  const HomeOnWayErrorState(this.message, {super.location});
+}
+
 class HomeCategoriesLoadingState extends HomeState {
   const HomeCategoriesLoadingState({super.location});
 }

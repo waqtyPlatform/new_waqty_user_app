@@ -9,12 +9,92 @@ import 'package:waqty_user_application/core/services/cache_helper.dart';
 import 'package:waqty_user_application/core/utils/constant_keys.dart';
 import 'package:waqty_user_application/features/home/home/data/models/home_category_model.dart';
 import 'package:waqty_user_application/features/home/home/data/models/home_location_model.dart';
+import 'package:waqty_user_application/features/home/home/data/models/home_profile_model.dart';
+import 'package:waqty_user_application/features/home/home/data/models/upcoming_booking_model.dart';
+import 'package:waqty_user_application/features/home/home/data/models/pending_rating_model.dart';
 import 'package:waqty_user_application/features/home/home/data/services/home_api_end_points.dart';
 
 class HomeService {
   ApiConsumer apiConsumer;
 
   HomeService({required this.apiConsumer});
+
+  Future<HomeProfileModel> profile() async {
+    final response = await apiConsumer.get(
+      HomeApiEndPoints.profile,
+      await _authHeaders(),
+    );
+    final decoded = _decode(response.body);
+    if (_isSuccess(response.statusCode) &&
+        decoded?['data'] is Map<String, dynamic>) {
+      return HomeProfileModel.fromJson(
+        decoded!['data'] as Map<String, dynamic>,
+      );
+    }
+    throw ServerException(
+      serverFailure: ServerFailure.fromJson(decoded ?? <String, dynamic>{}),
+    );
+  }
+
+  Future<UpcomingBookingModel?> upcomingBooking() async {
+    final response = await apiConsumer.get(
+      HomeApiEndPoints.upcomingBooking,
+      await _authHeaders(),
+    );
+    final decoded = _decode(response.body);
+    if (_isSuccess(response.statusCode) && decoded != null) {
+      final data = decoded['data'];
+      if (data == null) return null;
+      if (data is Map<String, dynamic>) {
+        final booking = UpcomingBookingModel.fromJson(data);
+        if (booking.uuid.isNotEmpty) return booking;
+      }
+    }
+    throw ServerException(
+      serverFailure: ServerFailure.fromJson(decoded ?? <String, dynamic>{}),
+    );
+  }
+
+  Future<List<PendingRatingModel>> pendingRatings() async {
+    final response = await apiConsumer.get(
+      HomeApiEndPoints.pendingRatings,
+      await _authHeaders(),
+    );
+    final decoded = _decode(response.body);
+    if (_isSuccess(response.statusCode) && decoded?['data'] is List) {
+      return (decoded!['data'] as List)
+          .whereType<Map<String, dynamic>>()
+          .map(PendingRatingModel.fromJson)
+          .where((rating) => rating.bookingUuid.isNotEmpty)
+          .toList(growable: false);
+    }
+    throw ServerException(
+      serverFailure: ServerFailure.fromJson(decoded ?? <String, dynamic>{}),
+    );
+  }
+
+  Future<DateTime> announceOnWay(String bookingUuid) async {
+    final response = await apiConsumer.post(
+      HomeApiEndPoints.announceOnWay(bookingUuid),
+      const {},
+      await _authHeaders(),
+    );
+    debugPrint(
+      'HOME_ON_WAY status=${response.statusCode} response=${response.body}',
+    );
+    final decoded = _decode(response.body);
+    if (_isSuccess(response.statusCode) &&
+        decoded?['data'] is Map<String, dynamic>) {
+      final data = decoded!['data'] as Map<String, dynamic>;
+      final announcedAt = DateTime.tryParse(
+        (data['announced_at'] ?? data['on_way_announced_at'])?.toString() ?? '',
+      );
+      if (announcedAt != null) return announcedAt;
+    }
+    throw ServerException(
+      serverFailure: ServerFailure.fromJson(decoded ?? <String, dynamic>{}),
+    );
+  }
 
   Future<List<HomeCategoryModel>> categories({String? query}) async {
     final uri = Uri.parse(HomeApiEndPoints.categories).replace(
@@ -34,9 +114,7 @@ class HomeService {
         return data
             .whereType<Map<String, dynamic>>()
             .map(HomeCategoryModel.fromJson)
-            .where(
-              (category) =>  category.hasProviders,
-            )
+            .where((category) => category.hasProviders)
             .toList();
       }
     }
