@@ -44,6 +44,14 @@ import 'package:waqty_user_application/features/onboarding/start/ui/onboarding_s
 import 'package:waqty_user_application/features/home/provider_details/logic/provider_details_cubit.dart';
 import 'package:waqty_user_application/features/home/provider_details/ui/provider_details_screen.dart';
 import 'package:waqty_user_application/features/home/provider_booking/ui/provider_booking_screen.dart';
+import 'package:waqty_user_application/features/home/available_now/logic/available_now_cubit.dart';
+import 'package:waqty_user_application/features/home/available_now/ui/available_now_screen.dart';
+import 'package:waqty_user_application/features/home/nearby_offers/logic/nearby_offers_cubit.dart';
+import 'package:waqty_user_application/features/home/nearby_offers/ui/nearby_offers_screen.dart';
+import 'package:waqty_user_application/features/home/book_again/logic/book_again_cubit.dart';
+import 'package:waqty_user_application/features/home/book_again/ui/book_again_screen.dart';
+import 'package:waqty_user_application/features/home/top_rated/logic/top_rated_cubit.dart';
+import 'package:waqty_user_application/features/home/top_rated/ui/top_rated_screen.dart';
 
 class RouteGenerator {
   static Route<dynamic>? generateRoute(RouteSettings settings) {
@@ -208,6 +216,7 @@ class RouteGenerator {
             providerUuid: providerUuid,
             branchUuid: branchUuid,
             providerName: args['provider_name']?.toString() ?? '',
+            serviceUuid: args['service_uuid']?.toString(),
           ),
         );
       case Routes.subcategoriesScreen:
@@ -252,6 +261,34 @@ class RouteGenerator {
               categoryUuid: categoryUuid.isEmpty ? null : categoryUuid,
               subcategoryUuid: subcategoryUuid.isEmpty ? null : subcategoryUuid,
             ),
+          ),
+        );
+      case Routes.availableNowScreen:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => AvailableNowCubit(getIt())..load(),
+            child: const AvailableNowScreen(),
+          ),
+        );
+      case Routes.nearbyOffersScreen:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => NearbyOffersCubit(getIt())..load(),
+            child: const NearbyOffersScreen(),
+          ),
+        );
+      case Routes.bookAgainScreen:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => BookAgainCubit(getIt())..load(),
+            child: const BookAgainScreen(),
+          ),
+        );
+      case Routes.topRatedScreen:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => TopRatedCubit(getIt())..load(),
+            child: const TopRatedScreen(),
           ),
         );
 

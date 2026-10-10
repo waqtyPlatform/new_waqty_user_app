@@ -47,6 +47,38 @@ class HomePendingRatingSelectionState extends HomeState {
   const HomePendingRatingSelectionState({super.location});
 }
 
+class HomeRatingSubmitLoadingState extends HomeState {
+  const HomeRatingSubmitLoadingState({super.location});
+}
+
+class HomeRatingSubmitSuccessState extends HomeState {
+  final String message;
+
+  const HomeRatingSubmitSuccessState(this.message, {super.location});
+}
+
+class HomeRatingSubmitErrorState extends HomeState {
+  final String message;
+
+  const HomeRatingSubmitErrorState(this.message, {super.location});
+}
+
+class HomeWaitlistOfferLoadingState extends HomeState {
+  const HomeWaitlistOfferLoadingState({super.location});
+}
+
+class HomeWaitlistOfferLoadedState extends HomeState {
+  const HomeWaitlistOfferLoadedState({super.location});
+}
+
+class HomeWaitlistOfferTickState extends HomeState {
+  const HomeWaitlistOfferTickState({super.location});
+}
+
+class HomeWaitlistOfferErrorState extends HomeState {
+  const HomeWaitlistOfferErrorState({super.location});
+}
+
 class HomeOnWayLoadingState extends HomeState {
   const HomeOnWayLoadingState({super.location});
 }

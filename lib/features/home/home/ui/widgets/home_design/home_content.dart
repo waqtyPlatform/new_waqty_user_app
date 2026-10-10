@@ -29,26 +29,10 @@ class HomeContent extends StatelessWidget {
         HomeAppointmentCard(),
         HomeRatingCard(),
         HomeWaitlistCard(),
-        HomeSectionHeader(
-          titleKey: 'home.availableTodayTitle',
-          subtitleKey: 'home.availableTodaySubtitle',
-        ),
-        HomeProviderScroller(wide: true, showDistance: showDistance),
-        HomeSectionHeader(
-          titleKey: 'home.nearOffersTitle',
-          subtitleKey: 'home.nearOffersSubtitle',
-        ),
-        HomeOfferScroller(),
-        HomeSectionHeader(
-          titleKey: 'home.repeatBookingTitle',
-          subtitleKey: 'home.repeatBookingSubtitle',
-        ),
-        HomeRepeatScroller(),
-        HomeSectionHeader(
-          titleKey: 'home.topRatedTitle',
-          subtitleKey: 'home.topRatedSubtitle',
-        ),
-        HomeProviderScroller(showDistance: showDistance),
+        HomeAvailableNowSection(showDistance: showDistance),
+        const HomeNearbyOffersSection(),
+        const HomeBookAgainSection(),
+        HomeTopRatedSection(showDistance: showDistance),
         HomeCategorySection(
           titleKey: 'home.menBarberTitle',
           subtitleKey: 'home.menBarberSubtitle',

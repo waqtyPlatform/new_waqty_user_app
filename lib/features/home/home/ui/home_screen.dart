@@ -27,7 +27,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   StreamSubscription<Map<String, bool>>? _connectivitySubscription;
   bool _isOffline = false;
   bool _isLocationDisabled = false;
@@ -36,11 +36,13 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _isOffline = widget.isOffline || !MyConnectivity.isOnline();
     _isLocationDisabled = widget.isLocationDisabled;
     unawaited(context.read<HomeCubit>().loadProfile());
     unawaited(context.read<HomeCubit>().loadUpcomingBooking());
     unawaited(context.read<HomeCubit>().loadPendingRatings());
+    unawaited(context.read<HomeCubit>().loadWaitlistOffer());
     _connectivitySubscription = MyConnectivity.myStream.listen((status) {
       final isOffline = widget.isOffline || status['result'] != true;
       if (_isOffline != isOffline) {
@@ -53,8 +55,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _connectivitySubscription?.cancel();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      context.read<HomeCubit>().resumeWaitlistOffer();
+    }
   }
 
   Future<void> _refreshLocationAccess() async {
@@ -98,6 +108,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (mounted) setState(() => _isOffline = false);
     unawaited(homeCubit.loadUpcomingBooking());
     unawaited(homeCubit.loadPendingRatings());
+    unawaited(homeCubit.loadWaitlistOffer());
 
     final isLocationAvailable = await YourLocation.isLocationAvailable();
     if (!isLocationAvailable) {

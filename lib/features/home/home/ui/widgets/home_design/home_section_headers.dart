@@ -48,12 +48,14 @@ class _SectionTitleRow extends StatelessWidget {
   final String subtitle;
   final IconData? icon;
   final double top;
+  final VoidCallback? onSeeAll;
 
   const _SectionTitleRow({
     required this.title,
     required this.subtitle,
     this.icon,
     required this.top,
+    this.onSeeAll,
   });
 
   @override
@@ -66,9 +68,16 @@ class _SectionTitleRow extends StatelessWidget {
           children: [
             Align(
               alignment: AlignmentDirectional.centerEnd,
-              child: Text(
-                context.tr('home.seeAll'),
-                style: TextStyles.font12greenColor500W600,
+              child: InkWell(
+                onTap: onSeeAll,
+                borderRadius: BorderRadius.circular(8.r),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8.h),
+                  child: Text(
+                    context.tr('home.seeAll'),
+                    style: TextStyles.font12greenColor500W600,
+                  ),
+                ),
               ),
             ),
             PositionedDirectional(

@@ -295,12 +295,33 @@ class HomeRatingCard extends StatelessWidget {
   const HomeRatingCard({super.key});
 
   @override
-  Widget build(BuildContext context) => BlocBuilder<HomeCubit, HomeState>(
+  Widget build(BuildContext context) => BlocConsumer<HomeCubit, HomeState>(
+    listenWhen: (_, current) =>
+        current is HomeRatingSubmitSuccessState ||
+        current is HomeRatingSubmitErrorState,
+    listener: (context, state) {
+      final success = state is HomeRatingSubmitSuccessState;
+      final serverMessage = switch (state) {
+        HomeRatingSubmitSuccessState(:final message) => message.trim(),
+        HomeRatingSubmitErrorState(:final message) => message.trim(),
+        _ => '',
+      };
+      AppConstant.toast(
+        serverMessage.isNotEmpty
+            ? serverMessage
+            : context.tr(success ? 'home.ratingSuccess' : 'home.ratingError'),
+        success,
+        context,
+      );
+    },
     buildWhen: (_, current) =>
         current is HomePendingRatingsLoadingState ||
         current is HomePendingRatingsLoadedState ||
         current is HomePendingRatingsErrorState ||
-        current is HomePendingRatingSelectionState,
+        current is HomePendingRatingSelectionState ||
+        current is HomeRatingSubmitLoadingState ||
+        current is HomeRatingSubmitSuccessState ||
+        current is HomeRatingSubmitErrorState,
     builder: (context, state) {
       final cubit = context.read<HomeCubit>();
       if (cubit.pendingRatingsLoading) {
@@ -392,12 +413,18 @@ class HomeRatingCard extends StatelessWidget {
                         foregroundColor: AppColors.whiteColor,
                         padding: EdgeInsets.zero,
                       ),
-                      onPressed: () => AppConstant.toast(
-                        context.tr('home.ratingApiPending'),
-                        false,
-                        context,
-                      ),
-                      child: Text(context.tr('home.sendRating')),
+                      onPressed: cubit.ratingSubmitting
+                          ? null
+                          : cubit.submitPendingRating,
+                      child: cubit.ratingSubmitting
+                          ? SizedBox.square(
+                              dimension: 18.w,
+                              child: const CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.whiteColor,
+                              ),
+                            )
+                          : Text(context.tr('home.sendRating')),
                     ),
                   ),
                 ),
@@ -421,75 +448,161 @@ class HomeWaitlistCard extends StatelessWidget {
   const HomeWaitlistCard({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return _SectionPadding(
-      top: 12,
-      child: _WhiteCard(
-        padding: EdgeInsets.all(16.w),
-        child: Column(
-          children: [
-            _StatusRow(
-              rightText: context.tr('home.waitlistOffer'),
-              leftText: context.tr('home.waitlistTimer'),
-              rightColor: AppColors.warningColor200,
-              leftColor: AppColors.warningColor200,
+  Widget build(BuildContext context) => BlocBuilder<HomeCubit, HomeState>(
+    buildWhen: (_, current) =>
+        current is HomeWaitlistOfferLoadingState ||
+        current is HomeWaitlistOfferLoadedState ||
+        current is HomeWaitlistOfferTickState ||
+        current is HomeWaitlistOfferErrorState,
+    builder: (context, state) {
+      final cubit = context.read<HomeCubit>();
+      final offer = cubit.waitlistOffer;
+      if (cubit.waitlistOfferLoading && offer == null) {
+        return const _WaitlistOfferShimmer();
+      }
+      if (offer == null || cubit.waitlistSecondsRemaining <= 0) {
+        return const SizedBox.shrink();
+      }
+      return _WaitlistOfferCard(
+        offer: offer,
+        secondsRemaining: cubit.waitlistSecondsRemaining,
+      );
+    },
+  );
+}
+
+class _WaitlistOfferCard extends StatelessWidget {
+  final WaitlistOfferModel offer;
+  final int secondsRemaining;
+
+  const _WaitlistOfferCard({
+    required this.offer,
+    required this.secondsRemaining,
+  });
+
+  @override
+  Widget build(BuildContext context) => _SectionPadding(
+    top: 12,
+    child: _WhiteCard(
+      padding: EdgeInsets.all(16.w),
+      child: Column(
+        children: [
+          _StatusRow(
+            rightText: context.tr('home.waitlistOffer'),
+            leftText: context.tr(
+              'home.waitlistTimer',
+              args: [_waitlistCountdown(secondsRemaining)],
             ),
-            SizedBox(height: 12.h),
-            SizedBox(
-              height: 68.h,
-              child: Stack(
-                children: [
-                  Align(
-                    alignment: AlignmentDirectional.centerStart,
-                    child: const _PhotoBox(size: 52),
-                  ),
-                  PositionedDirectional(
-                    start: 64.w,
-                    end: 0,
-                    top: 0,
-                    bottom: 0,
-                    child: _TextBlock(
-                      titleKey: 'home.waitlistTitle',
-                      subtitleKey: 'home.waitlistMeta',
-                      thirdKey: 'home.waitlistNote',
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 14.h),
-            SizedBox(
-              height: 44.h,
-              child: Stack(
-                children: [
-                  Align(
-                    alignment: AlignmentDirectional.centerEnd,
-                    child: SizedBox(
-                      width: 104.w,
-                      child: _PillButton(
-                        label: context.tr('home.notSuitable'),
-                        color: AppColors.sunkenColor,
-                        textColor: AppColors.greyColor900,
+            rightColor: AppColors.warningColor200,
+            leftColor: AppColors.warningColor200,
+          ),
+          SizedBox(height: 12.h),
+          Row(
+            children: [
+              const _PhotoBox(size: 52),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.tr(
+                        'home.waitlistTitle',
+                        args: [offer.providerName],
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyles.font16greyColor900Weight600,
                     ),
-                  ),
-                  PositionedDirectional(
-                    start: 0,
-                    end: 112.w,
-                    top: 0,
-                    bottom: 0,
-                    child: _PillButton(
-                      label: context.tr('home.bookSlot'),
-                      color: AppColors.greyColor900,
-                      textColor: AppColors.whiteColor,
+                    SizedBox(height: 3.h),
+                    Text(
+                      _waitlistMeta(context, offer),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyles.font12greyColor500W400,
                     ),
-                  ),
-                ],
+                    if (offer.message.isNotEmpty)
+                      Text(
+                        offer.message,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyles.font12greyColor500W400,
+                      ),
+                  ],
+                ),
               ),
+            ],
+          ),
+          SizedBox(height: 14.h),
+          SizedBox(
+            height: 44.h,
+            child: Row(
+              children: [
+                Expanded(
+                  child: _PillButton(
+                    label: context.tr('home.bookSlot'),
+                    color: AppColors.greyColor900,
+                    textColor: AppColors.whiteColor,
+                  ),
+                ),
+                SizedBox(width: 8.w),
+                SizedBox(
+                  width: 104.w,
+                  child: _PillButton(
+                    label: context.tr('home.notSuitable'),
+                    color: AppColors.sunkenColor,
+                    textColor: AppColors.greyColor900,
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+class _WaitlistOfferShimmer extends StatelessWidget {
+  const _WaitlistOfferShimmer();
+
+  @override
+  Widget build(BuildContext context) => _SectionPadding(
+    top: 12,
+    child: Shimmer.fromColors(
+      baseColor: AppColors.greyColor100,
+      highlightColor: AppColors.greyColor50,
+      child: Container(
+        height: 180.h,
+        decoration: BoxDecoration(
+          color: AppColors.whiteColor,
+          borderRadius: BorderRadius.circular(24.r),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
+
+String _waitlistCountdown(int totalSeconds) {
+  final safeSeconds = totalSeconds < 0 ? 0 : totalSeconds;
+  final hours = safeSeconds ~/ 3600;
+  final minutes = (safeSeconds % 3600) ~/ 60;
+  final seconds = safeSeconds % 60;
+  final minuteText = minutes.toString().padLeft(2, '0');
+  final secondText = seconds.toString().padLeft(2, '0');
+  return hours > 0
+      ? '$hours:$minuteText:$secondText'
+      : '$minuteText:$secondText';
+}
+
+String _waitlistMeta(BuildContext context, WaitlistOfferModel offer) {
+  final values = <String>[
+    offer.branchName,
+    if (offer.startAt != null)
+      DateFormat(
+        'd MMM · h:mm a',
+        context.locale.toString(),
+      ).format(offer.startAt!.toLocal()),
+  ].where((value) => value.trim().isNotEmpty);
+  return values.join(' · ');
 }

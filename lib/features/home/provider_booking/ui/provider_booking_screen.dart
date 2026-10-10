@@ -6,12 +6,14 @@ class ProviderBookingScreen extends StatelessWidget {
   final String providerUuid;
   final String branchUuid;
   final String providerName;
+  final String? serviceUuid;
 
   const ProviderBookingScreen({
     super.key,
     required this.providerUuid,
     required this.branchUuid,
     required this.providerName,
+    this.serviceUuid,
   });
 
   @override

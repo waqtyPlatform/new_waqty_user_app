@@ -10,6 +10,10 @@ class Routes {
   static const serviceProviderDetailsScreen = providerDetailsScreen;
   static const subcategoriesScreen = "/SubcategoriesScreen";
   static const providersScreen = "/ProvidersScreen";
+  static const availableNowScreen = "/AvailableNowScreen";
+  static const nearbyOffersScreen = "/NearbyOffersScreen";
+  static const bookAgainScreen = "/BookAgainScreen";
+  static const topRatedScreen = "/TopRatedScreen";
   static const registerVerifyCodeScreen = "/RegisterVerifyCodeScreen";
   static const onboardingAppointmentsScreen = "/OnboardingAppointmentsScreen";
   static const onboardingBookingScreen = "/OnboardingBookingScreen";

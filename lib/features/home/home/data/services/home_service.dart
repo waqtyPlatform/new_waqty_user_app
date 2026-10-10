@@ -12,6 +12,11 @@ import 'package:waqty_user_application/features/home/home/data/models/home_locat
 import 'package:waqty_user_application/features/home/home/data/models/home_profile_model.dart';
 import 'package:waqty_user_application/features/home/home/data/models/upcoming_booking_model.dart';
 import 'package:waqty_user_application/features/home/home/data/models/pending_rating_model.dart';
+import 'package:waqty_user_application/features/home/home/data/models/waitlist_offer_model.dart';
+import 'package:waqty_user_application/features/home/home/data/models/available_now_model.dart';
+import 'package:waqty_user_application/features/home/home/data/models/nearby_offer_model.dart';
+import 'package:waqty_user_application/features/home/home/data/models/book_again_model.dart';
+import 'package:waqty_user_application/features/home/home/data/models/top_rated_provider_model.dart';
 import 'package:waqty_user_application/features/home/home/data/services/home_api_end_points.dart';
 
 class HomeService {
@@ -67,6 +72,120 @@ class HomeService {
           .map(PendingRatingModel.fromJson)
           .where((rating) => rating.bookingUuid.isNotEmpty)
           .toList(growable: false);
+    }
+    throw ServerException(
+      serverFailure: ServerFailure.fromJson(decoded ?? <String, dynamic>{}),
+    );
+  }
+
+  Future<WaitlistOfferModel?> waitlistOffer() async {
+    final response = await apiConsumer.get(
+      HomeApiEndPoints.waitlistOffer,
+      await _authHeaders(),
+    );
+    final decoded = _decode(response.body);
+    if (_isSuccess(response.statusCode) && decoded != null) {
+      final data = decoded['data'];
+      if (data == null) return null;
+      if (data is Map<String, dynamic>) {
+        final offer = WaitlistOfferModel.fromJson(data);
+        if (offer.uuid.isNotEmpty) return offer;
+      }
+    }
+    throw ServerException(
+      serverFailure: ServerFailure.fromJson(decoded ?? <String, dynamic>{}),
+    );
+  }
+
+  Future<AvailableNowPageModel> availableNow({
+    int page = 1,
+    int limit = 10,
+  }) async {
+    final uri = Uri.parse(
+      HomeApiEndPoints.availableNow,
+    ).replace(queryParameters: {'page': '$page', 'limit': '$limit'});
+    final response = await apiConsumer.get(
+      uri.toString(),
+      await _authHeaders(),
+    );
+    final decoded = _decode(response.body);
+    if (_isSuccess(response.statusCode) && decoded?['data'] is List) {
+      return AvailableNowPageModel.fromJson(decoded!, requestedPage: page);
+    }
+    throw ServerException(
+      serverFailure: ServerFailure.fromJson(decoded ?? <String, dynamic>{}),
+    );
+  }
+
+  Future<NearbyOffersPageModel> nearbyOffers({
+    int page = 1,
+    int limit = 10,
+  }) async {
+    final uri = Uri.parse(
+      HomeApiEndPoints.nearbyOffers,
+    ).replace(queryParameters: {'page': '$page', 'limit': '$limit'});
+    final response = await apiConsumer.get(
+      uri.toString(),
+      await _authHeaders(),
+    );
+    final decoded = _decode(response.body);
+    if (_isSuccess(response.statusCode) && decoded?['data'] is List) {
+      return NearbyOffersPageModel.fromJson(decoded!, requestedPage: page);
+    }
+    throw ServerException(
+      serverFailure: ServerFailure.fromJson(decoded ?? <String, dynamic>{}),
+    );
+  }
+
+  Future<BookAgainPageModel> bookAgain({int page = 1, int limit = 10}) async {
+    final uri = Uri.parse(
+      HomeApiEndPoints.bookAgain,
+    ).replace(queryParameters: {'page': '$page', 'limit': '$limit'});
+    final response = await apiConsumer.get(
+      uri.toString(),
+      await _authHeaders(),
+    );
+    final decoded = _decode(response.body);
+    if (_isSuccess(response.statusCode) && decoded?['data'] is List) {
+      return BookAgainPageModel.fromJson(decoded!, requestedPage: page);
+    }
+    throw ServerException(
+      serverFailure: ServerFailure.fromJson(decoded ?? <String, dynamic>{}),
+    );
+  }
+
+  Future<TopRatedProvidersPageModel> topRated({
+    int page = 1,
+    int limit = 10,
+  }) async {
+    final uri = Uri.parse(
+      HomeApiEndPoints.topRated,
+    ).replace(queryParameters: {'page': '$page', 'limit': '$limit'});
+    final response = await apiConsumer.get(
+      uri.toString(),
+      await _authHeaders(),
+    );
+    final decoded = _decode(response.body);
+    if (_isSuccess(response.statusCode) && decoded?['data'] is List) {
+      return TopRatedProvidersPageModel.fromJson(decoded!, requestedPage: page);
+    }
+    throw ServerException(
+      serverFailure: ServerFailure.fromJson(decoded ?? <String, dynamic>{}),
+    );
+  }
+
+  Future<String> rateBooking({
+    required String bookingUuid,
+    required int rating,
+  }) async {
+    final response = await apiConsumer.post(
+      HomeApiEndPoints.rateBooking(bookingUuid),
+      {'rating': rating},
+      await _authHeaders(),
+    );
+    final decoded = _decode(response.body);
+    if (_isSuccess(response.statusCode) && decoded?['success'] == true) {
+      return decoded?['message']?.toString().trim() ?? '';
     }
     throw ServerException(
       serverFailure: ServerFailure.fromJson(decoded ?? <String, dynamic>{}),

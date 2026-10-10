@@ -6,6 +6,11 @@ import 'package:waqty_user_application/features/home/home/data/models/home_locat
 import 'package:waqty_user_application/features/home/home/data/models/home_profile_model.dart';
 import 'package:waqty_user_application/features/home/home/data/models/upcoming_booking_model.dart';
 import 'package:waqty_user_application/features/home/home/data/models/pending_rating_model.dart';
+import 'package:waqty_user_application/features/home/home/data/models/waitlist_offer_model.dart';
+import 'package:waqty_user_application/features/home/home/data/models/available_now_model.dart';
+import 'package:waqty_user_application/features/home/home/data/models/nearby_offer_model.dart';
+import 'package:waqty_user_application/features/home/home/data/models/book_again_model.dart';
+import 'package:waqty_user_application/features/home/home/data/models/top_rated_provider_model.dart';
 import 'package:waqty_user_application/features/home/home/data/services/home_service.dart';
 
 class HomeRepo {
@@ -36,6 +41,86 @@ class HomeRepo {
   Future<Either<Failure, List<PendingRatingModel>>> pendingRatings() async {
     try {
       return Right(await _homeService.pendingRatings());
+    } on ServerException catch (failure) {
+      return Left(failure.serverFailure);
+    } catch (failure) {
+      return Left(ServerFailure(message: failure.toString()));
+    }
+  }
+
+  Future<Either<Failure, WaitlistOfferModel?>> waitlistOffer() async {
+    try {
+      return Right(await _homeService.waitlistOffer());
+    } on ServerException catch (failure) {
+      return Left(failure.serverFailure);
+    } catch (failure) {
+      return Left(ServerFailure(message: failure.toString()));
+    }
+  }
+
+  Future<Either<Failure, AvailableNowPageModel>> availableNow({
+    int page = 1,
+    int limit = 10,
+  }) async {
+    try {
+      return Right(await _homeService.availableNow(page: page, limit: limit));
+    } on ServerException catch (failure) {
+      return Left(failure.serverFailure);
+    } catch (failure) {
+      return Left(ServerFailure(message: failure.toString()));
+    }
+  }
+
+  Future<Either<Failure, NearbyOffersPageModel>> nearbyOffers({
+    int page = 1,
+    int limit = 10,
+  }) async {
+    try {
+      return Right(await _homeService.nearbyOffers(page: page, limit: limit));
+    } on ServerException catch (failure) {
+      return Left(failure.serverFailure);
+    } catch (failure) {
+      return Left(ServerFailure(message: failure.toString()));
+    }
+  }
+
+  Future<Either<Failure, BookAgainPageModel>> bookAgain({
+    int page = 1,
+    int limit = 10,
+  }) async {
+    try {
+      return Right(await _homeService.bookAgain(page: page, limit: limit));
+    } on ServerException catch (failure) {
+      return Left(failure.serverFailure);
+    } catch (failure) {
+      return Left(ServerFailure(message: failure.toString()));
+    }
+  }
+
+  Future<Either<Failure, TopRatedProvidersPageModel>> topRated({
+    int page = 1,
+    int limit = 10,
+  }) async {
+    try {
+      return Right(await _homeService.topRated(page: page, limit: limit));
+    } on ServerException catch (failure) {
+      return Left(failure.serverFailure);
+    } catch (failure) {
+      return Left(ServerFailure(message: failure.toString()));
+    }
+  }
+
+  Future<Either<Failure, String>> rateBooking({
+    required String bookingUuid,
+    required int rating,
+  }) async {
+    try {
+      return Right(
+        await _homeService.rateBooking(
+          bookingUuid: bookingUuid,
+          rating: rating,
+        ),
+      );
     } on ServerException catch (failure) {
       return Left(failure.serverFailure);
     } catch (failure) {

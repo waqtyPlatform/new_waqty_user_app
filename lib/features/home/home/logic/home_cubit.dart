@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:waqty_user_application/core/services/cache_helper.dart';
@@ -9,6 +11,7 @@ import 'package:waqty_user_application/features/home/home/data/models/home_locat
 import 'package:waqty_user_application/features/home/home/data/models/home_profile_model.dart';
 import 'package:waqty_user_application/features/home/home/data/models/upcoming_booking_model.dart';
 import 'package:waqty_user_application/features/home/home/data/models/pending_rating_model.dart';
+import 'package:waqty_user_application/features/home/home/data/models/waitlist_offer_model.dart';
 
 class HomeCubit extends Cubit<HomeState> {
   final HomeRepo _homeRepo;
@@ -30,6 +33,11 @@ class HomeCubit extends Cubit<HomeState> {
   bool pendingRatingsLoading = false;
   String? selectedRatingBookingUuid;
   int selectedRatingValue = 0;
+  bool ratingSubmitting = false;
+  WaitlistOfferModel? waitlistOffer;
+  bool waitlistOfferLoading = false;
+  int waitlistSecondsRemaining = 0;
+  Timer? _waitlistTimer;
 
   String get currentUserName => profile?.name.trim() ?? '';
 
@@ -90,6 +98,7 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   void selectPendingRating(String bookingUuid, int rating) {
+    if (ratingSubmitting) return;
     if (rating < 1 ||
         rating > 5 ||
         !pendingRatings.any((item) => item.bookingUuid == bookingUuid)) {
@@ -98,6 +107,85 @@ class HomeCubit extends Cubit<HomeState> {
     selectedRatingBookingUuid = bookingUuid;
     selectedRatingValue = rating;
     emit(HomePendingRatingSelectionState(location: location));
+  }
+
+  Future<void> submitPendingRating() async {
+    final bookingUuid = selectedRatingBookingUuid;
+    final rating = selectedRatingValue;
+    if (ratingSubmitting || bookingUuid == null || rating < 1 || rating > 5) {
+      return;
+    }
+
+    ratingSubmitting = true;
+    emit(HomeRatingSubmitLoadingState(location: location));
+    final result = await _homeRepo.rateBooking(
+      bookingUuid: bookingUuid,
+      rating: rating,
+    );
+    if (isClosed) return;
+    ratingSubmitting = false;
+    await result.fold(
+      (failure) async =>
+          emit(HomeRatingSubmitErrorState(failure.message, location: location)),
+      (message) async {
+        selectedRatingBookingUuid = null;
+        selectedRatingValue = 0;
+        emit(HomeRatingSubmitSuccessState(message, location: location));
+        await loadPendingRatings();
+      },
+    );
+  }
+
+  Future<void> loadWaitlistOffer() async {
+    final token = (await CacheHelper.getSecuredString(
+      ConstantKeys.saveTokenToShared,
+    )).trim();
+    if (token.isEmpty || waitlistOfferLoading) return;
+    waitlistOfferLoading = true;
+    emit(HomeWaitlistOfferLoadingState(location: location));
+    final result = await _homeRepo.waitlistOffer();
+    if (isClosed) return;
+    waitlistOfferLoading = false;
+    result.fold((_) => emit(HomeWaitlistOfferErrorState(location: location)), (
+      value,
+    ) {
+      _waitlistTimer?.cancel();
+      waitlistOffer = value;
+      waitlistSecondsRemaining = value?.secondsRemaining ?? 0;
+      emit(HomeWaitlistOfferLoadedState(location: location));
+      if (value != null && waitlistSecondsRemaining > 0) {
+        _startWaitlistTimer();
+      }
+    });
+  }
+
+  void resumeWaitlistOffer() {
+    final offer = waitlistOffer;
+    if (offer == null) return;
+    waitlistSecondsRemaining = offer.remainingAt(DateTime.now());
+    emit(HomeWaitlistOfferTickState(location: location));
+    if (waitlistSecondsRemaining == 0) {
+      _waitlistTimer?.cancel();
+      unawaited(loadWaitlistOffer());
+    } else {
+      _startWaitlistTimer();
+    }
+  }
+
+  void _startWaitlistTimer() {
+    _waitlistTimer?.cancel();
+    _waitlistTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (waitlistSecondsRemaining <= 1) {
+        waitlistSecondsRemaining = 0;
+        waitlistOffer = null;
+        _waitlistTimer?.cancel();
+        emit(HomeWaitlistOfferTickState(location: location));
+        unawaited(loadWaitlistOffer());
+        return;
+      }
+      waitlistSecondsRemaining--;
+      emit(HomeWaitlistOfferTickState(location: location));
+    });
   }
 
   Future<void> announceOnWay() async {
@@ -249,4 +337,10 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   static HomeCubit get(context) => BlocProvider.of(context);
+
+  @override
+  Future<void> close() {
+    _waitlistTimer?.cancel();
+    return super.close();
+  }
 }
