@@ -6,13 +6,13 @@ import '../logic/provider_details_state.dart';
 import 'widgets/provider_details_booking_bar.dart';
 import 'widgets/provider_details_branch.dart';
 import 'widgets/provider_details_header.dart';
-import 'widgets/provider_details_information.dart';
 import 'widgets/provider_details_packages.dart';
+import 'widgets/provider_details_policies.dart';
 import 'widgets/provider_details_services.dart';
 import 'widgets/provider_details_shared.dart';
 import 'widgets/provider_details_shimmer.dart';
 import 'widgets/provider_details_specialists.dart';
-import 'widgets/provider_details_tabs.dart';
+import 'widgets/provider_details_working_hours.dart';
 
 class ProviderDetailsScreen extends StatelessWidget {
   final String providerUuid;
@@ -30,34 +30,36 @@ class ProviderDetailsScreen extends StatelessWidget {
               ? ProviderDetailsBookingBar(state: state)
               : null,
           body: switch (state) {
-            ProviderDetailsLoaded() => CustomScrollView(
-              key: const PageStorageKey('provider-details-scroll'),
-              slivers: [
-                SliverToBoxAdapter(child: ProviderDetailsHeader(state: state)),
-                SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  sliver: SliverToBoxAdapter(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        ProviderDetailsBranch(state: state),
-                        ProviderDetailsTabs(selected: state.tab),
-                        switch (state.tab) {
-                          ProviderDetailsTab.services =>
-                            ProviderDetailsServices(state: state),
-                          ProviderDetailsTab.specialists =>
-                            ProviderDetailsSpecialists(state: state),
-                          ProviderDetailsTab.packages =>
-                            ProviderDetailsPackages(state: state),
-                          ProviderDetailsTab.information =>
-                            ProviderDetailsInformation(state: state),
-                        },
-                        const SizedBox(height: 16),
-                      ],
+            ProviderDetailsLoaded() => RefreshIndicator(
+              color: pdGreen,
+              onRefresh: () =>
+                  context.read<ProviderDetailsCubit>().load(providerUuid),
+              child: CustomScrollView(
+                key: const PageStorageKey('provider-details-scroll'),
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: ProviderDetailsHeader(state: state),
+                  ),
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    sliver: SliverToBoxAdapter(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          ProviderDetailsBranch(state: state),
+                          ProviderDetailsServices(state: state),
+                          ProviderDetailsPackages(state: state),
+                          ProviderDetailsSpecialists(state: state),
+                          ProviderDetailsWorkingHours(state: state),
+                          ProviderDetailsPolicies(state: state),
+                          const SizedBox(height: 16),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             ProviderDetailsError() => SafeArea(
               child: Column(

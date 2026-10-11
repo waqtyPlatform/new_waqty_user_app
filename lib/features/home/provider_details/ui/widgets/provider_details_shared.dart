@@ -123,32 +123,46 @@ class PdButton extends StatelessWidget {
   );
 }
 
-Future<void> pdSheet(BuildContext context, String title, Widget child) =>
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      backgroundColor: AppColors.pageColor,
-      builder: (context) => SafeArea(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.sizeOf(context).height * .8,
-          ),
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisSize: MainAxisSize.min,
+Future<void> pdSheet(
+  BuildContext context,
+  String title,
+  Widget child,
+) => showModalBottomSheet<void>(
+  context: context,
+  isScrollControlled: true,
+  showDragHandle: true,
+  backgroundColor: AppColors.pageColor,
+  builder: (context) => SafeArea(
+    child: ConstrainedBox(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.sizeOf(context).height * .8,
+      ),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
               children: [
-                Text(title, style: pdText(20, pdInk, FontWeight.w600)),
-                const SizedBox(height: 16),
-                child,
+                Expanded(
+                  child: Text(title, style: pdText(20, pdInk, FontWeight.w600)),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+                  icon: const Icon(Icons.close, color: pdInk),
+                ),
               ],
             ),
-          ),
+            const SizedBox(height: 16),
+            child,
+          ],
         ),
       ),
-    );
+    ),
+  ),
+);
 void pdUnavailable(BuildContext context) {
   ScaffoldMessenger.of(
     context,

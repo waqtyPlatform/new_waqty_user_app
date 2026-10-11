@@ -5,6 +5,7 @@ import 'package:shimmer/shimmer.dart';
 import 'package:waqty_user_application/config/routes/routes.dart';
 import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
 import 'package:waqty_user_application/core/utils/styles.dart';
+import 'package:waqty_user_application/core/widgets/cached_network_image.dart';
 import 'package:waqty_user_application/features/home/home/data/models/book_again_model.dart';
 
 class BookAgainCard extends StatelessWidget {
@@ -39,17 +40,15 @@ class BookAgainCard extends StatelessWidget {
           height: 68.h,
           child: Row(
             children: [
-              Container(
+              SizedBox(
                 width: 58.w,
                 height: 58.w,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: AlignmentDirectional.topStart,
-                    end: AlignmentDirectional.bottomEnd,
-                    colors: [Color(0xFFF0EDF0), Color(0xFF4D454E)],
-                  ),
-                  borderRadius: BorderRadius.circular(18.r),
-                ),
+                child: item.imageUrl == null
+                    ? const _BookAgainImagePlaceholder()
+                    : CachedNetworkImageWidget(
+                        imgUrl: item.imageUrl!,
+                        radius: BorderRadius.circular(18.r),
+                      ),
               ),
               SizedBox(width: 12.w),
               Expanded(
@@ -155,6 +154,23 @@ class BookAgainCard extends StatelessWidget {
       },
     );
   }
+}
+
+class _BookAgainImagePlaceholder extends StatelessWidget {
+  const _BookAgainImagePlaceholder();
+
+  @override
+  Widget build(BuildContext context) => Container(
+    decoration: BoxDecoration(
+      color: AppColors.greyColor100,
+      borderRadius: BorderRadius.circular(18.r),
+    ),
+    child: Icon(
+      Icons.image_outlined,
+      color: AppColors.greyColor400,
+      size: 24.sp,
+    ),
+  );
 }
 
 class BookAgainShimmerCard extends StatelessWidget {

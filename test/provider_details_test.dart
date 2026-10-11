@@ -8,6 +8,8 @@ import 'package:waqty_user_application/features/home/provider_details/data/repo/
 import 'package:waqty_user_application/features/home/provider_details/data/services/provider_details_service.dart';
 import 'package:waqty_user_application/features/home/provider_details/logic/provider_details_cubit.dart';
 import 'package:waqty_user_application/features/home/provider_details/logic/provider_details_state.dart';
+import 'package:waqty_user_application/features/home/provider_details/logic/provider_employee_profile_cubit.dart';
+import 'package:waqty_user_application/features/home/provider_details/logic/provider_employee_profile_state.dart';
 
 class _Api extends Fake implements ApiConsumer {}
 
@@ -81,6 +83,21 @@ class _BookingRepo extends _Repo {
   }
 }
 
+class _EmployeeRepo extends _Repo {
+  final Either<Failure, ProviderEmployeeProfileModel> employeeResult;
+  int calls = 0;
+
+  _EmployeeRepo(this.employeeResult) : super(const Right(provider));
+
+  @override
+  Future<Either<Failure, ProviderEmployeeProfileModel>> employee(
+    String uuid,
+  ) async {
+    calls++;
+    return employeeResult;
+  }
+}
+
 const provider = ProviderDetailsModel(
   uuid: 'provider-1',
   name: 'Provider',
@@ -112,6 +129,13 @@ void main() {
       'rating_count': 0,
       'distance_km': null,
       'is_open_now': true,
+      'policies': {
+        'cancellation': 'Free cancellation before 24 hours',
+        'cancellation_window_hours': 24,
+        'refund': 'Refund policy',
+        'no_show': 'No-show policy',
+        'no_show_fee': 50,
+      },
       'branches': [
         {
           'uuid': 'branch-1',
@@ -150,6 +174,10 @@ void main() {
     expect(model.services.single.priceMax, 150);
     expect(model.branches.single.workingHours.single.dayOfWeek, 0);
     expect(model.reviews.single.userName, isNull);
+    expect(model.policies?.cancellationWindowHours, 24);
+    expect(model.policies?.refund, 'Refund policy');
+    expect(model.policies?.noShowFee, 50);
+    expect(model.policies?.hasContent, isTrue);
   });
 
   test('cubit loads API data and keeps selection in state', () async {
@@ -165,6 +193,31 @@ void main() {
     await cubit.close();
   });
 
+  test('shows only employees assigned to the selected branch', () {
+    final model = ProviderDetailsModel.fromJson({
+      'uuid': 'provider-1',
+      'name': 'Provider',
+      'branches': [
+        {'uuid': 'branch-1', 'name': 'First'},
+        {'uuid': 'branch-2', 'name': 'Second'},
+      ],
+      'employees': [
+        {'uuid': 'employee-1', 'name': 'Ahmed', 'branch_uuid': 'branch-1'},
+        {'uuid': 'employee-2', 'name': 'Tarek', 'branch_uuid': 'branch-2'},
+        {'uuid': 'employee-3', 'name': 'Karim', 'branch_uuid': 'branch-2'},
+      ],
+    });
+
+    final firstBranch = ProviderDetailsLoaded(model);
+    final secondBranch = ProviderDetailsLoaded(model, branchIndex: 1);
+
+    expect(firstBranch.availableEmployees.map((item) => item.name), ['Ahmed']);
+    expect(secondBranch.availableEmployees.map((item) => item.name), [
+      'Tarek',
+      'Karim',
+    ]);
+  });
+
   test('404 becomes a dedicated not-found state', () async {
     final cubit = ProviderDetailsCubit(
       _Repo(const Left(ProviderDetailsNotFoundFailure())),
@@ -176,6 +229,18 @@ void main() {
 
   test('parses employee, dates and slot token contracts', () {
     final employees = ProviderBookingEmployeesModel.fromData([]);
+    final employee = ProviderEmployeeModel.fromJson({
+      'uuid': 'employee-1',
+      'name': 'Ahmed',
+      'experience_years': 8,
+      'selection_fee': 50,
+      'services_count': 3,
+      'available_date': '2026-10-11',
+      'branch_uuids': ['branch-1', 'branch-2'],
+      'available_slots': [
+        {'start_time': '16:30:00'},
+      ],
+    });
     final slots = ProviderBookingSlotsModel.fromData({
       'slots': [
         {
@@ -186,8 +251,78 @@ void main() {
       ],
     });
     expect(employees.allowAnyEmployee, isTrue);
+    expect(employee.experienceYears, 8);
+    expect(employee.selectionFee, 50);
+    expect(employee.servicesCount, 3);
+    expect(employee.availableSlots, ['16:30:00']);
+    expect(employee.isAvailableAtBranch('branch-2'), isTrue);
+    expect(employee.isAvailableAtBranch('branch-3'), isFalse);
     expect(slots.slots.single.slotToken, 'signed-slot');
     expect(slots.slots.single.startsAt, '10:00:00');
+  });
+
+  test('loads and parses employee profile API response', () async {
+    final profile = ProviderEmployeeProfileModel.fromJson({
+      'uuid': 'employee-1',
+      'name': 'Ahmed Hassan',
+      'job_title': 'Senior barber',
+      'photo_url': null,
+      'provider': {'uuid': 'provider-1', 'name': 'Salon'},
+      'branch': {'uuid': 'branch-1', 'name': 'Main branch'},
+      'rating': null,
+      'rating_count': 12,
+      'services_count': 1,
+      'currency_code': 'EGP',
+      'services': [
+        {
+          'uuid': 'service-1',
+          'name': 'Haircut',
+          'price': 150,
+          'base_price': 120,
+          'duration_minutes': 30,
+        },
+      ],
+    });
+    final repo = _EmployeeRepo(Right(profile));
+    final cubit = ProviderEmployeeProfileCubit(repo, profile.uuid);
+
+    await cubit.load();
+
+    expect(repo.calls, 1);
+    expect(cubit.state, isA<ProviderEmployeeProfileLoaded>());
+    final loaded = cubit.state as ProviderEmployeeProfileLoaded;
+    expect(loaded.employee.rating, isNull);
+    expect(loaded.employee.services.single.price, 150);
+    expect(loaded.employee.services.single.basePrice, 120);
+    await cubit.close();
+  });
+
+  test('parses package included service names and session counts', () {
+    final model = ProviderPackageModel.fromJson({
+      'uuid': 'package-1',
+      'name': 'Skin care',
+      'price': 650,
+      'package_type': 'usage_based',
+      'total_units': 100,
+      'unit_name': 'minutes',
+      'sessions': 4,
+      'included_services': [
+        {
+          'service_name': 'Deep cleansing',
+          'sessions': 2,
+          'units_per_session': 15,
+        },
+        {'service_name': 'Skin mask', 'sessions': 2},
+      ],
+    });
+
+    expect(model.includedServices.length, 2);
+    expect(model.type, ProviderPackageType.creditUnits);
+    expect(model.units, 100);
+    expect(model.unitName, 'minutes');
+    expect(model.includedServices.first.serviceName, 'Deep cleansing');
+    expect(model.includedServices.first.sessions, 2);
+    expect(model.includedServices.first.unitsPerSession, 15);
   });
 
   test('service booking supports any employee then date and slot', () async {

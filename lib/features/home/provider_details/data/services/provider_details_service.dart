@@ -12,6 +12,10 @@ class ProviderDetailsNotFoundException implements Exception {
   const ProviderDetailsNotFoundException();
 }
 
+class ProviderEmployeeNotFoundException implements Exception {
+  const ProviderEmployeeNotFoundException();
+}
+
 class ProviderDetailsService {
   final ApiConsumer apiConsumer;
   ProviderDetailsService({required this.apiConsumer});
@@ -32,6 +36,33 @@ class ProviderDetailsService {
         decoded['data'] as Map<String, dynamic>,
       );
       if (provider.uuid.isNotEmpty && provider.name.isNotEmpty) return provider;
+    }
+    throw ServerException(
+      serverFailure: ServerFailure.fromJson(
+        decoded is Map<String, dynamic> ? decoded : <String, dynamic>{},
+      ),
+    );
+  }
+
+  Future<ProviderEmployeeProfileModel> employee(String uuid) async {
+    final response = await apiConsumer.get(
+      '${EndPoints.baseUrl}/user/employees/${Uri.encodeComponent(uuid)}',
+      await _authHeaders(),
+    );
+    if (response.statusCode == 404) {
+      throw const ProviderEmployeeNotFoundException();
+    }
+    final decoded = jsonDecode(response.body);
+    if (response.statusCode >= 200 &&
+        response.statusCode < 300 &&
+        decoded is Map<String, dynamic> &&
+        decoded['data'] is Map<String, dynamic>) {
+      final employee = ProviderEmployeeProfileModel.fromJson(
+        decoded['data'] as Map<String, dynamic>,
+      );
+      if (employee.uuid.isNotEmpty && employee.name.isNotEmpty) {
+        return employee;
+      }
     }
     throw ServerException(
       serverFailure: ServerFailure.fromJson(

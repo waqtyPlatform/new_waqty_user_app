@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:waqty_user_application/config/routes/routes.dart';
 import '../../logic/provider_details_state.dart';
 import 'provider_details_shared.dart';
 
@@ -8,7 +9,7 @@ class ProviderDetailsSpecialists extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final employees = state.provider.employees;
+    final employees = state.availableEmployees;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -18,47 +19,81 @@ class ProviderDetailsSpecialists extends StatelessWidget {
               ? pd(context, 'unnamedHint')
               : pd(context, 'specialistsCount', [employees.length.toString()]),
         ),
-        for (final employee in employees)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: PdCard(
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 24,
-                    backgroundColor: pdSoft,
-                    backgroundImage: employee.photoUrl == null
-                        ? null
-                        : NetworkImage(employee.photoUrl!),
-                    child: employee.photoUrl == null
-                        ? Text(
-                            employee.name.isEmpty
-                                ? '?'
-                                : employee.name.characters.first,
-                            style: pdText(20, pdGreen),
-                          )
-                        : null,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
+        if (employees.isNotEmpty)
+          SizedBox(
+            height: 112,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: employees.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 14),
+              itemBuilder: (context, index) {
+                final employee = employees[index];
+                return SizedBox(
+                  width: 86,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(16),
+                    onTap: () => Navigator.of(context).pushNamed(
+                      Routes.providerEmployeeScreen,
+                      arguments: {'employee_uuid': employee.uuid},
+                    ),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        _EmployeeAvatar(
+                          name: employee.name,
+                          photoUrl: employee.photoUrl,
+                        ),
+                        const SizedBox(height: 8),
                         Text(
                           employee.name,
-                          style: pdText(16, pdInk, FontWeight.w600),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: pdText(13, pdInk, FontWeight.w600),
                         ),
-                        if (employee.jobTitle != null)
-                          Text(employee.jobTitle!, style: pdText(12, pdSub)),
                       ],
                     ),
                   ),
-                ],
-              ),
+                );
+              },
             ),
           ),
         if (employees.isEmpty) PdNote(pd(context, 'unnamedDescription')),
       ],
+    );
+  }
+}
+
+class _EmployeeAvatar extends StatelessWidget {
+  final String name;
+  final String? photoUrl;
+
+  const _EmployeeAvatar({required this.name, required this.photoUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    final url = photoUrl?.trim();
+    return Container(
+      width: 64,
+      height: 64,
+      clipBehavior: Clip.antiAlias,
+      decoration: const BoxDecoration(shape: BoxShape.circle, color: pdSoft),
+      child: url == null || url.isEmpty
+          ? _initial()
+          : Image.network(
+              url,
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => _initial(),
+            ),
+    );
+  }
+
+  Widget _initial() {
+    final trimmedName = name.trim();
+    return Center(
+      child: Text(
+        trimmedName.isEmpty ? '?' : trimmedName.characters.first,
+        style: pdText(24, pdGreen, FontWeight.w600),
+      ),
     );
   }
 }

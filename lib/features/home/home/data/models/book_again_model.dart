@@ -1,3 +1,5 @@
+import 'package:waqty_user_application/core/api/end_points.dart';
+
 class BookAgainModel {
   final String bookingUuid;
   final String serviceUuid;
@@ -10,6 +12,7 @@ class BookAgainModel {
   final DateTime? lastBookedOn;
   final double price;
   final String currency;
+  final String? imageUrl;
 
   const BookAgainModel({
     required this.bookingUuid,
@@ -23,6 +26,7 @@ class BookAgainModel {
     required this.price,
     required this.currency,
     this.lastBookedOn,
+    this.imageUrl,
   });
 
   factory BookAgainModel.fromJson(Map<String, dynamic> json) => BookAgainModel(
@@ -37,7 +41,29 @@ class BookAgainModel {
     lastBookedOn: DateTime.tryParse(json['last_booked_on']?.toString() ?? ''),
     price: double.tryParse(json['price']?.toString() ?? '') ?? 0,
     currency: json['currency']?.toString() ?? '',
+    imageUrl: _mediaUrl(
+      json['service_image_url'] ??
+          json['service_image'] ??
+          json['image_url'] ??
+          json['logo_url'] ??
+          json['logo_path'],
+    ),
   );
+}
+
+String? _mediaUrl(dynamic value) {
+  final path = value?.toString().trim();
+  if (path == null || path.isEmpty) return null;
+  final uri = Uri.tryParse(path);
+  if (uri != null && uri.hasScheme) return path;
+
+  final normalized = path.replaceFirst(RegExp(r'^/+'), '');
+  final storagePath = normalized.startsWith('public/storage/')
+      ? normalized
+      : normalized.startsWith('storage/')
+      ? 'public/$normalized'
+      : 'public/storage/$normalized';
+  return '${Uri.parse(EndPoints.baseUrl).origin}/$storagePath';
 }
 
 class BookAgainPageModel {

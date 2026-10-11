@@ -55,7 +55,6 @@ class ProviderDetailsBranch extends StatelessWidget {
                   pd(context, 'change'),
                   Column(
                     children: [
-                      PdNote(pd(context, 'branchReset')),
                       for (var i = 0; i < state.provider.branches.length; i++)
                         ListTile(
                           title: Text(

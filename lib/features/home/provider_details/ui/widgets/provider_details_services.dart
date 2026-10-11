@@ -20,11 +20,18 @@ class ProviderDetailsServices extends StatelessWidget {
       if (state.availableServices.isEmpty)
         PdNote(pd(context, 'noServices'))
       else
-        for (final service in state.availableServices)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: _ServiceTile(service: service),
+        SizedBox(
+          height: 156,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: state.availableServices.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 12),
+            itemBuilder: (context, index) => SizedBox(
+              width: 230,
+              child: _ServiceTile(service: state.availableServices[index]),
+            ),
           ),
+        ),
     ],
   );
 }
@@ -42,11 +49,14 @@ class _ServiceTile extends StatelessWidget {
           ])
         : pd(context, 'money', [_money(service.price)]);
     final duration = service.durationMinutes == null
-        ? ''
-        : ' · ${pd(context, 'minutes', [service.durationMinutes.toString()])}';
+        ? null
+        : pd(context, 'minutes', [service.durationMinutes.toString()]);
     return PdCard(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      color: Colors.white,
+      radius: 20,
+      padding: EdgeInsets.zero,
       child: InkWell(
+        borderRadius: BorderRadius.circular(20),
         onTap: () => pdSheet(
           context,
           service.name,
@@ -55,25 +65,76 @@ class _ServiceTile extends StatelessWidget {
             children: [
               if (service.description != null)
                 Text(service.description!, style: pdText(14, pdSub)),
-              Text('$price$duration', style: pdText(16)),
+              Text(
+                duration == null ? price : '$price · $duration',
+                style: pdText(16),
+              ),
             ],
           ),
         ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
                 children: [
-                  Text(service.name, style: pdText(16, pdInk, FontWeight.w600)),
-                  Text('$price$duration', style: pdText(12, pdSub)),
-                  if (service.subcategory != null)
-                    Text(service.subcategory!.name, style: pdText(11, pdSub)),
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: const BoxDecoration(
+                      color: pdSoft,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.design_services_outlined,
+                      size: 18,
+                      color: pdGreen,
+                    ),
+                  ),
+                  const Spacer(),
+                  Container(
+                    width: 30,
+                    height: 30,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: pdInk.withValues(alpha: .06)),
+                    ),
+                    child: const Icon(
+                      Icons.chevron_left,
+                      size: 18,
+                      color: pdSub,
+                    ),
+                  ),
                 ],
               ),
-            ),
-            const Icon(Icons.chevron_left, size: 18, color: pdSub),
-          ],
+              const SizedBox(height: 10),
+              Text(
+                service.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: pdText(16, pdInk, FontWeight.w600),
+              ),
+              if (service.subcategory != null)
+                Text(
+                  service.subcategory!.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: pdText(11, pdSub),
+                ),
+              const Spacer(),
+              Row(
+                children: [
+                  Text(price, style: pdText(13, pdInk, FontWeight.w600)),
+                  if (duration != null) ...[
+                    const Spacer(),
+                    Text(duration, style: pdText(12, pdSub)),
+                  ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -9,6 +9,10 @@ class ProviderDetailsNotFoundFailure extends Failure {
   const ProviderDetailsNotFoundFailure() : super(message: 'not_found');
 }
 
+class ProviderEmployeeNotFoundFailure extends Failure {
+  const ProviderEmployeeNotFoundFailure() : super(message: 'not_found');
+}
+
 class ProviderDetailsRepo {
   final ProviderDetailsService _service;
   ProviderDetailsRepo(this._service);
@@ -17,6 +21,20 @@ class ProviderDetailsRepo {
       return Right(await _service.show(uuid));
     } on ProviderDetailsNotFoundException {
       return const Left(ProviderDetailsNotFoundFailure());
+    } on ServerException catch (failure) {
+      return Left(failure.serverFailure);
+    } catch (failure) {
+      return Left(ServerFailure(message: failure.toString()));
+    }
+  }
+
+  Future<Either<Failure, ProviderEmployeeProfileModel>> employee(
+    String uuid,
+  ) async {
+    try {
+      return Right(await _service.employee(uuid));
+    } on ProviderEmployeeNotFoundException {
+      return const Left(ProviderEmployeeNotFoundFailure());
     } on ServerException catch (failure) {
       return Left(failure.serverFailure);
     } catch (failure) {

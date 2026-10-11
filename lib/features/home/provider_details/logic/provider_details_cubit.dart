@@ -26,11 +26,6 @@ class ProviderDetailsCubit extends Cubit<ProviderDetailsState> {
     );
   }
 
-  void selectTab(ProviderDetailsTab tab) {
-    final current = state;
-    if (current is ProviderDetailsLoaded) emit(current.copyWith(tab: tab));
-  }
-
   void toggleService(String id) {
     final current = state;
     if (current is! ProviderDetailsLoaded ||
@@ -45,7 +40,7 @@ class ProviderDetailsCubit extends Cubit<ProviderDetailsState> {
     final current = state;
     if (current is! ProviderDetailsLoaded) return;
     if (id != null &&
-        !current.provider.employees.any((item) => item.uuid == id)) {
+        !current.availableEmployees.any((item) => item.uuid == id)) {
       return;
     }
     emit(current.copyWith(specialistId: id, clearSpecialist: id == null));
@@ -64,6 +59,7 @@ class ProviderDetailsCubit extends Cubit<ProviderDetailsState> {
       selectedIds: {},
       clearSpecialist: true,
       bookingServices: const [],
+      bookingEmployees: const [],
     );
     emit(next);
     await _loadBranchServices(next);

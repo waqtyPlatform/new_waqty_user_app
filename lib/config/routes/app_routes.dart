@@ -42,6 +42,8 @@ import 'package:waqty_user_application/features/onboarding/booking/ui/onboarding
 import 'package:waqty_user_application/features/onboarding/notifications/ui/onboarding_notifications_screen.dart';
 import 'package:waqty_user_application/features/onboarding/start/ui/onboarding_start_screen.dart';
 import 'package:waqty_user_application/features/home/provider_details/logic/provider_details_cubit.dart';
+import 'package:waqty_user_application/features/home/provider_details/logic/provider_employee_profile_cubit.dart';
+import 'package:waqty_user_application/features/home/provider_details/ui/provider_employee_profile_screen.dart';
 import 'package:waqty_user_application/features/home/provider_details/ui/provider_details_screen.dart';
 import 'package:waqty_user_application/features/home/provider_booking/ui/provider_booking_screen.dart';
 import 'package:waqty_user_application/features/home/available_now/logic/available_now_cubit.dart';
@@ -206,6 +208,18 @@ class RouteGenerator {
             child: ProviderDetailsScreen(providerUuid: providerUuid),
           ),
         );
+      case Routes.providerEmployeeScreen:
+        final employeeUuid = args is Map<String, dynamic>
+            ? args['employee_uuid']?.toString() ?? ''
+            : args?.toString() ?? '';
+        if (employeeUuid.isEmpty) return null;
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) =>
+                ProviderEmployeeProfileCubit(getIt(), employeeUuid)..load(),
+            child: ProviderEmployeeProfileScreen(employeeUuid: employeeUuid),
+          ),
+        );
       case Routes.providerBookingScreen:
         if (args is! Map<String, dynamic>) return null;
         final providerUuid = args['provider_uuid']?.toString() ?? '';
@@ -217,6 +231,7 @@ class RouteGenerator {
             branchUuid: branchUuid,
             providerName: args['provider_name']?.toString() ?? '',
             serviceUuid: args['service_uuid']?.toString(),
+            employeeUuid: args['employee_uuid']?.toString(),
           ),
         );
       case Routes.subcategoriesScreen:

@@ -1,8 +1,6 @@
 import '../data/models/provider_details_model.dart';
 import '../data/models/provider_booking_model.dart';
 
-enum ProviderDetailsTab { services, specialists, packages, information }
-
 abstract class ProviderDetailsState {
   const ProviderDetailsState();
 }
@@ -27,7 +25,6 @@ class ProviderDetailsError extends ProviderDetailsState {
 class ProviderDetailsLoaded extends ProviderDetailsState {
   final ProviderDetailsModel provider;
   final int branchIndex;
-  final ProviderDetailsTab tab;
   final Set<String> selectedIds;
   final String? specialistId;
   final bool favorite;
@@ -45,7 +42,6 @@ class ProviderDetailsLoaded extends ProviderDetailsState {
   const ProviderDetailsLoaded(
     this.provider, {
     this.branchIndex = 0,
-    this.tab = ProviderDetailsTab.services,
     this.selectedIds = const {},
     this.specialistId,
     this.favorite = false,
@@ -68,8 +64,24 @@ class ProviderDetailsLoaded extends ProviderDetailsState {
   });
   ProviderBranchModel? get branch =>
       provider.branches.isEmpty ? null : provider.branches[branchIndex];
-  List<ProviderServiceModel> get availableServices =>
-      bookingServices.isEmpty ? provider.services : bookingServices;
+  List<ProviderServiceModel> get availableServices {
+    if (bookingServices.isNotEmpty) return bookingServices;
+    final branchUuid = branch?.uuid;
+    return provider.services
+        .where(
+          (service) =>
+              service.branchUuid == null || service.branchUuid == branchUuid,
+        )
+        .toList(growable: false);
+  }
+
+  List<ProviderEmployeeModel> get availableEmployees {
+    final branchUuid = branch?.uuid;
+    return provider.employees
+        .where((employee) => employee.isAvailableAtBranch(branchUuid))
+        .toList(growable: false);
+  }
+
   List<ProviderServiceModel> get selectedServices => availableServices
       .where((item) => selectedIds.contains(item.uuid))
       .toList();
@@ -81,7 +93,6 @@ class ProviderDetailsLoaded extends ProviderDetailsState {
   );
   ProviderDetailsLoaded copyWith({
     int? branchIndex,
-    ProviderDetailsTab? tab,
     Set<String>? selectedIds,
     String? specialistId,
     bool clearSpecialist = false,
@@ -105,7 +116,6 @@ class ProviderDetailsLoaded extends ProviderDetailsState {
   }) => ProviderDetailsLoaded(
     provider,
     branchIndex: branchIndex ?? this.branchIndex,
-    tab: tab ?? this.tab,
     selectedIds: Set.unmodifiable(selectedIds ?? this.selectedIds),
     specialistId: clearSpecialist ? null : specialistId ?? this.specialistId,
     favorite: favorite ?? this.favorite,

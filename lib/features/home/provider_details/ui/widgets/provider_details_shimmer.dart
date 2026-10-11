@@ -63,14 +63,24 @@ class ProviderDetailsShimmer extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   _animate(const _Bone(height: 74, radius: 18)),
-                  const SizedBox(height: 14),
-                  _animate(const _Bone(height: 44)),
-                  const SizedBox(height: 16),
-                  for (var i = 0; i < 4; i++)
+                  const SizedBox(height: 20),
+                  const Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: _Bone(width: 120, height: 20),
+                  ),
+                  const SizedBox(height: 10),
+                  for (var i = 0; i < 3; i++)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 10),
                       child: _animate(const _Bone(height: 76, radius: 18)),
                     ),
+                  const SizedBox(height: 10),
+                  const Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: _Bone(width: 105, height: 20),
+                  ),
+                  const SizedBox(height: 10),
+                  _animate(const _Bone(height: 128, radius: 18)),
                   const SizedBox(height: 24),
                 ],
               ),
