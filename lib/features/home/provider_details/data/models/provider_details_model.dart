@@ -1,10 +1,11 @@
 class ProviderDetailsModel {
   final String uuid, name;
-  final String? description, logoUrl, coverUrl, currencyCode;
+  final String? description, logoUrl, coverUrl, currencyCode, branchUuid;
   final ProviderCategoryModel? category;
   final ProviderPoliciesModel? policies;
   final double? rating, distanceKm;
   final int ratingCount, servicesCount;
+  final int? visitsCount;
   final bool isOpenNow;
   final List<ProviderBranchModel> branches;
   final List<ProviderServiceModel> services;
@@ -18,11 +19,13 @@ class ProviderDetailsModel {
     this.logoUrl,
     this.coverUrl,
     this.currencyCode,
+    this.branchUuid,
     this.category,
     this.policies,
     this.rating,
     this.distanceKm,
     this.ratingCount = 0,
+    this.visitsCount,
     this.servicesCount = 0,
     this.isOpenNow = false,
     this.branches = const [],
@@ -39,10 +42,12 @@ class ProviderDetailsModel {
         logoUrl: _nullableString(json['logo_url']),
         coverUrl: _nullableString(json['cover_url']),
         currencyCode: _nullableString(json['currency_code']),
+        branchUuid: _nullableString(json['branch_uuid']),
         category: _map(json['category'], ProviderCategoryModel.fromJson),
         policies: _map(json['policies'], ProviderPoliciesModel.fromJson),
         rating: _nullableDouble(json['rating']),
         ratingCount: _integer(json['rating_count']),
+        visitsCount: _nullableInt(json['visits_count']),
         distanceKm: _nullableDouble(json['distance_km']),
         isOpenNow: json['is_open_now'] == true,
         branches: _list(json['branches'], ProviderBranchModel.fromJson),
@@ -52,6 +57,32 @@ class ProviderDetailsModel {
         reviews: _list(json['reviews'], ProviderReviewModel.fromJson),
         packages: _list(json['packages'], ProviderPackageModel.fromJson),
       );
+
+  ProviderDetailsModel copyWith({
+    String? branchUuid,
+    List<ProviderBranchModel>? branches,
+  }) => ProviderDetailsModel(
+    uuid: uuid,
+    name: name,
+    description: description,
+    logoUrl: logoUrl,
+    coverUrl: coverUrl,
+    currencyCode: currencyCode,
+    branchUuid: branchUuid ?? this.branchUuid,
+    category: category,
+    policies: policies,
+    rating: rating,
+    distanceKm: distanceKm,
+    ratingCount: ratingCount,
+    visitsCount: visitsCount,
+    servicesCount: servicesCount,
+    isOpenNow: isOpenNow,
+    branches: branches ?? this.branches,
+    services: services,
+    employees: employees,
+    reviews: reviews,
+    packages: packages,
+  );
 }
 
 class ProviderPoliciesModel {
@@ -99,7 +130,8 @@ class ProviderCategoryModel {
 class ProviderBranchModel {
   final String uuid, name;
   final String? address, city, closesAt;
-  final double? latitude, longitude, distanceKm;
+  final double? latitude, longitude, distanceKm, rating;
+  final int? ratingCount, visitsCount;
   final bool isOpenNow;
   final List<ProviderWorkingHourModel> workingHours;
   const ProviderBranchModel({
@@ -111,6 +143,9 @@ class ProviderBranchModel {
     this.latitude,
     this.longitude,
     this.distanceKm,
+    this.rating,
+    this.ratingCount,
+    this.visitsCount,
     this.isOpenNow = false,
     this.workingHours = const [],
   });
@@ -124,6 +159,9 @@ class ProviderBranchModel {
         latitude: _nullableDouble(json['latitude']),
         longitude: _nullableDouble(json['longitude']),
         distanceKm: _nullableDouble(json['distance_km']),
+        rating: _nullableDouble(json['rating']),
+        ratingCount: _nullableInt(json['rating_count']),
+        visitsCount: _nullableInt(json['visits_count']),
         isOpenNow: json['is_open_now'] == true,
         workingHours: _list(
           json['working_hours'],

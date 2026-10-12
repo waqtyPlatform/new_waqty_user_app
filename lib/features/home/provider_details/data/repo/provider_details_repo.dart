@@ -16,9 +16,12 @@ class ProviderEmployeeNotFoundFailure extends Failure {
 class ProviderDetailsRepo {
   final ProviderDetailsService _service;
   ProviderDetailsRepo(this._service);
-  Future<Either<Failure, ProviderDetailsModel>> show(String uuid) async {
+  Future<Either<Failure, ProviderDetailsModel>> show(
+    String uuid, {
+    String? branchUuid,
+  }) async {
     try {
-      return Right(await _service.show(uuid));
+      return Right(await _service.show(uuid, branchUuid: branchUuid));
     } on ProviderDetailsNotFoundException {
       return const Left(ProviderDetailsNotFoundFailure());
     } on ServerException catch (failure) {
@@ -41,11 +44,6 @@ class ProviderDetailsRepo {
       return Left(ServerFailure(message: failure.toString()));
     }
   }
-
-  Future<Either<Failure, List<ProviderServiceModel>>> bookingServices(
-    String providerUuid,
-    String branchUuid,
-  ) => _guard(() => _service.bookingServices(providerUuid, branchUuid));
 
   Future<Either<Failure, ProviderBookingEmployeesModel>> bookingEmployees(
     String providerUuid,

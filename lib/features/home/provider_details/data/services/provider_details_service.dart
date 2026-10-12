@@ -19,9 +19,17 @@ class ProviderEmployeeNotFoundException implements Exception {
 class ProviderDetailsService {
   final ApiConsumer apiConsumer;
   ProviderDetailsService({required this.apiConsumer});
-  Future<ProviderDetailsModel> show(String uuid) async {
+  Future<ProviderDetailsModel> show(String uuid, {String? branchUuid}) async {
+    final uri =
+        Uri.parse(
+          '${EndPoints.baseUrl}/user/providers/${Uri.encodeComponent(uuid)}',
+        ).replace(
+          queryParameters: branchUuid == null || branchUuid.isEmpty
+              ? null
+              : {'branch_uuid': branchUuid},
+        );
     final response = await apiConsumer.get(
-      '${EndPoints.baseUrl}/user/providers/${Uri.encodeComponent(uuid)}',
+      uri.toString(),
       await _authHeaders(),
     );
     if (response.statusCode == 404) {
@@ -69,17 +77,6 @@ class ProviderDetailsService {
         decoded is Map<String, dynamic> ? decoded : <String, dynamic>{},
       ),
     );
-  }
-
-  Future<List<ProviderServiceModel>> bookingServices(
-    String providerUuid,
-    String branchUuid,
-  ) async {
-    final data = await _get(
-      '/user/providers/${Uri.encodeComponent(providerUuid)}/booking/services',
-      {'branch_uuid': branchUuid},
-    );
-    return _modelList(data, ProviderServiceModel.fromJson);
   }
 
   Future<ProviderBookingEmployeesModel> bookingEmployees(

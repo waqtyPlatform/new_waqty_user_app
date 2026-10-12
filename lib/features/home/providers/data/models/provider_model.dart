@@ -4,6 +4,7 @@ class ProviderModel {
   final String? imageUrl;
   final String? categoryName;
   final String? branchName;
+  final String? branchUuid;
   final double rating;
   final int visitsCount;
 
@@ -13,6 +14,7 @@ class ProviderModel {
     this.imageUrl,
     this.categoryName,
     this.branchName,
+    this.branchUuid,
     required this.rating,
     required this.visitsCount,
   });
@@ -21,11 +23,14 @@ class ProviderModel {
     final branch = json['branch'] ?? json['main_branch'];
     final branchMap = branch is Map<String, dynamic> ? branch : null;
     return ProviderModel(
-      uuid: json['uuid']?.toString() ??
+      uuid:
+          json['uuid']?.toString() ??
           json['provider_uuid']?.toString() ??
           json['id']?.toString() ??
           '',
-      name: _text(json['name'] ?? json['provider_name'] ?? json['provider']) ?? '',
+      name:
+          _text(json['name'] ?? json['provider_name'] ?? json['provider']) ??
+          '',
       imageUrl: _mediaUrl(
         json['image_url'] ??
             json['image'] ??
@@ -33,7 +38,8 @@ class ProviderModel {
             json['logo_path'] ??
             json['logo'],
       ),
-      categoryName: _text(json['category_name'] ?? json['specialty']) ??
+      categoryName:
+          _text(json['category_name'] ?? json['specialty']) ??
           _nestedName(json['category']),
       branchName: _text(
         json['branch_name'] ??
@@ -41,8 +47,11 @@ class ProviderModel {
             branchMap?['name'] ??
             branchMap?['address'],
       ),
+      branchUuid: _text(json['branch_uuid'] ?? branchMap?['uuid']),
       rating: _number(json['rating'] ?? json['average_rating']),
-      visitsCount: _number(json['visits_count'] ?? json['reviews_count']).toInt(),
+      visitsCount: _number(
+        json['visits_count'] ?? json['reviews_count'],
+      ).toInt(),
     );
   }
 }

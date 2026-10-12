@@ -252,29 +252,26 @@ String _packageMeta(BuildContext context, ProviderPackageModel package) {
   return switch (package.type) {
     ProviderPackageType.singleVisit => price,
     ProviderPackageType.multiSession => pd(context, 'packageMeta', [
-      package.sessions.toString(),
+      _sessionCount(package).toString(),
       _money(package.price),
     ]),
-    ProviderPackageType.creditUnits =>
-      package.unitName == null
-          ? pd(context, 'packageUnitsMeta', [
-              package.units.toString(),
-              _money(package.price),
-            ])
-          : pd(context, 'packageNamedUnitsMeta', [
-              package.units.toString(),
-              package.unitName!,
-              _money(package.price),
-            ]),
+    ProviderPackageType.creditUnits => pd(context, 'packageUnitsPrice', [
+      package.units.toString(),
+      package.unitName ?? pd(context, 'packageUnit'),
+      _money(package.price),
+      _currencyLabel(context, package.currencyCode),
+    ]),
     ProviderPackageType.unknown =>
       package.units > 0
-          ? pd(context, 'packageUnitsMeta', [
+          ? pd(context, 'packageUnitsPrice', [
               package.units.toString(),
+              package.unitName ?? pd(context, 'packageUnit'),
               _money(package.price),
+              _currencyLabel(context, package.currencyCode),
             ])
-          : package.sessions > 0
+          : _sessionCount(package) > 0
           ? pd(context, 'packageMeta', [
-              package.sessions.toString(),
+              _sessionCount(package).toString(),
               _money(package.price),
             ])
           : price,
@@ -284,3 +281,27 @@ String _packageMeta(BuildContext context, ProviderPackageModel package) {
 String _money(double value) => value == value.roundToDouble()
     ? value.toInt().toString()
     : value.toStringAsFixed(2);
+
+int _sessionCount(ProviderPackageModel package) {
+  final includedSessions = package.includedServices.fold<int>(
+    0,
+    (total, service) => total + service.sessions,
+  );
+  return includedSessions > 0 ? includedSessions : package.sessions;
+}
+
+String _currencyLabel(BuildContext context, String? code) {
+  final normalized = code?.trim().toUpperCase();
+  final isArabic = Directionality.of(context) == TextDirection.rtl;
+  if (!isArabic) return normalized?.isNotEmpty == true ? normalized! : '';
+  return switch (normalized) {
+    'EGP' => 'جنيه',
+    'SAR' => 'ريال',
+    'AED' => 'درهم',
+    'KWD' => 'دينار كويتي',
+    'QAR' => 'ريال قطري',
+    'USD' => 'دولار',
+    'EUR' => 'يورو',
+    _ => normalized ?? '',
+  };
+}

@@ -200,11 +200,15 @@ class RouteGenerator {
         final providerUuid = args is Map<String, dynamic>
             ? (args['provider_uuid'] ?? args['uuid'])?.toString() ?? ''
             : args?.toString() ?? '';
+        final branchUuid = args is Map<String, dynamic>
+            ? args['branch_uuid']?.toString()
+            : null;
         if (providerUuid.isEmpty) return null;
         return MaterialPageRoute(
           builder: (_) => BlocProvider(
             create: (context) =>
-                ProviderDetailsCubit(getIt())..load(providerUuid),
+                ProviderDetailsCubit(getIt())
+                  ..load(providerUuid, branchUuid: branchUuid),
             child: ProviderDetailsScreen(providerUuid: providerUuid),
           ),
         );

@@ -26,6 +26,7 @@ class AvailableNowCard extends StatelessWidget {
       Routes.providerDetailsScreen,
       arguments: {
         'provider_uuid': provider.providerUuid,
+        'branch_uuid': provider.branchUuid,
         'provider_name': provider.providerName,
         'logo_path': provider.logoUrl,
         'category_name': provider.categoryName,

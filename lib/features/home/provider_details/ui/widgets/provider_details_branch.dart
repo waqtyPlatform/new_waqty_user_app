@@ -46,39 +46,65 @@ class ProviderDetailsBranch extends StatelessWidget {
               ],
             ),
           ),
-          if (state.provider.branches.length > 1)
-            TextButton(
-              onPressed: () {
-                final cubit = context.read<ProviderDetailsCubit>();
-                pdSheet(
-                  context,
-                  pd(context, 'change'),
-                  Column(
-                    children: [
-                      for (var i = 0; i < state.provider.branches.length; i++)
-                        ListTile(
-                          title: Text(
-                            state.provider.branches[i].name,
-                            style: pdText(16),
-                          ),
-                          subtitle:
-                              state.provider.branches[i].displayAddress.isEmpty
-                              ? null
-                              : Text(state.provider.branches[i].displayAddress),
-                          trailing: state.branchIndex == i
-                              ? const Icon(Icons.check_circle, color: pdGreen)
-                              : null,
-                          onTap: () {
-                            cubit.selectBranch(i);
-                            Navigator.pop(context);
-                          },
-                        ),
-                    ],
+          state.branchLoading
+              ? const Padding(
+                  padding: EdgeInsets.all(12),
+                  child: SizedBox.square(
+                    dimension: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: pdGreen,
+                    ),
                   ),
-                );
-              },
-              child: Text(pd(context, 'change'), style: pdText(12, pdGreen)),
-            ),
+                )
+              : TextButton(
+                  onPressed: () {
+                    final cubit = context.read<ProviderDetailsCubit>();
+                    pdSheet(
+                      context,
+                      pd(context, 'change'),
+                      Column(
+                        children: [
+                          for (
+                            var i = 0;
+                            i < state.provider.branches.length;
+                            i++
+                          )
+                            ListTile(
+                              title: Text(
+                                state.provider.branches[i].name,
+                                style: pdText(16),
+                              ),
+                              subtitle:
+                                  state
+                                      .provider
+                                      .branches[i]
+                                      .displayAddress
+                                      .isEmpty
+                                  ? null
+                                  : Text(
+                                      state.provider.branches[i].displayAddress,
+                                    ),
+                              trailing: state.branchIndex == i
+                                  ? const Icon(
+                                      Icons.check_circle,
+                                      color: pdGreen,
+                                    )
+                                  : null,
+                              onTap: () {
+                                cubit.selectBranch(i);
+                                Navigator.pop(context);
+                              },
+                            ),
+                        ],
+                      ),
+                    );
+                  },
+                  child: Text(
+                    pd(context, 'change'),
+                    style: pdText(12, pdGreen),
+                  ),
+                ),
         ],
       ),
     );

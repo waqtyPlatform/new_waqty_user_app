@@ -20,10 +20,7 @@ class ProviderDetailsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) =>
-      BlocConsumer<ProviderDetailsCubit, ProviderDetailsState>(
-        listener: (context, state) {
-          if (state is ProviderDetailsNotFound) Navigator.maybePop(context);
-        },
+      BlocBuilder<ProviderDetailsCubit, ProviderDetailsState>(
         builder: (context, state) => Scaffold(
           backgroundColor: AppColors.pageColor,
           bottomNavigationBar: state is ProviderDetailsLoaded
@@ -32,8 +29,7 @@ class ProviderDetailsScreen extends StatelessWidget {
           body: switch (state) {
             ProviderDetailsLoaded() => RefreshIndicator(
               color: pdGreen,
-              onRefresh: () =>
-                  context.read<ProviderDetailsCubit>().load(providerUuid),
+              onRefresh: () => context.read<ProviderDetailsCubit>().refresh(),
               child: CustomScrollView(
                 key: const PageStorageKey('provider-details-scroll'),
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -61,34 +57,60 @@ class ProviderDetailsScreen extends StatelessWidget {
                 ],
               ),
             ),
+            ProviderDetailsNotFound() => _ProviderDetailsMessage(
+              message: pd(context, 'providerNotFound'),
+            ),
             ProviderDetailsError() => SafeArea(
-              child: Column(
-                children: [
-                  const Align(
-                    alignment: AlignmentDirectional.centerStart,
-                    child: BackButton(),
-                  ),
-                  Expanded(
-                    child: Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(pd(context, 'loadError'), style: pdText(18)),
-                          PdButton(
-                            pd(context, 'retry'),
-                            onPressed: () => context
-                                .read<ProviderDetailsCubit>()
-                                .load(providerUuid),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+              child: _ProviderDetailsMessage(
+                message: pd(context, 'loadError'),
+                action: PdButton(
+                  pd(context, 'retry'),
+                  onPressed: () =>
+                      context.read<ProviderDetailsCubit>().load(providerUuid),
+                ),
               ),
             ),
             _ => const ProviderDetailsShimmer(),
           },
         ),
       );
+}
+
+class _ProviderDetailsMessage extends StatelessWidget {
+  final String message;
+  final Widget? action;
+
+  const _ProviderDetailsMessage({required this.message, this.action});
+
+  @override
+  Widget build(BuildContext context) => SafeArea(
+    child: Column(
+      children: [
+        const Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: BackButton(),
+        ),
+        Expanded(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.storefront_outlined, size: 56, color: pdSub),
+                  const SizedBox(height: 16),
+                  Text(
+                    message,
+                    textAlign: TextAlign.center,
+                    style: pdText(18, pdInk, FontWeight.w600),
+                  ),
+                  if (action != null) ...[const SizedBox(height: 20), action!],
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
 }

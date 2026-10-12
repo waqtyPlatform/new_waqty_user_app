@@ -28,7 +28,7 @@ class ProviderDetailsLoaded extends ProviderDetailsState {
   final Set<String> selectedIds;
   final String? specialistId;
   final bool favorite;
-  final List<ProviderServiceModel> bookingServices;
+  final bool branchLoading;
   final ProviderBookingKind bookingKind;
   final ProviderBookingStep bookingStep;
   final String? packageId;
@@ -45,7 +45,7 @@ class ProviderDetailsLoaded extends ProviderDetailsState {
     this.selectedIds = const {},
     this.specialistId,
     this.favorite = false,
-    this.bookingServices = const [],
+    this.branchLoading = false,
     this.bookingKind = ProviderBookingKind.service,
     this.bookingStep = ProviderBookingStep.employee,
     this.packageId,
@@ -64,16 +64,7 @@ class ProviderDetailsLoaded extends ProviderDetailsState {
   });
   ProviderBranchModel? get branch =>
       provider.branches.isEmpty ? null : provider.branches[branchIndex];
-  List<ProviderServiceModel> get availableServices {
-    if (bookingServices.isNotEmpty) return bookingServices;
-    final branchUuid = branch?.uuid;
-    return provider.services
-        .where(
-          (service) =>
-              service.branchUuid == null || service.branchUuid == branchUuid,
-        )
-        .toList(growable: false);
-  }
+  List<ProviderServiceModel> get availableServices => provider.services;
 
   List<ProviderEmployeeModel> get availableEmployees {
     final branchUuid = branch?.uuid;
@@ -92,12 +83,13 @@ class ProviderDetailsLoaded extends ProviderDetailsState {
     (sum, service) => sum + (service.durationMinutes ?? 0),
   );
   ProviderDetailsLoaded copyWith({
+    ProviderDetailsModel? provider,
     int? branchIndex,
     Set<String>? selectedIds,
     String? specialistId,
     bool clearSpecialist = false,
     bool? favorite,
-    List<ProviderServiceModel>? bookingServices,
+    bool? branchLoading,
     ProviderBookingKind? bookingKind,
     ProviderBookingStep? bookingStep,
     Object? packageId = _keep,
@@ -114,12 +106,12 @@ class ProviderDetailsLoaded extends ProviderDetailsState {
     bool? bookingCompleted,
     bool? waitlistJoined,
   }) => ProviderDetailsLoaded(
-    provider,
+    provider ?? this.provider,
     branchIndex: branchIndex ?? this.branchIndex,
     selectedIds: Set.unmodifiable(selectedIds ?? this.selectedIds),
     specialistId: clearSpecialist ? null : specialistId ?? this.specialistId,
     favorite: favorite ?? this.favorite,
-    bookingServices: bookingServices ?? this.bookingServices,
+    branchLoading: branchLoading ?? this.branchLoading,
     bookingKind: bookingKind ?? this.bookingKind,
     bookingStep: bookingStep ?? this.bookingStep,
     packageId: identical(packageId, _keep)

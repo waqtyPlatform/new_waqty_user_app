@@ -16,6 +16,10 @@ class ProviderDetailsHeader extends StatelessWidget {
     final name = state.provider.name.isEmpty
         ? pd(context, 'defaultName')
         : state.provider.name;
+    final rating = state.branch?.rating ?? state.provider.rating;
+    final ratingCount = state.branch?.ratingCount ?? state.provider.ratingCount;
+    final visitsCount =
+        state.branch?.visitsCount ?? state.provider.visitsCount ?? ratingCount;
     return Stack(
       children: [
         Positioned(
@@ -178,7 +182,7 @@ class ProviderDetailsHeader extends StatelessWidget {
                           onTap: () => pdSheet(
                             context,
                             pd(context, 'ratedVisits', [
-                              state.provider.ratingCount.toString(),
+                              ratingCount.toString(),
                             ]),
                             Text(
                               pd(context, 'noReviews'),
@@ -198,18 +202,16 @@ class ProviderDetailsHeader extends StatelessWidget {
                                 const PdIcon('3ed57'),
                                 const SizedBox(width: 5),
                                 Text(
-                                  state.provider.rating == null
+                                  rating == null
                                       ? pd(context, 'newRating')
-                                      : state.provider.rating!.toStringAsFixed(
-                                          1,
-                                        ),
+                                      : rating.toStringAsFixed(1),
                                   style: pdText(),
                                 ),
                                 const SizedBox(width: 5),
                                 Flexible(
                                   child: Text(
                                     pd(context, 'visits', [
-                                      state.provider.ratingCount.toString(),
+                                      visitsCount.toString(),
                                     ]),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
@@ -330,11 +332,12 @@ void _showLauncherError(BuildContext context, String key) {
 }
 
 String _providerMeta(BuildContext context, ProviderDetailsLoaded state) {
+  final distanceKm = state.branch?.distanceKm;
   final parts = <String>[
     if (state.provider.category?.name.isNotEmpty == true)
       state.provider.category!.name,
-    if (state.provider.distanceKm != null)
-      '${state.provider.distanceKm!.toStringAsFixed(1)} ${pd(context, 'km')}',
+    if (distanceKm != null)
+      '${distanceKm.toStringAsFixed(1)} ${pd(context, 'km')}',
   ];
   return parts.isEmpty ? pd(context, 'locationMeta') : parts.join(' · ');
 }

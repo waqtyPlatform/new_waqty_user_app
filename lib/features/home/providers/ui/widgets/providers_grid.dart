@@ -133,6 +133,7 @@ class _ProviderCard extends StatelessWidget {
         Routes.providerDetailsScreen,
         arguments: {
           'provider_uuid': item.uuid,
+          'branch_uuid': item.branchUuid,
           'provider_name': item.name,
           'logo_path': item.imageUrl,
           'category_name': item.categoryName,

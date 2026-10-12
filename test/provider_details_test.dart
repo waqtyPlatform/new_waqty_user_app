@@ -15,16 +15,16 @@ class _Api extends Fake implements ApiConsumer {}
 
 class _Repo extends ProviderDetailsRepo {
   final Either<Failure, ProviderDetailsModel> result;
+  final List<String?> requestedBranches = [];
   _Repo(this.result) : super(ProviderDetailsService(apiConsumer: _Api()));
   @override
-  Future<Either<Failure, ProviderDetailsModel>> show(String uuid) async =>
-      result;
-
-  @override
-  Future<Either<Failure, List<ProviderServiceModel>>> bookingServices(
-    String providerUuid,
-    String branchUuid,
-  ) async => Right(provider.services);
+  Future<Either<Failure, ProviderDetailsModel>> show(
+    String uuid, {
+    String? branchUuid,
+  }) async {
+    requestedBranches.add(branchUuid);
+    return result;
+  }
 }
 
 class _BookingRepo extends _Repo {
@@ -127,6 +127,7 @@ void main() {
       'name': 'Provider',
       'rating': null,
       'rating_count': 0,
+      'visits_count': 12,
       'distance_km': null,
       'is_open_now': true,
       'policies': {
@@ -140,6 +141,9 @@ void main() {
         {
           'uuid': 'branch-1',
           'name': 'Main',
+          'rating': 4.8,
+          'rating_count': 6,
+          'visits_count': 19,
           'working_hours': [
             {
               'day_of_week': 0,
@@ -170,7 +174,11 @@ void main() {
       ],
     });
     expect(model.rating, isNull);
+    expect(model.visitsCount, 12);
     expect(model.distanceKm, isNull);
+    expect(model.branches.single.rating, 4.8);
+    expect(model.branches.single.ratingCount, 6);
+    expect(model.branches.single.visitsCount, 19);
     expect(model.services.single.priceMax, 150);
     expect(model.branches.single.workingHours.single.dayOfWeek, 0);
     expect(model.reviews.single.userName, isNull);
@@ -181,15 +189,32 @@ void main() {
   });
 
   test('cubit loads API data and keeps selection in state', () async {
-    final cubit = ProviderDetailsCubit(_Repo(const Right(provider)));
+    final repo = _Repo(const Right(provider));
+    final cubit = ProviderDetailsCubit(repo);
     await cubit.load(provider.uuid);
+    expect(repo.requestedBranches, [null, 'branch-1']);
     cubit.toggleService('service-1');
     var state = cubit.state as ProviderDetailsLoaded;
     expect(state.totalPrice, 100);
     expect(state.totalMinutes, 30);
-    cubit.selectBranch(1);
+    await cubit.selectBranch(1);
     state = cubit.state as ProviderDetailsLoaded;
     expect(state.selectedIds, isEmpty);
+    expect(state.branch?.uuid, 'branch-2');
+    expect(repo.requestedBranches.last, 'branch-2');
+    await cubit.close();
+  });
+
+  test('keeps all branches when opening a specific branch', () async {
+    final repo = _Repo(const Right(provider));
+    final cubit = ProviderDetailsCubit(repo);
+
+    await cubit.load(provider.uuid, branchUuid: 'branch-2');
+
+    final state = cubit.state as ProviderDetailsLoaded;
+    expect(repo.requestedBranches, [null, 'branch-2']);
+    expect(state.provider.branches.length, 2);
+    expect(state.branch?.uuid, 'branch-2');
     await cubit.close();
   });
 
@@ -323,6 +348,29 @@ void main() {
     expect(model.includedServices.first.serviceName, 'Deep cleansing');
     expect(model.includedServices.first.sessions, 2);
     expect(model.includedServices.first.unitsPerSession, 15);
+  });
+
+  test('multi-session package keeps all included service sessions', () {
+    final model = ProviderPackageModel.fromJson({
+      'uuid': 'package-2',
+      'name': 'Hair package',
+      'package_type': 'multi_session',
+      'sessions': 1,
+      'price': 700,
+      'included_services': [
+        {'service_name': 'Haircut', 'sessions': 3},
+        {'service_name': 'Consultation', 'sessions': 2},
+      ],
+    });
+
+    expect(
+      model.includedServices.fold<int>(
+        0,
+        (total, service) => total + service.sessions,
+      ),
+      5,
+    );
+    expect(model.price, 700);
   });
 
   test('service booking supports any employee then date and slot', () async {

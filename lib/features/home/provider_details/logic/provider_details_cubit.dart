@@ -1,13 +1,14 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../data/repo/provider_details_repo.dart';
 import '../data/models/provider_booking_model.dart';
+import '../data/models/provider_details_model.dart';
 import 'provider_details_state.dart';
 
 class ProviderDetailsCubit extends Cubit<ProviderDetailsState> {
   final ProviderDetailsRepo _repo;
   int _generation = 0;
   ProviderDetailsCubit(this._repo) : super(const ProviderDetailsInitial());
-  Future<void> load(String uuid) async {
+  Future<void> load(String uuid, {String? branchUuid}) async {
     final generation = ++_generation;
     emit(const ProviderDetailsLoading());
     final result = await _repo.show(uuid);
@@ -18,12 +19,18 @@ class ProviderDetailsCubit extends Cubit<ProviderDetailsState> {
             ? const ProviderDetailsNotFound()
             : ProviderDetailsError(failure.message),
       ),
-      (provider) async {
-        final loaded = ProviderDetailsLoaded(provider);
-        emit(loaded);
-        await _loadBranchServices(loaded);
-      },
+      (provider) async => _emitInitialProvider(
+        provider,
+        requestedBranchUuid: branchUuid,
+        generation: generation,
+      ),
     );
+  }
+
+  Future<void> refresh() async {
+    final current = state;
+    if (current is! ProviderDetailsLoaded) return;
+    await _loadBranchDetails(current, current.branchIndex);
   }
 
   void toggleService(String id) {
@@ -54,15 +61,7 @@ class ProviderDetailsCubit extends Cubit<ProviderDetailsState> {
         index == current.branchIndex) {
       return;
     }
-    final next = current.copyWith(
-      branchIndex: index,
-      selectedIds: {},
-      clearSpecialist: true,
-      bookingServices: const [],
-      bookingEmployees: const [],
-    );
-    emit(next);
-    await _loadBranchServices(next);
+    await _loadBranchDetails(current, index);
   }
 
   void toggleFavorite() {
@@ -72,18 +71,73 @@ class ProviderDetailsCubit extends Cubit<ProviderDetailsState> {
     }
   }
 
-  Future<void> _loadBranchServices(ProviderDetailsLoaded current) async {
-    final branch = current.branch;
-    if (branch == null) return;
-    final result = await _repo.bookingServices(
+  Future<void> _emitInitialProvider(
+    ProviderDetailsModel provider, {
+    required String? requestedBranchUuid,
+    required int generation,
+  }) async {
+    if (provider.branches.isEmpty) {
+      emit(ProviderDetailsLoaded(provider));
+      return;
+    }
+    final selectedUuid = requestedBranchUuid ?? provider.branchUuid;
+    final branchIndex = selectedUuid == null
+        ? 0
+        : provider.branches.indexWhere((branch) => branch.uuid == selectedUuid);
+    final resolvedIndex = branchIndex < 0 ? 0 : branchIndex;
+    final resolvedUuid = provider.branches[resolvedIndex].uuid;
+
+    if (provider.branchUuid == resolvedUuid) {
+      emit(ProviderDetailsLoaded(provider, branchIndex: resolvedIndex));
+      return;
+    }
+
+    final filtered = await _repo.show(provider.uuid, branchUuid: resolvedUuid);
+    if (isClosed || generation != _generation) return;
+    filtered.fold(
+      (failure) => emit(
+        failure is ProviderDetailsNotFoundFailure
+            ? const ProviderDetailsNotFound()
+            : ProviderDetailsError(failure.message),
+      ),
+      (details) => emit(
+        ProviderDetailsLoaded(
+          details.copyWith(
+            branchUuid: resolvedUuid,
+            branches: provider.branches,
+          ),
+          branchIndex: resolvedIndex,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _loadBranchDetails(
+    ProviderDetailsLoaded current,
+    int branchIndex,
+  ) async {
+    final branches = current.provider.branches;
+    final branchUuid = branches[branchIndex].uuid;
+    emit(current.copyWith(branchLoading: true));
+    final result = await _repo.show(
       current.provider.uuid,
-      branch.uuid,
+      branchUuid: branchUuid,
     );
     if (isClosed || state is! ProviderDetailsLoaded) return;
     result.fold(
-      (_) {},
-      (services) => emit(
-        (state as ProviderDetailsLoaded).copyWith(bookingServices: services),
+      (_) => emit(current.copyWith(branchLoading: false)),
+      (provider) => emit(
+        current.copyWith(
+          provider: provider.copyWith(
+            branchUuid: branchUuid,
+            branches: branches,
+          ),
+          branchIndex: branchIndex,
+          selectedIds: const {},
+          clearSpecialist: true,
+          bookingEmployees: const [],
+          branchLoading: false,
+        ),
       ),
     );
   }
