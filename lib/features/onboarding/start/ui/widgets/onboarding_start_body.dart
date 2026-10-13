@@ -249,7 +249,8 @@ class _StartBottomActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final arrowAngle = math.pi / 2;
+    final isRtl = Directionality.of(context) == ui.TextDirection.rtl;
+    final arrowAngle = isRtl ? math.pi / 2 : -math.pi / 2;
     final arrowIcon = Container(
       width: 44.w,
       height: 44.w,
@@ -313,7 +314,7 @@ class _StartBottomActions extends StatelessWidget {
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [arrowIcon, createText],
+                children: [createText, arrowIcon],
               ),
             ),
           ),

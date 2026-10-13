@@ -38,7 +38,8 @@ class OnboardingHeaderBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final skipArrowAngle = math.pi / 2;
+    final isRtl = Directionality.of(context) == ui.TextDirection.rtl;
+    final skipArrowAngle = isRtl ? math.pi / 2 : -math.pi / 2;
     final skipIcon = Transform.rotate(
       angle: skipArrowAngle,
       child: SvgPicture.asset(
@@ -112,10 +113,12 @@ class OnboardingLanguageToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isEnglish = context.locale.languageCode == 'en';
+
     return GestureDetector(
-      onTap: () {
-        context.setLocale(const Locale('en', 'US'));
-      },
+      onTap: () => context.setLocale(
+        isEnglish ? const Locale('ar', 'EG') : const Locale('en', 'US'),
+      ),
       child: Container(
         height: 34.h,
         padding: EdgeInsets.symmetric(horizontal: 12.w),
@@ -125,7 +128,7 @@ class OnboardingLanguageToggle extends StatelessWidget {
         ),
         alignment: Alignment.center,
         child: Text(
-          'EN',
+          isEnglish ? 'ع' : 'EN',
           style: TextStyles.font12greenColor500W600.copyWith(fontSize: 13.sp),
         ),
       ),
@@ -177,7 +180,8 @@ class OnboardingBottomActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final nextArrowAngle = math.pi / 2;
+    final isRtl = Directionality.of(context) == ui.TextDirection.rtl;
+    final nextArrowAngle = isRtl ? math.pi / 2 : -math.pi / 2;
     final nextIcon = Container(
       width: 44.w,
       height: 44.w,
@@ -271,7 +275,7 @@ class OnboardingBottomActions extends StatelessWidget {
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [nextIcon, nextText],
+                children: [nextText, nextIcon],
               ),
             ),
           ),

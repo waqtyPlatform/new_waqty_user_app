@@ -86,10 +86,10 @@ class ProviderDetailsHeader extends StatelessWidget {
                                     );
                                     if (!context.mounted) return;
                                     Navigator.pop(context);
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(pd(context, 'copied')),
-                                      ),
+                                    AppConstant.toast(
+                                      pd(context, 'copied'),
+                                      true,
+                                      context,
                                     );
                                   },
                                 ),

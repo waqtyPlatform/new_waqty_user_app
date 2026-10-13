@@ -33,6 +33,15 @@ class DisconnectedApiConsumer implements ApiConsumer {
   }
 
   @override
+  Future<http.Response> patch(
+    String path,
+    Map<String, dynamic>? body,
+    Map<String, String>? headers,
+  ) async {
+    return _response('PATCH', path);
+  }
+
+  @override
   Future<http.Response> post(
     String path,
     Map<String, dynamic>? body,

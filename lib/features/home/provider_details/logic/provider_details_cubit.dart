@@ -161,6 +161,7 @@ class ProviderDetailsCubit extends Cubit<ProviderDetailsState> {
         bookingDate: null,
         slotToken: null,
         packageId: null,
+        entitlementId: null,
         bookingCompleted: false,
         waitlistJoined: false,
       ),
@@ -236,6 +237,7 @@ class ProviderDetailsCubit extends Cubit<ProviderDetailsState> {
       current.copyWith(
         bookingKind: ProviderBookingKind.package,
         packageId: packageUuid,
+        entitlementId: null,
         selectedIds: const {},
         bookingStep: ProviderBookingStep.date,
         bookingLoading: true,
@@ -271,6 +273,86 @@ class ProviderDetailsCubit extends Cubit<ProviderDetailsState> {
     );
   }
 
+  Future<void> startOwnedPackageBooking({
+    required String entitlementUuid,
+    required String packageUuid,
+  }) async {
+    await _startDirectBooking(
+      kind: ProviderBookingKind.ownedPackage,
+      itemUuid: packageUuid,
+      entitlementUuid: entitlementUuid,
+      loadDates: (current) => _repo.packageDates(
+        providerUuid: current.provider.uuid,
+        branchUuid: current.branch!.uuid,
+        packageUuid: packageUuid,
+        timezone: _timezone(current),
+      ),
+    );
+  }
+
+  Future<void> startFollowUpBooking({
+    required String entitlementUuid,
+    required String serviceUuid,
+  }) async {
+    await _startDirectBooking(
+      kind: ProviderBookingKind.followUp,
+      itemUuid: serviceUuid,
+      entitlementUuid: entitlementUuid,
+      loadDates: (current) => _repo.bookingDates(
+        providerUuid: current.provider.uuid,
+        branchUuid: current.branch!.uuid,
+        serviceUuid: serviceUuid,
+        timezone: _timezone(current),
+      ),
+    );
+  }
+
+  Future<void> _startDirectBooking({
+    required ProviderBookingKind kind,
+    required String itemUuid,
+    required String entitlementUuid,
+    required Future<dynamic> Function(ProviderDetailsLoaded current) loadDates,
+  }) async {
+    final current = state;
+    if (current is! ProviderDetailsLoaded || current.branch == null) return;
+    emit(
+      current.copyWith(
+        bookingKind: kind,
+        packageId: kind == ProviderBookingKind.ownedPackage ? itemUuid : null,
+        entitlementId: entitlementUuid,
+        selectedIds: kind == ProviderBookingKind.followUp
+            ? {itemUuid}
+            : const {},
+        clearSpecialist: true,
+        bookingStep: ProviderBookingStep.date,
+        bookingLoading: true,
+        bookingError: null,
+        bookingDates: const [],
+        bookingSlots: const [],
+        bookingDate: null,
+        slotToken: null,
+        bookingCompleted: false,
+        waitlistJoined: false,
+      ),
+    );
+    final result = await loadDates(current);
+    if (isClosed || state is! ProviderDetailsLoaded) return;
+    result.fold(
+      (failure) => emit(
+        (state as ProviderDetailsLoaded).copyWith(
+          bookingLoading: false,
+          bookingError: failure.message,
+        ),
+      ),
+      (dates) => emit(
+        (state as ProviderDetailsLoaded).copyWith(
+          bookingLoading: false,
+          bookingDates: dates,
+        ),
+      ),
+    );
+  }
+
   Future<void> chooseDate(DateTime date) async {
     final current = state;
     if (current is! ProviderDetailsLoaded || current.branch == null) return;
@@ -285,7 +367,9 @@ class ProviderDetailsCubit extends Cubit<ProviderDetailsState> {
         waitlistEnabled: false,
       ),
     );
-    final result = current.bookingKind == ProviderBookingKind.service
+    final result =
+        current.bookingKind == ProviderBookingKind.service ||
+            current.bookingKind == ProviderBookingKind.followUp
         ? await _repo.bookingSlots(
             providerUuid: current.provider.uuid,
             branchUuid: current.branch!.uuid,
@@ -327,6 +411,72 @@ class ProviderDetailsCubit extends Cubit<ProviderDetailsState> {
     }
   }
 
+  Future<void> refreshBookingStep() async {
+    final current = state;
+    if (current is! ProviderDetailsLoaded || current.bookingLoading) return;
+    switch (current.bookingStep) {
+      case ProviderBookingStep.employee:
+        await startServiceBooking();
+      case ProviderBookingStep.date:
+        switch (current.bookingKind) {
+          case ProviderBookingKind.service:
+            await chooseEmployee(current.specialistId);
+          case ProviderBookingKind.package:
+            await startPackageBooking(current.packageId!);
+          case ProviderBookingKind.ownedPackage:
+            await startOwnedPackageBooking(
+              entitlementUuid: current.entitlementId!,
+              packageUuid: current.packageId!,
+            );
+          case ProviderBookingKind.followUp:
+            await startFollowUpBooking(
+              entitlementUuid: current.entitlementId!,
+              serviceUuid: current.selectedIds.single,
+            );
+        }
+      case ProviderBookingStep.slot:
+        final date = current.bookingDate;
+        if (date != null) await chooseDate(date);
+      case ProviderBookingStep.complete:
+        return;
+    }
+  }
+
+  bool backBookingStep() {
+    final current = state;
+    if (current is! ProviderDetailsLoaded) return false;
+    if (current.bookingStep == ProviderBookingStep.slot) {
+      emit(
+        current.copyWith(
+          bookingStep: ProviderBookingStep.date,
+          bookingLoading: false,
+          bookingError: null,
+          bookingSlots: const [],
+          slotToken: null,
+          waitlistEnabled: false,
+        ),
+      );
+      return true;
+    }
+    if (current.bookingStep == ProviderBookingStep.date &&
+        current.bookingKind == ProviderBookingKind.service) {
+      emit(
+        current.copyWith(
+          bookingStep: ProviderBookingStep.employee,
+          clearSpecialist: true,
+          bookingLoading: false,
+          bookingError: null,
+          bookingDate: null,
+          bookingSlots: const [],
+          slotToken: null,
+          waitlistEnabled: false,
+        ),
+      );
+      return true;
+    }
+    return false;
+  }
+
   Future<void> confirmBooking() async {
     final current = state;
     if (current is! ProviderDetailsLoaded ||
@@ -344,6 +494,10 @@ class ProviderDetailsCubit extends Cubit<ProviderDetailsState> {
         'employee_uuid': current.specialistId,
       if (current.bookingKind == ProviderBookingKind.package)
         'package_uuid': current.packageId,
+      if (current.bookingKind == ProviderBookingKind.ownedPackage)
+        'entitlement_uuid': current.entitlementId,
+      if (current.bookingKind == ProviderBookingKind.followUp)
+        'follow_up_uuid': current.entitlementId,
       'slot_token': current.slotToken,
       'booking_date': _date(current.bookingDate!),
     };
@@ -382,6 +536,10 @@ class ProviderDetailsCubit extends Cubit<ProviderDetailsState> {
         'employee_uuid': current.specialistId,
       if (current.bookingKind == ProviderBookingKind.package)
         'package_uuid': current.packageId,
+      if (current.bookingKind == ProviderBookingKind.ownedPackage)
+        'entitlement_uuid': current.entitlementId,
+      if (current.bookingKind == ProviderBookingKind.followUp)
+        'follow_up_uuid': current.entitlementId,
       'preferred_date': _date(current.bookingDate!),
       'preferred_time': preferredTime,
     });

@@ -8,6 +8,11 @@ abstract class ApiConsumer {
     Map<String, dynamic>? body,
     Map<String, String>? headers,
   );
+  Future<http.Response> patch(
+    String path,
+    Map<String, dynamic>? body,
+    Map<String, String>? headers,
+  );
   Future<http.Response> post(
     String path,
     Map<String, dynamic>? body,

@@ -29,6 +29,8 @@ class _Repo extends ProviderDetailsRepo {
 
 class _BookingRepo extends _Repo {
   Map<String, dynamic>? submittedBooking;
+  String? requestedEmployeeUuid;
+  int employeeRequests = 0;
   _BookingRepo() : super(const Right(provider));
 
   @override
@@ -36,9 +38,12 @@ class _BookingRepo extends _Repo {
     String providerUuid,
     String branchUuid,
     String serviceUuid,
-  ) async => const Right(
-    ProviderBookingEmployeesModel(allowAnyEmployee: true, employees: []),
-  );
+  ) async {
+    employeeRequests++;
+    return const Right(
+      ProviderBookingEmployeesModel(allowAnyEmployee: true, employees: []),
+    );
+  }
 
   @override
   Future<Either<Failure, List<ProviderBookingDateModel>>> bookingDates({
@@ -47,13 +52,16 @@ class _BookingRepo extends _Repo {
     required String serviceUuid,
     String? employeeUuid,
     required String timezone,
-  }) async => Right([
-    ProviderBookingDateModel(
-      date: DateTime(2026, 10, 10),
-      available: true,
-      slotsCount: 1,
-    ),
-  ]);
+  }) async {
+    requestedEmployeeUuid = employeeUuid;
+    return Right([
+      ProviderBookingDateModel(
+        date: DateTime(2026, 10, 10),
+        available: true,
+        slotsCount: 1,
+      ),
+    ]);
+  }
 
   @override
   Future<Either<Failure, ProviderBookingSlotsModel>> bookingSlots({
@@ -81,6 +89,20 @@ class _BookingRepo extends _Repo {
     submittedBooking = body;
     return const Right(null);
   }
+
+  @override
+  Future<Either<Failure, List<ProviderBookingDateModel>>> packageDates({
+    required String providerUuid,
+    required String branchUuid,
+    required String packageUuid,
+    required String timezone,
+  }) async => Right([
+    ProviderBookingDateModel(
+      date: DateTime(2026, 10, 11),
+      available: true,
+      slotsCount: 2,
+    ),
+  ]);
 }
 
 class _EmployeeRepo extends _Repo {
@@ -286,6 +308,16 @@ void main() {
     expect(slots.slots.single.startsAt, '10:00:00');
   });
 
+  test('respects disabled waitlist for unavailable package', () {
+    final model = ProviderBookingSlotsModel.fromData({
+      'waitlist': {'enabled': false, 'reason': 'package_not_available'},
+    });
+
+    expect(model.slots, isEmpty);
+    expect(model.waitlistEnabled, isFalse);
+    expect(model.waitlistReason, 'package_not_available');
+  });
+
   test('loads and parses employee profile API response', () async {
     final profile = ProviderEmployeeProfileModel.fromJson({
       'uuid': 'employee-1',
@@ -385,6 +417,7 @@ void main() {
     state = cubit.state as ProviderDetailsLoaded;
     expect(state.bookingDates, hasLength(1));
     expect(state.specialistId, isNull);
+    expect(repo.requestedEmployeeUuid, isNull);
     await cubit.chooseDate(state.bookingDates.single.date);
     state = cubit.state as ProviderDetailsLoaded;
     expect(state.bookingSlots.single.slotToken, 'signed-slot');
@@ -397,8 +430,50 @@ void main() {
     await cubit.close();
   });
 
+  test('service booking back returns through previous steps', () async {
+    final repo = _BookingRepo();
+    final cubit = ProviderDetailsCubit(repo);
+    await cubit.load(provider.uuid);
+    cubit.toggleService('service-1');
+    await cubit.startServiceBooking();
+    await cubit.chooseEmployee(null);
+
+    expect(cubit.backBookingStep(), isTrue);
+    var state = cubit.state as ProviderDetailsLoaded;
+    expect(state.bookingStep, ProviderBookingStep.employee);
+
+    await cubit.chooseEmployee(null);
+    await cubit.chooseDate(
+      (cubit.state as ProviderDetailsLoaded).bookingDates.single.date,
+    );
+    expect(cubit.backBookingStep(), isTrue);
+    state = cubit.state as ProviderDetailsLoaded;
+    expect(state.bookingStep, ProviderBookingStep.date);
+    expect(cubit.backBookingStep(), isTrue);
+    expect(
+      (cubit.state as ProviderDetailsLoaded).bookingStep,
+      ProviderBookingStep.employee,
+    );
+    expect(cubit.backBookingStep(), isFalse);
+    await cubit.close();
+  });
+
   test('empty slots enable waitlist fallback', () {
     final slots = ProviderBookingSlotsModel.fromData({'slots': []});
     expect(slots.waitlistEnabled, isTrue);
+  });
+
+  test('package booking skips employee selection and loads dates', () async {
+    final repo = _BookingRepo();
+    final cubit = ProviderDetailsCubit(repo);
+    await cubit.load(provider.uuid);
+
+    await cubit.startPackageBooking('package-1');
+
+    final state = cubit.state as ProviderDetailsLoaded;
+    expect(state.bookingStep, ProviderBookingStep.date);
+    expect(state.bookingDates, hasLength(1));
+    expect(repo.employeeRequests, 0);
+    await cubit.close();
   });
 }

@@ -31,7 +31,7 @@ class ProviderDetailsLoaded extends ProviderDetailsState {
   final bool branchLoading;
   final ProviderBookingKind bookingKind;
   final ProviderBookingStep bookingStep;
-  final String? packageId;
+  final String? packageId, entitlementId;
   final List<ProviderEmployeeModel> bookingEmployees;
   final bool allowAnyEmployee, bookingLoading, bookingSubmitting;
   final List<ProviderBookingDateModel> bookingDates;
@@ -49,6 +49,7 @@ class ProviderDetailsLoaded extends ProviderDetailsState {
     this.bookingKind = ProviderBookingKind.service,
     this.bookingStep = ProviderBookingStep.employee,
     this.packageId,
+    this.entitlementId,
     this.bookingEmployees = const [],
     this.allowAnyEmployee = true,
     this.bookingLoading = false,
@@ -93,6 +94,7 @@ class ProviderDetailsLoaded extends ProviderDetailsState {
     ProviderBookingKind? bookingKind,
     ProviderBookingStep? bookingStep,
     Object? packageId = _keep,
+    Object? entitlementId = _keep,
     List<ProviderEmployeeModel>? bookingEmployees,
     bool? allowAnyEmployee,
     bool? bookingLoading,
@@ -117,6 +119,9 @@ class ProviderDetailsLoaded extends ProviderDetailsState {
     packageId: identical(packageId, _keep)
         ? this.packageId
         : packageId as String?,
+    entitlementId: identical(entitlementId, _keep)
+        ? this.entitlementId
+        : entitlementId as String?,
     bookingEmployees: bookingEmployees ?? this.bookingEmployees,
     allowAnyEmployee: allowAnyEmployee ?? this.allowAnyEmployee,
     bookingLoading: bookingLoading ?? this.bookingLoading,

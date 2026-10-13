@@ -46,6 +46,10 @@ import 'package:waqty_user_application/features/home/provider_details/logic/prov
 import 'package:waqty_user_application/features/home/provider_details/ui/provider_employee_profile_screen.dart';
 import 'package:waqty_user_application/features/home/provider_details/ui/provider_details_screen.dart';
 import 'package:waqty_user_application/features/home/provider_booking/ui/provider_booking_screen.dart';
+import 'package:waqty_user_application/features/home/provider_booking/data/repo/provider_booking_items_repo.dart';
+import 'package:waqty_user_application/features/home/provider_booking/logic/provider_booking_items_cubit.dart';
+import 'package:waqty_user_application/features/home/provider_booking/data/repo/booking_cart_repo.dart';
+import 'package:waqty_user_application/features/home/provider_booking/logic/booking_cart_cubit.dart';
 import 'package:waqty_user_application/features/home/available_now/logic/available_now_cubit.dart';
 import 'package:waqty_user_application/features/home/available_now/ui/available_now_screen.dart';
 import 'package:waqty_user_application/features/home/nearby_offers/logic/nearby_offers_cubit.dart';
@@ -230,12 +234,33 @@ class RouteGenerator {
         final branchUuid = args['branch_uuid']?.toString() ?? '';
         if (providerUuid.isEmpty || branchUuid.isEmpty) return null;
         return MaterialPageRoute(
-          builder: (_) => ProviderBookingScreen(
-            providerUuid: providerUuid,
-            branchUuid: branchUuid,
-            providerName: args['provider_name']?.toString() ?? '',
-            serviceUuid: args['service_uuid']?.toString(),
-            employeeUuid: args['employee_uuid']?.toString(),
+          builder: (_) => MultiBlocProvider(
+            providers: [
+              BlocProvider(
+                create: (_) =>
+                    ProviderDetailsCubit(getIt())
+                      ..load(providerUuid, branchUuid: branchUuid),
+              ),
+              BlocProvider(
+                create: (_) => ProviderBookingItemsCubit(
+                  getIt<ProviderBookingItemsRepo>(),
+                  providerUuid: providerUuid,
+                  branchUuid: branchUuid,
+                  selectedServiceUuid: args['service_uuid']?.toString(),
+                )..load(),
+              ),
+              BlocProvider(
+                create: (_) =>
+                    BookingCartCubit(getIt<BookingCartRepo>())..load(),
+              ),
+            ],
+            child: ProviderBookingScreen(
+              providerUuid: providerUuid,
+              branchUuid: branchUuid,
+              providerName: args['provider_name']?.toString() ?? '',
+              serviceUuid: args['service_uuid']?.toString(),
+              employeeUuid: args['employee_uuid']?.toString(),
+            ),
           ),
         );
       case Routes.subcategoriesScreen:

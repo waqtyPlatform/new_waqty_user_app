@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:waqty_user_application/core/api/api_consumer.dart';
 import 'package:waqty_user_application/core/api/end_points.dart';
 import 'package:waqty_user_application/core/exceptions/exceptions.dart';
@@ -98,12 +99,12 @@ class ProviderDetailsService {
     required String timezone,
   }) async {
     final now = DateTime.now();
+    final employee = Uri.encodeComponent(employeeUuid ?? 'any');
     final data = await _get(
-      '/user/providers/${Uri.encodeComponent(providerUuid)}/booking/dates',
+      '/user/providers/${Uri.encodeComponent(providerUuid)}/booking/employees/$employee/dates',
       {
         'branch_uuid': branchUuid,
         'service_uuid': serviceUuid,
-        if (employeeUuid != null) 'employee_uuid': employeeUuid,
         'from': _date(now),
         'days': '14',
         'timezone': timezone,
@@ -120,18 +121,20 @@ class ProviderDetailsService {
     String? employeeUuid,
     required DateTime date,
     required String timezone,
-  }) async => ProviderBookingSlotsModel.fromData(
-    await _get(
-      '/user/providers/${Uri.encodeComponent(providerUuid)}/booking/slots',
-      {
-        'branch_uuid': branchUuid,
-        'service_uuid': serviceUuid,
-        if (employeeUuid != null) 'employee_uuid': employeeUuid,
-        'date': _date(date),
-        'timezone': timezone,
-      },
-    ),
-  );
+  }) async {
+    final employee = Uri.encodeComponent(employeeUuid ?? 'any');
+    return ProviderBookingSlotsModel.fromData(
+      await _get(
+        '/user/providers/${Uri.encodeComponent(providerUuid)}/booking/employees/$employee/slots',
+        {
+          'branch_uuid': branchUuid,
+          'service_uuid': serviceUuid,
+          'date': _date(date),
+          'timezone': timezone,
+        },
+      ),
+    );
+  }
 
   Future<List<ProviderPackageModel>> bookingPackages(
     String providerUuid,
@@ -192,6 +195,7 @@ class ProviderDetailsService {
       uri.toString(),
       await _authHeaders(),
     );
+    _logBookingResponse(uri, response.statusCode, response.body);
     return _decode(response);
   }
 
@@ -225,6 +229,12 @@ class ProviderDetailsService {
     if (token.isEmpty) return {};
     return {ConstantKeys.appAuthorization: '${ConstantKeys.appBearer} $token'};
   }
+}
+
+void _logBookingResponse(Uri uri, int statusCode, String body) {
+  if (!kDebugMode || !uri.path.contains('/booking/')) return;
+  debugPrint('BOOKING RESPONSE [$statusCode] ${uri.toString()}');
+  debugPrint('BOOKING RESPONSE BODY: $body', wrapWidth: 1024);
 }
 
 List<T> _modelList<T>(dynamic data, T Function(Map<String, dynamic>) parser) =>

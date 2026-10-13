@@ -1,6 +1,6 @@
 import 'provider_details_model.dart';
 
-enum ProviderBookingKind { service, package }
+enum ProviderBookingKind { service, package, ownedPackage, followUp }
 
 enum ProviderBookingStep { employee, date, slot, complete }
 
@@ -93,9 +93,12 @@ class ProviderBookingSlotsModel {
     final waitlist = map['waitlist'] is Map<String, dynamic>
         ? map['waitlist'] as Map<String, dynamic>
         : <String, dynamic>{};
+    final hasWaitlistFlag = waitlist.containsKey('enabled');
     return ProviderBookingSlotsModel(
       slots: slots,
-      waitlistEnabled: waitlist['enabled'] == true || slots.isEmpty,
+      waitlistEnabled: hasWaitlistFlag
+          ? waitlist['enabled'] == true
+          : slots.isEmpty,
       waitlistReason: _nullable(waitlist['reason']),
     );
   }

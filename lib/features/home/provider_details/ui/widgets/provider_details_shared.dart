@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:waqty_user_application/core/utils/app_colors_white_theme.dart';
+import 'package:waqty_user_application/core/utils/app_constant.dart';
 
 const pdInk = AppColors.greyColor900;
 const pdSub = AppColors.greyColor500;
@@ -164,7 +165,5 @@ Future<void> pdSheet(
   ),
 );
 void pdUnavailable(BuildContext context) {
-  ScaffoldMessenger.of(
-    context,
-  ).showSnackBar(SnackBar(content: Text(pd(context, 'unavailable'))));
+  AppConstant.toast(pd(context, 'unavailable'), false, context);
 }

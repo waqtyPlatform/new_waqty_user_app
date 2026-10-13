@@ -32,6 +32,10 @@ import 'package:waqty_user_application/features/home/providers/data/repo/provide
 import 'package:waqty_user_application/features/home/providers/data/services/providers_service.dart';
 import 'package:waqty_user_application/features/home/provider_details/data/repo/provider_details_repo.dart';
 import 'package:waqty_user_application/features/home/provider_details/data/services/provider_details_service.dart';
+import 'package:waqty_user_application/features/home/provider_booking/data/repo/provider_booking_items_repo.dart';
+import 'package:waqty_user_application/features/home/provider_booking/data/services/provider_booking_items_service.dart';
+import 'package:waqty_user_application/features/home/provider_booking/data/repo/booking_cart_repo.dart';
+import 'package:waqty_user_application/features/home/provider_booking/data/services/booking_cart_service.dart';
 
 import '../api/api_consumer.dart';
 
@@ -105,6 +109,18 @@ class ServicesLocator {
     );
     getIt.registerLazySingleton<ProviderDetailsService>(
       () => ProviderDetailsService(apiConsumer: getIt()),
+    );
+    getIt.registerLazySingleton<ProviderBookingItemsRepo>(
+      () => ProviderBookingItemsRepo(getIt()),
+    );
+    getIt.registerLazySingleton<ProviderBookingItemsService>(
+      () => ProviderBookingItemsService(apiConsumer: getIt()),
+    );
+    getIt.registerLazySingleton<BookingCartRepo>(
+      () => BookingCartRepo(getIt()),
+    );
+    getIt.registerLazySingleton<BookingCartService>(
+      () => BookingCartService(apiConsumer: getIt()),
     );
 
     /// ExploreNearPeople
