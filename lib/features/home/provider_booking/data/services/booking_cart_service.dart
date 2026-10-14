@@ -1,8 +1,10 @@
 import 'dart:convert';
 
 import 'package:waqty_user_application/core/api/api_consumer.dart';
-import 'package:waqty_user_application/core/api/end_points.dart';
+import 'package:waqty_user_application/core/services/cache_helper.dart';
+import 'package:waqty_user_application/core/utils/constant_keys.dart';
 
+import 'booking_cart_api_end_points.dart';
 import '../models/booking_cart_model.dart';
 
 class BookingCartApiException implements Exception {
@@ -20,12 +22,17 @@ class BookingCartService {
   final ApiConsumer apiConsumer;
   const BookingCartService({required this.apiConsumer});
 
-  Future<BookingCartModel?> getCart() async =>
-      _cart(await apiConsumer.get(_url(''), null));
+  Future<BookingCartModel?> getCart() async => _cart(
+    await apiConsumer.get(BookingCartApiEndPoints.cart, await _authHeaders()),
+  );
 
   Future<BookingCartModel> addItem(BookingCartAddRequest request) async =>
       _requiredCart(
-        await apiConsumer.post(_url('/items'), request.toJson(), null),
+        await apiConsumer.post(
+          BookingCartApiEndPoints.items,
+          request.toJson(),
+          await _authHeaders(),
+        ),
       );
 
   Future<BookingCartModel?> updateItem({
@@ -33,22 +40,28 @@ class BookingCartService {
     required String slotToken,
     String? employeeUuid,
   }) async => _cart(
-    await apiConsumer.patch(_url('/items/${Uri.encodeComponent(itemUuid)}'), {
+    await apiConsumer.patch(BookingCartApiEndPoints.item(itemUuid), {
       'slot_token': slotToken,
       'employee_uuid': employeeUuid,
-    }, null),
+    }, await _authHeaders()),
   );
 
   Future<BookingCartModel?> deleteItem(String itemUuid) async => _cart(
     await apiConsumer.delete(
-      _url('/items/${Uri.encodeComponent(itemUuid)}'),
+      BookingCartApiEndPoints.item(itemUuid),
       null,
-      null,
+      await _authHeaders(),
     ),
   );
 
   Future<void> clear() async {
-    _decode(await apiConsumer.delete(_url(''), null, null));
+    _decode(
+      await apiConsumer.delete(
+        BookingCartApiEndPoints.cart,
+        null,
+        await _authHeaders(),
+      ),
+    );
   }
 
   Future<BookingCartCheckoutModel> checkout({
@@ -57,16 +70,37 @@ class BookingCartService {
     String paymentMethod = 'cash',
   }) async {
     final data = _decode(
-      await apiConsumer.post(_url('/checkout'), {
+      await apiConsumer.post(BookingCartApiEndPoints.checkout, {
         'cart_uuid': cartUuid,
         'payment_method': paymentMethod,
         'idempotency_key': idempotencyKey,
-      }, null),
+      }, await _authHeaders()),
     );
-    return BookingCartCheckoutModel.fromJson(_map(data));
+    final checkout = BookingCartCheckoutModel.fromJson(_map(data));
+    if (checkout.bookingUuid.isEmpty) {
+      throw const BookingCartApiException(
+        code: 'EMPTY_CHECKOUT_RESPONSE',
+        message: 'Checkout response did not include a booking UUID.',
+      );
+    }
+    return checkout;
   }
 
-  String _url(String suffix) => '${EndPoints.baseUrl}/user/booking-cart$suffix';
+  Future<Map<String, String>> _authHeaders() async {
+    final token = (await CacheHelper.getSecuredString(
+      ConstantKeys.saveTokenToShared,
+    )).trim();
+    print('---------------$token');
+    if (token.isEmpty) return {};
+
+    final normalizedToken = token.toLowerCase().startsWith('bearer ')
+        ? token.substring('bearer '.length).trim()
+        : token;
+    return {
+      ConstantKeys.appAuthorization:
+          '${ConstantKeys.appBearer} $normalizedToken',
+    };
+  }
 
   BookingCartModel _requiredCart(dynamic response) {
     final cart = _cart(response);

@@ -125,9 +125,9 @@ class HttpConsumer implements ApiConsumer {
   }
 
   Future<bool> _performRefreshBearer() async {
-    final oldToken = (await CacheHelper.getSecuredString(
-      ConstantKeys.saveTokenToShared,
-    )).trim();
+    final oldToken = _normalizeToken(
+      await CacheHelper.getSecuredString(ConstantKeys.saveTokenToShared),
+    );
     if (oldToken.isEmpty) return false;
 
     final authorization = oldToken.toLowerCase().startsWith('bearer ')
@@ -141,17 +141,41 @@ class HttpConsumer implements ApiConsumer {
         ConstantKeys.acceptText: ConstantKeys.applicationJson,
       },
     );
-    if (response.statusCode != StatusCode.ok) return false;
+    if (response.statusCode != StatusCode.ok) {
+      if (response.statusCode == 401 || response.statusCode == 403) {
+        await CacheHelper.removeSecureData(ConstantKeys.saveTokenToShared);
+      }
+      return false;
+    }
 
-    final decoded = jsonDecode(response.body);
+    dynamic decoded;
+    try {
+      decoded = jsonDecode(response.body);
+    } on FormatException {
+      return false;
+    }
     final data = decoded is Map<String, dynamic> ? decoded['data'] : null;
     final token = data is Map<String, dynamic>
         ? data['token']?.toString().trim() ?? ''
         : '';
-    if (token.isEmpty) return false;
+    final normalizedToken = _normalizeToken(token);
+    if (normalizedToken.isEmpty) return false;
 
-    await CacheHelper.setSecuredString(ConstantKeys.saveTokenToShared, token);
+    await CacheHelper.setSecuredString(
+      ConstantKeys.saveTokenToShared,
+      normalizedToken,
+    );
     return true;
+  }
+
+  String _normalizeToken(String token) {
+    final value = token.trim();
+    if (value.toLowerCase().startsWith(
+      '${ConstantKeys.appBearer.toLowerCase()} ',
+    )) {
+      return value.substring(ConstantKeys.appBearer.length).trim();
+    }
+    return value;
   }
 
   @override

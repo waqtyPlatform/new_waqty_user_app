@@ -9,9 +9,9 @@ import 'package:waqty_user_application/core/utils/styles.dart';
 import '../../logic/booking_cart_timer_cubit.dart';
 
 class BookingCartHoldCountdown extends StatelessWidget {
-  final String? expirationMessage;
+  final double? expirationHours;
 
-  const BookingCartHoldCountdown({super.key, this.expirationMessage});
+  const BookingCartHoldCountdown({super.key, this.expirationHours});
 
   @override
   Widget build(BuildContext context) => BlocBuilder<BookingCartTimerCubit, int>(
@@ -44,8 +44,12 @@ class BookingCartHoldCountdown extends StatelessWidget {
             const SizedBox(width: 9),
             Expanded(
               child: Text(
-                expirationMessage ??
-                    context.tr('providerBooking.cartExpiresIn'),
+                expirationHours == null
+                    ? context.tr('providerBooking.cartExpiresIn')
+                    : context.tr(
+                        'providerBooking.cartReleaseMessage',
+                        args: [_hoursText(expirationHours!)],
+                      ),
                 style: TextStyles.font12greyColor900Weight400,
               ),
             ),
@@ -64,3 +68,7 @@ class BookingCartHoldCountdown extends StatelessWidget {
     },
   );
 }
+
+String _hoursText(double hours) => hours == hours.roundToDouble()
+    ? hours.toInt().toString()
+    : hours.toStringAsFixed(1);

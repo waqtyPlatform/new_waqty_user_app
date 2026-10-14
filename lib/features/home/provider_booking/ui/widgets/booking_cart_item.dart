@@ -84,10 +84,13 @@ class BookingCartItem extends StatelessWidget {
                   '${NumberFormat.decimalPattern(locale).format(item.price)} ${item.currencyCode}',
                   style: TextStyles.font12greenColor500W600,
                 ),
-                if (item.expirationMessage != null) ...[
+                if (item.remainingHours != null) ...[
                   const SizedBox(height: 3),
                   Text(
-                    item.expirationMessage!,
+                    context.tr(
+                      'providerBooking.cartReleaseMessage',
+                      args: [_hoursText(item.remainingHours!)],
+                    ),
                     style: TextStyles.font12greyColor500W400,
                   ),
                 ],
@@ -109,3 +112,7 @@ class BookingCartItem extends StatelessWidget {
     );
   }
 }
+
+String _hoursText(double hours) => hours == hours.roundToDouble()
+    ? hours.toInt().toString()
+    : hours.toStringAsFixed(1);

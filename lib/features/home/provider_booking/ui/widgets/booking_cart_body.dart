@@ -67,7 +67,11 @@ class BookingCartBody extends StatelessWidget {
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
                   children: [
                     BookingCartHoldCountdown(
-                      expirationMessage: cart.expirationMessage,
+                      expirationHours:
+                          cart.expiresInHours ??
+                          (cart.expiresInSeconds == null
+                              ? null
+                              : cart.expiresInSeconds! / 3600),
                     ),
                     const SizedBox(height: 16),
                     for (final item in cart.items) ...[

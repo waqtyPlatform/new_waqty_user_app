@@ -8,6 +8,9 @@ import 'booking_cart_state.dart';
 
 class BookingCartCubit extends Cubit<BookingCartState> {
   final BookingCartRepo _repo;
+  String? _checkoutCartUuid;
+  String? _checkoutIdempotencyKey;
+
   BookingCartCubit(this._repo) : super(const BookingCartState());
 
   Future<void> load({bool silent = false}) async {
@@ -16,9 +19,12 @@ class BookingCartCubit extends Cubit<BookingCartState> {
     }
     final result = await _repo.getCart();
     if (isClosed) return;
-    result.fold(
-      _failure,
-      (cart) => emit(
+    result.fold(_failure, (cart) {
+      if (cart == null ||
+          (_checkoutCartUuid != null && _checkoutCartUuid != cart.uuid)) {
+        _resetCheckoutKey();
+      }
+      emit(
         state.copyWith(
           cart: cart,
           loading: false,
@@ -26,8 +32,8 @@ class BookingCartCubit extends Cubit<BookingCartState> {
           errorCode: null,
           errorMessage: null,
         ),
-      ),
-    );
+      );
+    });
   }
 
   Future<void> addItem(BookingCartAddRequest request) async {
@@ -43,9 +49,9 @@ class BookingCartCubit extends Cubit<BookingCartState> {
       if (cleared.isRight()) result = await _repo.addItem(request);
       if (isClosed) return;
     }
-    result.fold(
-      _failure,
-      (cart) => emit(
+    result.fold(_failure, (cart) {
+      _resetCheckoutKey();
+      emit(
         state.copyWith(
           cart: cart,
           mutating: false,
@@ -54,8 +60,8 @@ class BookingCartCubit extends Cubit<BookingCartState> {
           errorCode: null,
           errorMessage: null,
         ),
-      ),
-    );
+      );
+    });
   }
 
   Future<void> deleteItem(String itemUuid) async {
@@ -63,9 +69,9 @@ class BookingCartCubit extends Cubit<BookingCartState> {
     emit(state.copyWith(mutating: true));
     final result = await _repo.deleteItem(itemUuid);
     if (isClosed) return;
-    result.fold(
-      _failure,
-      (cart) => emit(
+    result.fold(_failure, (cart) {
+      _resetCheckoutKey();
+      emit(
         state.copyWith(
           cart: cart,
           mutating: false,
@@ -74,8 +80,8 @@ class BookingCartCubit extends Cubit<BookingCartState> {
           errorCode: null,
           errorMessage: null,
         ),
-      ),
-    );
+      );
+    });
   }
 
   Future<void> clear() async {
@@ -83,9 +89,9 @@ class BookingCartCubit extends Cubit<BookingCartState> {
     emit(state.copyWith(mutating: true));
     final result = await _repo.clear();
     if (isClosed) return;
-    result.fold(
-      _failure,
-      (_) => emit(
+    result.fold(_failure, (_) {
+      _resetCheckoutKey();
+      emit(
         state.copyWith(
           cart: null,
           mutating: false,
@@ -94,8 +100,8 @@ class BookingCartCubit extends Cubit<BookingCartState> {
           errorCode: null,
           errorMessage: null,
         ),
-      ),
-    );
+      );
+    });
   }
 
   Future<void> checkout() async {
@@ -104,34 +110,54 @@ class BookingCartCubit extends Cubit<BookingCartState> {
     emit(state.copyWith(mutating: true, errorCode: null, errorMessage: null));
     final result = await _repo.checkout(
       cartUuid: cart.uuid,
-      idempotencyKey: newIdempotencyKey(),
+      idempotencyKey: _checkoutKeyFor(cart.uuid),
     );
     if (isClosed) return;
     await result.fold<Future<void>>(
       (failure) async {
         if (failure is BookingCartFailure &&
             failure.code == 'CART_ITEM_EXPIRED') {
+          _resetCheckoutKey();
           await load(silent: true);
           if (isClosed) return;
         }
         _failure(failure);
       },
-      (checkout) async => emit(
-        state.copyWith(
-          cart: null,
-          checkout: checkout,
-          mutating: false,
-          action: BookingCartAction.checkedOut,
-          actionId: state.actionId + 1,
-          errorCode: null,
-          errorMessage: null,
-        ),
-      ),
+      (checkout) async {
+        _resetCheckoutKey();
+        emit(
+          state.copyWith(
+            cart: null,
+            checkout: checkout,
+            mutating: false,
+            action: BookingCartAction.checkedOut,
+            actionId: state.actionId + 1,
+            errorCode: null,
+            errorMessage: null,
+          ),
+        );
+      },
     );
+  }
+
+  String _checkoutKeyFor(String cartUuid) {
+    if (_checkoutCartUuid != cartUuid || _checkoutIdempotencyKey == null) {
+      _checkoutCartUuid = cartUuid;
+      _checkoutIdempotencyKey = newIdempotencyKey();
+    }
+    return _checkoutIdempotencyKey!;
+  }
+
+  void _resetCheckoutKey() {
+    _checkoutCartUuid = null;
+    _checkoutIdempotencyKey = null;
   }
 
   void _failure(Object failure) {
     final cartFailure = failure is BookingCartFailure ? failure : null;
+    if (cartFailure?.code == 'CART_CONTEXT_MISMATCH') {
+      _resetCheckoutKey();
+    }
     emit(
       state.copyWith(
         cart: cartFailure?.code == 'CART_CONTEXT_MISMATCH' ? null : state.cart,

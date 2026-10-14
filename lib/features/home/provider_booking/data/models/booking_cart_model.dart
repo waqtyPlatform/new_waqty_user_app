@@ -52,6 +52,8 @@ class BookingCartModel {
   final int itemsCount;
   final double subtotal;
   final String currencyCode;
+  final double servicesTotal, serviceFee, tax, discount, estimatedTotal;
+  final bool hasServiceFee, hasTax, hasDiscount;
   final DateTime? expiresAt, serverTime;
   final int? expiresInSeconds;
   final double? expiresInHours;
@@ -63,6 +65,14 @@ class BookingCartModel {
     required this.itemsCount,
     required this.subtotal,
     required this.currencyCode,
+    this.servicesTotal = 0,
+    this.serviceFee = 0,
+    this.tax = 0,
+    this.discount = 0,
+    this.estimatedTotal = 0,
+    this.hasServiceFee = false,
+    this.hasTax = false,
+    this.hasDiscount = false,
     this.addedItem,
     this.expiresAt,
     this.serverTime,
@@ -71,24 +81,71 @@ class BookingCartModel {
     this.expirationMessage,
   });
 
-  factory BookingCartModel.fromJson(Map<String, dynamic> json) =>
-      BookingCartModel(
-        uuid: _text(json['cart_uuid']),
-        addedItem: json['item'] is Map<String, dynamic>
-            ? BookingCartItemModel.fromJson(
-                json['item'] as Map<String, dynamic>,
-              )
-            : null,
-        items: _models(json['items'], BookingCartItemModel.fromJson),
-        itemsCount: _integer(json['items_count']),
-        subtotal: _number(json['subtotal']),
-        currencyCode: _text(json['currency_code']),
-        expiresAt: _date(json['expires_at']),
-        serverTime: _date(json['server_time']),
-        expiresInSeconds: _nullableInteger(json['expires_in_seconds']),
-        expiresInHours: _nullableNumber(json['expires_in_hours']),
-        expirationMessage: _nullableText(json['expiration_message']),
-      );
+  factory BookingCartModel.fromJson(Map<String, dynamic> json) {
+    final summary = _map(json['summary']);
+    final subtotal = _number(json['subtotal']);
+    final servicesTotal = _number(
+      json['services_total'] ?? summary['services_total'] ?? subtotal,
+    );
+    final serviceFee = _number(json['service_fee'] ?? summary['service_fee']);
+    final tax = _number(
+      json['tax'] ??
+          json['tax_amount'] ??
+          json['vat'] ??
+          json['vat_amount'] ??
+          summary['tax'] ??
+          summary['tax_amount'] ??
+          summary['vat'] ??
+          summary['vat_amount'],
+    );
+    final discount = _number(
+      json['discount'] ??
+          json['discount_amount'] ??
+          summary['discount'] ??
+          summary['discount_amount'],
+    );
+    final estimatedTotalValue =
+        json['estimated_total'] ?? summary['estimated_total'];
+    final estimatedTotal = estimatedTotalValue == null
+        ? servicesTotal + serviceFee + tax - discount
+        : _number(estimatedTotalValue);
+    return BookingCartModel(
+      uuid: _text(json['cart_uuid']),
+      addedItem: json['item'] is Map<String, dynamic>
+          ? BookingCartItemModel.fromJson(json['item'] as Map<String, dynamic>)
+          : null,
+      items: _models(json['items'], BookingCartItemModel.fromJson),
+      itemsCount: _integer(json['items_count']),
+      subtotal: subtotal,
+      currencyCode: _text(json['currency_code'] ?? summary['currency_code']),
+      servicesTotal: servicesTotal,
+      serviceFee: serviceFee,
+      tax: tax,
+      discount: discount,
+      estimatedTotal: estimatedTotal,
+      hasServiceFee:
+          json.containsKey('service_fee') || summary.containsKey('service_fee'),
+      hasTax:
+          json.containsKey('tax') ||
+          json.containsKey('tax_amount') ||
+          json.containsKey('vat') ||
+          json.containsKey('vat_amount') ||
+          summary.containsKey('tax') ||
+          summary.containsKey('tax_amount') ||
+          summary.containsKey('vat') ||
+          summary.containsKey('vat_amount'),
+      hasDiscount:
+          json.containsKey('discount') ||
+          json.containsKey('discount_amount') ||
+          summary.containsKey('discount') ||
+          summary.containsKey('discount_amount'),
+      expiresAt: _date(json['expires_at']),
+      serverTime: _date(json['server_time']),
+      expiresInSeconds: _nullableInteger(json['expires_in_seconds']),
+      expiresInHours: _nullableNumber(json['expires_in_hours']),
+      expirationMessage: _nullableText(json['expiration_message']),
+    );
+  }
 }
 
 class BookingCartItemModel {
@@ -197,3 +254,6 @@ String? _nullableText(dynamic value) {
 }
 
 DateTime? _date(dynamic value) => DateTime.tryParse(_text(value));
+
+Map<String, dynamic> _map(dynamic value) =>
+    value is Map<String, dynamic> ? value : const <String, dynamic>{};

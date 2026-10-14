@@ -1,12 +1,12 @@
 import 'dart:convert';
 
 import 'package:waqty_user_application/core/api/api_consumer.dart';
-import 'package:waqty_user_application/core/api/end_points.dart';
 import 'package:waqty_user_application/core/exceptions/exceptions.dart';
 import 'package:waqty_user_application/core/exceptions/failure.dart';
 import 'package:waqty_user_application/core/services/cache_helper.dart';
 import 'package:waqty_user_application/core/utils/constant_keys.dart';
 
+import 'provider_booking_items_api_end_points.dart';
 import '../models/provider_booking_items_model.dart';
 
 class ProviderBookingItemsService {
@@ -19,15 +19,13 @@ class ProviderBookingItemsService {
     required String branchUuid,
     required ProviderBookingItemType type,
   }) async {
-    final data = await _get(
-      '/user/providers/${Uri.encodeComponent(providerUuid)}/catalogue',
-      {
-        'branch_uuid': branchUuid,
-        'type': type == ProviderBookingItemType.services
-            ? 'services'
-            : 'packages',
-      },
-    );
+    final data =
+        await _get(ProviderBookingItemsApiEndPoints.catalogue(providerUuid), {
+          'branch_uuid': branchUuid,
+          'type': type == ProviderBookingItemType.services
+              ? 'services'
+              : 'packages',
+        });
     return ProviderBookingCatalogueModel.fromJson(_map(data));
   }
 
@@ -37,7 +35,7 @@ class ProviderBookingItemsService {
     required ProviderBookingItemType type,
     String status = 'active',
   }) async {
-    final data = await _get('/user/my-entitlements', {
+    final data = await _get(ProviderBookingItemsApiEndPoints.entitlements, {
       'provider_uuid': providerUuid,
       'branch_uuid': branchUuid,
       'type': type == ProviderBookingItemType.ownedPackages
@@ -49,9 +47,7 @@ class ProviderBookingItemsService {
   }
 
   Future<dynamic> _get(String path, Map<String, String> query) async {
-    final uri = Uri.parse(
-      '${EndPoints.baseUrl}$path',
-    ).replace(queryParameters: query);
+    final uri = Uri.parse(path).replace(queryParameters: query);
     final response = await apiConsumer.get(uri.toString(), await _headers());
     final decoded = jsonDecode(response.body);
     if (response.statusCode >= 200 &&

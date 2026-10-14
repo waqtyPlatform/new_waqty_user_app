@@ -24,7 +24,7 @@ class BookingCartAppBar extends StatelessWidget implements PreferredSizeWidget {
     ),
     leadingWidth: 64,
     leading: Padding(
-      padding: const EdgeInsetsDirectional.only(end: 8),
+      padding: const EdgeInsetsDirectional.only(end: 20),
       child: Tooltip(
         message: MaterialLocalizations.of(context).backButtonTooltip,
         child: Material(

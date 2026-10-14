@@ -209,10 +209,18 @@ class RouteGenerator {
             : null;
         if (providerUuid.isEmpty) return null;
         return MaterialPageRoute(
-          builder: (_) => BlocProvider(
-            create: (context) =>
-                ProviderDetailsCubit(getIt())
-                  ..load(providerUuid, branchUuid: branchUuid),
+          builder: (_) => MultiBlocProvider(
+            providers: [
+              BlocProvider(
+                create: (context) =>
+                    ProviderDetailsCubit(getIt())
+                      ..load(providerUuid, branchUuid: branchUuid),
+              ),
+              BlocProvider(
+                create: (_) =>
+                    BookingCartCubit(getIt<BookingCartRepo>())..load(),
+              ),
+            ],
             child: ProviderDetailsScreen(providerUuid: providerUuid),
           ),
         );

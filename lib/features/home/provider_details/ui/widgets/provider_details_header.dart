@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:waqty_user_application/core/utils/app_constant.dart';
+import 'package:waqty_user_application/features/home/provider_booking/logic/booking_cart_cubit.dart';
+import 'package:waqty_user_application/features/home/provider_booking/logic/booking_cart_state.dart';
+import 'package:waqty_user_application/features/home/provider_booking/ui/booking_cart_screen.dart';
 import '../../logic/provider_details_cubit.dart';
 import '../../logic/provider_details_state.dart';
 import 'provider_details_shared.dart';
@@ -65,6 +69,8 @@ class ProviderDetailsHeader extends StatelessWidget {
                           child: const Icon(Icons.arrow_back_rounded),
                         ),
                         const Spacer(),
+                        const _CartAction(),
+                        const SizedBox(width: 8),
                         _RoundAction(
                           label: pd(context, 'share'),
                           child: const PdIcon('25005'),
@@ -238,6 +244,60 @@ class ProviderDetailsHeader extends StatelessWidget {
       ],
     );
   }
+}
+
+class _CartAction extends StatelessWidget {
+  const _CartAction();
+
+  @override
+  Widget build(BuildContext context) =>
+      BlocBuilder<BookingCartCubit, BookingCartState>(
+        buildWhen: (previous, current) =>
+            previous.cart?.itemsCount != current.cart?.itemsCount,
+        builder: (context, state) => Stack(
+          clipBehavior: Clip.none,
+          children: [
+            _RoundAction(
+              label: context.tr('providerBooking.cartTitle'),
+              onTap: () {
+                final cartCubit = context.read<BookingCartCubit>()..load();
+                Navigator.of(context).push<void>(
+                  MaterialPageRoute(
+                    builder: (_) => BlocProvider.value(
+                      value: cartCubit,
+                      child: const BookingCartScreen(),
+                    ),
+                  ),
+                );
+              },
+              child: const Icon(
+                Icons.shopping_bag_outlined,
+                size: 20,
+                color: pdInk,
+              ),
+            ),
+            if ((state.cart?.itemsCount ?? 0) > 0)
+              PositionedDirectional(
+                end: -2,
+                top: -2,
+                child: Container(
+                  constraints: const BoxConstraints(minWidth: 18),
+                  height: 18,
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  alignment: Alignment.center,
+                  decoration: const BoxDecoration(
+                    color: pdGreen,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    '${state.cart!.itemsCount}',
+                    style: pdText(10, Colors.white, FontWeight.w600),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      );
 }
 
 class _Cover extends StatelessWidget {
