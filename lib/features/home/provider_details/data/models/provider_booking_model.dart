@@ -53,6 +53,36 @@ class ProviderBookingDateModel {
       );
 }
 
+class ProviderBookingDatesModel {
+  final List<ProviderBookingDateModel> dates;
+  final bool bookableDirectly;
+  final bool requiresPurchase;
+  final String? code;
+
+  const ProviderBookingDatesModel({
+    required this.dates,
+    this.bookableDirectly = true,
+    this.requiresPurchase = false,
+    this.code,
+  });
+
+  factory ProviderBookingDatesModel.fromData(dynamic data) {
+    final map = data is Map<String, dynamic> ? data : const <String, dynamic>{};
+    final rawDates = map['dates'];
+    return ProviderBookingDatesModel(
+      dates: rawDates is List
+          ? rawDates
+                .whereType<Map<String, dynamic>>()
+                .map(ProviderBookingDateModel.fromJson)
+                .toList(growable: false)
+          : const [],
+      bookableDirectly: map['bookable_directly'] != false,
+      requiresPurchase: map['requires_purchase'] == true,
+      code: _nullable(map['code']),
+    );
+  }
+}
+
 class ProviderBookingSlotModel {
   final String startsAt, endsAt;
   final String? employeeUuid;

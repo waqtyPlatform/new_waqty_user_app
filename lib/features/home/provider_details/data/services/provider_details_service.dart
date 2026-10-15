@@ -147,7 +147,7 @@ class ProviderDetailsService {
     ProviderPackageModel.fromJson,
   );
 
-  Future<List<ProviderBookingDateModel>> packageDates({
+  Future<ProviderBookingDatesModel> packageDates({
     required String providerUuid,
     required String branchUuid,
     required String packageUuid,
@@ -162,9 +162,21 @@ class ProviderDetailsService {
         'timezone': timezone,
       },
     );
-    final map = data is Map<String, dynamic> ? data : const <String, dynamic>{};
-    return _modelList(map['dates'], ProviderBookingDateModel.fromJson);
+    return ProviderBookingDatesModel.fromData(data);
   }
+
+  Future<ProviderBookingSlotsModel> purchasePackageSlots({
+    required String providerUuid,
+    required String branchUuid,
+    required String packageUuid,
+    required DateTime date,
+    required String timezone,
+  }) async => ProviderBookingSlotsModel.fromData(
+    await _get(
+      '/user/providers/${Uri.encodeComponent(providerUuid)}/booking/packages/${Uri.encodeComponent(packageUuid)}/purchase-slots',
+      {'branch_uuid': branchUuid, 'date': _date(date), 'timezone': timezone},
+    ),
+  );
 
   Future<ProviderBookingSlotsModel> packageSlots({
     required String providerUuid,

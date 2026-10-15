@@ -835,6 +835,7 @@
     "remainingVisits": "متبقي {} زيارات",
     "expiresAt": "ينتهي في {}",
     "addToCart": "إضافة إلى السلة",
+    "buyPackageOnly": "شراء الباقة بدون حجز جلسة",
     "addingToCart": "جارٍ الإضافة...",
     "addedToCart": "تمت إضافة الموعد إلى السلة",
     "cartTitle": "سلة الحجز",

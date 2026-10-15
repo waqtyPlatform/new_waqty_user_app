@@ -115,6 +115,7 @@ class ProviderBookingScreen extends StatelessWidget {
       await detailsCubit.startOwnedPackageBooking(
         entitlementUuid: item!.uuid,
         packageUuid: item.packageUuid ?? item.uuid,
+        serviceUuid: item.serviceUuid,
       );
     } else {
       await detailsCubit.startFollowUpBooking(

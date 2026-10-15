@@ -78,6 +78,9 @@ class ProviderBookingEntitlementsModel {
 class ProviderBookingEntitlementModel {
   final String uuid, name, status;
   final String? description, serviceUuid, packageUuid, expiresAt, unitName;
+  final String? paymentStatus;
+  final List<String> usableOn;
+  final bool canBookRemainingSessions;
   final int? remainingSessions, remainingUnits, remainingVisits;
 
   const ProviderBookingEntitlementModel({
@@ -92,11 +95,28 @@ class ProviderBookingEntitlementModel {
     this.remainingSessions,
     this.remainingUnits,
     this.remainingVisits,
+    this.paymentStatus,
+    this.usableOn = const [],
+    this.canBookRemainingSessions = false,
   });
 
   factory ProviderBookingEntitlementModel.fromJson(Map<String, dynamic> json) {
     final service = _map(json['service']);
     final package = _map(json['package']);
+    final sessions = _map(json['sessions']);
+    final units = _map(json['units']);
+    final usableOn = json['usable_on'];
+    final usableServiceUuids = usableOn is List
+        ? usableOn
+              .map(
+                (item) => item is Map<String, dynamic>
+                    ? item['service_uuid'] ?? item['uuid']
+                    : item,
+              )
+              .map((item) => item?.toString() ?? '')
+              .where((item) => item.isNotEmpty)
+              .toList(growable: false)
+        : const <String>[];
     return ProviderBookingEntitlementModel(
       uuid: _string(json['uuid']),
       name: _string(
@@ -108,13 +128,24 @@ class ProviderBookingEntitlementModel {
       ),
       status: _string(json['status']),
       description: _nullableString(json['description']),
-      serviceUuid: _nullableString(json['service_uuid'] ?? service['uuid']),
+      serviceUuid: _nullableString(
+        json['service_uuid'] ??
+            service['uuid'] ??
+            usableServiceUuids.firstOrNull,
+      ),
       packageUuid: _nullableString(json['package_uuid'] ?? package['uuid']),
       expiresAt: _nullableString(json['expires_at']),
       unitName: _nullableString(json['unit_name']),
-      remainingSessions: _nullableInt(json['remaining_sessions']),
-      remainingUnits: _nullableInt(json['remaining_units']),
+      remainingSessions: _nullableInt(
+        json['remaining_sessions'] ?? sessions['available'],
+      ),
+      remainingUnits: _nullableInt(
+        json['remaining_units'] ?? units['available'],
+      ),
       remainingVisits: _nullableInt(json['remaining_visits']),
+      paymentStatus: _nullableString(json['payment_status']),
+      usableOn: usableServiceUuids,
+      canBookRemainingSessions: json['can_book_remaining_sessions'] == true,
     );
   }
 }

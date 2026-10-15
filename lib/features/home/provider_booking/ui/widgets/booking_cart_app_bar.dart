@@ -24,23 +24,27 @@ class BookingCartAppBar extends StatelessWidget implements PreferredSizeWidget {
     ),
     leadingWidth: 64,
     leading: Padding(
-      padding: const EdgeInsetsDirectional.only(end: 20),
-      child: Tooltip(
-        message: MaterialLocalizations.of(context).backButtonTooltip,
-        child: Material(
+      padding: const EdgeInsets.only(right: 8),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
           color: AppColors.whiteColor,
-          shape: const CircleBorder(),
-          elevation: 5,
-          shadowColor: AppColors.greyColor900.withValues(alpha: .12),
-          child: InkWell(
-            customBorder: const CircleBorder(),
-            onTap: () => Navigator.pop(context),
-            child: Directionality(
-              textDirection: ui.TextDirection.ltr,
-              child: const Icon(
-                Icons.arrow_forward_rounded,
-                color: AppColors.greyColor900,
-              ),
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.greyColor900.withValues(alpha: .10),
+              blurRadius: 12,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Directionality(
+          textDirection: ui.TextDirection.ltr,
+          child: IconButton(
+            onPressed: () => Navigator.pop(context),
+            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+            icon: const Icon(
+              Icons.arrow_forward_rounded,
+              color: AppColors.greyColor900,
             ),
           ),
         ),

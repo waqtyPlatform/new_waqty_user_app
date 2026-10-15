@@ -87,7 +87,7 @@ class ProviderDetailsRepo {
     ),
   );
 
-  Future<Either<Failure, List<ProviderBookingDateModel>>> packageDates({
+  Future<Either<Failure, ProviderBookingDatesModel>> packageDates({
     required String providerUuid,
     required String branchUuid,
     required String packageUuid,
@@ -97,6 +97,22 @@ class ProviderDetailsRepo {
       providerUuid: providerUuid,
       branchUuid: branchUuid,
       packageUuid: packageUuid,
+      timezone: timezone,
+    ),
+  );
+
+  Future<Either<Failure, ProviderBookingSlotsModel>> purchasePackageSlots({
+    required String providerUuid,
+    required String branchUuid,
+    required String packageUuid,
+    required DateTime date,
+    required String timezone,
+  }) => _guard(
+    () => _service.purchasePackageSlots(
+      providerUuid: providerUuid,
+      branchUuid: branchUuid,
+      packageUuid: packageUuid,
+      date: date,
       timezone: timezone,
     ),
   );

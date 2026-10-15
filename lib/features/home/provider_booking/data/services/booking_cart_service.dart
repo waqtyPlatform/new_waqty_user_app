@@ -77,7 +77,8 @@ class BookingCartService {
       }, await _authHeaders()),
     );
     final checkout = BookingCartCheckoutModel.fromJson(_map(data));
-    if (checkout.bookingUuid.isEmpty) {
+    if ((checkout.bookingUuid == null || checkout.bookingUuid!.isEmpty) &&
+        checkout.purchases.isEmpty) {
       throw const BookingCartApiException(
         code: 'EMPTY_CHECKOUT_RESPONSE',
         message: 'Checkout response did not include a booking UUID.',
@@ -90,7 +91,6 @@ class BookingCartService {
     final token = (await CacheHelper.getSecuredString(
       ConstantKeys.saveTokenToShared,
     )).trim();
-    print('---------------$token');
     if (token.isEmpty) return {};
 
     final normalizedToken = token.toLowerCase().startsWith('bearer ')

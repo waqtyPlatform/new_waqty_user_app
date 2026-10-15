@@ -155,6 +155,8 @@ class ProviderDetailsCubit extends Cubit<ProviderDetailsState> {
         bookingStep: ProviderBookingStep.employee,
         bookingLoading: true,
         bookingError: null,
+        bookingRequiresPurchase: false,
+        bookingAvailabilityCode: null,
         bookingEmployees: const [],
         bookingDates: const [],
         bookingSlots: const [],
@@ -203,6 +205,8 @@ class ProviderDetailsCubit extends Cubit<ProviderDetailsState> {
         bookingStep: ProviderBookingStep.date,
         bookingLoading: true,
         bookingError: null,
+        bookingRequiresPurchase: false,
+        bookingAvailabilityCode: null,
         bookingDates: const [],
       ),
     );
@@ -242,6 +246,8 @@ class ProviderDetailsCubit extends Cubit<ProviderDetailsState> {
         bookingStep: ProviderBookingStep.date,
         bookingLoading: true,
         bookingError: null,
+        bookingRequiresPurchase: false,
+        bookingAvailabilityCode: null,
         bookingDates: const [],
         bookingSlots: const [],
         bookingDate: null,
@@ -267,7 +273,9 @@ class ProviderDetailsCubit extends Cubit<ProviderDetailsState> {
       (dates) => emit(
         (state as ProviderDetailsLoaded).copyWith(
           bookingLoading: false,
-          bookingDates: dates,
+          bookingDates: dates.dates,
+          bookingRequiresPurchase: dates.requiresPurchase,
+          bookingAvailabilityCode: dates.code,
         ),
       ),
     );
@@ -276,15 +284,18 @@ class ProviderDetailsCubit extends Cubit<ProviderDetailsState> {
   Future<void> startOwnedPackageBooking({
     required String entitlementUuid,
     required String packageUuid,
+    String? serviceUuid,
   }) async {
+    if (serviceUuid == null || serviceUuid.isEmpty) return;
     await _startDirectBooking(
       kind: ProviderBookingKind.ownedPackage,
       itemUuid: packageUuid,
       entitlementUuid: entitlementUuid,
-      loadDates: (current) => _repo.packageDates(
+      serviceUuid: serviceUuid,
+      loadDates: (current) => _repo.bookingDates(
         providerUuid: current.provider.uuid,
         branchUuid: current.branch!.uuid,
-        packageUuid: packageUuid,
+        serviceUuid: serviceUuid,
         timezone: _timezone(current),
       ),
     );
@@ -311,6 +322,7 @@ class ProviderDetailsCubit extends Cubit<ProviderDetailsState> {
     required ProviderBookingKind kind,
     required String itemUuid,
     required String entitlementUuid,
+    String? serviceUuid,
     required Future<dynamic> Function(ProviderDetailsLoaded current) loadDates,
   }) async {
     final current = state;
@@ -320,8 +332,8 @@ class ProviderDetailsCubit extends Cubit<ProviderDetailsState> {
         bookingKind: kind,
         packageId: kind == ProviderBookingKind.ownedPackage ? itemUuid : null,
         entitlementId: entitlementUuid,
-        selectedIds: kind == ProviderBookingKind.followUp
-            ? {itemUuid}
+        selectedIds: kind == ProviderBookingKind.followUp || serviceUuid != null
+            ? {serviceUuid ?? itemUuid}
             : const {},
         clearSpecialist: true,
         bookingStep: ProviderBookingStep.date,
@@ -347,7 +359,9 @@ class ProviderDetailsCubit extends Cubit<ProviderDetailsState> {
       (dates) => emit(
         (state as ProviderDetailsLoaded).copyWith(
           bookingLoading: false,
-          bookingDates: dates,
+          bookingDates: dates.dates,
+          bookingRequiresPurchase: dates.requiresPurchase,
+          bookingAvailabilityCode: dates.code,
         ),
       ),
     );
@@ -375,6 +389,22 @@ class ProviderDetailsCubit extends Cubit<ProviderDetailsState> {
             branchUuid: current.branch!.uuid,
             serviceUuid: current.selectedIds.single,
             employeeUuid: current.specialistId,
+            date: date,
+            timezone: _timezone(current),
+          )
+        : current.bookingRequiresPurchase
+        ? await _repo.purchasePackageSlots(
+            providerUuid: current.provider.uuid,
+            branchUuid: current.branch!.uuid,
+            packageUuid: current.packageId!,
+            date: date,
+            timezone: _timezone(current),
+          )
+        : current.bookingKind == ProviderBookingKind.ownedPackage
+        ? await _repo.bookingSlots(
+            providerUuid: current.provider.uuid,
+            branchUuid: current.branch!.uuid,
+            serviceUuid: current.selectedIds.single,
             date: date,
             timezone: _timezone(current),
           )
@@ -427,6 +457,7 @@ class ProviderDetailsCubit extends Cubit<ProviderDetailsState> {
             await startOwnedPackageBooking(
               entitlementUuid: current.entitlementId!,
               packageUuid: current.packageId!,
+              serviceUuid: current.selectedIds.single,
             );
           case ProviderBookingKind.followUp:
             await startFollowUpBooking(

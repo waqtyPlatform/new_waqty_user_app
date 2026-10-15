@@ -1,16 +1,26 @@
-enum BookingCartItemType { service, package, ownedPackage, followUp }
+enum BookingCartItemType {
+  service,
+  package,
+  packagePurchase,
+  packagePurchaseOnly,
+  ownedPackage,
+  followUp,
+}
 
 extension BookingCartItemTypeApi on BookingCartItemType {
   String get value => switch (this) {
     BookingCartItemType.service => 'service',
     BookingCartItemType.package => 'package',
+    BookingCartItemType.packagePurchase => 'package_purchase',
+    BookingCartItemType.packagePurchaseOnly => 'package_purchase_only',
     BookingCartItemType.ownedPackage => 'owned_package',
     BookingCartItemType.followUp => 'follow_up',
   };
 }
 
 class BookingCartAddRequest {
-  final String providerUuid, branchUuid, slotToken, idempotencyKey;
+  final String providerUuid, branchUuid, idempotencyKey;
+  final String? slotToken;
   final BookingCartItemType itemType;
   final String? serviceUuid;
   final String? packageUuid;
@@ -21,7 +31,7 @@ class BookingCartAddRequest {
   const BookingCartAddRequest({
     required this.providerUuid,
     required this.branchUuid,
-    required this.slotToken,
+    this.slotToken,
     required this.idempotencyKey,
     required this.itemType,
     this.serviceUuid,
@@ -40,7 +50,7 @@ class BookingCartAddRequest {
     if (entitlementUuid != null) 'entitlement_uuid': entitlementUuid,
     if (followUpUuid != null) 'follow_up_uuid': followUpUuid,
     if (employeeUuid != null) 'employee_uuid': employeeUuid,
-    'slot_token': slotToken,
+    if (slotToken != null && slotToken!.isNotEmpty) 'slot_token': slotToken,
     'idempotency_key': idempotencyKey,
   };
 }
@@ -212,16 +222,20 @@ class BookingCartEmployeeModel {
 }
 
 class BookingCartCheckoutModel {
-  final String bookingUuid, status;
+  final String? bookingUuid;
+  final String status;
+  final List<Map<String, dynamic>> purchases;
   const BookingCartCheckoutModel({
-    required this.bookingUuid,
+    this.bookingUuid,
     required this.status,
+    this.purchases = const [],
   });
 
   factory BookingCartCheckoutModel.fromJson(Map<String, dynamic> json) =>
       BookingCartCheckoutModel(
-        bookingUuid: _text(json['booking_uuid']),
+        bookingUuid: _nullableText(json['booking_uuid']),
         status: _text(json['status']),
+        purchases: _models(json['purchases'], (item) => item),
       );
 }
 

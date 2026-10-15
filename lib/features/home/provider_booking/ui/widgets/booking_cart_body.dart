@@ -79,22 +79,34 @@ class BookingCartBody extends StatelessWidget {
                       const SizedBox(height: 12),
                     ],
                     Padding(
-                      padding: const EdgeInsetsDirectional.only(top: 2),
+                      padding: const EdgeInsetsDirectional.only(top: 4),
                       child: Align(
                         alignment: AlignmentDirectional.centerStart,
-                        child: TextButton.icon(
+                        child: OutlinedButton.icon(
                           onPressed: state.mutating
                               ? null
                               : context.read<BookingCartCubit>().clear,
                           icon: const Icon(
-                            Icons.delete_sweep_outlined,
-                            size: 18,
+                            Icons.delete_outline_rounded,
+                            size: 19,
                           ),
                           label: Text(context.tr('providerBooking.clearCart')),
-                          style: TextButton.styleFrom(
-                            foregroundColor: AppColors.greenColor600,
-                            padding: const EdgeInsets.symmetric(horizontal: 4),
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.errorColor200,
+                            backgroundColor: AppColors.errorColor0,
+                            minimumSize: const Size(0, 40),
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            side: const BorderSide(
+                              color: AppColors.errorColor50,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            textStyle: TextStyles.font12greyColor500W400
+                                .copyWith(
+                                  color: AppColors.errorColor200,
+                                  fontWeight: FontWeight.w600,
+                                ),
                           ),
                         ),
                       ),

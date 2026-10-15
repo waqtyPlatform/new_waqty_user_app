@@ -154,7 +154,18 @@ class _ProviderBookingFlowScreen extends StatelessWidget {
       final dates = state.bookingDates
           .where((date) => date.available && date.slotsCount > 0)
           .toList(growable: false);
-      if (dates.isEmpty) return PdNote(pd(context, 'noDates'));
+      if (dates.isEmpty) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            PdNote(pd(context, 'noDates')),
+            if (state.bookingRequiresPurchase) ...[
+              const SizedBox(height: 16),
+              _BuyPackageOnlyButton(state: state),
+            ],
+          ],
+        );
+      }
       return LayoutBuilder(
         builder: (context, constraints) => GridView.builder(
           shrinkWrap: true,
@@ -299,10 +310,11 @@ class _ProviderBookingFlowScreen extends StatelessWidget {
         branchUuid: branch.uuid,
         slotToken: slotToken,
         idempotencyKey: newIdempotencyKey(),
-        itemType: _cartItemType(state.bookingKind),
+        itemType: _cartItemType(state),
         serviceUuid:
             state.bookingKind == ProviderBookingKind.service ||
-                state.bookingKind == ProviderBookingKind.followUp
+                state.bookingKind == ProviderBookingKind.followUp ||
+                state.bookingKind == ProviderBookingKind.ownedPackage
             ? state.selectedIds.firstOrNull
             : null,
         packageUuid:
@@ -348,12 +360,16 @@ class _ProviderBookingFlowScreen extends StatelessWidget {
   }
 }
 
-BookingCartItemType _cartItemType(ProviderBookingKind kind) => switch (kind) {
-  ProviderBookingKind.service => BookingCartItemType.service,
-  ProviderBookingKind.package => BookingCartItemType.package,
-  ProviderBookingKind.ownedPackage => BookingCartItemType.ownedPackage,
-  ProviderBookingKind.followUp => BookingCartItemType.followUp,
-};
+BookingCartItemType _cartItemType(ProviderDetailsLoaded state) =>
+    switch (state.bookingKind) {
+      ProviderBookingKind.service => BookingCartItemType.service,
+      ProviderBookingKind.package =>
+        state.bookingRequiresPurchase
+            ? BookingCartItemType.packagePurchase
+            : BookingCartItemType.package,
+      ProviderBookingKind.ownedPackage => BookingCartItemType.ownedPackage,
+      ProviderBookingKind.followUp => BookingCartItemType.followUp,
+    };
 
 String _cartErrorKey(String? code) => switch (code) {
   'SLOT_UNAVAILABLE' => 'providerBooking.slotUnavailable',
@@ -394,6 +410,34 @@ class _SelectedDateBanner extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _BuyPackageOnlyButton extends StatelessWidget {
+  final ProviderDetailsLoaded state;
+  const _BuyPackageOnlyButton({required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    final branch = state.branch;
+    final packageUuid = state.packageId;
+    return BlocBuilder<BookingCartCubit, BookingCartState>(
+      builder: (context, cartState) => PdButton(
+        context.tr('providerBooking.buyPackageOnly'),
+        dark: false,
+        onPressed: branch == null || packageUuid == null || cartState.mutating
+            ? null
+            : () => context.read<BookingCartCubit>().addItem(
+                BookingCartAddRequest(
+                  providerUuid: state.provider.uuid,
+                  branchUuid: branch.uuid,
+                  packageUuid: packageUuid,
+                  itemType: BookingCartItemType.packagePurchaseOnly,
+                  idempotencyKey: newIdempotencyKey(),
+                ),
+              ),
       ),
     );
   }
@@ -633,6 +677,7 @@ class _ErrorState extends StatelessWidget {
           cubit.startOwnedPackageBooking(
             entitlementUuid: state.entitlementId!,
             packageUuid: state.packageId!,
+            serviceUuid: state.selectedIds.single,
           );
         case ProviderBookingKind.followUp:
           cubit.startFollowUpBooking(

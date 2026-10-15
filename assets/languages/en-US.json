@@ -836,6 +836,7 @@
     "remainingVisits": "{} visits remaining",
     "expiresAt": "Expires on {}",
     "addToCart": "Add to cart",
+    "buyPackageOnly": "Buy package without booking a session",
     "addingToCart": "Adding...",
     "addedToCart": "Appointment added to your cart",
     "cartTitle": "Booking cart",

@@ -35,6 +35,8 @@ class ProviderDetailsLoaded extends ProviderDetailsState {
   final List<ProviderEmployeeModel> bookingEmployees;
   final bool allowAnyEmployee, bookingLoading, bookingSubmitting;
   final List<ProviderBookingDateModel> bookingDates;
+  final bool bookingRequiresPurchase;
+  final String? bookingAvailabilityCode;
   final DateTime? bookingDate;
   final List<ProviderBookingSlotModel> bookingSlots;
   final String? slotToken, bookingError;
@@ -55,6 +57,8 @@ class ProviderDetailsLoaded extends ProviderDetailsState {
     this.bookingLoading = false,
     this.bookingSubmitting = false,
     this.bookingDates = const [],
+    this.bookingRequiresPurchase = false,
+    this.bookingAvailabilityCode,
     this.bookingDate,
     this.bookingSlots = const [],
     this.slotToken,
@@ -100,6 +104,8 @@ class ProviderDetailsLoaded extends ProviderDetailsState {
     bool? bookingLoading,
     bool? bookingSubmitting,
     List<ProviderBookingDateModel>? bookingDates,
+    bool? bookingRequiresPurchase,
+    Object? bookingAvailabilityCode = _keep,
     Object? bookingDate = _keep,
     List<ProviderBookingSlotModel>? bookingSlots,
     Object? slotToken = _keep,
@@ -127,6 +133,11 @@ class ProviderDetailsLoaded extends ProviderDetailsState {
     bookingLoading: bookingLoading ?? this.bookingLoading,
     bookingSubmitting: bookingSubmitting ?? this.bookingSubmitting,
     bookingDates: bookingDates ?? this.bookingDates,
+    bookingRequiresPurchase:
+        bookingRequiresPurchase ?? this.bookingRequiresPurchase,
+    bookingAvailabilityCode: identical(bookingAvailabilityCode, _keep)
+        ? this.bookingAvailabilityCode
+        : bookingAvailabilityCode as String?,
     bookingDate: identical(bookingDate, _keep)
         ? this.bookingDate
         : bookingDate as DateTime?,
